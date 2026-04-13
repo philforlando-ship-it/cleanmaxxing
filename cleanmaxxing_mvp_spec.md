@@ -120,6 +120,82 @@ Every feature below is IN. Everything not below is OUT.
 
 ---
 
+## 2.5 Stickiness Mechanics: Five Weekly Rituals That Drive Renewal
+
+The core insight: people renew subscriptions because they've built a habit, they can see the habit working, and they feel the product responding to them specifically. These five mechanics are the difference between "I tried this for a month" and "I'm paying for this next year."
+
+### 5a. Weekly Reflection Email (Sunday evening)
+
+**What it is:** Automated email sent Sunday at 6pm (user timezone). Summary: days checked in out of 7, goals completed, one pattern observation pulled from their data, one small suggestion for the coming week.
+
+**Example:**
+
+> You checked in 5 out of 7 days this week and completed your goals 4 out of 5 days. Pattern: you crush it Mon–Wed, then drop off Thu–Fri. Suggestion: what if you did your goal check-in right after breakfast instead of at night? Habit stacking works better than willpower.
+
+**Why it sticks:** It's not judgment, it's a conversation. The user sees themselves reflected accurately, gets a micro-insight, and has something small to try.
+
+**Implementation:** Template via Resend, pattern detection from check-in clustering (simple day-of-week heuristics first), suggestion pulled from Mister P with one API call per email. Build week 3, launch week 4.
+
+### 5b. Monthly Checkpoint (Day 30)
+
+**What it is:** On day 30, user sees: confidence delta (big number), goal completion rate (percentage), and three new suggested goals ranked by algorithm based on what they completed.
+
+**Example:**
+
+> Your self-confidence moved from 4.2 to 5.1 in 30 days. Here's what that shift means: you went from "I avoid mirrors" to "I can take a selfie without hating it." You completed 73% of your goals. Ready to layer in something new?
+
+**Why it sticks:** This is the renewal moment. Proof the system works, permission to celebrate, immediate next step visible. No friction between "this is working" and "what's next."
+
+**Implementation:** Triggered at user.created_at + 30 days. Compare Week 1 to Week 4 confidence averages. Suggested goals pulled from library filtered by age segment + completed goal categories, ranked by POV hierarchy. Map confidence deltas to plain language context (4.2 to 5.1 = "avoid mirrors" to "can take selfie"). Build week 4, launch week 5.
+
+### 5c. Mister P Proactive Suggestions
+
+**What it is:** When user asks Mister P about a topic they haven't asked about before (detected via embedding similarity), he suggests a deeper resource without pushing.
+
+**Example:**
+
+User asks: "Is collagen worth it?"
+
+Mister P: "Short answer: for your age, probably not. Long answer: I've got a detailed guide on collagen bioavailability and which supplements actually matter for skin health. Want to spend 10 minutes on it?"
+
+**Why it sticks:** Users feel seen. The system knows they're exploring something new and offers exactly the right depth.
+
+**Implementation:** Log topic of each query (embed it, cluster against prior questions). If it's a new topic cluster (fewer than 2 prior questions in that cluster), append one-liner suggestion to response linking to relevant POV doc. Build week 3 (logging + topic detection), launch week 4.
+
+### 5d. Weekly Community Thread (External Discord)
+
+**What it is:** Discord server with one channel: #weekly-wins. Every Sunday evening, post prompt: "What's one thing that went well this week, or one thing you learned about yourself?" Members post optional one-liners. No moderation, no forced connection, just visibility.
+
+**Example thread:**
+
+> I actually took progress photos without spiraling. Small win but I'll take it. — @user1
+>
+> Realized I care way more about how my clothes fit than my face. Changed everything. — @user2
+>
+> Just showed up 4 days in a row. More than I've done in months. — @user3
+
+**Why it sticks:** Belonging without pressure. Users see they're not alone, FOMO keeps them checking, they get ideas from others.
+
+**Implementation:** Set up Discord server, one channel, one standing message Sunday with prompt (you post it manually, 5 seconds). Invite link in settings page and monthly checkpoint screen. Optional join. No moderation needed at small scale. Build week 1 (Discord setup), launch week 2 (during onboarding).
+
+### 5e. Confidence Score Context (Copy, not code)
+
+**What it is:** Every confidence score is paired with what it means behaviorally, not naked numbers.
+
+**Context examples:**
+
+- **3.0:** "I avoid photos and mirrors. Changing clothes feels like a ordeal."
+- **4.0:** "I'm okay in familiar situations. New social settings feel risky."
+- **5.0:** "I can take a selfie without hating it. Most days feel neutral."
+- **6.0:** "I'm proud of how I look. I initiate photos sometimes."
+- **7.0:** "I feel genuinely good about my appearance. It's not something I worry about."
+
+**Why it sticks:** Abstract numbers don't move people. When a user sees 4.2 to 5.1, pairing it with "you went from okay-in-familiar to initiating-photos" makes it real.
+
+**Implementation:** Write context table once (1 page, 7 levels, 2–3 sentences each). Reference everywhere: dashboard, emails, checkpoint, chart labels. Same descriptor always maps to same score. Build week 2 (write table), deploy week 2 (add to templates).
+
+---
+
 ## 3. Explicitly Out of Scope (v2+)
 
 **Do not build in MVP.** If you catch yourself starting to build any of these, stop and reread this section.
@@ -195,8 +271,8 @@ goals
   user_id
   title
   description
-  category (from POV hierarchy)
-  priority_tier (S, A, B, C — from POV hierarchy)
+  category (one of the 5 Layers from doc 15: 'biological-foundation', 'structural-framing', 'grooming-refinement', 'behavioral-aesthetics', 'perception-identity', or meta categories 'system', 'safety', 'context')
+  priority_tier (one of: 'tier-1', 'tier-2', 'tier-3', 'tier-4', 'tier-5', 'conditional-tier-1', 'advanced', 'monitor', 'avoid', 'meta' — from doc 15 looksmaxxing system; 'monitor' = manageable-cost substances like alcohol/nicotine)
   status (active, completed, abandoned)
   created_at
   completed_at (nullable)
@@ -411,6 +487,7 @@ Each week assumes ~28 hours of build time (4 hours × 7 days, with some days sho
 - Create `/content/povs/` directory structure
 - Restructure POV docs with FAQ sections (this work continues through week 2)
 - Write `SESSION_HANDOFF.md` pattern into the repo from day 1
+- Discord server setup for #weekly-wins
 
 **End of week:** Can sign up, log in, see an empty authenticated home page. Payments work in test mode.
 
@@ -423,6 +500,8 @@ Each week assumes ~28 hours of build time (4 hours × 7 days, with some days sho
 - Build `/api/mister-p/ask` endpoint
 - Write smoke test suite (20 questions)
 - Iterate prompt until smoke tests pass
+- Write confidence score context table
+- Deploy Discord invite link
 
 **End of week:** You can ask Mister P a question from a terminal or Postman and get a grounded answer with citations.
 
@@ -432,6 +511,8 @@ Each week assumes ~28 hours of build time (4 hours × 7 days, with some days sho
 - Build goal suggestion algorithm
 - Build goal library browse/filter/swap UI
 - Build goals list view
+- Weekly reflection email templates + pattern detection logic
+- Mister P topic detection logging
 
 **End of week:** Full flow from signup → survey → 3 goals in your library works end-to-end.
 
@@ -441,6 +522,8 @@ Each week assumes ~28 hours of build time (4 hours × 7 days, with some days sho
 - Build confidence trend chart (use Recharts)
 - Wire Mister P chat UI into Today screen
 - Handle "already checked in" states
+- Monthly checkpoint screen + goal suggestions algorithm
+- Launch weekly emails
 
 **End of week:** Core daily loop works. You can use the product yourself and see the chart update.
 
@@ -451,6 +534,8 @@ Each week assumes ~28 hours of build time (4 hours × 7 days, with some days sho
 - Build creator landing page template (parameterized by creator slug)
 - Onboarding email sequence (Resend): welcome, day 3, day 7, day 14 (trial ending)
 - Public homepage with signup CTA
+- Launch monthly checkpoint
+- User testing on stickiness loop
 
 **End of week:** Marketing surface is live. Affiliate tracking works.
 

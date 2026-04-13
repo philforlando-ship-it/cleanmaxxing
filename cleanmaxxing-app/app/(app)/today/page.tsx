@@ -8,8 +8,20 @@ export default async function TodayPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
-      <h1 className="text-3xl font-semibold tracking-tight">Today</h1>
-      <p className="mt-2 text-sm text-zinc-500">Signed in as {user.email}</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">Today</h1>
+          <p className="mt-2 text-sm text-zinc-500">Signed in as {user.email}</p>
+        </div>
+        <form action="/api/auth/signout" method="post">
+          <button
+            type="submit"
+            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Sign out
+          </button>
+        </form>
+      </div>
 
       <section className="mt-10 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
         <h2 className="text-lg font-medium">Daily check-in</h2>

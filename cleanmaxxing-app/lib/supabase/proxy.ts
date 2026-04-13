@@ -47,5 +47,29 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Onboarding gate: authenticated users who haven't completed onboarding get
+  // bounced to /onboarding, and completed users get bounced out of /onboarding.
+  if (user && isProtected) {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('onboarding_completed_at')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const onboardingDone = !!profile?.onboarding_completed_at;
+    const inOnboarding = pathname.startsWith('/onboarding');
+
+    if (!onboardingDone && !inOnboarding) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/onboarding';
+      return NextResponse.redirect(url);
+    }
+    if (onboardingDone && inOnboarding) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/today';
+      return NextResponse.redirect(url);
+    }
+  }
+
   return supabaseResponse;
 }

@@ -11,6 +11,7 @@
     "embed-povs": "tsx -r dotenv/config scripts/embed-povs.ts dotenv_config_path=.env.local",
     "test-retrieval": "tsx -r dotenv/config scripts/test-retrieval.ts dotenv_config_path=.env.local",
     "test-mister-p": "tsx -r dotenv/config scripts/test-mister-p.ts dotenv_config_path=.env.local",
+    "smoke-test": "tsx -r dotenv/config scripts/smoke-test.ts dotenv_config_path=.env.local",
     "check-query-log": "tsx -r dotenv/config scripts/check-query-log.ts dotenv_config_path=.env.local",
     "typecheck": "tsc --noEmit"
   },

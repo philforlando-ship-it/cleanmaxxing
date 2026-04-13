@@ -13,6 +13,44 @@ import { createClient } from '@supabase/supabase-js';
 import { chunkMarkdown } from '../lib/mister-p/chunking';
 
 const POVS_DIR = 'content/povs';
+const METADATA_FILE = 'content/povs/_metadata.json';
+
+type PovTier =
+  | 'tier-1'
+  | 'tier-2'
+  | 'tier-3'
+  | 'tier-4'
+  | 'tier-5'
+  | 'conditional-tier-1'
+  | 'advanced'
+  | 'monitor'
+  | 'avoid'
+  | 'meta';
+
+type PovCategory =
+  | 'biological-foundation'
+  | 'structural-framing'
+  | 'grooming-refinement'
+  | 'behavioral-aesthetics'
+  | 'perception-identity'
+  | 'system'
+  | 'safety'
+  | 'context';
+
+type PovMetadata = {
+  priority_tier: PovTier | null;
+  category: PovCategory | null;
+  age_segments: Array<'18-24' | '25-32' | '33-40'>;
+};
+
+async function loadMetadata(): Promise<Record<string, PovMetadata>> {
+  const raw = await readFile(METADATA_FILE, 'utf8');
+  const parsed = JSON.parse(raw) as Record<string, PovMetadata>;
+  // Strip legend / comment keys
+  return Object.fromEntries(
+    Object.entries(parsed).filter(([k]) => !k.startsWith('_'))
+  );
+}
 
 function parseFrontmatter(md: string): { meta: Record<string, string>; body: string } {
   const match = md.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
@@ -32,14 +70,27 @@ async function main() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
+  const metadata = await loadMetadata();
   const files = (await readdir(POVS_DIR)).filter((f) => f.endsWith('.md'));
-  console.log(`Found ${files.length} POV docs`);
+  console.log(`Found ${files.length} POV docs, ${Object.keys(metadata).length} metadata entries`);
+
+  let missingMeta = 0;
+  let incompleteMeta = 0;
 
   for (const file of files) {
     const raw = await readFile(join(POVS_DIR, file), 'utf8');
     const { meta, body } = parseFrontmatter(raw);
     const slug = meta.slug || file.replace(/\.md$/, '');
     const title = meta.title || slug;
+
+    const md = metadata[slug];
+    if (!md) {
+      console.warn(`  WARN ${slug}: no entry in _metadata.json — add one`);
+      missingMeta++;
+    } else if (md.priority_tier === null || md.category === null || md.age_segments.length === 0) {
+      console.warn(`  WARN ${slug}: metadata incomplete (tier=${md.priority_tier} category=${md.category} segments=${md.age_segments.length})`);
+      incompleteMeta++;
+    }
 
     // Upsert pov_docs
     const { data: doc, error: docErr } = await supabase
@@ -48,8 +99,9 @@ async function main() {
         {
           slug,
           title,
-          category: meta.category || null,
-          priority_tier: meta.priority_tier || null,
+          category: md?.category ?? null,
+          priority_tier: md?.priority_tier ?? null,
+          age_segments: md?.age_segments ?? [],
           content: body,
           updated_at: new Date().toISOString(),
         },
@@ -96,6 +148,9 @@ async function main() {
   }
 
   console.log('\nDone.');
+  if (missingMeta > 0 || incompleteMeta > 0) {
+    console.log(`Metadata gaps: ${missingMeta} missing, ${incompleteMeta} incomplete. Goal suggestion will skip these.`);
+  }
 }
 
 main().catch((err) => {
