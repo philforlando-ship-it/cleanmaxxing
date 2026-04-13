@@ -57,6 +57,24 @@ const FOCUS_TO_SLUGS: Record<string, string[]> = {
   grooming: ['10-grooming', '09-facial-hair', '29-body-hair-methods', '11-teeth-smile'],
 };
 
+export function focusSlugsFor(focusAreas: string[]): Set<string> {
+  return new Set(focusAreas.flatMap((f) => FOCUS_TO_SLUGS[f] ?? []));
+}
+
+// Scoring used by both the onboarding suggestion ranker and the library
+// browser. No exclusion logic here — callers decide what to filter.
+export function scoreDoc(
+  slug: string,
+  priorityTier: string | null,
+  focusSlugs: Set<string>,
+  goalType: 'process' | 'outcome'
+): number {
+  let score = baseTierScore(priorityTier);
+  if (focusSlugs.has(slug)) score += 6;
+  if (goalType === 'process') score += 1;
+  return score;
+}
+
 function baseTierScore(tier: string | null): number {
   switch (tier) {
     case 'tier-1':

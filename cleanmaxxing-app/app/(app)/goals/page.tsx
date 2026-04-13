@@ -35,17 +35,25 @@ export default async function GoalsPage() {
             {goals?.length ?? 0} active
           </p>
         </div>
-        <a
-          href="/today"
-          className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-        >
-          Back to Today
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href="/goals/library"
+            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Browse library
+          </a>
+          <a
+            href="/today"
+            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Back to Today
+          </a>
+        </div>
       </div>
 
       {!goals || goals.length === 0 ? (
         <p className="mt-10 text-sm text-zinc-500">
-          No active goals yet. Goal browsing and creation are coming next.
+          No active goals yet. <a href="/goals/library" className="underline">Browse the library</a> to add some.
         </p>
       ) : (
         <ul className="mt-8 flex flex-col gap-4">
