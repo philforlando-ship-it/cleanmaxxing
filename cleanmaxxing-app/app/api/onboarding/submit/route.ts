@@ -68,13 +68,15 @@ export async function POST() {
     }
   }
 
+  // Note: onboarding_completed_at is NOT set here. It gets set by
+  // /api/goals/accept once the user actually picks starter goals.
+  // Until then, age_segment serves as the "survey submitted" signal.
   const { error: userErr } = await supabase
     .from('users')
     .update({
       age,
       age_segment: segment,
       clinical_screen_flagged: clinicalFlagged,
-      onboarding_completed_at: new Date().toISOString(),
     })
     .eq('id', user.id);
   if (userErr) {

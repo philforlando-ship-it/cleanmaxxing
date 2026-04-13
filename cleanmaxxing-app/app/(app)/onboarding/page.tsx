@@ -8,6 +8,17 @@ export default async function OnboardingEntryPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  // If the survey has already been submitted, the user is just missing goals.
+  const { data: profile } = await supabase
+    .from('users')
+    .select('age_segment')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (profile?.age_segment) {
+    redirect('/onboarding/complete');
+  }
+
   const { data: rows } = await supabase
     .from('survey_responses')
     .select('question_key')

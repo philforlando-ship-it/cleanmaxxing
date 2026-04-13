@@ -1,24 +1,35 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { GoalsPicker } from './goals-picker';
 
 export default async function OnboardingCompletePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  // Require the survey to have been submitted (age_segment set by submit route).
+  // Users who hit this URL directly without finishing the survey get bounced.
+  const { data: profile } = await supabase
+    .from('users')
+    .select('age_segment')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (!profile?.age_segment) {
+    redirect('/onboarding');
+  }
+
   return (
-    <main className="mx-auto flex min-h-[100svh] max-w-xl flex-col items-center justify-center px-6 py-10 text-center">
-      <h1 className="text-3xl font-semibold tracking-tight">You&rsquo;re set.</h1>
-      <p className="mt-4 text-base text-zinc-600 dark:text-zinc-400">
-        Goal suggestions are coming in the next build. For now, head to Today.
-      </p>
-      <Link
-        href="/today"
-        className="mt-8 rounded-lg bg-zinc-900 px-6 py-3 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-      >
-        Go to Today
-      </Link>
+    <main className="mx-auto flex min-h-[100svh] max-w-xl flex-col px-6 py-10">
+      <header className="mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Here are your three starter goals
+        </h1>
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+          Based on your age and focus areas. You can swap any of them, then start.
+        </p>
+      </header>
+      <GoalsPicker />
     </main>
   );
 }
