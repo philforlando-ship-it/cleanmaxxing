@@ -56,8 +56,17 @@ export async function GET() {
   });
 
   const top = pickTopN(ranked, 3);
-  // Return 7 alternatives for the swap cycle — top of the remaining list.
-  const alternatives = ranked.filter((g) => !top.includes(g)).slice(0, 7);
+
+  // Build the swap queue with outcome goals at the front. The top 3 are
+  // always process goals by design (process bonus + category diversity),
+  // so without this ordering the swap button would only ever surface more
+  // process goals — users would never reach an outcome via swap, and the
+  // §13 nudge (which fires when fewer than 2 of 3 are process) could never
+  // be triggered by swap alone.
+  const remaining = ranked.filter((g) => !top.includes(g));
+  const outcomeAlts = remaining.filter((g) => g.goal_type === 'outcome');
+  const processAlts = remaining.filter((g) => g.goal_type === 'process');
+  const alternatives = [...outcomeAlts, ...processAlts].slice(0, 15);
 
   return NextResponse.json({
     suggested: top,

@@ -63,6 +63,8 @@ Every feature below is IN. Everything not below is OUT.
 
 **Plain-language expansion on every goal.** Each goal card in both the onboarding picker and the library has a one-sentence plain-language helper that appears on tap or hover, demystifying any jargon (TDEE, RDA, 1RM, hypertrophy, compound lifts, androgenic versus anabolic, and so on). Mister P talks to users — he doesn't quiz them. The helper text is sourced from a short plain-language summary line added to each POV doc (new field `faqs.plain_language` or equivalent) so it stays in sync with the corpus and can be edited in one place. Goal templates without a plain-language summary fall back to showing only the main description.
 
+**Active goal cap at 5 with soft override.** Behavior-change research consistently shows 3–5 concurrent habit goals is the sustainable ceiling — beyond that, completion rates fall and users start seeing daily check-ins as a wall of failures. When a user already has 5 active goals and tries to add a 6th from the library, show an inline nudge below the card they clicked: *"You already have 5 active goals. The sustainable ceiling is usually 5 — past that, most people start missing more days than they hit. Want to add this anyway?"* One-tap "Add anyway" confirm overrides the cap. This is a nudge, not a block — same pattern as the process-goal default. The cap applies only to library adds, not to the three-goal onboarding acceptance (which can never hit the limit by construction). Each new add attempt at 5+ re-triggers the nudge; the override is per-request, not a persistent opt-out. This is a psychological safety commitment — see section 13.
+
 **Done when:**
 - User can complete survey in <4 minutes on mobile
 - User sees 3 suggested goals at the end, tailored by age
@@ -70,6 +72,7 @@ Every feature below is IN. Everything not below is OUT.
 - State is saved after each question (no data loss on drop-off)
 - Process goal soft override fires when fewer than 2 of 3 final goals are process-oriented
 - Every goal card in the library and picker exposes plain-language helper text on tap
+- Active goal cap at 5 with soft override fires when adding a goal from the library while already at or above 5 active goals
 
 ### Feature 2: Check-In Loop (Daily + Weekly)
 **What it does:** Two loops. **Daily (10 seconds):** one checkbox per active goal — "Did you work on this today?" No confidence rating here. **Weekly (60 seconds, Sundays):** short reflection across 3–4 contextual confidence dimensions ("this week, in social situations, I felt...") on a 1–10 scale. See section 13 for the psychological reasoning behind splitting these.
@@ -638,6 +641,8 @@ This section exists because the category Cleanmaxxing operates in has known fail
 **Mister P has circuit-breakers on obsessive patterns.** When a user asks 5+ questions in a 7-day window about the same insecurity or topic, Mister P notices and responds with something like: "You're circling this one hard. Sometimes the work isn't more fixing, it's less checking. Take a week off from this topic and come back to it." This requires tracking query topic clustering — a lightweight version (tag questions by category on ingestion, count by category per user per week) is sufficient for MVP.
 
 **"Step away" mode is a first-class feature.** Settings includes a one-tap option to pause daily check-ins and tracking without losing goals or progress. The copy explicitly frames this as a legitimate and sometimes correct choice: "Taking a break from tracking is healthy. Your goals will be here when you come back." Most tracking products hide this or don't offer it. Cleanmaxxing offers it prominently.
+
+**Active goal cap at 5 with soft override.** Behavior-change research shows 3–5 concurrent habit goals is the sustainable ceiling — past that, completion rates drop and users start seeing their daily check-ins as a wall of failures. When a user already has 5 active goals and tries to add a 6th, show an inline nudge with one-tap override. See Feature 1 for the implementation detail. The point of the cap is not to block users who genuinely want more — it's to interrupt the "more is better" reflex with a moment of honest friction, and to prevent the retention anchor (the check-in screen) from turning into a demoralization surface.
 
 **Onboarding includes a clinical screening question.** Add to the survey: "Have you ever been diagnosed with or treated for an eating disorder, body dysmorphic disorder, or OCD?" If yes, show a screen recommending they speak with a clinician before using the product, with resources (NEDA alternative: National Alliance for Eating Disorders helpline) and a soft option to continue. Some users will drop off. Those are users the product should not be serving.
 

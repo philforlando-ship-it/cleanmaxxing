@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { GOAL_TEMPLATES } from '@/content/goal-templates';
 import { focusSlugsFor, scoreDoc } from '@/lib/onboarding/goal-suggest';
+import { plainLanguageFor } from '@/lib/content/plain-language';
 import type { AgeSegment } from '@/lib/onboarding/types';
 
 // Returns every goal template joined with its POV doc metadata,
@@ -56,18 +57,23 @@ export async function GET() {
     .eq('status', 'active');
   const activeTitles = new Set((activeGoals ?? []).map((g) => g.title));
 
+  const docsBySlug = new Map((povDocs ?? []).map((d) => [d.slug, d]));
+
   const templates = [];
-  for (const doc of povDocs ?? []) {
-    if (!(doc.slug in GOAL_TEMPLATES)) continue;
+  // Iterate templates, not POV docs — multiple templates can share a
+  // source_slug (e.g. a process and an outcome both anchored to 19-strength-training).
+  for (const t of Object.values(GOAL_TEMPLATES)) {
+    const doc = docsBySlug.get(t.source_slug);
+    if (!doc) continue;
     if (ageSegment && doc.age_segments && !doc.age_segments.includes(ageSegment)) continue;
 
-    const t = GOAL_TEMPLATES[doc.slug];
     const score = scoreDoc(doc.slug, doc.priority_tier, focusSlugs, t.goal_type);
 
     templates.push({
       source_slug: doc.slug,
       title: t.title,
       description: t.description,
+      plain_language: plainLanguageFor(doc.slug),
       category: doc.category,
       priority_tier: doc.priority_tier,
       goal_type: t.goal_type,

@@ -11,6 +11,10 @@ const ALLOWED_TIERS = new Set([
   'advanced',
 ]);
 
+// Active goal cap (spec §13). Users at or above this count trigger a
+// soft override nudge on add. Client can retry with force: true to bypass.
+const ACTIVE_GOAL_SOFT_CAP = 5;
+
 type AddPayload = {
   title?: string;
   description?: string;
@@ -18,6 +22,7 @@ type AddPayload = {
   priority_tier?: string;
   goal_type?: 'process' | 'outcome';
   source_slug?: string;
+  force?: boolean;
 };
 
 // Adds a single goal to an already-onboarded user. Post-onboarding only —
@@ -37,7 +42,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { title, description, category, priority_tier, goal_type, source_slug } = body;
+  const { title, description, category, priority_tier, goal_type, source_slug, force } = body;
 
   if (!title || typeof title !== 'string') {
     return NextResponse.json({ error: 'Missing title' }, { status: 400 });
@@ -72,6 +77,29 @@ export async function POST(req: Request) {
     .maybeSingle();
   if (existing) {
     return NextResponse.json({ error: 'Already active.' }, { status: 409 });
+  }
+
+  // Soft goal cap check (spec §13). Count current active goals; if the user
+  // is already at or above the cap and hasn't explicitly confirmed, return
+  // the cap-reached flag so the client can show the nudge. The client retries
+  // with force: true if the user chooses "Add anyway".
+  if (!force) {
+    const { count: activeCount } = await supabase
+      .from('goals')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('status', 'active');
+
+    if ((activeCount ?? 0) >= ACTIVE_GOAL_SOFT_CAP) {
+      return NextResponse.json(
+        {
+          error: 'goal_limit_reached',
+          active_count: activeCount ?? 0,
+          cap: ACTIVE_GOAL_SOFT_CAP,
+        },
+        { status: 409 }
+      );
+    }
   }
 
   const { error: insErr } = await supabase.from('goals').insert({

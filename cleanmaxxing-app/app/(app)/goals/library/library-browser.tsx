@@ -7,6 +7,7 @@ type Template = {
   source_slug: string;
   title: string;
   description: string;
+  plain_language: string | null;
   category: string | null;
   priority_tier: string | null;
   goal_type: 'process' | 'outcome';
@@ -42,6 +43,11 @@ export function LibraryBrowser() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [busySlug, setBusySlug] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Soft goal-cap nudge state. When the server returns goal_limit_reached
+  // for a given template, we stash the template here so the nudge can
+  // render inline below that card. Confirming "Add anyway" re-posts with
+  // force: true and clears this.
+  const [capNudge, setCapNudge] = useState<{ template: Template; activeCount: number; cap: number } | null>(null);
 
   async function load() {
     const res = await fetch('/api/goals/templates');
@@ -59,9 +65,11 @@ export function LibraryBrowser() {
     load();
   }, []);
 
-  async function addGoal(t: Template) {
+  async function addGoal(t: Template, force = false) {
     setBusySlug(t.source_slug);
     setError(null);
+    if (!force) setCapNudge(null);
+
     const res = await fetch('/api/goals/add', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -72,18 +80,30 @@ export function LibraryBrowser() {
         category: t.category,
         priority_tier: t.priority_tier,
         goal_type: t.goal_type,
+        force: force || undefined,
       }),
     });
     setBusySlug(null);
+
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
+      if (body.error === 'goal_limit_reached' && !force) {
+        setCapNudge({
+          template: t,
+          activeCount: body.active_count ?? 0,
+          cap: body.cap ?? 5,
+        });
+        return;
+      }
       setError(body.error ?? 'Could not add goal.');
       return;
     }
+
     // Update in place so the "Already active" state reflects immediately
     setTemplates((prev) =>
       prev.map((x) => (x.source_slug === t.source_slug ? { ...x, already_active: true } : x))
     );
+    setCapNudge(null);
     router.refresh();
   }
 
@@ -164,6 +184,16 @@ export function LibraryBrowser() {
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
               {t.description}
             </p>
+            {t.plain_language && (
+              <details className="mt-3">
+                <summary className="cursor-pointer text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100">
+                  What does this mean?
+                </summary>
+                <p className="mt-2 text-sm italic text-zinc-600 dark:text-zinc-400">
+                  {t.plain_language}
+                </p>
+              </details>
+            )}
             <div className="mt-4">
               {t.already_active ? (
                 <span className="text-xs text-zinc-500">Already active</span>
@@ -178,6 +208,30 @@ export function LibraryBrowser() {
                 </button>
               )}
             </div>
+            {capNudge?.template.source_slug === t.source_slug && (
+              <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30">
+                <p className="text-sm text-amber-900 dark:text-amber-200">
+                  {`You already have ${capNudge.activeCount} active goals. The sustainable ceiling is usually ${capNudge.cap} — past that, most people start missing more days than they hit. Want to add this anyway?`}
+                </p>
+                <div className="mt-3 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => addGoal(t, true)}
+                    disabled={busySlug === t.source_slug}
+                    className="rounded-lg bg-zinc-900 px-4 py-2 text-xs font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
+                  >
+                    Add anyway
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCapNudge(null)}
+                    className="text-xs text-zinc-600 underline dark:text-zinc-400"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </li>
         ))}
       </ul>

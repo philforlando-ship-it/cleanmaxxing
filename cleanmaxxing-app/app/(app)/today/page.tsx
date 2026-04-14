@@ -1,10 +1,13 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { DevResetButton } from './dev-reset-button';
 
 export default async function TodayPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+
+  const isDev = process.env.NODE_ENV === 'development';
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -13,14 +16,17 @@ export default async function TodayPage() {
           <h1 className="text-3xl font-semibold tracking-tight">Today</h1>
           <p className="mt-2 text-sm text-zinc-500">Signed in as {user.email}</p>
         </div>
-        <form action="/api/auth/signout" method="post">
-          <button
-            type="submit"
-            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          >
-            Sign out
-          </button>
-        </form>
+        <div className="flex items-center gap-2">
+          {isDev && <DevResetButton />}
+          <form action="/api/auth/signout" method="post">
+            <button
+              type="submit"
+              className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              Sign out
+            </button>
+          </form>
+        </div>
       </div>
 
       <section className="mt-10 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">

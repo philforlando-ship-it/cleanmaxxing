@@ -1,4 +1,5 @@
-import { GOAL_TEMPLATES, hasTemplate, type GoalTemplate } from '@/content/goal-templates';
+import { GOAL_TEMPLATES } from '@/content/goal-templates';
+import { plainLanguageFor } from '@/lib/content/plain-language';
 import type { AgeSegment } from './types';
 
 export type PovDocRow = {
@@ -13,6 +14,7 @@ export type SuggestedGoal = {
   source_slug: string;
   title: string;
   description: string;
+  plain_language: string | null;
   category: string;
   priority_tier: string;
   goal_type: 'process' | 'outcome';
@@ -108,32 +110,31 @@ export function rankCandidates({
   ageSegment: AgeSegment;
   focusAreas: string[];
 }): SuggestedGoal[] {
-  const focusSlugs = new Set(
-    focusAreas.flatMap((f) => FOCUS_TO_SLUGS[f] ?? [])
-  );
+  const focusSlugs = focusSlugsFor(focusAreas);
+  const docsBySlug = new Map(povDocs.map((d) => [d.slug, d]));
 
   const candidates: SuggestedGoal[] = [];
 
-  for (const doc of povDocs) {
-    if (!hasTemplate(doc.slug)) continue;
+  // Iterate templates rather than POV docs so multiple templates can share a
+  // single source slug (a process and an outcome anchored to the same doc).
+  for (const template of Object.values(GOAL_TEMPLATES)) {
+    const doc = docsBySlug.get(template.source_slug);
+    if (!doc) continue;
     if (!doc.priority_tier || EXCLUDED_TIERS.has(doc.priority_tier)) continue;
     if (!appliesToAge(doc, ageSegment)) continue;
-
-    const template: GoalTemplate = GOAL_TEMPLATES[doc.slug];
-
-    let score = baseTierScore(doc.priority_tier);
-    if (focusSlugs.has(doc.slug)) score += 6;
-    if (template.goal_type === 'process') score += 1; // §13 bias toward process goals
 
     // conditional-tier-1 only surfaces when a focus area explicitly matches
     if (doc.priority_tier === 'conditional-tier-1' && !focusSlugs.has(doc.slug)) {
       continue;
     }
 
+    const score = scoreDoc(doc.slug, doc.priority_tier, focusSlugs, template.goal_type);
+
     candidates.push({
       source_slug: doc.slug,
       title: template.title,
       description: template.description,
+      plain_language: plainLanguageFor(doc.slug),
       category: doc.category ?? 'uncategorized',
       priority_tier: doc.priority_tier,
       goal_type: template.goal_type,

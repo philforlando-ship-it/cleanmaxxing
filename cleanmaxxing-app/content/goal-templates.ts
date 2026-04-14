@@ -1,17 +1,28 @@
-// Goal templates: one per POV slug. Used by the suggestion algorithm to
-// turn educational POV docs into user-facing goals.
+// Goal templates. Each key is a unique template id (stable, not a POV slug
+// since multiple templates can anchor to the same doc — e.g. a process
+// "Strength train 3x per week" and an outcome "Add 10 pounds of muscle"
+// both anchor to 19-strength-training). Templates turn educational POV
+// docs into user-facing goals.
 //
 // Only populate entries for docs that genuinely make sense as a user goal.
 // Meta / avoid / monitor / advanced / niche docs are intentionally absent
-// and will never appear in suggestions. Conditional-tier-1 entries like
-// acne and hair loss are included but will only surface when the user's
-// focus areas match the underlying concern.
+// and never appear in suggestions. Conditional-tier-1 entries (acne, hair
+// loss) are included but only surface when the user's focus areas match.
 //
-// Phrasing bias: process-flavored, second-person, concrete. No "journey".
-// No moralizing. Titles read as something you could say out loud ("Hit
-// your protein target every day") rather than a topic ("Protein Creatine").
+// Phrasing bias:
+//   Process goals use action verbs — "Build," "Hit," "Train," "Run," "Protect,"
+//   "Rebuild," "Match," "Start." Titles should pass the "does this describe an
+//   action you do, or a state you want to reach?" test. "Improve," "optimize,"
+//   "master," "fix," "upgrade" are outcome verbs and should not appear in
+//   process titles.
+//
+//   Outcome goals are measurable end states over a specific time window
+//   when possible — "Lose 10% of body weight," "Reach 15% body fat," "Add
+//   10 pounds of muscle in 6 months." The time window matters because it
+//   prevents outcome goals from becoming open-ended body-dysmorphia loops.
 
 export type GoalTemplate = {
+  source_slug: string;
   title: string;
   description: string;
   goal_type: 'process' | 'outcome';
@@ -19,57 +30,66 @@ export type GoalTemplate = {
 
 export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
   // ==========================================
-  // Tier 1 — Non-negotiable foundation
+  // Tier 1 — Non-negotiable foundation (process)
   // ==========================================
-  '07-skincare-antiaging': {
+  'skincare-daily-routine': {
+    source_slug: '07-skincare-antiaging',
     title: 'Build a daily skincare routine',
     description:
       'Cleanser morning and evening, moisturizer twice, SPF every morning. Add a retinoid at night once your skin has adjusted.',
     goal_type: 'process',
   },
-  '08-head-hair-balding': {
-    title: 'Take your hair seriously',
+  'hair-protect-daily': {
+    source_slug: '08-head-hair-balding',
+    title: 'Run a daily hair-care routine',
     description:
-      'Protect what you have. Right cut for your face shape, consistent product, and treatment early if you see loss starting.',
+      'Right cut for your face shape, consistent product, wash schedule that suits your hair type. Early boring action is what protects you.',
     goal_type: 'process',
   },
-  '17-environment-lifestyle-design': {
+  'environment-design': {
+    source_slug: '17-environment-lifestyle-design',
     title: 'Engineer your environment for consistency',
     description:
       'Remove friction from the habits you want and add friction to the ones you don\u2019t. Willpower is not the variable.',
     goal_type: 'process',
   },
-  '19-strength-training': {
+  'strength-train-3x-week': {
+    source_slug: '19-strength-training',
     title: 'Strength train three times per week',
     description:
       'Compound lifts as the base, progressive overload tracked. Consistency beats intensity for the first year.',
     goal_type: 'process',
   },
-  '20-diet-macros': {
+  'macros-daily': {
+    source_slug: '20-diet-macros',
     title: 'Dial in your daily macros',
     description:
       'Set a TDEE-based calorie target, protein first, fats and carbs around it. Track until it becomes intuitive.',
     goal_type: 'process',
   },
-  '21-protein-creatine': {
+  'protein-daily-target': {
+    source_slug: '21-protein-creatine',
     title: 'Hit your protein target every day',
     description:
       'Roughly your bodyweight in grams, spread across three to five meals. Creatine monohydrate once the protein is handled.',
     goal_type: 'process',
   },
-  '30-appetite-control': {
-    title: 'Master appetite control',
+  'appetite-structure': {
+    source_slug: '30-appetite-control',
+    title: 'Eat on a structure that kills cravings',
     description:
-      'Protein-forward meals, fiber, water, and a structured eating window. Hunger is a design problem, not a willpower test.',
+      'Protein-forward meals, fiber, water, and a consistent eating window. Hunger is a design problem, not a willpower test.',
     goal_type: 'process',
   },
-  '42-sleep': {
+  'sleep-schedule': {
+    source_slug: '42-sleep',
     title: 'Protect your sleep schedule',
     description:
       'Same sleep and wake times most days, dark cool room, no screens in the last hour. Seven to nine hours, tracked loosely.',
     goal_type: 'process',
   },
-  '45-meal-plans': {
+  'meal-plan-build': {
+    source_slug: '45-meal-plans',
     title: 'Build a repeatable meal plan',
     description:
       'Three to five meals you actually enjoy, hitting protein and calorie targets. Repetition beats variety for consistency.',
@@ -77,101 +97,109 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
   },
 
   // ==========================================
-  // Tier 2 — High impact, address early
+  // Tier 2 — High impact, address early (process)
   // ==========================================
-  '09-facial-hair': {
-    title: 'Optimize your facial hair',
+  'facial-hair-match': {
+    source_slug: '09-facial-hair',
+    title: 'Match your facial hair to your face',
     description:
       'Shape what grows well, accept what doesn\u2019t. The right stubble length or beard style lifts every face type.',
     goal_type: 'process',
   },
-  '10-grooming': {
+  'grooming-daily': {
+    source_slug: '10-grooming',
     title: 'Build a daily grooming routine',
     description:
       'Eyebrows, nails, ears, nose, skin. Five minutes a day of boring maintenance that most men skip.',
     goal_type: 'process',
   },
-  '11-teeth-smile': {
-    title: 'Improve your smile',
+  'teeth-start-work': {
+    source_slug: '11-teeth-smile',
+    title: 'Start the dental work your smile needs',
     description:
-      'Whitening if shade is the issue, orthodontics if alignment is. Start with a dental cleaning and an honest assessment.',
+      'Begin with a dental cleaning and an honest assessment. Whitening, orthodontics, or restoration — whichever applies to you.',
     goal_type: 'process',
   },
-  '12-style-clothing': {
-    title: 'Upgrade your wardrobe fit',
+  'wardrobe-rebuild-fit': {
+    source_slug: '12-style-clothing',
+    title: 'Rebuild your wardrobe around fit',
     description:
-      'Fit first, fabric second, fashion last. Pick one archetype and rebuild the wardrobe around fit.',
+      'Fit first, fabric second, fashion last. Pick one archetype and rebuild the wardrobe around clothes that actually fit.',
     goal_type: 'process',
   },
-  '18-tanning': {
+  'tanning-controlled': {
+    source_slug: '18-tanning',
     title: 'Add controlled tanning to your routine',
     description:
       'A slight base tan lifts physique and skin tone. Short, regular exposure with SPF on the face. No tanning beds.',
     goal_type: 'process',
   },
-  '48-skin-tone-guidance': {
-    title: 'Use color to your advantage',
+  'skin-tone-dress-for': {
+    source_slug: '48-skin-tone-guidance',
+    title: 'Dress for your skin tone',
     description:
-      'Dress for your undertone. The right shirt color next to your face does more than most grooming tweaks.',
+      'Certain colors flatter your undertone and others wash you out. Wearing the right ones next to your face quietly upgrades every look.',
     goal_type: 'process',
   },
-  '50-posture': {
-    title: 'Fix your posture',
+  'posture-train-daily': {
+    source_slug: '50-posture',
+    title: 'Train your posture daily',
     description:
       'Daily mobility for the thoracic spine, hips, and neck. Work on stance until upright becomes the default.',
     goal_type: 'process',
   },
 
   // ==========================================
-  // Tier 3 — Meaningful refinements
+  // Tier 3 — Meaningful refinements (process)
   // ==========================================
-  '05-supplements': {
+  'supplements-foundation': {
+    source_slug: '05-supplements',
     title: 'Build a supplement foundation',
     description:
       'Creatine, vitamin D, omega-3, magnesium glycinate. Nothing flashy, nothing without evidence behind it.',
     goal_type: 'process',
   },
-  '16-facial-definition-jawline': {
-    title: 'Reveal your jawline through fat loss',
-    description:
-      'Jawline definition is a body fat problem, not a mewing problem. Lean out and the structure shows up on its own.',
-    goal_type: 'outcome',
-  },
-  '23-cardio': {
+  'cardio-base': {
+    source_slug: '23-cardio',
     title: 'Build a cardio base',
     description:
       'Zone 2 work most of the week, one harder session. Cardio supports the lifting, not the other way around.',
     goal_type: 'process',
   },
-  '29-body-hair-methods': {
+  'body-hair-cleanup': {
+    source_slug: '29-body-hair-methods',
     title: 'Clean up body hair',
     description:
       'Trim or remove where it makes the physique read cleaner. Chest, back, abdomen based on what you actually have.',
     goal_type: 'process',
   },
-  '32-skin-texture-scarring': {
-    title: 'Address skin texture',
+  'skin-texture-routine': {
+    source_slug: '32-skin-texture-scarring',
+    title: 'Run a texture-focused skincare routine',
     description:
-      'Retinoid, consistent exfoliation, and professional treatment if scarring is significant. Patience more than product.',
+      'Retinoid and consistent exfoliation. Professional treatment if scarring is significant. Patience more than product.',
     goal_type: 'process',
   },
-  '35-gut-health-fiber': {
-    title: 'Improve gut health and fiber intake',
+  'fiber-30g-daily': {
+    source_slug: '35-gut-health-fiber',
+    title: 'Hit 30 grams of fiber every day',
     description:
-      'Thirty grams of fiber per day from whole foods, fermented foods a few times a week. Skin and digestion both follow.',
+      'Whole foods plus fermented foods a few times a week. Skin and digestion both follow. Cheaper than any gut supplement.',
     goal_type: 'process',
   },
-  '47-eye-health': {
-    title: 'Improve the eye area',
+  'eye-area-routine': {
+    source_slug: '47-eye-health',
+    title: 'Run an eye-area skincare routine',
     description:
       'Sleep, hydration, eye-specific moisturizer, and knock out the inflammation drivers. The eye area is a lifestyle mirror.',
     goal_type: 'process',
   },
 
   // ==========================================
-  // Tier 4 — Top performers (rarely auto-suggested)
+  // Tier 4 — Top performers (process, rarely auto-suggested)
   // ==========================================
-  '46-mobility': {
+  'mobility-daily': {
+    source_slug: '46-mobility',
     title: 'Build daily mobility',
     description:
       'Ten minutes a day on hips, thoracic spine, and ankles. Keeps training sustainable and posture honest.',
@@ -179,15 +207,17 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
   },
 
   // ==========================================
-  // Conditional tier 1 — only when focus areas match
+  // Conditional tier 1 — only when focus areas match (process)
   // ==========================================
-  '25-acne': {
+  'acne-treat-system': {
+    source_slug: '25-acne',
     title: 'Treat active acne as a system problem',
     description:
       'Salicylic acid, benzoyl peroxide, retinoid if needed. Diet and sleep as upstream inputs, derm escalation if it persists.',
     goal_type: 'process',
   },
-  '27-hair-loss-treatments': {
+  'hair-loss-start-plan': {
+    source_slug: '27-hair-loss-treatments',
     title: 'Start a hair loss treatment plan',
     description:
       'Minoxidil and finasteride are the evidence-backed stack. Earlier is better. Talk to a doctor about the finasteride side.',
@@ -195,25 +225,71 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
   },
 
   // ==========================================
-  // Self-acceptance (spec §13 — "second leg of the stool")
-  // These are the only goals where the intent is less action, not
-  // more. They live in the library under their own category, never
-  // auto-suggested at onboarding (would be weird as a starter goal),
-  // but available for anyone to add.
+  // Outcome goals — measurable end states over a defined time window
   // ==========================================
-  '54-when-to-stop': {
+  'weight-loss-10-percent': {
+    source_slug: '20-diet-macros',
+    title: 'Lose 10% of your body weight',
+    description:
+      'Sustainable rate is one to two pounds per week. Calorie deficit around 300-500 per day, protein target held, strength training preserved.',
+    goal_type: 'outcome',
+  },
+  'body-fat-15-percent': {
+    source_slug: '31-calorie-macro-framework',
+    title: 'Reach 15 percent body fat',
+    description:
+      'The level where a trained physique starts to read lean without any water or lighting tricks. Calorie deficit, protein, and consistent lifting get you there.',
+    goal_type: 'outcome',
+  },
+  'muscle-gain-10lb-6mo': {
+    source_slug: '19-strength-training',
+    title: 'Add 10 pounds of muscle in 6 months',
+    description:
+      'Realistic for most trained lifters in a small calorie surplus. Requires four sessions a week, protein at target, and sleep as the recovery anchor.',
+    goal_type: 'outcome',
+  },
+  'hair-retention-one-year': {
+    source_slug: '27-hair-loss-treatments',
+    title: 'Keep your hairline where it is for a year',
+    description:
+      'Measurable by photos, same lighting, same angle, every 90 days. Treatment plan in place if loss is active. Early action is the lever.',
+    goal_type: 'outcome',
+  },
+  'clear-skin-30-days': {
+    source_slug: '25-acne',
+    title: 'Have clear skin for 30 days straight',
+    description:
+      'No new active breakouts for a full month. A simple routine, diet cleanup, and derm visit if the basics are not enough. Photo every week to track.',
+    goal_type: 'outcome',
+  },
+  'jawline-through-fat-loss': {
+    source_slug: '16-facial-definition-jawline',
+    title: 'Reveal your jawline through fat loss',
+    description:
+      'Jawline definition is a body fat problem, not a mewing problem. Lean out and the structure shows up on its own.',
+    goal_type: 'outcome',
+  },
+
+  // ==========================================
+  // Self-acceptance (spec §13 — "second leg of the stool")
+  // Never auto-suggested; library-only. Process-framed.
+  // ==========================================
+  'when-to-stop': {
+    source_slug: '54-when-to-stop',
     title: 'Practice noticing when to stop',
     description:
       'Self-improvement works best when you can tell the difference between productive effort and self-surveillance. Check in weekly: is this still serving me, or am I just chasing a number?',
     goal_type: 'process',
   },
-  '55-limits-self-improvement': {
+  'limits-accept': {
+    source_slug: '55-limits-self-improvement',
     title: 'Accept the limits of self-improvement',
     description:
       'Every variable has a ceiling. Part of the work is recognizing when you\u2019ve hit yours on something and moving your attention somewhere else.',
     goal_type: 'process',
   },
-  '56-identity-beyond-appearance': {
+  'identity-beyond-appearance': {
+    source_slug: '56-identity-beyond-appearance',
     title: 'Build an identity beyond your appearance',
     description:
       'Skills, relationships, work, hobbies. The stuff that holds up on the days your face, hair, or body isn\u2019t cooperating. That foundation makes the appearance work sustainable.',
@@ -221,6 +297,13 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
   },
 };
 
-export function hasTemplate(slug: string): boolean {
-  return slug in GOAL_TEMPLATES;
+export function hasTemplateForSlug(slug: string): boolean {
+  for (const t of Object.values(GOAL_TEMPLATES)) {
+    if (t.source_slug === slug) return true;
+  }
+  return false;
+}
+
+export function templatesForSlug(slug: string): GoalTemplate[] {
+  return Object.values(GOAL_TEMPLATES).filter((t) => t.source_slug === slug);
 }
