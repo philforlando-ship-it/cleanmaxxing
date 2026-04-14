@@ -98,7 +98,8 @@ async function runOne(
   });
 
   const answer = await result.text;
-  const refusalDetected = /That's not something I cover yet|Not something I'll help with|Not something I cover/i.test(answer);
+  const refusalDetected =
+    /That's not something I cover yet|That's not something I cover|Not something I'll help with|Not something I cover|can't help|hard line|off-limits|off the table/i.test(answer);
 
   return { answer, chunks, refusalDetected };
 }

@@ -7,6 +7,7 @@ type IncomingGoal = {
   category: string;
   priority_tier: string;
   goal_type: 'process' | 'outcome';
+  source_slug?: string;
 };
 
 const ALLOWED_TIERS = new Set([
@@ -72,6 +73,7 @@ export async function POST(req: Request) {
     category: g.category,
     priority_tier: g.priority_tier,
     goal_type: g.goal_type,
+    source_slug: g.source_slug ?? null,
     status: 'active',
     source: 'system_suggested',
   }));

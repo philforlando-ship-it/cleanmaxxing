@@ -17,6 +17,7 @@ type AddPayload = {
   category?: string;
   priority_tier?: string;
   goal_type?: 'process' | 'outcome';
+  source_slug?: string;
 };
 
 // Adds a single goal to an already-onboarded user. Post-onboarding only —
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { title, description, category, priority_tier, goal_type } = body;
+  const { title, description, category, priority_tier, goal_type, source_slug } = body;
 
   if (!title || typeof title !== 'string') {
     return NextResponse.json({ error: 'Missing title' }, { status: 400 });
@@ -80,6 +81,7 @@ export async function POST(req: Request) {
     category: category ?? null,
     priority_tier,
     goal_type,
+    source_slug: source_slug ?? null,
     status: 'active',
     source: 'system_suggested',
   });

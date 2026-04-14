@@ -193,6 +193,32 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
       'Minoxidil and finasteride are the evidence-backed stack. Earlier is better. Talk to a doctor about the finasteride side.',
     goal_type: 'process',
   },
+
+  // ==========================================
+  // Self-acceptance (spec §13 — "second leg of the stool")
+  // These are the only goals where the intent is less action, not
+  // more. They live in the library under their own category, never
+  // auto-suggested at onboarding (would be weird as a starter goal),
+  // but available for anyone to add.
+  // ==========================================
+  '54-when-to-stop': {
+    title: 'Practice noticing when to stop',
+    description:
+      'Self-improvement works best when you can tell the difference between productive effort and self-surveillance. Check in weekly: is this still serving me, or am I just chasing a number?',
+    goal_type: 'process',
+  },
+  '55-limits-self-improvement': {
+    title: 'Accept the limits of self-improvement',
+    description:
+      'Every variable has a ceiling. Part of the work is recognizing when you\u2019ve hit yours on something and moving your attention somewhere else.',
+    goal_type: 'process',
+  },
+  '56-identity-beyond-appearance': {
+    title: 'Build an identity beyond your appearance',
+    description:
+      'Skills, relationships, work, hobbies. The stuff that holds up on the days your face, hair, or body isn\u2019t cooperating. That foundation makes the appearance work sustainable.',
+    goal_type: 'process',
+  },
 };
 
 export function hasTemplate(slug: string): boolean {

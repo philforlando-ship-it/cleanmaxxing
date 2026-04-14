@@ -79,7 +79,8 @@ export function GoalsPicker() {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        goals: current.map(({ title, description, category, priority_tier, goal_type }) => ({
+        goals: current.map(({ source_slug, title, description, category, priority_tier, goal_type }) => ({
+          source_slug,
           title,
           description,
           category,

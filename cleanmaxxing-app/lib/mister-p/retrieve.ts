@@ -8,17 +8,22 @@ export type RetrievedChunk = {
   doc_title: string;
 };
 
-export async function retrieveChunks(question: string, matchCount = 5): Promise<RetrievedChunk[]> {
+export async function embedQuestion(question: string): Promise<number[]> {
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-  const embedding = await openai.embeddings.create({
+  const result = await openai.embeddings.create({
     model: 'text-embedding-3-small',
     input: question,
   });
+  return result.data[0].embedding;
+}
 
+export async function retrieveChunksWithEmbedding(
+  embedding: number[],
+  matchCount = 5
+): Promise<RetrievedChunk[]> {
   const supabase = createServiceClient();
   const { data, error } = await supabase.rpc('match_pov_chunks', {
-    query_embedding: embedding.data[0].embedding as unknown as string,
+    query_embedding: embedding as unknown as string,
     match_count: matchCount,
   });
 
@@ -28,6 +33,11 @@ export async function retrieveChunks(question: string, matchCount = 5): Promise<
   }
 
   return (data || []) as RetrievedChunk[];
+}
+
+export async function retrieveChunks(question: string, matchCount = 5): Promise<RetrievedChunk[]> {
+  const embedding = await embedQuestion(question);
+  return retrieveChunksWithEmbedding(embedding, matchCount);
 }
 
 export function formatChunksForPrompt(chunks: RetrievedChunk[]): string {

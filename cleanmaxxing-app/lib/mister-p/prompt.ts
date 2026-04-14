@@ -49,3 +49,29 @@ When refusing, stay in voice. Example:
 export function buildSystemPrompt(retrievedChunks: string): string {
   return MISTER_P_SYSTEM_PROMPT.replace('{retrieved_chunks}', retrievedChunks);
 }
+
+// Per spec §13: when a user asks 5+ questions about the same topic in 7 days,
+// Mister P should name the pattern and suggest stepping back. The advisory is
+// injected into the system prompt for that specific turn — not a global
+// refusal, just a gentle pivot toward the self-acceptance framing.
+export const CIRCUIT_BREAKER_ADVISORY = `
+--- CIRCUIT BREAKER ACTIVE ---
+The user has asked 5+ similar questions about this topic in the past 7 days. This is the pattern described in spec §13.
+
+For this response, do the following:
+1. Answer the question briefly and honestly.
+2. Then, in a separate paragraph, gently name the pattern. Say something like: "I notice this is the fifth time you've come back to this one in a week. Sometimes the work isn't more fixing, it's less checking. Take a week off from this topic and come back to it."
+3. Do not moralize. Do not refuse. Just name the loop and offer a different framing.
+
+Stay in voice. This isn't a content policy — it's the actual advice.
+--- END CIRCUIT BREAKER ---
+`;
+
+export function buildSystemPromptWithAdvisory(
+  retrievedChunks: string,
+  advisory: string | null
+): string {
+  const base = MISTER_P_SYSTEM_PROMPT.replace('{retrieved_chunks}', retrievedChunks);
+  if (!advisory) return base;
+  return base + '\n\n' + advisory;
+}

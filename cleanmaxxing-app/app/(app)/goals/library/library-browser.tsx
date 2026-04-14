@@ -19,6 +19,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   'grooming-refinement': 'Grooming & Refinement',
   'behavioral-aesthetics': 'Behavioral',
   'perception-identity': 'Perception & Identity',
+  'safety': 'Self-acceptance',
 };
 
 function tierLabel(tier: string | null): string {
@@ -65,6 +66,7 @@ export function LibraryBrowser() {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
+        source_slug: t.source_slug,
         title: t.title,
         description: t.description,
         category: t.category,
