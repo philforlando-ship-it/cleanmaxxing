@@ -9,12 +9,16 @@ import {
   formatChunksForPrompt,
 } from '@/lib/mister-p/retrieve';
 import {
-  buildSystemPromptWithAdvisory,
+  buildSystemPromptFull,
+  buildProactiveSuggestionAdvisory,
   CIRCUIT_BREAKER_ADVISORY,
+  formatGoalsBlock,
+  type GoalContext,
 } from '@/lib/mister-p/prompt';
 import {
   analyzeTopicCluster,
   shouldTriggerCircuitBreaker,
+  shouldTriggerProactiveSuggestion,
 } from '@/lib/mister-p/topic';
 
 const RequestSchema = z.object({
@@ -51,8 +55,72 @@ export async function POST(req: NextRequest) {
   );
   const triggerCircuitBreaker = shouldTriggerCircuitBreaker(topicAnalysis);
 
-  const advisory = triggerCircuitBreaker ? CIRCUIT_BREAKER_ADVISORY : null;
-  const systemPrompt = buildSystemPromptWithAdvisory(contextBlock, advisory);
+  // Active goals for the user — injected into the system prompt so Mister P
+  // can anchor answers to what they're actually working on.
+  const { data: activeGoalRows } = await supabase
+    .from('goals')
+    .select('title, description, source_slug, goal_type, created_at')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .order('created_at', { ascending: true });
+
+  // Prior citation history — count how many past answers cited each slug.
+  // Lets Mister P calibrate depth (user has seen this doc 4 times, skip the
+  // foundations) without needing to re-explain from scratch.
+  const { data: priorQueries } = await service
+    .from('mister_p_queries')
+    .select('citations')
+    .eq('user_id', user.id)
+    .not('citations', 'is', null);
+
+  const citationCounts = new Map<string, number>();
+  for (const row of priorQueries ?? []) {
+    const citations = row.citations as Array<{ slug?: string }> | null;
+    if (!Array.isArray(citations)) continue;
+    // Count each slug once per query so a single answer citing 5 chunks of
+    // doc 21 doesn't inflate the count artificially.
+    const seenThisQuery = new Set<string>();
+    for (const c of citations) {
+      if (c?.slug && !seenThisQuery.has(c.slug)) {
+        seenThisQuery.add(c.slug);
+        citationCounts.set(c.slug, (citationCounts.get(c.slug) ?? 0) + 1);
+      }
+    }
+  }
+
+  const nowMs = Date.now();
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+  const goals: GoalContext[] = (activeGoalRows ?? []).map((g) => {
+    const createdAt = g.created_at ? new Date(g.created_at).getTime() : nowMs;
+    const daysActive = Math.max(0, Math.floor((nowMs - createdAt) / MS_PER_DAY));
+    const priorCitationCount = g.source_slug
+      ? citationCounts.get(g.source_slug) ?? 0
+      : 0;
+    return {
+      title: g.title,
+      description: g.description ?? null,
+      source_slug: g.source_slug ?? null,
+      goal_type: (g.goal_type ?? 'process') as 'process' | 'outcome',
+      daysActive,
+      priorCitationCount,
+    };
+  });
+
+  // Advisory selection — at most one advisory per turn. Circuit breaker
+  // takes priority because it signals an obsessive loop that overrides the
+  // proactive-suggestion nudge. In practice the two are mutually exclusive
+  // (circuit breaker needs a familiar topic; proactive suggestion needs a
+  // new one), but the explicit priority defends against overlap.
+  let advisory: string | null = null;
+  if (triggerCircuitBreaker) {
+    advisory = CIRCUIT_BREAKER_ADVISORY;
+  } else if (shouldTriggerProactiveSuggestion(topicAnalysis) && chunks.length > 0) {
+    advisory = buildProactiveSuggestionAdvisory(chunks[0].doc_title, chunks[0].doc_slug);
+  }
+
+  const goalsBlock = formatGoalsBlock(goals);
+  const systemPrompt = buildSystemPromptFull(contextBlock, advisory, goalsBlock);
 
   const result = streamText({
     model: anthropic('claude-sonnet-4-6'),

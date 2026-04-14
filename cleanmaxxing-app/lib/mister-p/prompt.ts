@@ -50,6 +50,28 @@ export function buildSystemPrompt(retrievedChunks: string): string {
   return MISTER_P_SYSTEM_PROMPT.replace('{retrieved_chunks}', retrievedChunks);
 }
 
+// Stickiness 5c — when a user asks about a topic they haven't explored
+// before (and they have enough history for the nudge to be meaningful),
+// Mister P offers a deeper dive into the most relevant POV doc. The
+// advisory is per-turn; Mister P writes the actual copy in his own voice.
+export function buildProactiveSuggestionAdvisory(
+  topDocTitle: string,
+  topDocSlug: string
+): string {
+  return `
+--- PROACTIVE SUGGESTION ACTIVE ---
+This is a new topic for this user — they have not asked about this before. The most relevant POV doc in the retrieved context is "${topDocTitle}" (${topDocSlug}).
+
+For this response, do the following:
+1. Answer the question directly and well, as usual.
+2. After the main answer, append a single line offering a deeper dive into the POV doc. One sentence, natural, not pushy. Example phrasing: "If you want the longer version, I've got a full breakdown in the ${topDocTitle} doc — about ten minutes of reading."
+3. Only do this if the suggestion is genuinely useful. If the retrieved doc is only tangentially related to the question, skip the offer entirely. Do not force a connection.
+
+Stay in voice. Conversational, optional, never pushy. This is a recommendation, not a cross-sell.
+--- END PROACTIVE SUGGESTION ---
+`;
+}
+
 // Per spec §13: when a user asks 5+ questions about the same topic in 7 days,
 // Mister P should name the pattern and suggest stepping back. The advisory is
 // injected into the system prompt for that specific turn — not a global
@@ -74,4 +96,64 @@ export function buildSystemPromptWithAdvisory(
   const base = MISTER_P_SYSTEM_PROMPT.replace('{retrieved_chunks}', retrievedChunks);
   if (!advisory) return base;
   return base + '\n\n' + advisory;
+}
+
+// Active goal block — injected when the user has active goals so Mister P
+// can anchor responses to what the user is actually working on. Not a
+// directive to force every answer through the goal lens; just context.
+export type GoalContext = {
+  title: string;
+  description: string | null;
+  source_slug: string | null;
+  goal_type: 'process' | 'outcome';
+  daysActive: number;
+  // How many of the user's prior Mister P answers cited this goal's source
+  // doc. Signals that the user has already read foundational material on
+  // this topic and doesn't need the 101 version again.
+  priorCitationCount: number;
+};
+
+function describeDuration(days: number): string {
+  if (days < 1) return 'just started';
+  if (days === 1) return 'active 1 day';
+  if (days < 14) return `active ${days} days`;
+  if (days < 60) return `active ${Math.round(days / 7)} weeks`;
+  const months = Math.round(days / 30);
+  return `active ${months} month${months === 1 ? '' : 's'}`;
+}
+
+export function formatGoalsBlock(goals: GoalContext[]): string | null {
+  if (goals.length === 0) return null;
+  const lines = goals.map((g, i) => {
+    const duration = describeDuration(g.daysActive);
+    const source = g.source_slug
+      ? `\n   Source: ${g.source_slug}${g.priorCitationCount > 0 ? ` (covered in ${g.priorCitationCount} prior chat${g.priorCitationCount === 1 ? '' : 's'})` : ''}`
+      : '';
+    return `${i + 1}. ${g.title} — ${duration}${source}`;
+  });
+  return `--- USER'S ACTIVE GOALS ---
+The user is currently working on these goals. When the user's question
+overlaps with a goal, anchor your answer to what they're already doing
+— name the connection briefly and build from there. You do not need to
+reference goals every turn, and you should not force a connection that
+isn't there. If the question is unrelated, answer the question.
+
+Calibrate your depth by the goal age and prior-chat coverage. A user
+weeks or months into a goal who has already seen the source doc cited
+in prior chats does not need foundations — they need the next layer,
+the plateau fix, or the honest assessment of whether to keep going.
+
+${lines.join('\n')}
+--- END USER'S ACTIVE GOALS ---`;
+}
+
+export function buildSystemPromptFull(
+  retrievedChunks: string,
+  advisory: string | null,
+  goalsBlock: string | null
+): string {
+  let prompt = MISTER_P_SYSTEM_PROMPT.replace('{retrieved_chunks}', retrievedChunks);
+  if (goalsBlock) prompt += '\n\n' + goalsBlock;
+  if (advisory) prompt += '\n\n' + advisory;
+  return prompt;
 }

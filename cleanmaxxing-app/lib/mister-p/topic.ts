@@ -16,6 +16,13 @@ export const TOPIC_SIMILARITY_THRESHOLD = 0.82;
 export const CIRCUIT_BREAKER_WINDOW_DAYS = 7;
 export const CIRCUIT_BREAKER_COUNT = 5;
 
+// Minimum total prior questions before proactive suggestions fire. First-
+// session users would otherwise get a "want a deeper dive?" offer on every
+// question because every topic is technically "new" when there are no
+// priors to compare against. Gating on 2+ priors makes the suggestion feel
+// earned and like Mister P "noticing" a pattern.
+export const PROACTIVE_SUGGESTION_MIN_PRIORS = 2;
+
 type PriorQuery = {
   topic_embedding: number[] | string | null;
   created_at: string;
@@ -55,6 +62,9 @@ export type TopicAnalysis = {
   // Count of prior questions (within the window) whose similarity to the new
   // one is above the threshold. Does NOT include the new question itself.
   recentSimilarCount: number;
+  // Total prior questions the user has asked (up to the 200-row cap), used
+  // to gate proactive suggestions behind a minimum-history threshold.
+  totalPriorCount: number;
 };
 
 type SupabaseLike = {
@@ -89,7 +99,7 @@ export async function analyzeTopicCluster(
     .limit(200);
 
   if (!priors || priors.length === 0) {
-    return { isNewTopic: true, maxSimilarity: 0, recentSimilarCount: 0 };
+    return { isNewTopic: true, maxSimilarity: 0, recentSimilarCount: 0, totalPriorCount: 0 };
   }
 
   let maxSim = 0;
@@ -109,6 +119,7 @@ export async function analyzeTopicCluster(
     isNewTopic: maxSim < TOPIC_SIMILARITY_THRESHOLD,
     maxSimilarity: maxSim,
     recentSimilarCount: recentCount,
+    totalPriorCount: priors.length,
   };
 }
 
@@ -116,4 +127,11 @@ export async function analyzeTopicCluster(
 // window (so recentSimilarCount >= COUNT - 1 before adding this one).
 export function shouldTriggerCircuitBreaker(analysis: TopicAnalysis): boolean {
   return analysis.recentSimilarCount >= CIRCUIT_BREAKER_COUNT - 1;
+}
+
+// Trigger when (a) this is a new topic for the user — no prior question
+// clusters with it — AND (b) the user has enough history for the nudge
+// to feel earned rather than spammy. Stickiness 5c per spec §2.5.
+export function shouldTriggerProactiveSuggestion(analysis: TopicAnalysis): boolean {
+  return analysis.isNewTopic && analysis.totalPriorCount >= PROACTIVE_SUGGESTION_MIN_PRIORS;
 }
