@@ -21,6 +21,18 @@ Cleanmaxxing is the safe, structured, brand-trustworthy self-improvement platfor
 ### Strategic wedge
 The category is currently dominated by individual creators (Clav, Hamza, Tren Twins, etc.) whose audiences trust them but whose advice is inconsistent, sometimes unsafe, and not personalized. Cleanmaxxing is not trying to replace them — it's the structured, safe "second opinion" that their own audiences secretly want.
 
+### Framing: one path among several
+Cleanmaxxing positions itself as **one route to self-confidence, not the only one.** The homepage presents four paths that research and experience suggest actually move the needle on how men feel about themselves:
+
+1. **Therapy and internal work** — addressing root causes, narratives, and nervous-system regulation
+2. **Relationships and social investment** — deepening friendships, romantic connection, community
+3. **Purpose and accomplishment** — work, craft, skill development, meaningful contribution
+4. **Physical attributes** — body, skin, hair, style, grooming, posture
+
+Cleanmaxxing owns path four explicitly: the fastest measurable progress of the four (six months versus years), process-based, safe, and honest about its limits. The other three paths are not diminished — they are acknowledged as real and often more important over a full life. Most looksmaxing products frame themselves as *the* way to become a better version of yourself; Cleanmaxxing declines to do that. The intellectual honesty is itself the moat — and it's what separates us from every competitor who treats appearance as the whole identity.
+
+This framing is not just a homepage element. Mister P's voice, the goal library's inclusion of self-acceptance content, and the "step away" mode in section 13 all follow from it.
+
 ### Target user
 Men aged 18–40 who are actively interested in self-improvement, appearance, and confidence. The ICP skews 22–32: old enough to have disposable income, young enough to still be actively shaping their appearance and identity.
 
@@ -47,11 +59,17 @@ Every feature below is IN. Everything not below is OUT.
 
 **Design principle:** Feel like a conversation, not a form. Progress indicator at top. One question per screen on mobile. Default answers pre-selected where reasonable so users can tap through quickly.
 
+**Process goal soft override.** When the user finalizes their three starter goals, check how many are process-oriented versus outcome-oriented. If fewer than two are process goals, show a gentle inline prompt above the "Start with these" button: *"Most people get better results with at least 2 process goals. Process goals are things you do; outcome goals are things you're trying to become. Want to swap one?"* — with a one-tap swap action that replaces the lowest-scoring outcome goal with the highest-scoring unused process goal from the ranking. This is a nudge, not a block. The user can dismiss it and continue. It's a direct implementation of the process-goal default commitment from section 13 — the friction is gentle because the goal is to shift the default, not to moralize.
+
+**Plain-language expansion on every goal.** Each goal card in both the onboarding picker and the library has a one-sentence plain-language helper that appears on tap or hover, demystifying any jargon (TDEE, RDA, 1RM, hypertrophy, compound lifts, androgenic versus anabolic, and so on). Mister P talks to users — he doesn't quiz them. The helper text is sourced from a short plain-language summary line added to each POV doc (new field `faqs.plain_language` or equivalent) so it stays in sync with the corpus and can be edited in one place. Goal templates without a plain-language summary fall back to showing only the main description.
+
 **Done when:**
 - User can complete survey in <4 minutes on mobile
 - User sees 3 suggested goals at the end, tailored by age
 - User can accept, modify, or swap goals from a filtered library
 - State is saved after each question (no data loss on drop-off)
+- Process goal soft override fires when fewer than 2 of 3 final goals are process-oriented
+- Every goal card in the library and picker exposes plain-language helper text on tap
 
 ### Feature 2: Check-In Loop (Daily + Weekly)
 **What it does:** Two loops. **Daily (10 seconds):** one checkbox per active goal — "Did you work on this today?" No confidence rating here. **Weekly (60 seconds, Sundays):** short reflection across 3–4 contextual confidence dimensions ("this week, in social situations, I felt...") on a 1–10 scale. See section 13 for the psychological reasoning behind splitting these.
@@ -213,6 +231,7 @@ Mister P: "Short answer: for your age, probably not. Long answer: I've got a det
 | Mobile push notifications | Requires native app or PWA permissions dance | Post-launch retention experiment |
 | Social sharing of progress | Privacy-sensitive, brand risk | Never as a default, maybe opt-in v3 |
 | Age segments <18 | Hard brand and liability line | Never |
+| Scoring the top looksmaxing influencers across the "Is Clav Right" methodology | Requires publicly criticizing named creators bigger than us before we have standing. Content production cost is ~10× the single Clav piece. Legal and reputational blast radius is larger when scoring specific people. | Month 4–6, after subscribers and creator partners exist and can absorb some of the reputational weight |
 
 ---
 
@@ -534,6 +553,7 @@ Each week assumes ~28 hours of build time (4 hours × 7 days, with some days sho
 - Build creator landing page template (parameterized by creator slug)
 - Onboarding email sequence (Resend): welcome, day 3, day 7, day 14 (trial ending)
 - Public homepage with signup CTA
+- **"Ways to build self-confidence" framework section on the public homepage** — four-path framing per section 1. Cleanmaxxing owns the physical-attributes path explicitly, acknowledges the other three as real. This is the positioning section that separates us from every competitor who treats appearance as the whole identity.
 - Launch monthly checkpoint
 - User testing on stickiness loop
 

@@ -77,6 +77,16 @@ __C\-Tier — Save Your Money__
 - "Hormone optimizer" stacks \(tongkat ali blends, fad stacks\) — marginal at best unless correcting a specific deficiency; the category is aggressively marketed and consistently underdelivers
 - Random nootropic stacks — expensive, highly variable results, and most cognitive benefits are better achieved through sleep, exercise, and caffeine timing
 
+__Why Not a Multivitamin?__
+
+Multivitamins sit in an awkward place: they feel like a reasonable "insurance policy" but they rarely solve the problems that actually matter\. The issue is not that multivitamins are dangerous — it is that they underdose the things that actually move the needle and duplicate the things most men already get from food\.
+
+The S\-tier supplements — creatine, vitamin D, omega\-3, magnesium — all require therapeutic doses to deliver their documented benefits, and multivitamins do not provide those doses\. Vitamin D needs 1000\-4000 IU daily to correct deficiency; a typical men's multivitamin provides 400\-800 IU, enough for the label but not enough to move a deficient person into sufficient range\. Omega\-3 requires roughly one to two grams of combined EPA and DHA per day and is rarely included in multivitamins at meaningful amounts due to soft\-gel manufacturing constraints\. Magnesium needs to be in a well\-absorbed form like glycinate at 200\-400mg; multivitamins typically use magnesium oxide at 50\-100mg, which is both poorly absorbed and below the threshold where sleep and stress effects appear\. Creatine is not in multivitamins at all in any meaningful dose\.
+
+Meanwhile, the things multivitamins cover well — most B vitamins, vitamin C, iron, trace minerals — are already adequate in any varied diet that includes meat, eggs, dairy, fruit, and vegetables\. In the case of iron specifically, adult men usually should not supplement unless a blood test confirms deficiency; excess iron is associated with worse health outcomes in non\-deficient men\.
+
+The better framing: do not buy a package of underdosed stuff to feel covered\. Buy the three or four things you are actually short on, at doses that work\. The lean stack below does that in fewer pills, at lower total cost, with meaningfully better outcomes\.
+
 __The Illusion of Advanced Stacks__
 
 One of the most persistent patterns in supplement culture is the belief that a more complex, expensive stack produces meaningfully better outcomes than a simple one\. The visual difference between a basic stack and an advanced stack is negligible compared to changes in body fat, muscle mass, and sleep quality\. Most advanced supplement stacks create the feeling of optimization without meaningfully changing the outcomes that actually affect appearance\. The ROI curve on supplements is extremely front\-loaded — creatine, vitamin D, omega\-3s, and magnesium capture the vast majority of available benefit\. Everything added after that produces diminishing returns measured in single\-digit percentage improvements at best\. The mental energy and financial cost of managing a complex stack often exceeds the cumulative benefit it provides\.

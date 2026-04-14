@@ -57,6 +57,21 @@ read it at the start of the next one.
 
 ### Outstanding — what the next session should start with
 
+**Spec amendments landed (2026-04-14).** Spec §1, §2 Feature 1, §3, and §9 Week 5 were updated with four decisions: process goal soft override, plain-language helper text on goals, "one path among several" homepage framing, and a v2 backlog entry for influencer scoring. These change the scope for this session and for Week 5.
+
+**Slice B.5 — Spec amendment follow-through (pulled into session 3).**
+
+1. **Plain-language summary authoring for POV docs.** Spec §2 Feature 1 now requires every goal card to expose a plain-language helper that demystifies jargon (TDEE, 1RM, hypertrophy, compound lifts, androgenic vs anabolic, etc.) on tap. Implementation path per spec: add a `plain_language` summary line to each POV doc, stored either as frontmatter in `content/povs/*.md` or as a new field on `pov_docs` via a light migration. Options:
+   - **(a) Frontmatter in markdown** — easiest, no migration, `embed-povs.ts` picks it up at sync time. Add a `plain_language:` key to each of the 58 POV files. Tedious but mechanical.
+   - **(b) Migration 0005 adds `plain_language text` to `pov_docs`** — slightly cleaner separation; edits can happen in the DB without re-embedding. Still needs the 58 summaries written somewhere.
+   - **(c) Sidecar file** `content/povs/_plain_language.json` like `_metadata.json` — consistent with the metadata pattern, no migration, no per-file frontmatter edits.
+   - Recommendation: **(c)**. It matches how metadata already works, and the authoring can happen incrementally (docs without a summary just fall back to description only).
+   - Corpus authoring: ~58 single-sentence summaries, plain English, no jargon. Can be done in one sitting or incrementally as goals actually surface in testing.
+
+2. **Process goal soft override** — client-side logic in `goals-picker.tsx`. When user clicks "Start with these," count process vs outcome goals from `current`. If process count < 2, render a modal (or inline banner above the button) with the exact copy from the spec and a "Swap one" button that finds the highest-scoring unused process goal from `alternatives` and replaces the lowest-scoring outcome goal in `current`. User can dismiss and continue. Small component — maybe 45 min.
+
+3. **Plain-language helper text UI** — once #1 is authored, expose in `goals-picker.tsx` and `library-browser.tsx` as a tap-to-expand line below the main description. Maybe a small chevron or "What does this mean?" affordance. Small component — maybe 30 min.
+
 **Slice C — Weekly reflection email (not started).**
 - Resend email skeleton + day-of-week pattern heuristic on check-in data + Sunday trigger.
 - Spec §9 has this launching in Week 4, so it's legitimately deferrable if Week 4 starts getting pressured.
