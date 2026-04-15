@@ -1,17 +1,35 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
 export default function SignupPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Capture creator referral from ?via=slug and persist in localStorage.
+  // ?via= is Rewardful's default referral param. When Rewardful is
+  // enabled (NEXT_PUBLIC_REWARDFUL_API_KEY set), the Rewardful script
+  // also handles this via its own cookie — the localStorage value is a
+  // fallback so attribution still works in local dev and pre-launch
+  // environments where Rewardful is disabled.
+  const viaSlug = searchParams?.get('via') ?? null;
+  useEffect(() => {
+    if (viaSlug && typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem('cm_via', viaSlug);
+      } catch {
+        // ignore storage errors
+      }
+    }
+  }, [viaSlug]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,6 +54,12 @@ export default function SignupPage() {
       setLoading(false);
       return;
     }
+
+    // Fire welcome email without blocking the redirect. Server-side route
+    // handles dedupe, dry-run, and errors; we intentionally don't await.
+    fetch('/api/email/welcome', { method: 'POST' }).catch(() => {
+      // ignore — dry-run in dev, server logs the real failure in prod
+    });
 
     router.push('/onboarding');
     router.refresh();
