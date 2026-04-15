@@ -44,6 +44,23 @@ export const QUESTIONS: Question[] = [
     required: true,
   },
   {
+    // Motivation segment (spec §7 amendment 2026-04-15). Single-select, six
+    // options. Routes experience ambiently via users.motivation_segment —
+    // the segment is never surfaced back to the user as a label.
+    key: 'motivation_segment',
+    prompt: 'What\u2019s bringing you to Cleanmaxxing right now?',
+    type: 'choice',
+    options: [
+      { value: 'feel-better-in-own-skin', label: 'I want to feel better in my own skin' },
+      { value: 'social-professional-confidence', label: 'I want to feel more confident in social or professional situations' },
+      { value: 'specific-event', label: 'I\u2019m preparing for a specific event or life change' },
+      { value: 'structured-plan', label: 'I want a structured plan for self-improvement' },
+      { value: 'something-specific-bothering-me', label: 'Something specific is bothering me and I want to address it' },
+      { value: 'not-sure-yet', label: 'Honestly, I\u2019m not sure yet' },
+    ],
+    required: true,
+  },
+  {
     key: 'referral_source',
     prompt: 'How did you hear about Cleanmaxxing?',
     type: 'choice',

@@ -2,6 +2,18 @@ import { GOAL_TEMPLATES } from '@/content/goal-templates';
 import { plainLanguageFor } from '@/lib/content/plain-language';
 import type { AgeSegment } from './types';
 
+// Motivation segment (spec §2 Feature 1 amendment 2026-04-15). Drives
+// ambient ranker weighting — never labeled back to the user. Null when
+// the user predates the Q4 survey amendment or skipped the question.
+export type MotivationSegment =
+  | 'feel-better-in-own-skin'
+  | 'social-professional-confidence'
+  | 'specific-event'
+  | 'structured-plan'
+  | 'something-specific-bothering-me'
+  | 'not-sure-yet'
+  | null;
+
 export type PovDocRow = {
   slug: string;
   title: string;
@@ -69,12 +81,50 @@ export function scoreDoc(
   slug: string,
   priorityTier: string | null,
   focusSlugs: Set<string>,
-  goalType: 'process' | 'outcome'
+  goalType: 'process' | 'outcome',
+  motivationSegment: MotivationSegment = null,
+  category: string | null = null
 ): number {
   let score = baseTierScore(priorityTier);
   if (focusSlugs.has(slug)) score += 6;
   if (goalType === 'process') score += 1;
+  score += motivationAdjustment(goalType, category, motivationSegment);
   return score;
+}
+
+// Ambient motivation routing. Adjusts the process/outcome balance and
+// lightly boosts self-acceptance content for the highest psychological-
+// safety-risk segments. Intentionally modest in magnitude — the point is
+// to shift the default, not to override the tier hierarchy.
+function motivationAdjustment(
+  goalType: 'process' | 'outcome',
+  category: string | null,
+  segment: MotivationSegment
+): number {
+  if (!segment) return 0;
+  const isSelfAcceptance = category === 'safety';
+
+  switch (segment) {
+    case 'feel-better-in-own-skin':
+    case 'not-sure-yet':
+      // Soft-framing segments: up-weight process goals, down-weight
+      // outcome goals, surface self-acceptance content earlier.
+      return (
+        (goalType === 'process' ? 2 : -2) + (isSelfAcceptance ? 3 : 0)
+      );
+    case 'specific-event':
+      // Deadline segment: tolerate outcome goals more readily.
+      return goalType === 'outcome' ? 2 : 0;
+    case 'structured-plan':
+    case 'social-professional-confidence':
+    case 'something-specific-bothering-me':
+      // Neutral in the ranker. The routing for these segments lives
+      // elsewhere (confidence-dimension weighting, circuit breaker
+      // threshold, Mister P priming) — not in tier ordering.
+      return 0;
+    default:
+      return 0;
+  }
 }
 
 function baseTierScore(tier: string | null): number {
@@ -105,10 +155,12 @@ export function rankCandidates({
   povDocs,
   ageSegment,
   focusAreas,
+  motivationSegment = null,
 }: {
   povDocs: PovDocRow[];
   ageSegment: AgeSegment;
   focusAreas: string[];
+  motivationSegment?: MotivationSegment;
 }): SuggestedGoal[] {
   const focusSlugs = focusSlugsFor(focusAreas);
   const docsBySlug = new Map(povDocs.map((d) => [d.slug, d]));
@@ -128,7 +180,14 @@ export function rankCandidates({
       continue;
     }
 
-    const score = scoreDoc(doc.slug, doc.priority_tier, focusSlugs, template.goal_type);
+    const score = scoreDoc(
+      doc.slug,
+      doc.priority_tier,
+      focusSlugs,
+      template.goal_type,
+      motivationSegment,
+      doc.category ?? null
+    );
 
     candidates.push({
       source_slug: doc.slug,

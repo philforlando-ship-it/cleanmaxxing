@@ -37,6 +37,18 @@ export async function POST() {
 
   const clinicalFlagged = byKey.get('clinical_screen') === 'yes';
 
+  const MOTIVATION_VALUES = new Set([
+    'feel-better-in-own-skin',
+    'social-professional-confidence',
+    'specific-event',
+    'structured-plan',
+    'something-specific-bothering-me',
+    'not-sure-yet',
+  ]);
+  const motivationRaw = byKey.get('motivation_segment');
+  const motivationSegment =
+    motivationRaw && MOTIVATION_VALUES.has(motivationRaw) ? motivationRaw : null;
+
   // Persist confidence_dimensions rows from the slider answers for baseline tracking.
   const confidenceMap: Array<{ key: string; dimension: 'appearance' | 'social' | 'career' | 'physical' | 'overall' }> = [
     { key: 'confidence_appearance', dimension: 'appearance' },
@@ -77,6 +89,7 @@ export async function POST() {
       age,
       age_segment: segment,
       clinical_screen_flagged: clinicalFlagged,
+      motivation_segment: motivationSegment,
     })
     .eq('id', user.id);
   if (userErr) {

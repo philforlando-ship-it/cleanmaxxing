@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { rankCandidates, pickTopN, type PovDocRow } from '@/lib/onboarding/goal-suggest';
+import {
+  rankCandidates,
+  pickTopN,
+  type PovDocRow,
+  type MotivationSegment,
+} from '@/lib/onboarding/goal-suggest';
 import type { AgeSegment } from '@/lib/onboarding/types';
 
 export async function GET() {
@@ -10,10 +15,12 @@ export async function GET() {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  // Profile (age_segment) is required for suggestions.
+  // Profile (age_segment) is required for suggestions. motivation_segment
+  // is optional — present only if the 0005 migration has been applied and
+  // the user answered Q4.
   const { data: profile } = await supabase
     .from('users')
-    .select('age_segment')
+    .select('age_segment, motivation_segment')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -53,6 +60,7 @@ export async function GET() {
     povDocs: (povRows ?? []) as PovDocRow[],
     ageSegment: profile.age_segment as AgeSegment,
     focusAreas,
+    motivationSegment: (profile.motivation_segment ?? null) as MotivationSegment,
   });
 
   const top = pickTopN(ranked, 3);

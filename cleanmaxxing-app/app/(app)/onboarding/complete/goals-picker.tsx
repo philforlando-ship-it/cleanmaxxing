@@ -180,6 +180,10 @@ export function GoalsPicker() {
 
   return (
     <div className="flex flex-1 flex-col">
+      <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+        We suggested these three because they&rsquo;re the highest-impact starting
+        points for your age segment and the focus areas you picked.
+      </p>
       <ul className="flex flex-col gap-4">
         {current.map((goal, i) => (
           <li
