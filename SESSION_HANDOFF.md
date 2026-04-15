@@ -5,14 +5,19 @@ read it at the start of the next one.
 
 ---
 
-## Last session: 2026-04-15 — Week 4 complete + Thread B spec-amendment code landed (Today screen + check-in loop + Mister P chat + weekly reflection + chart + monthly checkpoint + weekly email cron + motivation segment)
+## Last session: 2026-04-15 — Week 4 AND Week 5 substantially shipped (full Today screen, all stickiness mechanics, full marketing surface, Rewardful + Stripe scaffold, settings + billing + step-away, committed in four clean commits)
 
 ### Current repo state
 
-- **Dev server:** running on http://localhost:3000 (background task `bvw0ud6dd`). Dev reset button still lives on `/today` top-right when `NODE_ENV=development`.
-- **Supabase project:** `zmdijizkxcconyisjcht`. **Migrations 0001–0005 applied.** 0005 added `users.motivation_segment` + `users.motivation_specific_detail` per spec §7 amendment. Always use SQL Editor, not the Migrations panel.
-- **Working tree:** dirty at session end — Week 4 + Thread B changes unstaged. Resend package added to `package.json` + `package-lock.json`.
+- **Dev server:** running on http://localhost:3000 (background task `bvw0ud6dd`). Dev reset button still lives on `/today` top-right when `NODE_ENV=development`. `CHECKPOINT_FORCE_ELIGIBLE=1` in `.env.local` will make the monthly checkpoint card render regardless of days-since-signup (dev-gated, never leaks to prod).
+- **Supabase project:** `zmdijizkxcconyisjcht`. **Migrations 0001–0006 applied.** 0005 added `users.motivation_segment` + `users.motivation_specific_detail`. 0006 added `user_email_events` (append-only email dedupe log with unique `(user_id, event_key)`). Always use SQL Editor, not the Migrations panel.
+- **Working tree:** clean at session end. Only untracked artifact is `cleanmaxxing-app/tests/mister_p_smoke_results.md` (local test output, previously flagged as gitignored even though `.gitignore` doesn't actually include it — skipped intentionally).
 - **Mister P smoke test:** 22/22 all behaving correctly (20 original + Q21 lab-interpretation + Q22 hierarchy-framing). Two new refusal categories fire in-voice.
+- **Commits this session (four, in order):**
+  - `8210b44` — Add Mister P lab + hierarchy refusals and v2 backlog spec
+  - `4887b25` — Ship Week 4 Today screen with check-in, chat, reflection, and motivation routing
+  - `80e97a2` — Add monthly checkpoint, weekly email cron, and onboarding email sequence
+  - `2243a5a` — Ship Week 5 marketing surface, settings, billing, and step-away
 
 ### Session 4 — what shipped
 
@@ -58,52 +63,99 @@ read it at the start of the next one.
 - `lib/checkpoint/service.ts` — same treatment so monthly checkpoint suggestions respect the segment.
 - `app/(app)/onboarding/complete/goals-picker.tsx` — one-line rationale added above the suggestions list: *"We suggested these three because they're the highest-impact starting points for your age segment and the focus areas you picked."*
 
+**Slice 7 — Dev force-eligible flag for monthly checkpoint.**
+- `lib/checkpoint/service.ts` now honors `CHECKPOINT_FORCE_ELIGIBLE=1` when `NODE_ENV !== 'production'`. Lets the card render for review without backdating `users.created_at` in Supabase. Prod-gated — cannot leak.
+
+**Slice 8 — Week 5 marketing surface.**
+- `content/marketing/is-clav-right.md` + `app/is-clav-right/page.tsx` — polished version of the existing Clav draft with docx escape characters stripped, bold syntax fixed, reframed in Cleanmaxxing's voice, "That's what Cleanmaxxing is built for" closer. Server component reads the markdown at request time and renders via `react-markdown` with custom component overrides (sans headings, serif 17px body, zinc palette). OG/Twitter metadata + back-link + CTA section. `react-markdown` added as dep.
+- `content/marketing/mister-p-background.md` + `app/mister-p/page.tsx` — written from Phil's 11-minute transcript in his own voice. First-person origin story: birthmark, acne, hair loss (college grocery store insults + follow-through at first financial-institution job + Propecia $85/month + X Fusion years with pillows/cars/wind/water detail), body (easy muscle + easy fat + on/off cycles), anti-aging miss, peak ("6 to 8, with hair maybe 8.75"), reckoning ("mistook a three-year genetic window for a personality"), grounding (wife of 9 years, second kid incoming), closes on the scoreboard-vs-process framing with Crocker + Branden as the research backing, then Mister P's will-and-won't-do list, then Clav-page thesis echo. Page component **strips HTML comment blocks server-side before render** so authoring notes never leak.
+- `app/page.tsx` — public homepage fully rebuilt. Hero + **four-path framework** ("Ways to build self-confidence" — horizontal responsive grid `sm:grid-cols-2 lg:grid-cols-4` so path 04 "Physical attributes" stays visible with a thicker 2px border and shadow) + "What we own" product breakdown + brand lines ("Not medical" / "Not a hierarchy of worth") + "Is Clav Right?" pointer + final CTA + footer with `/mister-p` and `/is-clav-right` links. Same typography system across all three public pages.
+- `content/marketing/creators.ts` + `app/from/[creator]/page.tsx` — parameterized creator landing route. Static `generateStaticParams` per registered slug, per-creator `hook` copy, `tone` enum (direct / analytical / warm) shifts hero intro without forking the template. Three seed entries: `clav`, `hamza`, `tren-twins`. Unknown slugs 404. Signup CTA carries `?via=slug`.
+- `app/(auth)/signup/page.tsx` — reads `?via=slug` via `useSearchParams`, persists to `localStorage` as `cm_via` as a Rewardful fallback, **fires welcome email fire-and-forget** via `POST /api/email/welcome` right after `supabase.auth.signUp` succeeds (doesn't await, doesn't block the redirect).
+- `lib/supabase/proxy.ts` — `/mister-p` removed from `protectedPaths` (it's a public marketing page now, not a dashboard route). Comment preserved so a future dev doesn't re-add it.
+
+**Slice 9 — Onboarding email sequence (stickiness, welcome + day 3/7/14).**
+- Migration 0006 — `user_email_events` append-only dedupe log, unique `(user_id, event_key)`, RLS on with own-read policy.
+- `lib/email/onboarding-sequence.ts` — four templates (welcome, day_3, day_7, day_14) in Phil-voice (direct, a little dry, the day_14 email frames the trial end as a real choice point rather than a dark pattern: "If it hasn't been useful, walk away. We'd rather you leave now than stay on something that isn't earning its keep"). Shared inline-styled HTML template + plain-text fallback. `hasStepBeenSent` / `markStepSent` helpers for idempotent delivery.
+- `app/api/email/welcome/route.ts` — server route called fire-and-forget from signup. Authed, dedupes via `hasStepBeenSent`, dry-runs when key unset (still marks sent so local repeats stay idempotent), logs but doesn't fail on send errors.
+- `app/api/cron/onboarding-emails/route.ts` — daily cron picks up day 3/7/14 by matching `floor((now - created_at) / 1 day)`. Skips paused users. Returns `{ summary, results }` matching the weekly-email cron shape.
+- `vercel.json` — adds `0 15 * * *` (daily 15:00 UTC = 11am ET).
+- **Dry-run verified end-to-end**: `/api/cron/onboarding-emails` returned `day_3 dry_run` for a day-3 user and `day_2_no_step` skip for a day-2 user on first hit; on second hit the day-3 user correctly dedupes with `already_sent`.
+
+**Slice 10 — Rewardful + Stripe Checkout scaffold.**
+- `components/rewardful-loader.tsx` — client script loader via `next/script`. `beforeInteractive` queue shim + `afterInteractive` main script. Gated on `NEXT_PUBLIC_REWARDFUL_API_KEY`. Mounted in `app/layout.tsx` so every public page captures `?via=slug` referrals.
+- `lib/rewardful.ts` — `getRewardfulReferral()` reads `window.Rewardful?.referral` safely. Declares `window.Rewardful` global typing inline.
+- `lib/stripe/server.ts` — lazy-cached `getStripe()` returning null when env unset. `getPriceIds()` reads `STRIPE_PRICE_MONTHLY` / `STRIPE_PRICE_ANNUAL`.
+- `app/api/stripe/checkout/route.ts` — authed Checkout session creator. Zod body (`plan: 'monthly'|'annual'`, optional `rewardful_referral`). Passes referral as `client_reference_id` so Rewardful reconciles via its Stripe integration. Threads `user_id` through `metadata` + `subscription_data.metadata` so the future webhook has what it needs. Returns 503 with clear error when Stripe env unset.
+
+**Slice 11 — Settings + billing + step-away.**
+- `app/(app)/settings/page.tsx` — auth-gated landing with three cards: Billing (links to `/settings/billing`, shows current `subscription_status` badge), StepAwayCard (real, not stub), Account (signed-in email + sign-out).
+- `app/(app)/settings/billing/page.tsx` — server component handling `?billing=success` and `?billing=cancelled` query params with toast-style banners (emerald for success, neutral for cancelled). Trial-days-left computed from `created_at + 14 days`. Plan picker only renders when `status !== 'active'`.
+- `app/(app)/settings/billing/billing-plan-picker.tsx` — client component, monthly/annual cards (annual emphasized with 2px border + "Save 34%" floating badge). Clicking calls `POST /api/stripe/checkout` with plan + `getRewardfulReferral()`, redirects to Stripe-hosted URL on success, surfaces errors inline.
+- `app/api/settings/tracking-paused/route.ts` — zod-validated POST toggling `users.tracking_paused_at` between `now()` and `null`.
+- `app/(app)/settings/step-away-card.tsx` — client card with Step-away / Resume-tracking button, pending state, error surface, `router.refresh()` after save.
+- `app/(app)/today/page.tsx` — reads `tracking_paused_at`. When paused: daily check-in + weekly reflection + monthly checkpoint hide behind a **"You're stepped away" banner**. **Chart and chat stay accessible** — chart history is useful for reflection and chat has no tracking side effects.
+
 ### Verified working this session
 
 - `npm run typecheck` — clean after every slice
-- `npm run build` — clean when the .next lock isn't held (the EPERM error on `unlink` is a Windows/OneDrive dev-server file lock, not a code issue)
-- `npm run smoke-test` — 22/22, all categories behave, Q21 + Q22 answers reviewed manually and both in-voice
-- Browser end-to-end: Today page renders all four cards, daily check-in persists and reloads cleanly, weekly reflection saves and immediately updates the chart via `router.refresh()`, chart stroke reads in both light and dark mode
-- `/api/cron/weekly-email` dry-run returns `{ dry_run: 2, errors: 0, dry_run_mode: true }`
+- `npm run build` — clean when .next lock isn't held (the EPERM on `unlink` is a Windows/OneDrive dev-server file lock, not a code issue)
+- `npm run smoke-test` — 22/22, all categories behave
+- Browser end-to-end: Today page renders all cards correctly, daily check-in persists, weekly reflection saves and updates chart via `router.refresh()`, step-away banner replaces check-in/reflection while keeping chart + chat, motivation Q4 visible in onboarding, Clav + Mister P background + homepage + creator pages all render publicly
+- `/api/cron/weekly-email` dry-run → `{ dry_run: 2, errors: 0, dry_run_mode: true }`
+- `/api/cron/onboarding-emails` dry-run → day-3 user dry-run on first hit, dedupes with `already_sent` on second
+- `/from/clav`, `/from/hamza`, `/from/tren-twins` → 200; `/from/nobody` → 404
+- `/mister-p` now public (no longer redirects to /login — middleware fix)
 
 ### Not verified (no natural surface in current state)
 
-- **Circuit breaker firing** — still requires 5 semantically similar questions in 7 days against a single account. Not tested manually.
+- **Circuit breaker firing** — still requires 5 semantically similar questions in 7 days. Not tested manually.
 - **Proactive suggestion firing** — still requires a user with 2+ priors asking a brand new topic. Code path reached but actual one-liner hasn't been eyeballed.
-- **Monthly checkpoint card live rendering** — requires `users.created_at` to be ≥ 30 days old. User's dev account doesn't meet the threshold; can be tested by backdating `created_at` in Supabase or by adding a dev-only force-eligible flag.
-- **Weekly email actual send** — requires `RESEND_API_KEY` + verified `cleanmaxxing.com` domain in Resend. Dry-run is the furthest local validation can go.
-- **Motivation-segment-driven ranking differences** — needs a user with each motivation segment to A/B the top-3 output. Worth eyeballing in session 5 when onboarding + reset can be run end-to-end.
+- **Monthly checkpoint card live rendering** — unblocked by the dev force-eligible flag but not actually eyeballed in-browser this session. Set `CHECKPOINT_FORCE_ELIGIBLE=1` in `.env.local` and restart dev to see it.
+- **Weekly + onboarding email actual sends** — require `RESEND_API_KEY` + verified `cleanmaxxing.com` domain. Dry-run is the furthest local validation can go.
+- **Motivation-segment ranking differences** — still needs a user per segment to A/B the top-3 output. Onboarding flow can be exercised via dev reset button.
+- **Stripe Checkout full path** — needs `STRIPE_SECRET_KEY` + `STRIPE_PRICE_MONTHLY` / `STRIPE_PRICE_ANNUAL`. Route returns 503 cleanly in dev.
+- **Rewardful referral cookie → Stripe** — needs `NEXT_PUBLIC_REWARDFUL_API_KEY` + Rewardful↔Stripe integration configured on Rewardful's side.
 
 ### Outstanding — what the next session should start with
 
-**Option A: Week 5 — content pages + affiliate + public homepage.** Spec §9 Week 5 list: "Is Clav Right?" page (polish existing draft), Mister P Background page (write in own voice, do NOT generate with Claude), Rewardful integration with Stripe, creator landing page template, onboarding email sequence via Resend (welcome + day 3 + day 7 + day 14 trial ending), public homepage with signup CTA, **"Ways to build self-confidence" framework section** on the homepage (four-path framing per §1), launch monthly checkpoint copy review, user testing on stickiness loop.
+Week 4 and Week 5 are substantially shipped. The remaining MVP-scope pieces are:
 
-**Option B: Thread B polish (small remaining pieces).**
-1. **Conditional follow-up detail field** — when user picks `something-specific-bothering-me` in Q4, show a one-line free-text follow-up that writes to `users.motivation_specific_detail`. Requires a conditional question rendering path in the survey flow (medium change — current rendering is strictly linear). Column already exists.
-2. **Tier badge one-tap explainers** — badges already render ("Foundation / High impact / Refinement / Top performers / Polish / Situational") but the spec amendment asks for a tap-to-explain. Minor polish.
-3. **Corpus audit (pre-launch gate, manual)** — half-day sweep of the 90k-word POV corpus for alpha/beta, "high-value male," PSL/decile/tier-list, and worth-ranking language. Not urgent for development but non-negotiable before public launch per §13.
-4. **Dev-only force-eligible flag for monthly checkpoint card** — so the checkpoint can be tested without backdating `users.created_at`. 10-minute change to `lib/checkpoint/service.ts`.
+1. **Stripe webhook handler** — `app/api/stripe/webhook/route.ts`. Handles `checkout.session.completed` and `customer.subscription.updated/deleted` to keep `users.subscription_status` in sync. Intentionally deferred this session because webhook handling is load-bearing and should be tested against a real Stripe test account, not written blind. The metadata thread is already in place (`metadata.user_id` on session + subscription) so the webhook just needs to read it and update.
+2. **Stripe customer portal link** — `stripe.billingPortal.sessions.create` call, button on `/settings/billing` when `status === 'active'`. Copy already references it ("coming soon"). Straightforward once Stripe is live.
+3. **User testing on stickiness loop** — spec §9 Week 5 item. Task, not code. Invite 3–5 testers and watch PostHog session recordings.
+4. **Thread B polish** (small remaining pieces, all non-blocking):
+   - Conditional follow-up detail field for `something-specific-bothering-me` motivation segment (writes to `users.motivation_specific_detail`, column exists). Requires conditional question rendering in the survey flow — medium change.
+   - Tier badge one-tap explainers on goal cards. Badges already render; just needs a disclosure.
+5. **Pre-launch corpus audit** — half-day manual sweep of the POV corpus for alpha/beta, "high-value male," PSL/decile/tier-list, and worth-ranking language. Non-negotiable before public launch per §13, not blocking development.
+6. **Beta invites + watch sessions** — spec §9 Week 6. Invite 10–30 beta testers from a creator partner, watch PostHog daily, fix top 5 UX issues.
 
-**Recommendation:** Week 5, with a 15-minute detour at the start to add the force-eligible dev flag so the monthly checkpoint copy can be eyeballed and reviewed in-browser during the stickiness loop user testing that's on the Week 5 list anyway.
+**Recommendation for next session**: build the Stripe webhook against a real Stripe test account (requires creating one + getting test keys), then stand up the customer portal link. After that, the product is legitimately ready for beta invites modulo the corpus audit. Mister P Background page content is already shipped from this session's transcript so the §9 "write in own voice, do not generate" commitment is honored — Phil authored, Claude transcribed and structured.
 
 ### Known issues / limitations carried forward
 
 - **Title-based duplicate detection in `/api/goals/add`** — still pending, should migrate to `source_slug` matching. One-line change, not blocking.
-- **In-memory topic similarity** scales to ~500 queries per user before becoming a latency concern. Migrate to Postgres RPC when needed.
-- **Eye-area retrieval gap** (Q9 smoke test) — still deferred. Probably chunk-size tuning in docs 44/47.
+- **In-memory topic similarity** scales to ~500 queries per user. Migrate to Postgres RPC when needed.
+- **Eye-area retrieval gap** (Q9 smoke test) — still deferred. Chunk-size tuning in docs 44/47.
 - **Mister P refusal regex** pattern-matches rather than LLM-classifies. Good enough for MVP. Expanded this session to cover lab-interpretation and hierarchy-framing phrasings.
 - **Circuit breaker not manually verified end-to-end** — still needs a user with real query volume.
 - **`.env.local` secrets** still not rotated. User decision.
-- **No Google OAuth, Stripe Checkout, PostHog** — still deferred.
-- **`RESEND_API_KEY` empty** — weekly email code is in place but sends are gated. Needs key + domain verification before going live.
-- **`CRON_SECRET` not set** — currently the cron endpoint is open in dev (correct) and would fail-closed in production (also correct). Set it alongside the Resend key when deploying.
-- **`NEXT_PUBLIC_APP_URL`** — not set locally, defaults to `https://cleanmaxxing.com` in email templates. Set this per environment.
+- **`RESEND_API_KEY` empty** — email code in place but gated. Needs key + domain verification before going live. Both weekly-email and onboarding-emails crons depend on this, plus the welcome route.
+- **`CRON_SECRET` not set** — cron endpoints are open in dev (correct) and fail-closed in production (also correct). Set alongside Resend keys when deploying.
+- **`NEXT_PUBLIC_APP_URL`** — not set locally, defaults to `https://cleanmaxxing.com` in email templates. Set per environment.
+- **`NEXT_PUBLIC_REWARDFUL_API_KEY` empty** — Rewardful loader renders nothing, `getRewardfulReferral()` returns null, Stripe checkout gets null `client_reference_id`. Everything degrades cleanly.
+- **`STRIPE_SECRET_KEY` / `STRIPE_PRICE_MONTHLY` / `STRIPE_PRICE_ANNUAL` empty** — checkout route returns 503 with clear error. Billing page shows the error inline if user clicks a plan button.
 - **Supabase SQL Editor, not Migrations panel.** Always.
-- **Build EPERM on Windows** — `.next/static/*` file locks when dev server is running and build is invoked against the same directory. Kill dev server before running `npm run build` for a clean production build locally. Not a code issue.
+- **Build EPERM on Windows** — `.next/static/*` file locks when dev server is running and build is invoked against the same directory. Kill dev server before running `npm run build` for a clean production build locally.
 
 ### Spec amendments landed this session
 
-See the "Spec amendments landed 2026-04-15" block below for the full itemized list from the morning notes batch. Every bullet in that list now has corresponding code except for: (a) the conditional follow-up detail field for the motivation question, (b) tier badge tap-explainers, and (c) the pre-launch corpus audit (manual).
+Every bullet from the 2026-04-15 morning notes batch (see the amendments block below) now has corresponding code **except**:
+- (a) the conditional follow-up detail field for the motivation question (column exists, UI not wired)
+- (b) tier badge tap-explainers (badges render, explainers not wired)
+- (c) the pre-launch corpus audit (manual task)
+
+The Mister P Background page is shipped and fulfills §2 Feature 6 ("write in own voice, do not generate with Claude") — Phil authored the content via transcript, Claude transcribed and structured.
 
 ### How to resume next session
 
@@ -115,30 +167,37 @@ npm run dev
 npm run typecheck
 npm run smoke-test   # should still be 22/22, 8 refusals detected
 
-# Start state: /today renders five cards (or four if checkpoint is not eligible):
-#   Monthly checkpoint (amber, eligible-only)
-#   Daily check-in
-#   Confidence trend chart
-#   Weekly reflection
-#   Mister P chat
+# Quick eyeball pass:
+# - http://localhost:3000/ (homepage with four-path grid)
+# - http://localhost:3000/is-clav-right
+# - http://localhost:3000/mister-p
+# - http://localhost:3000/from/clav (or hamza, tren-twins)
+# - http://localhost:3000/today (logged in)
+# - http://localhost:3000/settings (logged in)
+# - http://localhost:3000/settings/billing (logged in, will 503 the plan buttons until Stripe env set)
 #
-# Week 5 starting points (recommended order):
-# 1. 15 min — add dev-only force-eligible flag to lib/checkpoint/service.ts so
-#    the checkpoint card can be reviewed in-browser without backdating created_at
-# 2. "Is Clav Right?" page — polish existing draft, ship as /clav or /is-clav-right
-# 3. Public homepage + "Ways to build self-confidence" framework section
-# 4. Onboarding email sequence (reuse resend client from lib/email/)
-# 5. Rewardful + Stripe affiliate tracking
-# 6. Mister P Background page (WRITE IN YOUR OWN VOICE — do not generate)
+# To see the monthly checkpoint card without 30 days of real usage:
+#   add CHECKPOINT_FORCE_ELIGIBLE=1 to .env.local and restart dev server
+#
+# Next session recommended order:
+# 1. Get Stripe test account, add STRIPE_SECRET_KEY + test price IDs to .env.local
+# 2. Build /api/stripe/webhook handler (checkout.session.completed → flip users.subscription_status to 'active')
+# 3. Add Stripe customer portal link to /settings/billing when status === 'active'
+# 4. (Optional) Thread B polish: conditional follow-up detail, tier badge explainers
+# 5. Corpus audit pre-beta
+# 6. Beta invites from first creator partner
 ```
 
-### Commit plan for this session
+### Commits this session
 
-Not yet committed. Suggested split:
-1. Spec amendments + Mister P refusals (two new hard refusals, smoke test update)
-2. Week 4 Today screen + check-in + chat UI + weekly reflection + chart
-3. Monthly checkpoint + weekly email cron (+ Resend dep + vercel.json)
-4. Thread B motivation segment (migration 0005 + questions + ranker routing + one-line rationale)
+Four commits, all on `master`:
+
+1. **`8210b44`** — Add Mister P lab + hierarchy refusals and v2 backlog spec
+2. **`4887b25`** — Ship Week 4 Today screen with check-in, chat, reflection, and motivation routing
+3. **`80e97a2`** — Add monthly checkpoint, weekly email cron, and onboarding email sequence
+4. **`2243a5a`** — Ship Week 5 marketing surface, settings, billing, and step-away
+
+Not pushed to remote. Working tree clean except for `cleanmaxxing-app/tests/mister_p_smoke_results.md` (local test output, skipped intentionally — should probably be added to `.gitignore` next session since the handoff has repeatedly claimed it's ignored).
 
 ---
 
