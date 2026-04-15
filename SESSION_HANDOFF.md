@@ -5,7 +5,144 @@ read it at the start of the next one.
 
 ---
 
-## Last session: 2026-04-14 — Week 3 Session 3 complete (library browse, instrumentation, Mister P context awareness)
+## Last session: 2026-04-15 — Week 4 complete + Thread B spec-amendment code landed (Today screen + check-in loop + Mister P chat + weekly reflection + chart + monthly checkpoint + weekly email cron + motivation segment)
+
+### Current repo state
+
+- **Dev server:** running on http://localhost:3000 (background task `bvw0ud6dd`). Dev reset button still lives on `/today` top-right when `NODE_ENV=development`.
+- **Supabase project:** `zmdijizkxcconyisjcht`. **Migrations 0001–0005 applied.** 0005 added `users.motivation_segment` + `users.motivation_specific_detail` per spec §7 amendment. Always use SQL Editor, not the Migrations panel.
+- **Working tree:** dirty at session end — Week 4 + Thread B changes unstaged. Resend package added to `package.json` + `package-lock.json`.
+- **Mister P smoke test:** 22/22 all behaving correctly (20 original + Q21 lab-interpretation + Q22 hierarchy-framing). Two new refusal categories fire in-voice.
+
+### Session 4 — what shipped
+
+**Slice 0 — Morning spec amendments + Mister P refusal update (pulled forward before Week 4 code).**
+- `cleanmaxxing_mvp_spec.md` §1 / §2 Feature 1 / §5 / §6 / §7 / §13 / new §14 v2 Backlog amended per the 2026-04-15 morning notes batch. Two explicit brand lines ("Not medical" + "No hierarchy of worth"), visible tier badges + motivation-aware routing in Feature 1, new `motivation_segment` enum column in §5, two new Mister P hard refusals (lab interpretation + alpha/high-value-male hierarchy framing), Q4 motivation question in §7, anti-hierarchy commitment in §13, v2 backlog section covering blood labs / tracking utilities / influencer scoring / medical-adjacent-restraint discipline.
+- `lib/mister-p/prompt.ts` — two new hard-refusal sections with in-voice example responses ("I'm not going to interpret lab values — that's a conversation for your doctor" / "I don't think about it that way, and Cleanmaxxing doesn't either").
+- `scripts/smoke-test.ts` — Q21 + Q22 added (total 22), refusal regex broadened to catch new phrasings (`not going to interpret`, `don't think about it that way`, `worth isn't a ranking`, `take (the numbers|this|that) to your (doctor|physician)`, `conversation for your doctor`), expected refusal count updated to 8.
+- `tests/mister_p_smoke.md` — matching Q21 + Q22 entries.
+
+**Slice 1 — Today screen + daily check-in loop.**
+- `lib/check-in/service.ts` — `getTodayCheckInState`, `saveTodayCheckIn`, `undoTodayCheckIn`, `todayDateString`. Validates goal ownership belt-and-suspenders against RLS. Clears + re-inserts `goal_check_ins` on save so updates reflect current state. Returns enriched goal shape including `description`, `source_slug`, and `plain_language` lookup.
+- `app/api/check-in/route.ts` — GET (today's state), POST (save), DELETE (clear today).
+- `app/(app)/today/daily-check-in-card.tsx` — checkbox per goal with "Did you work on this today? Check the ones you moved forward on." framing, Save/Update/Clear-today buttons, optimistic draft state, empty-state CTA to library. **Per-goal "What is this?" disclosure** revealing description + plain-language helper + "Ask Mister P about this" button that dispatches a `mister-p:prefill` window event.
+- `app/(app)/today/page.tsx` — rewritten. Redirects unonboarded users to `/onboarding`. Loads check-in state + reflection state + checkpoint state in parallel via `Promise.all`. Renders MonthlyCheckpointCard (eligible-only) → DailyCheckInCard → ConfidenceTrendChart → WeeklyReflectionCard → MisterPChatCard.
+
+**Slice 2 — Mister P chat UI (the capstone).**
+- `app/(app)/today/mister-p-chat-card.tsx` — client chat. Streams plain text from `/api/mister-p/ask` via native `ReadableStream.getReader()` (no AI SDK react hooks — deliberately zero new dependency). `sendQuestion(question)` is a single reusable callback. Per-role message rendering: **user messages** right-aligned dark bubble (asymmetric `rounded-tr-sm`, 85% max width), **Mister P messages** full-width left-border accent, "MISTER P" uppercase label, **serif 15px relaxed line-height** to read as a column rather than a chat reply (leans into the voice positioning). Stop button mid-stream via `AbortController`, Clear to reset, streamingRef guard against rapid repeats, pulse cursor on the streaming message. Listens for `mister-p:prefill` window events — smooth-scrolls the card into view and auto-sends the question. First time goal awareness + proactive suggestions + depth calibration + circuit breaker + new refusals are user-testable in a browser.
+
+**Slice 3 — Weekly reflection form + confidence trend chart.**
+- `lib/weekly-reflection/service.ts` — `weekStartString` (ISO Monday), `getWeeklyReflectionState` (current + last 12 weeks history), `saveWeeklyReflection` (upsert on `user_id,week_start`), `averageConfidence`.
+- `app/api/weekly-reflection/route.ts` — GET + POST, zod-validated dimensions (int 1–10), optional notes.
+- `app/(app)/today/weekly-reflection-card.tsx` — four contextual sliders with prompts from spec §13 ("this week, in social situations, I felt…"), live `contextFor` label on each slider, optional notes field, summary view after save with per-dimension boxes and labels, Update to re-edit. **After save calls `router.refresh()`** so the sibling ConfidenceTrendChart picks up the new history without a manual reload.
+- `app/(app)/today/confidence-trend-chart.tsx` — Recharts `LineChart`, averaged confidence across the four dimensions per week, Y domain 1–10, tooltip shows score + `contextFor` label ("6.5 · Steady"), empty-state copy before first reflection. Uses `currentColor` for stroke so light/dark mode both read correctly.
+
+**Slice 4 — Monthly checkpoint (stickiness 5b).**
+- `lib/checkpoint/service.ts` — `getCheckpointState` returns discriminated union `{ not_eligible | dismissed | eligible }`. Computes days-since-start from `users.created_at`, confidence delta (earliest vs latest weekly reflection averages) via `deltaPhrase`, lifetime goal completion rate from `goal_check_ins`, and three fresh suggestions via `rankCandidates` + `pickTopN` filtered against already-touched slugs (active/completed/abandoned). Reads `motivation_segment` and threads it through the ranker. `dismissCheckpoint` persists dismissal via `survey_responses` under key `monthly_checkpoint_dismissed_at` (pragmatic, avoids a migration for one boolean).
+- `app/api/checkpoint/route.ts` — GET state, POST to dismiss.
+- `app/(app)/today/monthly-checkpoint-card.tsx` — amber-themed card, only rendered when `status === 'eligible'`. Shows Day N badge, confidence delta with bolded numbers + delta phrase, completion % ("You completed 73% of your goal check-ins"), three suggested new goals with tier badges + plain language, "Browse the library" link, Dismiss button + `router.refresh()`.
+
+**Slice 5 — Weekly reflection email cron (stickiness 5a).**
+- `resend@latest` added as dependency.
+- `lib/email/weekly-reflection-email.ts` — `computeWeeklyEmailData` reads last 7 days of check-ins + goal completion rate, runs day-of-week clustering (only emits pattern observation when signal is strong — early-week spike with late-week drop, weekday-only, weekend-only), picks adaptive suggestion based on days-checked-in + completion rate. `renderWeeklyEmail` returns `{ subject, html, text }` — HTML is a simple responsive template with inline styles matching the Today screen aesthetic.
+- `app/api/cron/weekly-email/route.ts` — scans `users` where `onboarding_completed_at IS NOT NULL` AND `subscription_status IN ('trial','active')`. Respects §13 step-away mode by skipping users with `tracking_paused_at` set. Pulls auth email via `service.auth.admin.getUserById`. Calls Resend when `RESEND_API_KEY` is set and otherwise returns dry-run results. Authorized via `CRON_SECRET` Bearer header in production, open in dev. Returns a summary payload `{ total, sent, dry_run, skipped, errors, dry_run_mode }`.
+- `vercel.json` — cron at `0 23 * * 0` (Sunday 23:00 UTC = 6pm ET / 3pm PT).
+- **Dry-run verified end-to-end against live dev server** — hit `/api/cron/weekly-email`, returned 2 eligible users, 0 errors, `dry_run_mode: true` because `RESEND_API_KEY` is empty.
+
+**Slice 6 — Thread B: motivation segment routing.**
+- **Migration 0005** — `users.motivation_segment` (text + check constraint for six enum values) and `users.motivation_specific_detail` (text, nullable). User applied via Supabase SQL Editor.
+- `lib/onboarding/questions.ts` — motivation question inserted at position 3 (between `effort_level` and `referral_source`), plain `choice` type so the existing onboarding flow renders it without any new type plumbing. Six options per spec §7.
+- `app/api/onboarding/submit/route.ts` — validates `motivation_segment` against an enum set, persists to `users` in the same update as `age` + `age_segment` + `clinical_screen_flagged`.
+- `lib/onboarding/goal-suggest.ts` — new `MotivationSegment` exported type. `scoreDoc` signature extended with optional `motivationSegment` + `category` params. New `motivationAdjustment` helper: `feel-better-in-own-skin` / `not-sure-yet` → process +2 / outcome -2 / self-acceptance (`category === 'safety'`) +3; `specific-event` → outcome +2; the remaining three segments are neutral in the ranker (their routing lives elsewhere — circuit breaker threshold, Mister P priming, weekly reflection dimension weighting). `rankCandidates` accepts `motivationSegment` and threads it through.
+- `app/api/onboarding/suggestions/route.ts` — reads `motivation_segment` from profile, passes to `rankCandidates`.
+- `lib/checkpoint/service.ts` — same treatment so monthly checkpoint suggestions respect the segment.
+- `app/(app)/onboarding/complete/goals-picker.tsx` — one-line rationale added above the suggestions list: *"We suggested these three because they're the highest-impact starting points for your age segment and the focus areas you picked."*
+
+### Verified working this session
+
+- `npm run typecheck` — clean after every slice
+- `npm run build` — clean when the .next lock isn't held (the EPERM error on `unlink` is a Windows/OneDrive dev-server file lock, not a code issue)
+- `npm run smoke-test` — 22/22, all categories behave, Q21 + Q22 answers reviewed manually and both in-voice
+- Browser end-to-end: Today page renders all four cards, daily check-in persists and reloads cleanly, weekly reflection saves and immediately updates the chart via `router.refresh()`, chart stroke reads in both light and dark mode
+- `/api/cron/weekly-email` dry-run returns `{ dry_run: 2, errors: 0, dry_run_mode: true }`
+
+### Not verified (no natural surface in current state)
+
+- **Circuit breaker firing** — still requires 5 semantically similar questions in 7 days against a single account. Not tested manually.
+- **Proactive suggestion firing** — still requires a user with 2+ priors asking a brand new topic. Code path reached but actual one-liner hasn't been eyeballed.
+- **Monthly checkpoint card live rendering** — requires `users.created_at` to be ≥ 30 days old. User's dev account doesn't meet the threshold; can be tested by backdating `created_at` in Supabase or by adding a dev-only force-eligible flag.
+- **Weekly email actual send** — requires `RESEND_API_KEY` + verified `cleanmaxxing.com` domain in Resend. Dry-run is the furthest local validation can go.
+- **Motivation-segment-driven ranking differences** — needs a user with each motivation segment to A/B the top-3 output. Worth eyeballing in session 5 when onboarding + reset can be run end-to-end.
+
+### Outstanding — what the next session should start with
+
+**Option A: Week 5 — content pages + affiliate + public homepage.** Spec §9 Week 5 list: "Is Clav Right?" page (polish existing draft), Mister P Background page (write in own voice, do NOT generate with Claude), Rewardful integration with Stripe, creator landing page template, onboarding email sequence via Resend (welcome + day 3 + day 7 + day 14 trial ending), public homepage with signup CTA, **"Ways to build self-confidence" framework section** on the homepage (four-path framing per §1), launch monthly checkpoint copy review, user testing on stickiness loop.
+
+**Option B: Thread B polish (small remaining pieces).**
+1. **Conditional follow-up detail field** — when user picks `something-specific-bothering-me` in Q4, show a one-line free-text follow-up that writes to `users.motivation_specific_detail`. Requires a conditional question rendering path in the survey flow (medium change — current rendering is strictly linear). Column already exists.
+2. **Tier badge one-tap explainers** — badges already render ("Foundation / High impact / Refinement / Top performers / Polish / Situational") but the spec amendment asks for a tap-to-explain. Minor polish.
+3. **Corpus audit (pre-launch gate, manual)** — half-day sweep of the 90k-word POV corpus for alpha/beta, "high-value male," PSL/decile/tier-list, and worth-ranking language. Not urgent for development but non-negotiable before public launch per §13.
+4. **Dev-only force-eligible flag for monthly checkpoint card** — so the checkpoint can be tested without backdating `users.created_at`. 10-minute change to `lib/checkpoint/service.ts`.
+
+**Recommendation:** Week 5, with a 15-minute detour at the start to add the force-eligible dev flag so the monthly checkpoint copy can be eyeballed and reviewed in-browser during the stickiness loop user testing that's on the Week 5 list anyway.
+
+### Known issues / limitations carried forward
+
+- **Title-based duplicate detection in `/api/goals/add`** — still pending, should migrate to `source_slug` matching. One-line change, not blocking.
+- **In-memory topic similarity** scales to ~500 queries per user before becoming a latency concern. Migrate to Postgres RPC when needed.
+- **Eye-area retrieval gap** (Q9 smoke test) — still deferred. Probably chunk-size tuning in docs 44/47.
+- **Mister P refusal regex** pattern-matches rather than LLM-classifies. Good enough for MVP. Expanded this session to cover lab-interpretation and hierarchy-framing phrasings.
+- **Circuit breaker not manually verified end-to-end** — still needs a user with real query volume.
+- **`.env.local` secrets** still not rotated. User decision.
+- **No Google OAuth, Stripe Checkout, PostHog** — still deferred.
+- **`RESEND_API_KEY` empty** — weekly email code is in place but sends are gated. Needs key + domain verification before going live.
+- **`CRON_SECRET` not set** — currently the cron endpoint is open in dev (correct) and would fail-closed in production (also correct). Set it alongside the Resend key when deploying.
+- **`NEXT_PUBLIC_APP_URL`** — not set locally, defaults to `https://cleanmaxxing.com` in email templates. Set this per environment.
+- **Supabase SQL Editor, not Migrations panel.** Always.
+- **Build EPERM on Windows** — `.next/static/*` file locks when dev server is running and build is invoked against the same directory. Kill dev server before running `npm run build` for a clean production build locally. Not a code issue.
+
+### Spec amendments landed this session
+
+See the "Spec amendments landed 2026-04-15" block below for the full itemized list from the morning notes batch. Every bullet in that list now has corresponding code except for: (a) the conditional follow-up detail field for the motivation question, (b) tier badge tap-explainers, and (c) the pre-launch corpus audit (manual).
+
+### How to resume next session
+
+```bash
+# Dev server may still be running. If not:
+npm run dev
+
+# Sanity checks:
+npm run typecheck
+npm run smoke-test   # should still be 22/22, 8 refusals detected
+
+# Start state: /today renders five cards (or four if checkpoint is not eligible):
+#   Monthly checkpoint (amber, eligible-only)
+#   Daily check-in
+#   Confidence trend chart
+#   Weekly reflection
+#   Mister P chat
+#
+# Week 5 starting points (recommended order):
+# 1. 15 min — add dev-only force-eligible flag to lib/checkpoint/service.ts so
+#    the checkpoint card can be reviewed in-browser without backdating created_at
+# 2. "Is Clav Right?" page — polish existing draft, ship as /clav or /is-clav-right
+# 3. Public homepage + "Ways to build self-confidence" framework section
+# 4. Onboarding email sequence (reuse resend client from lib/email/)
+# 5. Rewardful + Stripe affiliate tracking
+# 6. Mister P Background page (WRITE IN YOUR OWN VOICE — do not generate)
+```
+
+### Commit plan for this session
+
+Not yet committed. Suggested split:
+1. Spec amendments + Mister P refusals (two new hard refusals, smoke test update)
+2. Week 4 Today screen + check-in + chat UI + weekly reflection + chart
+3. Monthly checkpoint + weekly email cron (+ Resend dep + vercel.json)
+4. Thread B motivation segment (migration 0005 + questions + ranker routing + one-line rationale)
+
+---
+
+## Previous session: 2026-04-14 — Week 3 Session 3 complete (library browse, instrumentation, Mister P context awareness)
 
 ### Current repo state
 
@@ -87,6 +224,18 @@ read it at the start of the next one.
 - §3: v2 backlog entry for scoring named influencers across the "Is Clav Right" methodology (month 4–6, after subscribers exist).
 - §9 Week 5: "Ways to build self-confidence" homepage framework section added as explicit deliverable.
 - §13: Active goal cap at 5 commitment added, referencing Feature 1 for implementation detail.
+
+### Spec amendments landed 2026-04-15 (morning notes batch, pre-session)
+
+- §1: two explicit brand lines added — "Not medical" (Mister P never interprets labs, diagnoses, or advises on treatment) and "No hierarchy of worth" (explicit rejection of alpha/high-value-male/attractiveness-ranking framing; stated in Cleanmaxxing's voice as a defensive posture against the category's origin baggage).
+- §2 Feature 1: visible tier badges on every goal card with one-tap explainer + one-line rationale on the suggestions screen; motivation-aware routing (ambient, not labeled) driven by new `motivation_segment` field. Five Done-when bullets added for tier badges, rationale line, motivation persistence, and motivation-weighted ranking.
+- §5 Data model: `users.motivation_segment` (enum, 6 values) and `users.motivation_specific_detail` (nullable text) added.
+- §6 Mister P system prompt: hard refusal added for lab interpretation / diagnosis / treatment recommendations (Mister P may contextualize lifestyle but must redirect clinical questions to a physician); hard refusal added for alpha/high-value-male/attractiveness-hierarchy framings with an in-voice redirect ("I don't think about it that way…").
+- §7 Onboarding survey: new motivation question inserted as Q4 in Bucket A (6 single-select options + optional follow-up free text when user picks "something specific bothering me"); Q5 onward renumbered; total survey length 16 questions. "After submit" block updated to persist `motivation_segment` and feed it into the suggestion algorithm.
+- §13: new anti-hierarchy commitment bullet (brand line enforced via §1 + §6 + a pre-launch corpus audit to sweep the 90k-word POV corpus for alpha/high-value/worth-via-attractiveness framings).
+- New §14 "v2 Backlog": blood labs with LLM analysis (2–3 months, non-negotiable scope constraint that Mister P contextualizes but never interprets), in-app frictionless tracking utilities (~6 weeks, opinionated per-category trackers not a generic framework, integrations as year-2 play), pointer to influencer scoring, and a standing medical-adjacent-restraint discipline that applies to all v2 decisions. Former §14 "What This Doc Is Not" renumbered to §15.
+- **Implementation follow-through not yet landed in code** (next session pickup): add `motivation_segment` + `motivation_specific_detail` columns via a new migration, wire Q4 into the onboarding survey flow and the suggestion algorithm, add tier badges to `goals-picker.tsx` + `library-browser.tsx`, and add the lab-interpretation / hierarchy refusal rules to the Mister P prompt + smoke tests.
+- **Corpus audit task queued pre-launch**: half-day sweep of all POV docs for alpha/beta, "high-value male," PSL/decile/tier-list, and worth-ranking language. Flag and rewrite.
 
 ### How to resume next session
 

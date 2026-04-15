@@ -29,8 +29,11 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Routes that require auth
-  const protectedPaths = ['/today', '/goals', '/mister-p', '/settings', '/onboarding'];
+  // Routes that require auth. Note: /mister-p is a public marketing page
+  // (the "Who is Mister P?" background), not a dashboard route — excluded
+  // here intentionally. The authenticated chat lives on /today via
+  // MisterPChatCard, not at its own URL.
+  const protectedPaths = ['/today', '/goals', '/settings', '/onboarding'];
   const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
 
   // Redirect unauthenticated users away from protected routes
