@@ -46,6 +46,14 @@ Men aged 18–40 who are actively interested in self-improvement, appearance, an
 - Not a supplement store
 - Not for minors
 
+### Two explicit brand lines
+
+These are load-bearing statements. They appear verbatim (or close to it) on the Mister P Background page, in Mister P's system prompt, and in the press kit. They exist because the category has real baggage and the defensive posture is to state our position in our own voice before anyone else frames it for us.
+
+**Not medical.** Cleanmaxxing is not a medical or therapeutic service. Mister P does not diagnose, does not interpret lab results, and does not advise on treatment. When a user brings medical data or a medical question, Mister P contextualizes it within the lifestyle domain Cleanmaxxing owns (sleep, training, nutrition, skincare, grooming, body composition) and then tells the user to take the medical question to a physician. This is the line. It does not move.
+
+**No hierarchy of worth.** Looksmaxxing as a category emerged from communities that tied male worth to a hierarchy of attractiveness — "alpha," "high-value," and the surrounding vocabulary. Cleanmaxxing rejects that framing outright. There is nothing wrong with wanting to look and feel better. There is everything wrong with attaching your worth as a person to where you rank on an attractiveness ladder. We don't subscribe to the worldview the term came from and the product is designed to make that worldview impossible to take root in. Mister P will refuse to engage with alpha/beta, high-value-male, or ranked-attractiveness framings and will redirect the user to what they actually want to work on.
+
 ---
 
 ## 2. MVP Scope — The Six Things
@@ -63,6 +71,19 @@ Every feature below is IN. Everything not below is OUT.
 
 **Plain-language expansion on every goal.** Each goal card in both the onboarding picker and the library has a one-sentence plain-language helper that appears on tap or hover, demystifying any jargon (TDEE, RDA, 1RM, hypertrophy, compound lifts, androgenic versus anabolic, and so on). Mister P talks to users — he doesn't quiz them. The helper text is sourced from a short plain-language summary line added to each POV doc (new field `faqs.plain_language` or equivalent) so it stays in sync with the corpus and can be edited in one place. Goal templates without a plain-language summary fall back to showing only the main description.
 
+**Visible tier badges on every goal card.** The POV hierarchy (S/A/B/C tiers, or `tier-1` through `tier-5` in the data model) is the foundation of the suggestion algorithm, but it's currently invisible to users. Surface it. Every goal card in the onboarding picker and the library shows a small tier badge ("S — foundational, highest impact," "A — high leverage once the basics are in," "B — worth doing once the foundations are solid," "C — optional refinement") with a one-tap explainer. The goal suggestion algorithm also explains itself in one line at the top of the suggestions screen: *"We suggested these three because they're the highest-impact starting points for your age segment and focus areas."* The point isn't to gate users behind tiers — they can still pick whatever they want — it's to turn the ranking into education. Users who stick around learn the framework as a side effect of using the product, which is itself a stickiness mechanic. Implementation is trivial: the `priority_tier` field is already in the `goals` and `pov_docs` tables, so this is a UI change, not a data change.
+
+**Motivation-aware routing (ambient, not labeled).** The onboarding survey captures a single motivation question early in Bucket A (see §7 — "What's bringing you to Cleanmaxxing right now?" with six options). Store the answer as `motivation_segment` on the `users` table. The segment shapes the experience in several small ways without ever being shown to the user — the personalization is ambient, not labeled, because naming the segment either creates gaming behavior or makes users self-conscious about which bucket they're in.
+
+Routing by segment:
+- **feel-better-in-own-skin / not-sure-yet** — process goals up-weighted, self-acceptance POV docs surfaced earlier, weekly reflection copy leans gentler, circuit breaker trips one question earlier. These users are the highest psychological-safety risk and get the softest framing.
+- **social-professional-confidence** — the contextual confidence dimensions in the weekly reflection are weighted toward social/work questions, not appearance. Behavioral outcomes up-weighted over appearance metrics.
+- **specific-event** — time-boxed goals surfaced, outcome goals tolerated more readily, higher-intensity protocols exposed in the library. These users have a deadline and know it; treat them like adults with a clear ask.
+- **structured-plan** — the full framework hierarchy (all tiers, S through C) is visible from day one; these are the systems-thinker power users who want to see the architecture.
+- **something-specific-bothering-me** — one follow-up question captures what it is; Mister P is primed to address it directly; the circuit breaker threshold drops from 5 similar questions in 7 days to 3, because this segment is the most at-risk for obsessive checking.
+
+None of this is shown to the user as "you are in segment X." It just changes what appears and in what order. `motivation_segment` is referenced from the goal suggestion algorithm, the weekly reflection email tone selector, the monthly checkpoint copy, and the circuit breaker threshold.
+
 **Active goal cap at 5 with soft override.** Behavior-change research consistently shows 3–5 concurrent habit goals is the sustainable ceiling — beyond that, completion rates fall and users start seeing daily check-ins as a wall of failures. When a user already has 5 active goals and tries to add a 6th from the library, show an inline nudge below the card they clicked: *"You already have 5 active goals. The sustainable ceiling is usually 5 — past that, most people start missing more days than they hit. Want to add this anyway?"* One-tap "Add anyway" confirm overrides the cap. This is a nudge, not a block — same pattern as the process-goal default. The cap applies only to library adds, not to the three-goal onboarding acceptance (which can never hit the limit by construction). Each new add attempt at 5+ re-triggers the nudge; the override is per-request, not a persistent opt-out. This is a psychological safety commitment — see section 13.
 
 **Done when:**
@@ -73,6 +94,10 @@ Every feature below is IN. Everything not below is OUT.
 - Process goal soft override fires when fewer than 2 of 3 final goals are process-oriented
 - Every goal card in the library and picker exposes plain-language helper text on tap
 - Active goal cap at 5 with soft override fires when adding a goal from the library while already at or above 5 active goals
+- Every goal card (onboarding picker and library) shows a visible tier badge with a one-tap explainer
+- The suggestions screen shows a one-line explanation of why the three starter goals were chosen
+- Motivation question is collected in onboarding and persisted to `users.motivation_segment`
+- Goal suggestion algorithm reads `motivation_segment` and adjusts ranking/weighting accordingly (no segment label ever shown to the user)
 
 ### Feature 2: Check-In Loop (Daily + Weekly)
 **What it does:** Two loops. **Daily (10 seconds):** one checkbox per active goal — "Did you work on this today?" No confidence rating here. **Weekly (60 seconds, Sundays):** short reflection across 3–4 contextual confidence dimensions ("this week, in social situations, I felt...") on a 1–10 scale. See section 13 for the psychological reasoning behind splitting these.
@@ -283,6 +308,8 @@ users
   created_at
   age
   age_segment (enum: '18-24', '25-32', '33-40')
+  motivation_segment (enum: 'feel-better-in-own-skin', 'social-professional-confidence', 'specific-event', 'structured-plan', 'something-specific-bothering-me', 'not-sure-yet', nullable until onboarding complete)
+  motivation_specific_detail (text, nullable — only populated when motivation_segment = 'something-specific-bothering-me')
   onboarding_completed_at
   subscription_status (trial, active, canceled, past_due)
   stripe_customer_id
@@ -420,6 +447,28 @@ Hard refusals — these topics are off-limits regardless of context:
 - DIY dental work, DIY orthodontics, bone-smashing, mewing-as-orthodontics
 - Hairline tattoos or procedures abroad from unvetted providers
 - Any advice for users under 18
+- Interpretation of lab results, diagnosis, or treatment recommendations. Mister P does
+  NOT interpret blood work, hormone panels, lipid panels, or any other clinical data.
+  If a user shares a lab value, Mister P may discuss the lifestyle domain Cleanmaxxing
+  owns (sleep, training, body comp, nutrition, skincare) in general terms and MUST
+  tell the user to take the medical question to their physician. Mister P never says
+  "this value suggests X condition" or "you should consider X treatment."
+
+Hard refusal for attractiveness hierarchies and "alpha" framings:
+Mister P refuses to engage with framings built on "alpha males," "high-value men,"
+attractiveness rankings, looks-tier scores (PSL, decile ranking, etc.), or any
+premise that a person's worth as a human maps to where they sit on a hierarchy of
+attractiveness or masculinity. If a user brings this language into a question,
+Mister P does not play along. He redirects in voice:
+
+"I don't think about it that way, and Cleanmaxxing doesn't either. Your worth
+isn't a ranking. Tell me what you actually want to work on and I'll help with
+that."
+
+This is not a content filter added on top — it's the brand's position. The history
+of looksmaxxing as a category includes communities that tied male worth to these
+hierarchies and the defensive posture is to refuse the premise rather than argue
+with it.
 
 When refusing, stay in voice. Example:
 "Not something I'll help with — that's the kind of shortcut that ends careers
@@ -448,35 +497,48 @@ Every refused or "not in corpus" question writes a row to `mister_p_queries` wit
 
 Keep to ~15 questions. One per screen on mobile. Progress bar at top.
 
-### Bucket A: Demographics and Baseline (4 questions)
+### Bucket A: Demographics and Baseline (5 questions)
 1. How old are you? (number, must be 18+)
 2. What's your height and weight? (optional, two number fields)
 3. How would you describe your current level of self-improvement effort? (none / occasional / consistent / obsessive)
-4. How did you hear about Cleanmaxxing? (dropdown: creator name / Google / friend / other)
+4. **What's bringing you to Cleanmaxxing right now?** (single select — routes experience but never shown back as a label; persisted to `users.motivation_segment`)
+   - I want to feel better in my own skin
+   - I want to feel more confident in social or professional situations
+   - I'm preparing for a specific event or life change (wedding, new job, dating, etc.)
+   - I want a structured plan for self-improvement
+   - Something specific is bothering me and I want to address it
+   - Honestly, I'm not sure yet
+
+   If the user picks "Something specific is bothering me," one follow-up free-text field appears: *"What is it? (one sentence is fine)"* — persisted to `users.motivation_specific_detail`. Skippable. This is the one case where we capture the detail because it changes what Mister P addresses first.
+5. How did you hear about Cleanmaxxing? (dropdown: creator name / Google / friend / other)
 
 ### Bucket B: Physical Focus Areas (6 questions)
-5. Which of these do you most want to improve? (multi-select, max 3: fitness / body composition / skin / hair / facial aesthetics / style / posture / grooming)
-6. Do you avoid photos of yourself? (never / sometimes / often / always)
-7. Have you tried structured self-improvement routines before? (never / yes, stuck with them / yes, stopped / currently active)
-8. Is there one specific thing you think about more than you'd like to? (free text, optional)
-9. On a 1–10 scale, how happy are you with your current appearance?
-10. What's your biggest obstacle right now? (time / money / knowledge / motivation / something else)
+6. Which of these do you most want to improve? (multi-select, max 3: fitness / body composition / skin / hair / facial aesthetics / style / posture / grooming)
+7. Do you avoid photos of yourself? (never / sometimes / often / always)
+8. Have you tried structured self-improvement routines before? (never / yes, stuck with them / yes, stopped / currently active)
+9. Is there one specific thing you think about more than you'd like to? (free text, optional)
+10. On a 1–10 scale, how happy are you with your current appearance?
+11. What's your biggest obstacle right now? (time / money / knowledge / motivation / something else)
 
 ### Bucket C: Confidence Baseline (5 questions — 1–10 sliders)
-11. How confident do you feel about your appearance?
-12. How confident do you feel in social situations?
-13. How confident do you feel at work or school?
-14. How confident do you feel about your physical health?
-15. Overall, how confident do you feel about yourself?
+12. How confident do you feel about your appearance?
+13. How confident do you feel in social situations?
+14. How confident do you feel at work or school?
+15. How confident do you feel about your physical health?
+16. Overall, how confident do you feel about yourself?
+
+Total: 16 questions. Still well under the "feels like a conversation, not a form" threshold at one-per-screen.
 
 ### After submit
 - Store all responses
 - Compute age segment
+- Persist `motivation_segment` (and `motivation_specific_detail` if applicable) to the `users` table
 - Run goal suggestion algorithm:
   - Filter POV corpus by age segment
-  - Filter by selected focus areas (question 5)
+  - Filter by selected focus areas (question 6)
   - Rank by priority tier from POV hierarchy (S → A → B → C)
-  - Return top 3 as suggested goals
+  - Apply motivation-segment weighting per Feature 1 (process-goal up-weight for feel-better/not-sure, self-acceptance docs up-weight for same, time-boxed goals for specific-event, etc.)
+  - Return top 3 as suggested goals, with visible tier badges and a one-line explanation of why they were chosen
 - Show the 3 suggestions with option to accept, swap, or browse library
 
 ---
@@ -648,6 +710,8 @@ This section exists because the category Cleanmaxxing operates in has known fail
 
 **Mister P never moralizes, but Mister P also never pretends that every problem has a product-shaped solution.** The system prompt should be updated to include: "Sometimes the right answer is that the user doesn't need to fix this. If the question is about an insecurity that isn't worth fixing, say so. 'Honestly, this one isn't worth your attention. Focus on [X] instead.' Refusing to help isn't always a content policy — sometimes it's the actual advice."
 
+**Explicit anti-hierarchy commitment.** Cleanmaxxing rejects the framing that a person's worth maps to a hierarchy of attractiveness or masculinity — "alpha," "high-value male," PSL ranking, decile scoring, looks tier lists. This is stated in §1 as a brand line, enforced in §6 as a Mister P hard refusal, and carried through the corpus as an audit commitment: before launch, read all 90k words of the POV corpus with this lens on and rewrite any framing that ranks men against each other, implies worth is contingent on attractiveness, or references "alpha/beta" or "high-value" language. This is a half-day of work pre-launch and it is dramatically harder to do retroactively once the product is live. The category has a known history and the defensive posture is to make the underlying worldview impossible to take root in the product rather than to name or engage with it in marketing.
+
 **Explicit self-acceptance content lives in the corpus.** At least 3 POV docs in the initial release cover self-acceptance, the limits of self-improvement, and when to stop. These aren't hidden or optional — they're surfaced in Mister P's responses when relevant and appear in the goal library under their own category. This is the "second leg of the stool" the original spec was missing.
 
 ### Pre-launch review
@@ -678,7 +742,43 @@ If the answer to any of these is "the harmful direction," change the feature or 
 
 ---
 
-## 14. What This Doc Is Not
+## 14. v2 Backlog
+
+Not MVP. Captured here so they aren't lost and so the spec has one place to point when a tempting "we should build this" impulse strikes mid-build. Each entry includes the scope constraint that makes it safe to build when the time comes — the constraints matter as much as the features.
+
+### Blood labs input with LLM analysis (v2+, 2–3 months of work)
+
+**What it is:** Users upload a PDF or manually enter values from doctor-ordered blood work. The system parses, normalizes units (US vs SI), tracks markers longitudinally, and feeds the data into Mister P so he can contextualize lab values within the lifestyle domain Cleanmaxxing already owns.
+
+**Why it's attractive:** It's the cleanest version of the "medical-adjacent" pull because the user is bringing objective, doctor-ordered data into the conversation. Testosterone trending low → Mister P surfaces the sleep, training, and body-comp POV content. LDL elevated → Mister P surfaces the dietary content. Vitamin D low → supplementation discussion. It stays in lane while becoming genuinely differentiated, because the regulated medical-AI players (Hippocratic, etc.) won't touch lifestyle integration and the lifestyle players won't touch lab data. Real moat in 18 months.
+
+**The hard scope constraint — non-negotiable:** Mister P contextualizes, he does NOT interpret. He never says "your TSH suggests subclinical hypothyroidism" or "this lipid panel warrants a statin discussion." He links lab markers to the lifestyle levers in the corpus and then tells the user to take the medical question to their physician. This line is the entire reason the feature is safe to build. If the implementation drifts across it, the feature becomes a regulatory and liability problem rather than a moat. See §1 brand line and §6 Mister P refusal for the primary-source constraints.
+
+**Why it's not MVP:** Lab parsing is harder than it looks. PDFs from ~50 different labs in ~50 different formats, unit normalization, reference range handling, longitudinal tracking, and the UX of reliably getting users to upload. Realistically 2–3 months of focused work to do it well, and it's a feature that breaks badly when it breaks (wrong unit → wrong contextualization → user takes wrong action).
+
+**When to revisit:** After 500+ paying users, when the retention loop is stable and the corpus is mature enough that the contextualization layer has real depth. Do not build this before the core loop is proven.
+
+### In-app frictionless tracking utilities for goals (v2+, ~6 weeks)
+
+**What it is:** Tracking widgets built into the product, one per goal category — weight tracking, lifting log, sleep log, skincare adherence, supplement adherence. The New Wave / MacroFactor / Strong observation: tracking in-app has dramatically higher adherence than "user maintains their own spreadsheet."
+
+**Why it's not MVP:** Each goal category needs a different tracker UI. Building them well is a feature-per-category exercise and could eat 6 weeks on its own. In MVP, the daily check-in stays binary — *did you work on this today, yes/no* — and for users who want richer tracking, Mister P suggests an off-platform tool (MacroFactor or Lose It for weight, Strong or Hevy for lifting, etc.). We lose some stickiness but we avoid building a half-dozen mediocre trackers.
+
+**Scope constraint for v2:** Don't build a generic tracking framework. Pick the 3–4 highest-leverage categories (weight, lifting volume, sleep, supplement adherence are the obvious candidates) and build one opinionated, really good tracker per category. Opinionated beats generic here.
+
+**Integrations are the longer-term play.** MacroFactor and Strong have APIs. Pulling data in is better than asking users to double-log. Year-2 conversation but worth keeping in mind when scoping v2.
+
+### Scoring named looksmaxxing influencers across the "Is Clav Right" methodology (month 4–6)
+
+Already captured in §3 out-of-scope table. Kept here as a pointer. Revisit when subscribers and creator partners exist and can absorb some of the reputational weight of publicly criticizing named creators.
+
+### Medical-adjacent restraint (standing constraint, not a feature)
+
+This is not a v2 feature — it's a standing discipline that applies to every v2 decision. The temptation in this category is to drift toward "better WebMD," because users will ask medical-flavored questions and the product feels smarter when it answers them. Do not drift. Every v2 feature that touches medical data, symptoms, or treatment gets held against the §1 "Not medical" brand line and the §6 Mister P refusal rules. Mister P contextualizes within the lifestyle domain and redirects clinical questions to a physician. Full stop. The blood labs feature above is the one place this gets tested hardest; its scope constraint exists precisely to keep the discipline intact.
+
+---
+
+## 15. What This Doc Is Not
 
 This is not a product roadmap past MVP. It is not a brand bible. It is not a marketing plan. It is a **shippable build spec for the next 6 weeks**. Anything outside that scope belongs in a different document.
 
