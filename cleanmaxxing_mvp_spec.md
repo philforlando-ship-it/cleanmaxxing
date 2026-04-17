@@ -772,6 +772,18 @@ Not MVP. Captured here so they aren't lost and so the spec has one place to poin
 
 Already captured in §3 out-of-scope table. Kept here as a pointer. Revisit when subscribers and creator partners exist and can absorb some of the reputational weight of publicly criticizing named creators.
 
+### Image upload for skin observations (v2+, paired with blood labs)
+
+**What it is:** Users upload a photo of their face. Mister P makes observational comments within the lifestyle domain — oily T-zone, redness around the nose, uneven texture, visible acne scarring — and routes the user to the relevant POV docs (skincare, acne, skin texture, etc.). Not a diagnosis. Not a dermatology substitute. The same contextualize-don't-interpret line as blood labs applies.
+
+**Why it's attractive:** It's visually obvious what the product could do with this, and the observation-to-POV-doc pipeline is a stronger "wow moment" than text-only chat. It also surfaces the skincare troubleshooting content (Doc 07) and the acne pivot content (Doc 25) in a way that feels personalized rather than generic.
+
+**The hard scope constraint:** Mister P observes, he does not diagnose. He never says "this looks like rosacea" or "you should see a derm about this mole." He says "there's some redness and visible capillaries around the nose and cheeks — here's what the skincare doc says about calming that down, and here's when it's worth seeing a dermatologist." Same line as labs: contextualize within the lifestyle domain, redirect clinical questions to a physician.
+
+**Implementation cost:** Multimodal LLM call (Claude already supports vision), image upload + storage (Supabase Storage or S3), a prompt wrapper that constrains observation to the lifestyle domain, and UX for getting users to upload reliably. Lighter than blood labs (no PDF parsing, no unit normalization) but still needs careful prompt engineering to stay on the right side of the medical line.
+
+**When to revisit:** After the blood-labs infrastructure is scoped (they share the same medical-boundary constraint), or standalone once the core loop is proven. Potentially earlier than labs because the implementation cost is lower.
+
 ### Medical-adjacent restraint (standing constraint, not a feature)
 
 This is not a v2 feature — it's a standing discipline that applies to every v2 decision. The temptation in this category is to drift toward "better WebMD," because users will ask medical-flavored questions and the product feels smarter when it answers them. Do not drift. Every v2 feature that touches medical data, symptoms, or treatment gets held against the §1 "Not medical" brand line and the §6 Mister P refusal rules. Mister P contextualizes within the lifestyle domain and redirects clinical questions to a physician. Full stop. The blood labs feature above is the one place this gets tested hardest; its scope constraint exists precisely to keep the discipline intact.

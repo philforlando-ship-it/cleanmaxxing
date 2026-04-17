@@ -71,6 +71,14 @@ __Nail and Hand Care__
 
 Nails and hands are a close\-range signal that registers in handshakes, gestures, and any interaction where hands are visible\. Trimmed, clean nails with smooth edges communicate hygiene and attention to detail\. Neglected nails — overgrown, dirty, or bitten — communicate the opposite immediately and viscerally\. Moisturized hands avoid the cracked, dry appearance that can read as low\-health or low\-maintenance\. This requires minimal ongoing time — a weekly trim and basic moisturizer — but the signal value in close interaction is disproportionate to the effort\. People notice hands more than most men realize\.
 
+__Professional manicures and pedicures__
+
+Most men have never had a professional manicure or pedicure and assume the service is not for them\. It is\. A basic men's mani/pedi runs roughly $30 to $50 at most nail salons, takes about 30 minutes, and handles cuticle management, callus removal, ingrown nail prevention, and shaping in a way that home clipping cannot replicate\. The result is noticeably cleaner and more polished than DIY, and the difference is especially visible in close social and professional interactions — handshakes, meals, any context where hands and feet are on display\.
+
+The practical argument for going professional at least occasionally: cuticles that are properly pushed back and trimmed, calluses on feet that are filed rather than cracked, and nails that are shaped evenly rather than clipped unevenly are the kinds of details that register subconsciously\. Once a month or even once a quarter as a maintenance reset alongside weekly home upkeep is a reasonable cadence\. The cost is trivial relative to almost any other grooming investment, and the return in close\-range presentation is disproportionately high\.
+
+For feet specifically: most men ignore their feet entirely until a problem forces attention — ingrown toenails, cracked heels, fungal issues\. A periodic pedicure is preventive maintenance, not vanity\. Cracked heels and thick, yellowed toenails are visible in sandals, at the beach, and in any barefoot context, and they read as neglect regardless of how well the rest of the grooming is handled\.
+
 __Hydration — The Supporting Variable__
 
 Hydration produces real but modest effects\. At the skin level, adequate hydration affects stratum corneum elasticity — the skin appears slightly plumper and more supple\. Dehydration causes the body to retain water as compensation, which paradoxically creates puffiness\. Active hydration reduces this effect\. Better vascularity becomes visible when hydration is consistently adequate\. None of these effects are dramatic, but they stack with every other variable and cost nothing\. Target approximately half an ounce to 0\.7 ounces of water per pound of bodyweight daily, with electrolytes during high\-activity periods\.

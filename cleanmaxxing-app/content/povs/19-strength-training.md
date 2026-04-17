@@ -33,6 +33,14 @@ __The practical translation__
 
 Train in the eight to fifteen rep range for the majority of your work\. Use progressive overload — add reps or weight gradually over time — as the primary driver of progress\. Prioritize full range of motion and the stretched position of each exercise\. Choose exercises based on which ones grow the muscles that matter most for aesthetics, not which ones allow the most weight\. Treat strength gains in your working rep ranges as a signal of progress, not as the goal itself\. No one can see your one\-rep max\. Everyone can see whether your shoulders, chest, and arms are developed\.
 
+__Aesthetic priority — what actually gets noticed__
+
+Not all muscle groups are equal in terms of visual impact\. The muscles that change how people perceive you — in clothes, in photos, in a first impression — are concentrated in the upper body: lateral delts \(shoulder width and the V\-taper\), upper chest, arms \(biceps and triceps\), traps, and upper back\. These are the muscle groups that fill out a shirt, create visible shape under clothing, and register from across a room\.
+
+Lower body and core training matter — and they should not be skipped\. Squats and deadlifts are excellent for functional strength, athletic performance, posture, injury prevention, and overall hormonal response to training\. A strong core supports every other lift and directly improves posture under load\. But legs and core are rarely the aesthetic bottleneck for men in this audience\. Pants cover quads and glutes\. Abs are revealed by body fat percentage, not by ab exercises alone\. If your time is limited and your goal is how you look to other people, the aesthetic return on investment is highest in the shoulder, chest, arm, and upper back work\.
+
+The honest framing: train legs for health, function, and a balanced physique\. But if you have four hours a week and you are choosing between a third leg day and an extra upper\-body session focused on lateral delts and arms, the upper\-body session will move the needle on how you are perceived more than the extra leg day will\. This is not an excuse to skip legs entirely — it is a prioritization framework for people who are optimizing for appearance within real\-world time constraints\.
+
 __The Foundation: Consistency Over Everything__
 
 Strength training is the primary driver of muscular development, and muscular development is one of the most powerful determinants of an aesthetic physique\. However, the most important factor in strength training is not exercise selection, rep schemes, or advanced programming — it is consistency\. Training that is performed regularly, progressively, and over long periods of time will always outperform perfectly optimized training done inconsistently\. The body responds to repeated stimulus over weeks, months, and years\. Without consistency, no amount of optimization produces meaningful results\.
