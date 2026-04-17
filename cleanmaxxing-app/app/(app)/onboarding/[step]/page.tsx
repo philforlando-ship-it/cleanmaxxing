@@ -29,6 +29,19 @@ export default async function OnboardingStepPage({
     .eq('question_key', question.key)
     .maybeSingle();
 
+  // For the motivation question, also pull any prior follow-up detail so the
+  // conditional textarea can pre-fill when the user comes back.
+  let initialDetail: string | null = null;
+  if (question.key === 'motivation_segment') {
+    const { data: detail } = await supabase
+      .from('survey_responses')
+      .select('response_value')
+      .eq('user_id', user.id)
+      .eq('question_key', 'motivation_specific_detail')
+      .maybeSingle();
+    initialDetail = detail?.response_value ?? null;
+  }
+
   return (
     <main className="mx-auto flex min-h-[100svh] max-w-xl flex-col px-6 py-10">
       <div className="mb-8">
@@ -55,6 +68,7 @@ export default async function OnboardingStepPage({
         step={step}
         question={question}
         initialValue={existing?.response_value ?? null}
+        initialDetail={initialDetail}
         isLast={step === QUESTION_COUNT - 1}
       />
     </main>

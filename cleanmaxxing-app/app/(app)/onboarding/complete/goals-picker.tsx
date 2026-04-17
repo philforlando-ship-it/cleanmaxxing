@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { TierBadge } from '@/components/tier-badge';
 
 type Goal = {
   source_slug: string;
@@ -18,18 +19,6 @@ type SuggestionsResponse = {
   suggested: Goal[];
   alternatives: Goal[];
 };
-
-function tierLabel(tier: string): string {
-  switch (tier) {
-    case 'tier-1': return 'Foundation';
-    case 'tier-2': return 'High impact';
-    case 'tier-3': return 'Refinement';
-    case 'tier-4': return 'Top performers';
-    case 'tier-5': return 'Polish';
-    case 'conditional-tier-1': return 'Situational';
-    default: return tier;
-  }
-}
 
 const MIN_PROCESS_GOALS = 2;
 
@@ -182,7 +171,10 @@ export function GoalsPicker() {
     <div className="flex flex-1 flex-col">
       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
         We suggested these three because they&rsquo;re the highest-impact starting
-        points for your age segment and the focus areas you picked.
+        points for your age segment and the focus areas you picked. Cleanmaxxing
+        runs a hierarchy &mdash; Foundation first, then high impact, then
+        refinement. These start at the bottom of that ladder. Tap any tier
+        label to see what it means.
       </p>
       <ul className="flex flex-col gap-4">
         {current.map((goal, i) => (
@@ -191,9 +183,7 @@ export function GoalsPicker() {
             className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900"
           >
             <div className="mb-2 flex items-center gap-2 text-xs">
-              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                {tierLabel(goal.priority_tier)}
-              </span>
+              <TierBadge tier={goal.priority_tier} />
               <span
                 className={`rounded-full px-2 py-0.5 ${
                   goal.goal_type === 'process'

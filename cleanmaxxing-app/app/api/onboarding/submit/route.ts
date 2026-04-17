@@ -49,6 +49,17 @@ export async function POST() {
   const motivationSegment =
     motivationRaw && MOTIVATION_VALUES.has(motivationRaw) ? motivationRaw : null;
 
+  // Only carry the follow-up detail through when it's semantically tied to
+  // the segment that triggered it. Swapping segments after-the-fact should
+  // null it out even if a stale row somehow survived.
+  const detailRaw = byKey.get('motivation_specific_detail');
+  const motivationSpecificDetail =
+    motivationSegment === 'something-specific-bothering-me' &&
+    typeof detailRaw === 'string' &&
+    detailRaw.trim().length > 0
+      ? detailRaw.trim().slice(0, 500)
+      : null;
+
   // Persist confidence_dimensions rows from the slider answers for baseline tracking.
   const confidenceMap: Array<{ key: string; dimension: 'appearance' | 'social' | 'career' | 'physical' | 'overall' }> = [
     { key: 'confidence_appearance', dimension: 'appearance' },
@@ -90,6 +101,7 @@ export async function POST() {
       age_segment: segment,
       clinical_screen_flagged: clinicalFlagged,
       motivation_segment: motivationSegment,
+      motivation_specific_detail: motivationSpecificDetail,
     })
     .eq('id', user.id);
   if (userErr) {

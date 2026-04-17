@@ -8,10 +8,19 @@ type Props = {
   step: number;
   question: Question;
   initialValue: string | null;
+  initialDetail?: string | null;
   isLast: boolean;
 };
 
-export function QuestionForm({ step, question, initialValue, isLast }: Props) {
+const MOTIVATION_DETAIL_TRIGGER = 'something-specific-bothering-me';
+
+export function QuestionForm({
+  step,
+  question,
+  initialValue,
+  initialDetail,
+  isLast,
+}: Props) {
   const router = useRouter();
   const [value, setValue] = useState<string>(() => {
     if (initialValue) return initialValue;
@@ -31,8 +40,13 @@ export function QuestionForm({ step, question, initialValue, isLast }: Props) {
       return [];
     }
   });
+  const [detail, setDetail] = useState<string>(initialDetail ?? '');
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const showDetailField =
+    question.key === 'motivation_segment' &&
+    value === MOTIVATION_DETAIL_TRIGGER;
 
   function effectiveValue(): string | null {
     if (question.type === 'multi-choice') {
@@ -79,6 +93,10 @@ export function QuestionForm({ step, question, initialValue, isLast }: Props) {
       body: JSON.stringify({
         question_key: question.key,
         response_value: raw,
+        // Server ignores `detail` for any question other than motivation_segment.
+        ...(question.key === 'motivation_segment'
+          ? { detail: detail.trim() || null }
+          : {}),
       }),
     });
 
@@ -152,6 +170,22 @@ export function QuestionForm({ step, question, initialValue, isLast }: Props) {
                 {opt.label}
               </button>
             ))}
+            {showDetailField && (
+              <div className="mt-3">
+                <label className="mb-2 block text-sm text-zinc-600 dark:text-zinc-400">
+                  What&rsquo;s the specific thing? Optional — helps us tailor
+                  what we surface first.
+                </label>
+                <textarea
+                  value={detail}
+                  onChange={(e) => setDetail(e.target.value)}
+                  rows={3}
+                  maxLength={500}
+                  placeholder="A few words is enough."
+                  className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-base outline-none focus:border-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:border-zinc-100"
+                />
+              </div>
+            )}
           </div>
         )}
 

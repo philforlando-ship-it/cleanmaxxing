@@ -1,18 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-
-function tierLabel(tier: string | null): string {
-  if (!tier) return '';
-  switch (tier) {
-    case 'tier-1': return 'Foundation';
-    case 'tier-2': return 'High impact';
-    case 'tier-3': return 'Refinement';
-    case 'tier-4': return 'Top performers';
-    case 'tier-5': return 'Polish';
-    case 'conditional-tier-1': return 'Situational';
-    default: return tier;
-  }
-}
+import { TierBadge } from '@/components/tier-badge';
 
 export default async function GoalsPage() {
   const supabase = await createClient();
@@ -63,9 +51,7 @@ export default async function GoalsPage() {
               className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900"
             >
               <div className="mb-2 flex items-center gap-2 text-xs">
-                <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                  {tierLabel(goal.priority_tier)}
-                </span>
+                <TierBadge tier={goal.priority_tier} />
                 <span
                   className={`rounded-full px-2 py-0.5 ${
                     goal.goal_type === 'process'

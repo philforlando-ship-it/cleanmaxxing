@@ -12,9 +12,6 @@ export default async function LibraryPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Goal library</h1>
-          <p className="mt-2 text-sm text-zinc-500">
-            Add any of these to your active goals.
-          </p>
         </div>
         <a
           href="/goals"
@@ -23,6 +20,11 @@ export default async function LibraryPage() {
           Back to Goals
         </a>
       </div>
+      <p className="mt-3 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">
+        Build from the bottom up. Foundation first, then high impact, then
+        refinement. Polish is last &mdash; easy to over-invest in before the
+        real work is done. Tap any tier label to see what it means.
+      </p>
       <LibraryBrowser />
     </main>
   );

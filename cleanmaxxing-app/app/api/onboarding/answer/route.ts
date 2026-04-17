@@ -9,14 +9,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  let body: { question_key?: string; response_value?: string | null };
+  let body: {
+    question_key?: string;
+    response_value?: string | null;
+    // Optional follow-up text tied to the current answer. Only honored for
+    // motivation_segment today — persisted as a separate survey_responses
+    // row under key `motivation_specific_detail`.
+    detail?: string | null;
+  };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { question_key, response_value } = body;
+  const { question_key, response_value, detail } = body;
   if (!question_key) {
     return NextResponse.json({ error: 'Missing question_key' }, { status: 400 });
   }
@@ -56,6 +63,34 @@ export async function POST(req: Request) {
   });
   if (insErr) {
     return NextResponse.json({ error: insErr.message }, { status: 500 });
+  }
+
+  // Follow-up detail on the motivation question. Wipe any prior detail row
+  // regardless of current choice so that swapping from the "specific
+  // bothering" option back to another segment doesn't leave stale text.
+  if (question_key === 'motivation_segment') {
+    await supabase
+      .from('survey_responses')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('question_key', 'motivation_specific_detail');
+
+    const trimmed = typeof detail === 'string' ? detail.trim() : '';
+    if (
+      response_value === 'something-specific-bothering-me' &&
+      trimmed.length > 0
+    ) {
+      const { error: detailErr } = await supabase
+        .from('survey_responses')
+        .insert({
+          user_id: user.id,
+          question_key: 'motivation_specific_detail',
+          response_value: trimmed.slice(0, 500),
+        });
+      if (detailErr) {
+        return NextResponse.json({ error: detailErr.message }, { status: 500 });
+      }
+    }
   }
 
   return NextResponse.json({ ok: true });

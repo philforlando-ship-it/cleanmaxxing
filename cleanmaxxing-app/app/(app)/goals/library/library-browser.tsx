@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { TierBadge } from '@/components/tier-badge';
+import { TIER_ORDER, tierLabel } from '@/lib/goals/tier';
 
 type Template = {
   source_slug: string;
@@ -22,19 +24,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   'perception-identity': 'Perception & Identity',
   'safety': 'Self-acceptance',
 };
-
-function tierLabel(tier: string | null): string {
-  if (!tier) return '';
-  switch (tier) {
-    case 'tier-1': return 'Foundation';
-    case 'tier-2': return 'High impact';
-    case 'tier-3': return 'Refinement';
-    case 'tier-4': return 'Top performers';
-    case 'tier-5': return 'Polish';
-    case 'conditional-tier-1': return 'Situational';
-    default: return tier;
-  }
-}
 
 export function LibraryBrowser() {
   const router = useRouter();
@@ -117,6 +106,28 @@ export function LibraryBrowser() {
     return templates.filter((t) => t.category === categoryFilter);
   }, [templates, categoryFilter]);
 
+  // Group the filtered templates by tier so the hierarchy is visible in the
+  // layout itself — Foundation on top, Polish at the bottom. Within a tier,
+  // the API's score-based ordering is preserved.
+  const grouped = useMemo(() => {
+    const buckets = new Map<string, Template[]>();
+    for (const t of filtered) {
+      const key = t.priority_tier ?? 'other';
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key)!.push(t);
+    }
+    const orderedKeys = [
+      ...TIER_ORDER.filter((k) => buckets.has(k)),
+      ...Array.from(buckets.keys()).filter(
+        (k) => !TIER_ORDER.includes(k as (typeof TIER_ORDER)[number])
+      ),
+    ];
+    return orderedKeys.map((key) => ({
+      tier: key,
+      items: buckets.get(key) ?? [],
+    }));
+  }, [filtered]);
+
   if (loading) {
     return <p className="mt-8 text-sm text-zinc-500">Loading library…</p>;
   }
@@ -156,8 +167,19 @@ export function LibraryBrowser() {
 
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
-      <ul className="mt-6 flex flex-col gap-4">
-        {filtered.map((t) => (
+      <div className="mt-6 flex flex-col gap-8">
+        {grouped.map((group) => (
+          <section key={group.tier}>
+            <div className="mb-4 flex items-baseline gap-3 border-b-2 border-zinc-300 pb-2 dark:border-zinc-700">
+              <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                {group.tier === 'other' ? 'Other' : tierLabel(group.tier)}
+              </h2>
+              <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-sm font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                {group.items.length}
+              </span>
+            </div>
+            <ul className="flex flex-col gap-4">
+              {group.items.map((t) => (
           <li
             key={t.source_slug}
             className={`rounded-xl border p-5 transition ${
@@ -167,9 +189,7 @@ export function LibraryBrowser() {
             }`}
           >
             <div className="mb-2 flex items-center gap-2 text-xs">
-              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                {tierLabel(t.priority_tier)}
-              </span>
+              <TierBadge tier={t.priority_tier} />
               <span
                 className={`rounded-full px-2 py-0.5 ${
                   t.goal_type === 'process'
@@ -233,8 +253,11 @@ export function LibraryBrowser() {
               </div>
             )}
           </li>
+              ))}
+            </ul>
+          </section>
         ))}
-      </ul>
+      </div>
 
       {filtered.length === 0 && (
         <p className="mt-8 text-sm text-zinc-500">No goals in this category.</p>
