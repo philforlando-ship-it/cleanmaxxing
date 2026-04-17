@@ -784,6 +784,18 @@ Already captured in §3 out-of-scope table. Kept here as a pointer. Revisit when
 
 **When to revisit:** After the blood-labs infrastructure is scoped (they share the same medical-boundary constraint), or standalone once the core loop is proven. Potentially earlier than labs because the implementation cost is lower.
 
+### Age-segment-specific tier overrides for goal templates (v2+, ~1 week)
+
+**What it is:** Right now `content/povs/_metadata.json` assigns one `priority_tier` per POV doc, applied uniformly across every age segment. The hierarchy a 22-year-old should work through is meaningfully different from a 38-year-old — most visibly with cardio, which is a tier-2 "high impact" item aesthetically but becomes genuinely foundational (tier-1) after ~35 for longevity and metabolic health. Other likely candidates: sleep (already tier-1 but the 35+ weighting should be even stronger), mobility (probably bumps up for 33-40), supplements (longevity case changes with age).
+
+**Proposed shape:** Add an optional `priority_tier_overrides: { "33-40": "tier-1" }` field on `_metadata.json` entries. Thread through the ingest script into a new `pov_doc_tier_overrides` column or sidecar table. Ranking, suggestions, library grouping, and badges all resolve the effective tier for the current user before rendering.
+
+**Why it's not MVP:** Adds a schema dimension, touches the ingest script + `/api/goals/templates` + `/api/onboarding/suggestions` + `/lib/checkpoint/service.ts` + the library browser grouping. Global uniform tier is a defensible approximation for v1 — cardio at tier-2 ("high impact") is honest for 35+ even if it underweights the longevity case.
+
+**When to revisit:** After the first cohort of 33-40 users report on whether the current hierarchy feels right for them. If the 35+ feedback consistently says "cardio / recovery / mobility should have been pushed harder earlier," that's the signal to build this. Until then, the global tier is fine.
+
+**Scope constraint:** Per-age-segment overrides only — don't generalize this into per-motivation-segment or per-focus-area tier overrides. Those route through the ranking algorithm's scoring weights, which is the right abstraction for fuzzy preferences. Age segment is a hard demographic boundary and deserves first-class tier treatment; motivation is softer and belongs in the scorer.
+
 ### Medical-adjacent restraint (standing constraint, not a feature)
 
 This is not a v2 feature — it's a standing discipline that applies to every v2 decision. The temptation in this category is to drift toward "better WebMD," because users will ask medical-flavored questions and the product feels smarter when it answers them. Do not drift. Every v2 feature that touches medical data, symptoms, or treatment gets held against the §1 "Not medical" brand line and the §6 Mister P refusal rules. Mister P contextualizes within the lifestyle domain and redirects clinical questions to a physician. Full stop. The blood labs feature above is the one place this gets tested hardest; its scope constraint exists precisely to keep the discipline intact.

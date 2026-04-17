@@ -29,7 +29,7 @@
   "20-diet-macros":               { "priority_tier": "tier-1",             "category": "biological-foundation",  "age_segments": ["18-24", "25-32", "33-40"] },
   "21-protein-creatine":          { "priority_tier": "tier-1",             "category": "biological-foundation",  "age_segments": ["18-24", "25-32", "33-40"] },
   "22-carbohydrates-fasting":     { "priority_tier": "tier-3",             "category": "biological-foundation",  "age_segments": ["18-24", "25-32", "33-40"] },
-  "23-cardio":                    { "priority_tier": "tier-3",             "category": "biological-foundation",  "age_segments": ["18-24", "25-32", "33-40"] },
+  "23-cardio":                    { "priority_tier": "tier-2",             "category": "biological-foundation",  "age_segments": ["18-24", "25-32", "33-40"] },
   "24-alcohol-cannabis":          { "priority_tier": "monitor",            "category": "biological-foundation",  "age_segments": ["18-24", "25-32", "33-40"] },
   "25-acne":                      { "priority_tier": "conditional-tier-1", "category": "biological-foundation",  "age_segments": ["18-24", "25-32", "33-40"] },
   "26-training-while-enhanced":   { "priority_tier": "advanced",           "category": "biological-foundation",  "age_segments": ["18-24", "25-32", "33-40"] },
