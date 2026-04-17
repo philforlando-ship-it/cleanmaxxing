@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { BillingPlanPicker } from './billing-plan-picker';
+import { BillingPortalButton } from './billing-portal-button';
 
 type Props = {
   searchParams: Promise<{ billing?: string }>;
@@ -76,10 +77,13 @@ export default async function BillingPage({ searchParams }: Props) {
           </p>
         )}
         {status === 'active' && (
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            Your subscription is active. Manage your payment method and
-            invoices through the Stripe customer portal (coming soon).
-          </p>
+          <>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Your subscription is active. Manage your payment method,
+              invoices, plan, and cancellation through the Stripe portal.
+            </p>
+            <BillingPortalButton />
+          </>
         )}
         {status === 'canceled' && (
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
