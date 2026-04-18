@@ -14,6 +14,7 @@
     "smoke-test": "tsx -r dotenv/config scripts/smoke-test.ts dotenv_config_path=.env.local",
     "check-query-log": "tsx -r dotenv/config scripts/check-query-log.ts dotenv_config_path=.env.local",
     "corpus-audit": "tsx scripts/corpus-audit.ts",
+    "motivation-diff": "tsx scripts/motivation-differentiation.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
