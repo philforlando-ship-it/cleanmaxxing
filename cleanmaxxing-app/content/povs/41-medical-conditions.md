@@ -13,6 +13,36 @@ This document does not replace medical guidance for any condition\. What it does
 
 Each section follows the same structure: what the condition changes about the system, what stays the same, and what requires medical oversight before proceeding\. These are modifier overlays on the existing 40\-document system, not standalone guides\.
 
+__Before You Have a Diagnosis — The Starter Diagnostic Path__
+
+The sections below are written for readers who already have a confirmed medical diagnosis\. The more common situation is suspicion without diagnosis: symptoms that suggest one of these conditions, an intuition that something is off, and no clear path to the answer\. The gap between "I think something is wrong" and "a physician has confirmed or ruled it out" is where most men stall — and where the longest\-running optimization failures accumulate, because the cleanmaxxing system keeps getting run on a broken biological substrate\.
+
+__Signals that warrant testing — by condition__
+
+Thyroid dysfunction: persistent fatigue despite adequate sleep, diffuse hair thinning that does not match an androgenetic pattern, inexplicable weight gain or resistance to fat loss, skin dryness or cold intolerance, slow recovery from training\. Insulin resistance and Type 2 diabetes: persistent post\-meal fatigue, strong sugar cravings, midsection fat distribution, slow fat loss despite controlled intake, family history combined with current weight\. Skin conditions: flare patterns that correlate with stress, alcohol, or specific foods; symmetric rashes on elbows, scalp, or face that do not respond to standard moisturizer and cleanser\. Low testosterone: persistently low libido, reduced morning erections, low motivation that predates other life changes, reduced training recovery not explained by sleep or overtraining\. ADHD in men not currently evaluated: a consistent history of executive function difficulties, task completion problems, and attention regulation issues that have persisted from childhood\. Eye\-area conditions: asymmetric lid position, eye alignment concerns, chronic redness that does not resolve with sleep and hydration\.
+
+The list is not diagnostic — symptoms overlap and many common presentations have multiple possible causes\. The list is a threshold\. If two or more of the signals for a condition persist across several weeks, that is the trigger for testing rather than continuing to optimize around the issue\.
+
+__The tests to ask for__
+
+For suspected thyroid dysfunction, the standard panel is TSH, free T4, and free T3\. Many primary care physicians default to TSH alone; that misses meaningful cases\. Ask for all three\. For suspected insulin resistance or diabetes, fasting glucose, fasting insulin, HbA1c, and a lipid panel cover the relevant ground\. HOMA\-IR \(a calculated ratio from fasting glucose and insulin\) gives a useful insulin resistance picture even in the absence of frank diabetes\. For suspected low testosterone, total testosterone and free testosterone at morning draw, plus LH and FSH if replacement is being considered — one low reading does not establish a diagnosis; two confirmatory readings at least a week apart is the standard\. For suspected ADHD, the relevant step is referral to a psychiatrist or specialized psychologist for formal evaluation, not a lab test\.
+
+__Which specialist to start with__
+
+Primary care physician for the initial thyroid, glucose, and testosterone panels — most can order these without specialist referral\. Dermatologist for any active skin condition that has not resolved with basic skincare, particularly symmetric rashes or persistent flares\. Ophthalmologist for any eye alignment or chronic eye irritation concern; oculoplastic surgeon specifically for lid position concerns\. Psychiatrist or specialized psychologist for ADHD evaluation\. Endocrinologist is the right referral if primary care results are ambiguous or require ongoing hormone management\. Sports medicine physician or orthopedist for any joint issue producing pain during training\.
+
+__What to bring to the appointment__
+
+Physicians get through first appointments faster and more accurately when the presentation is organized rather than narrative\. Bring: a list of the specific symptoms, how long they have persisted, and what has been ruled out already\. Any relevant family history\. Current supplement and medication list including dosages\. For thyroid and testosterone concerns, prior bloodwork if available\. For skin concerns, photographs of the condition in different states if flares are intermittent\. This preparation converts a twenty\-minute appointment into a productive one rather than an inconclusive one\.
+
+__What to do while awaiting results__
+
+Two mistakes are common\. The first is aggressive self\-experimentation before results arrive — starting TRT research, purchasing thyroid supplements, running aggressive cuts\. Wait for data\. The second is complete paralysis — avoiding any cleanmaxxing work until a diagnosis is confirmed\. The better path sits between: continue with the Phase 1 foundation from Doc 15 \(sleep, basic skincare, protein, movement\)\. These interventions are safe across every condition in this document and produce independent benefit regardless of what the diagnosis turns out to be\. Defer any condition\-specific or pharmacological intervention until results are in hand and have been discussed with the physician\.
+
+__When to move forward with the main system__
+
+Once a diagnosis is confirmed and the relevant medical intervention is underway — thyroid replacement stabilized, glucose management protocol in place, skin condition being treated, ADHD medication dialed in — return to the condition\-specific section below for the modifier overlay\. The standard priority stack resumes from there\. A diagnosis is not the end state; it is the point at which the cleanmaxxing system can actually work on a functional substrate\. Until then, running the system harder will not fix what the medical issue is producing\.
+
 __Type 2 Diabetes and Insulin Resistance__
 
 __What changes__

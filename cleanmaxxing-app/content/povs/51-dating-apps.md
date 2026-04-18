@@ -102,5 +102,41 @@ Change one variable at a time\. If you swap the primary photo and matches change
 
 The most common profile bottleneck in order of frequency: primary photo quality or readability \(most common\), absence of a full\-body photo, generic bio with no specific hooks, and wrong photo variety \(five similar shots\)\. Fix in that order before concluding the profile cannot perform\.
 
+__If You Are Starting From Zero — The Two\-Week Launch Sequence__
+
+The document above contains every decision a dating app profile requires, but for someone with no current presence — or a profile running on old, undifferentiated photos — the useful question is the order of operations\. The sequence below converts the sections into an executable two\-week launch with one variable installed per stage and a testing window before the next change\.
+
+__Day one — decide the platform\(s\)__
+
+Pick one platform to start\. Running profiles on three apps simultaneously with no active optimization on any is the most common failure mode\. Tinder for volume and swipe\-first logic; Hinge for profile depth, prompt answers, and slower evaluation; Bumble for the woman\-opens\-first mechanic and clean presentation\. Match the platform to what you actually have energy to maintain — an actively optimized Hinge profile outperforms a neglected presence across all three\.
+
+__Days one through seven — get the photos__
+
+Nothing else matters until the photo stack exists\. Choose one of the three routes in the section above: solo with tripod, friend with phone, or professional photographer\. Outdoor natural light, golden hour, at least fifty to one hundred frames of the primary face shot\. Capture the full six\-photo stack in the same week rather than spreading it out — the outfits, activity, and context carry more continuity when shot close in time\. Do not go live with the profile yet\.
+
+__Day eight — select and sequence__
+
+From the photo session, choose the top three to five face shots, the strongest full\-body photo, the best social or context shot, the best activity shot, the best style shot, and the best warmth or personality shot\. Order them per the six\-photo stack above\. The primary photo decision is the most important — if in doubt between two face shots, go with the one that reads most clearly as a face at thumbnail size rather than the one that is "best" at full size\.
+
+__Day nine — write the bio and prompt answers__
+
+One bio draft, aligned with the example patterns above: specific details, light self\-awareness, no defensive or qualifying language\. For Hinge specifically, draft three prompt answers that are concrete and slightly unexpected rather than polished and generic\. Write them in one sitting rather than across days — momentum matters more than polish here\. A first bio draft that says something real outperforms a fourth revision that has been sanded smooth into generic territory\.
+
+__Days ten through fourteen — go live and do not touch it__
+
+Launch the profile with the chosen photos, bio, and prompt answers\. Resist the urge to change anything for at least two weeks\. The instinct to adjust after the first few days is the largest source of A/B testing contamination\. Two weeks is the minimum window for drawing any conclusion about what is working\.
+
+__Weeks three onward — test one variable at a time__
+
+Once the baseline two\-week run is complete, apply the A/B testing rules in the section above\. The bottleneck order stated there holds: primary photo quality, absence of a full\-body photo, generic bio, photo variety\. Fix in that order\. Change one variable, wait two weeks, evaluate match\-to\-conversation conversion \(not raw swipes\)\. The profile that emerges from three to four two\-week cycles is almost always meaningfully better than the initial launch, and meaningfully better than a profile that has been tweaked daily in response to short\-term signal noise\.
+
+__What to explicitly not do in the first month__
+
+Do not run premium subscriptions to boost visibility on a weak profile — you are paying to show more people a profile that is not converting, which amplifies the problem rather than solving it\. Do not swap apps after a slow first week\. Do not ask for profile feedback from friends whose dating\-app experience is not comparable to yours; the signal is too noisy\. Do not shoot more photos until the current stack has been tested for at least two full weeks\.
+
+__When the profile is ready to stop being the constraint__
+
+The transition signal is when match\-to\-conversation conversion stabilizes at a rate you are comfortable with \(individually variable, but the conversion rate matters far more than the absolute match count\) and changes to the profile no longer produce meaningful shifts\. At that point the profile has reached its useful ceiling\. Further returns come from conversation quality, first\-message discipline, and the underlying appearance variables the rest of the system addresses — not from more profile tweaks\.
+
 __Dating app performance is primarily a packaging problem, not an attractiveness problem\. The primary photo determines most outcomes — optimize it for instant face readability in good outdoor light\. Build a six\-photo stack covering face, body, social, activity, style, and personality\. Write a bio that says something specific and true rather than generic and safe\. On Hinge, prompt answers are the highest\-leverage text element — specific and slightly unexpected beats polished and generic every time\. If you do not have usable photos, one dedicated outdoor session with a friend or a tripod produces the raw material\. Change one variable at a time when testing\.__
 
