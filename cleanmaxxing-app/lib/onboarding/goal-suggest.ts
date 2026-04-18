@@ -93,9 +93,11 @@ export function scoreDoc(
 }
 
 // Ambient motivation routing. Adjusts the process/outcome balance and
-// lightly boosts self-acceptance content for the highest psychological-
-// safety-risk segments. Intentionally modest in magnitude — the point is
-// to shift the default, not to override the tier hierarchy.
+// boosts self-acceptance content for the highest psychological-safety-risk
+// segments. Magnitudes sized to actually move the top-3 picks — the prior
+// ±2 values were overridden by the tier hierarchy in every test case
+// except specific-event. See scripts/motivation-differentiation.ts for
+// the empirical check that motivates these numbers.
 function motivationAdjustment(
   goalType: 'process' | 'outcome',
   category: string | null,
@@ -108,13 +110,19 @@ function motivationAdjustment(
     case 'feel-better-in-own-skin':
     case 'not-sure-yet':
       // Soft-framing segments: up-weight process goals, down-weight
-      // outcome goals, surface self-acceptance content earlier.
+      // outcome goals, surface self-acceptance content earlier. ±4 is
+      // the smallest magnitude that reliably flips a process+tier-2 goal
+      // ahead of an outcome+tier-1 goal, and lets a self-acceptance
+      // goal at tier-1 actually appear in the top-3 for the segments
+      // where psychological safety is the priority.
       return (
-        (goalType === 'process' ? 2 : -2) + (isSelfAcceptance ? 3 : 0)
+        (goalType === 'process' ? 4 : -4) + (isSelfAcceptance ? 5 : 0)
       );
     case 'specific-event':
-      // Deadline segment: tolerate outcome goals more readily.
-      return goalType === 'outcome' ? 2 : 0;
+      // Deadline segment: tolerate outcome goals more readily. ±4 to
+      // match the magnitude on the other side — a user prepping for a
+      // specific event should see outcome goals prominently.
+      return goalType === 'outcome' ? 4 : 0;
     case 'structured-plan':
     case 'social-professional-confidence':
     case 'something-specific-bothering-me':
@@ -205,25 +213,41 @@ export function rankCandidates({
   return candidates;
 }
 
-// Pick the top N from a ranked list with category diversity — prefer to avoid
-// returning three tier-1 biological-foundation docs when a user picked multiple
-// focus areas spanning different categories.
+// Pick the top N from a ranked list with category diversity as the
+// default — but break diversity when a same-category candidate outscores
+// the best cross-category candidate by a large gap. The prior strict-
+// diversity rule was pushing tier-4 goals into the top-3 when a user's
+// focus areas concentrated in one or two categories; this keeps the
+// spirit (variety across picks) while letting strong tier gaps dominate.
+const CATEGORY_BREAK_SCORE = 4;
+
 export function pickTopN(ranked: SuggestedGoal[], n: number): SuggestedGoal[] {
   const picked: SuggestedGoal[] = [];
   const seenCategories = new Set<string>();
+  const remaining = [...ranked];
 
-  for (const g of ranked) {
-    if (picked.length >= n) break;
-    if (!seenCategories.has(g.category)) {
-      picked.push(g);
-      seenCategories.add(g.category);
+  while (picked.length < n && remaining.length > 0) {
+    const topOverall = remaining[0];
+    const topNewCat = remaining.find((g) => !seenCategories.has(g.category));
+
+    let choice: SuggestedGoal;
+    if (!topNewCat) {
+      // No unseen categories left — fill from the top of what's remaining.
+      choice = topOverall;
+    } else if (seenCategories.has(topOverall.category)) {
+      // Top overall repeats a category. Prefer a new-category candidate
+      // unless the score gap is large enough to override diversity.
+      const gap = topOverall.score - topNewCat.score;
+      choice = gap >= CATEGORY_BREAK_SCORE ? topOverall : topNewCat;
+    } else {
+      // Top overall is in a new category — diversity and score agree.
+      choice = topOverall;
     }
-  }
 
-  // If we haven't hit N yet (not enough categories), fill from remaining
-  for (const g of ranked) {
-    if (picked.length >= n) break;
-    if (!picked.includes(g)) picked.push(g);
+    picked.push(choice);
+    seenCategories.add(choice.category);
+    const idx = remaining.indexOf(choice);
+    if (idx >= 0) remaining.splice(idx, 1);
   }
 
   return picked;
