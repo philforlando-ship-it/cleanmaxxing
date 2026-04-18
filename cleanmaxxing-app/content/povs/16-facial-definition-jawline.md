@@ -186,6 +186,40 @@ __Ages 40\+ — structural illusion and support__
 
 Jawline definition at this stage becomes less about revealing fat and more about managing skin laxity and volume loss\. Even very lean men may notice reduced jaw sharpness as periorbital fat depletes, skin loses elasticity, and the face loses the subtle fullness that supported sharp edges in earlier decades\. Leanness alone no longer produces the same result it did at twenty\-five\. The toolkit expands accordingly: strategic facial hair to create the illusion of jaw definition, posture and neck training to maintain the neck\-to\-jaw contrast, and aesthetic procedures — fillers for volume support, skin tightening for laxity — that become genuinely appropriate considerations\. The conceptual shift is from revealing existing structure to recreating the appearance of structure\.
 
+__The Posture and Neck Protocol — Implementing the Hierarchy__
+
+The document above repeatedly identifies forward head posture and underdeveloped neck musculature as things that hide existing jaw definition, but treats both as principles rather than trainable variables\. The protocol below is the practical implementation of Tier 1 and Tier 2: what to actually do, how often, for how long\. It assumes the fat loss work is already in progress; posture and neck development amplify the fat loss result rather than replace it\.
+
+__Assessing where you are__
+
+Stand normally against a wall with your heels, buttocks, and upper back touching it\. If the back of your head does not reach the wall without actively tucking the chin, you have measurable forward head posture\. Most men do\. The gap between the back of the head and the wall at a relaxed stance is the variable being addressed\. Note it the first day, re\-check at four weeks and eight weeks\.
+
+__Daily posture reset — thirty seconds, three times a day__
+
+Stand against a wall as above\. Pull the back of the head toward the wall by tucking the chin slightly \(not tilting the head down\)\. Hold for ten seconds\. Repeat three times\. Three wall resets across the day — morning, midday, evening — rebuild the neutral neck position that chronic screen time has unlearned\. Run consistently for a couple of months, this tends to change how the jaw and neck read over that window, particularly in photographs\.
+
+__Neck training — two short sessions per week__
+
+Direct neck training is a lever for lower\-face definition that is rarely programmed into a standard lifting split\. Two sessions per week of three to four exercises, ten to fifteen reps each, is typically enough to produce visible change over two to three months for most people\. The movements: chin tucks against resistance \(a towel pulled by both hands against the forehead, or a neck harness with light plates\), lateral neck flexion \(band\-resisted head tilts side to side\), controlled neck extension \(band or towel resisted, avoiding heavy load that compresses the cervical spine\), and weighted shrugs for upper trap development, which frames the jaw\-to\-shoulder line\.
+
+Neck tissue adapts slowly and injury risk is real if load progresses too fast\. Start with bodyweight or band resistance only\. Add light load only after two to three weeks of pain\-free consistency\. Range of motion and control matter more than resistance for the first block\.
+
+__Sleep posture__
+
+Pillow height affects daytime neck position more than most people realize\. A pillow too high forces the neck into flexion all night and reinforces the forward\-head posture the daytime resets are trying to undo\. A pillow that keeps the neck neutral — roughly the height of the gap between the side of the head and the shoulder when lying on the side — is the correct setup\. Back sleepers need a lower pillow; side sleepers a slightly higher one\. One\-time fix, compounding effect\.
+
+__Screen setup__
+
+Forward head posture is mostly a desk and phone problem\. The laptop at desk height pulls the head forward; the phone below eye level pulls it down\. Raise the laptop to eye level with a stand or a stack of books\. Position the phone higher, even if it feels unnatural\. These environmental fixes matter more than the resets because they reduce the daily forcing function that created the posture in the first place\.
+
+__Self\-test for fat distribution before setting a body fat target__
+
+The document above distinguishes face\-first from body\-first fat distributors without saying how to tell which you are\. The simplest test: compare a photo of yourself at your current body fat to photos of other men at the same published body fat percentage \(DEXA\-validated galleries are available online\)\. If your face looks softer than theirs at the same composition, you are likely face\-first and your personal body\-fat target for facial sharpness is lower than average\. If your face looks comparably lean or sharper, you are body\-first and fifteen percent is likely enough\. This is useful to know before committing to a cut, because it calibrates how far the cut needs to go to produce the face change\.
+
+__Typical timeline — and when to add the next layer__
+
+Posture changes tend to become noticeable in photographs somewhere in a four\-to\-eight week window of consistent daily resets, though individual response varies\. Neck development generally shows up at eight to twelve weeks of twice\-weekly training for most people\. Fat\-loss\-driven face changes are more individually variable — sometimes weeks, sometimes months — depending on starting composition and distribution pattern\. Stay with the wall resets alone until they are automatic\. Add neck training once posture work has been running for at least two weeks without missed days\. Reassess every four weeks against a photo from the start, not against the mirror — the mirror adapts to gradual change, the photo does not\.
+
 __Community Reality Check — Fat Loss and the Face__
 
 Progress photo communities strongly support the central thesis of this document — fat loss often reveals dramatically better facial structure — but they also make it more nuanced than a clean threshold claim suggests\. Reddit is full of twenty\-five, forty, fifty\-five, and seventy\-plus pound loss posts where users say some version of "I have a jawline for the first time" or "I cannot believe how much my face changed\." The broad proposition holds consistently\.

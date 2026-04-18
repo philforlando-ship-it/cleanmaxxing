@@ -33,14 +33,6 @@ __The practical translation__
 
 Train in the eight to fifteen rep range for the majority of your work\. Use progressive overload — add reps or weight gradually over time — as the primary driver of progress\. Prioritize full range of motion and the stretched position of each exercise\. Choose exercises based on which ones grow the muscles that matter most for aesthetics, not which ones allow the most weight\. Treat strength gains in your working rep ranges as a signal of progress, not as the goal itself\. No one can see your one\-rep max\. Everyone can see whether your shoulders, chest, and arms are developed\.
 
-__Aesthetic priority — what actually gets noticed__
-
-Not all muscle groups are equal in terms of visual impact\. The muscles that change how people perceive you — in clothes, in photos, in a first impression — are concentrated in the upper body: lateral delts \(shoulder width and the V\-taper\), upper chest, arms \(biceps and triceps\), traps, and upper back\. These are the muscle groups that fill out a shirt, create visible shape under clothing, and register from across a room\.
-
-Lower body and core training matter — and they should not be skipped\. Squats and deadlifts are excellent for functional strength, athletic performance, posture, injury prevention, and overall hormonal response to training\. A strong core supports every other lift and directly improves posture under load\. But legs and core are rarely the aesthetic bottleneck for men in this audience\. Pants cover quads and glutes\. Abs are revealed by body fat percentage, not by ab exercises alone\. If your time is limited and your goal is how you look to other people, the aesthetic return on investment is highest in the shoulder, chest, arm, and upper back work\.
-
-The honest framing: train legs for health, function, and a balanced physique\. But if you have four hours a week and you are choosing between a third leg day and an extra upper\-body session focused on lateral delts and arms, the upper\-body session will move the needle on how you are perceived more than the extra leg day will\. This is not an excuse to skip legs entirely — it is a prioritization framework for people who are optimizing for appearance within real\-world time constraints\.
-
 __The Foundation: Consistency Over Everything__
 
 Strength training is the primary driver of muscular development, and muscular development is one of the most powerful determinants of an aesthetic physique\. However, the most important factor in strength training is not exercise selection, rep schemes, or advanced programming — it is consistency\. Training that is performed regularly, progressively, and over long periods of time will always outperform perfectly optimized training done inconsistently\. The body responds to repeated stimulus over weeks, months, and years\. Without consistency, no amount of optimization produces meaningful results\.
@@ -82,6 +74,38 @@ __Rep Range — Why 5 to 12 Is a Strong Default__
 A rep range of approximately 5 to 12 repetitions per set is one of the most effective zones for building an aesthetic physique\. This range balances mechanical tension, control, and fatigue in a way that consistently produces hypertrophy while allowing for progressive overload\. Lower reps around 5\-8 emphasize heavier loads and higher mechanical tension, building dense, thick muscle\. Moderate reps around 8\-12 offer the best balance between tension and fatigue for most hypertrophy work\.
 
 However, the effectiveness of a set is not determined by the exact number of reps, but by how close it is taken to failure\. A set of 6 reps far from failure produces less stimulus than a set of 12 reps with proper effort and control\. This is why RIR matters more than the specific rep number\. Individual variation also plays a role — some respond better to heavier, lower\-rep work, others to higher\-rep, more controlled training\. The optimal number of reps per set varies by person, exercise, and muscle group\. The 5\-12 range provides a strong foundation, but it should not be treated as a rigid rule\.
+
+__Before the 5\-Day Split — Your First 8 to 12 Weeks__
+
+The system described above assumes some existing training experience\. For someone who has never lifted, or who last trained years ago, jumping directly into a five\-day split with MEV/MAV volume targets and one to two reps in reserve is the wrong entry point\. The stimulus is too high, the exercise list is too long, and the skill demands of a dozen different movements are too much to learn simultaneously\. Most beginners who try to start here either burn out within three weeks or get hurt chasing intensities their nervous system and tendons have not earned\.
+
+The goal of the first eight to twelve weeks is different from the goal of a trained lifter's program\. It is not to maximize hypertrophy per unit time\. It is to build the habit of showing up, learn how each major movement pattern should feel, and accumulate enough base work for the more sophisticated framework above to actually produce results once it is applied\.
+
+__The minimum viable starting program__
+
+Three sessions per week, full\-body each time, with roughly two days between sessions\. Monday\-Wednesday\-Friday is the cleanest default\. Each session covers the major patterns: a squat or leg\-press variant, a hip hinge \(Romanian deadlift or a machine equivalent\), a horizontal push \(machine chest press or dumbbell press\), a horizontal pull \(cable row or chest\-supported row\), a vertical pull \(lat pulldown\), a lateral raise, and one arm movement alternated between biceps and triceps across sessions\. Two to three working sets per exercise is enough\. Total session length: forty to sixty minutes\.
+
+__Effort and intensity in the first block__
+
+For weeks one through four, train at three to four reps in reserve\. The target is not a hard set — it is a consistent set with good form, full range of motion, and a rep count that could have clearly been higher\. This sounds unproductive and is not\. Beginners experience the novice effect: the nervous system and muscles adapt rapidly to any meaningful stimulus, and the ceiling on useful effort is lower than it will be later\. Pushing to failure in week one produces soreness, fatigue, and discouragement without proportionate growth\.
+
+From weeks five through eight, move to two to three RIR\. By weeks nine through twelve, working at two RIR on most sets is appropriate\. This progression earns the right to run the one to two RIR programming in the main framework without flaming out early\.
+
+__Progression in the first block__
+
+Linear progression works for beginners in a way it does not for trained lifters\. Add a single rep, or increase the load by the smallest available increment \(often 2\.5 to 5 pounds\), each time you complete all prescribed sets at the target RIR with clean form\. Some weeks that happens on every exercise; some weeks it stalls on one or two\. Both are fine\. Linear progression stops working — usually between week eight and week sixteen — when you can no longer add reps or weight week over week on the compounds\. That is the signal to graduate\.
+
+__Exercises to avoid early on__
+
+Heavy barbell back squats, straight\-bar deadlifts, and flat barbell bench press are high\-skill movements with real injury potential when form is still forming\. They are worth learning eventually, but the first twelve weeks are not the moment\. Use machine and dumbbell equivalents that load the same muscles without the coordination and stability demands\. The movement pattern and the muscle stimulus matter\. The specific implement does not\.
+
+__Warming up — build the habit now__
+
+Five to ten minutes of general movement \(cycling, brisk walking, or rowing\) followed by two to three ramp\-up sets on the first compound exercise of the session\. This is the same warm\-up the forty\-plus framework later describes as mandatory\. Building it into the first twelve weeks means it is already automatic by the time it matters most\.
+
+__When to graduate to the 5\-day split__
+
+The transition signals are: weekly progression has stalled on the main compounds, sessions feel sustainable rather than exhausting, you can consistently judge what two RIR feels like on a given exercise, and you have trained at least three times per week for twelve consecutive weeks\. When those are true, move to the five\-day split and the weekly progression model below\. If they are not true yet, stay in the beginner block longer\. Rushing the on\-ramp is one of the most common reasons people stall at the intermediate stage and conclude the system does not work for them\.
 
 __The 5\-Day Aesthetic Training Split__
 

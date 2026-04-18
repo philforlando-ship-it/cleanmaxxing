@@ -87,5 +87,33 @@ The community also documents the ugly middle honestly\. Some users expected to l
 
 For cannabis, r/leaves shows a softer but still consistent pattern\. The most common post\-quit improvements described are less dull skin, fewer under\-eye bags, less facial bloating, and brighter eyes\. Some users notice changes within days to two weeks; others only describe a clear improvement after several months\. The cannabis appearance gains are reported much less uniformly than alcohol, and many users attribute the change indirectly — to sleeping deeper, eating more normally, or simply not looking zoned out\. That is consistent with the mechanism: cannabis operates primarily through behavioral and sleep channels rather than direct skin inflammation pathways\.
 
+__If You Are Currently Drinking or Using Regularly — The Reduction Plan__
+
+The sections above describe what alcohol and cannabis cost and what stopping produces\. Neither is useful if the gap between "I should cut back" and "here is what I actually did on Tuesday" never gets bridged\. The single most common failure is an open\-ended "I'll drink less" resolution with no target, no structure, and no feedback loop — which produces the same intake pattern within a month\. A reduction plan with explicit numbers and dates is not overkill; it is the difference between behavior change and a lightly rephrased status quo\.
+
+__Step one — pick your target honestly__
+
+Three targets are defensible\. Complete elimination is the cleanest and produces the fastest appearance and recovery timeline; the r/stopdrinking timeline referenced above is the payoff\. Moderate use — an explicit numeric cap like two drinks a week or one joint on weekends — works if the honest audit of current intake suggests moderation is genuinely achievable, which it often is not for alcohol once intake is past a certain point\. A time\-bounded experiment — thirty to ninety days of no use, then re\-evaluate — is the most useful starting point for most readers because it produces the appearance and performance signal without the permanent decision\. If you do not know which of the three applies to you, run the thirty\-day experiment first and let the data decide\.
+
+__Step two — a four\-week reduction sequence for current drinkers__
+
+For regular drinkers not going cold turkey, a staged reduction is easier to sustain and less likely to produce the "broke the rule, might as well drink everything this weekend" rebound\. Week one: reduce to the current number of drinking occasions but cut drinks per occasion in half\. Nothing else changes — same nights out, same social context, just the number of drinks\. Week two: remove one drinking occasion per week\. A Thursday becomes a non\-drinking night; Friday and Saturday can remain at the week\-one reduced count\. Week three: remove a second occasion\. Week four: drinking is down to one to two occasions with a halved count\. At the end of four weeks, appearance changes are already visible and the question of whether to continue reducing becomes easier to answer from an informed position rather than a theoretical one\.
+
+__Heavy or daily drinkers — the medical caveat__
+
+If current intake is daily or at a level where withdrawal symptoms are a real risk, the plan above does not apply\. Cold\-turkey alcohol withdrawal at high intake can be medically dangerous\. A physician\-supervised taper is the correct path, not a home reduction schedule\. This is the one place in the document where self\-experimentation is not appropriate\.
+
+__Cannabis reduction — different mechanism, different plan__
+
+Cannabis reduction rarely benefits from the same staged drink\-count approach because use patterns are usually less tied to specific events\. Two approaches work better\. Time\-of\-day restriction: no use before a specified hour — typically evening — which preserves productive parts of the day regardless of use level\. Context restriction: no use on training days, or no use on weeknights\. Either of these produces a detectable change in sleep quality and training intensity within one to two weeks, which creates the feedback loop for deciding whether further reduction is warranted\. Complete cessation is cleaner for evaluating the baseline effect, and the r/leaves timeline referenced above is the appearance and cognitive payoff\.
+
+__Social contexts — the main failure point__
+
+Most reduction plans fail at specific social contexts rather than in general\. A wedding, a work event, a weekly friend group routine\. Deciding in advance what you will do at each of these — not in the moment — removes the decision fatigue that erodes every reduction plan after two weeks\. Pre\-committed rules that match the context: "one drink at work events, none at home," "sparkling water at the standing Thursday dinner," "a joint on Saturday only if no training Sunday\." The rules do not have to be strict\. They have to exist before the event rather than during it\.
+
+__What to track and when to reassess__
+
+One variable is enough: drinks per week, or days of cannabis use per week\. A tally in a phone note is sufficient\. The tracking is not for accountability — it is for signal\. Without it, month three feels like month one and the question "is this actually working?" cannot be answered honestly\. The honest reassessment points are thirty and ninety days into whatever target was set\. Appearance changes show up on the sobriety timeline referenced above; performance changes show up in training logs and sleep quality\. If the expected changes are showing, the plan is working\. If they are not, the intake target is probably still too high — most people underestimate current intake and overestimate how much a small reduction produces\.
+
 __Alcohol and cannabis are both net negatives that can be managed, but they are not equivalent problems\. Alcohol ages the body — skin, hormones, fat, sleep architecture — through direct physiological mechanisms that scale in cost with age\. The sobriety timeline from community experience: facial depuffing within weeks, skin and redness improvement around two to three months, more dramatic change around six months\. Cannabis primarily affects how you manage your life — motivation, consistency, appetite control, training intensity — through behavioral and neurological mechanisms\. Managing each requires understanding which problem you are actually dealing with\. Neither requires elimination, but both require intentional management rather than running alongside the system unexamined\.__
 

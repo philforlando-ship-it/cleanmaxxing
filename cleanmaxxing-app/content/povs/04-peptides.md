@@ -72,6 +72,42 @@ __Who Should Not Touch Them__
 
 That is most people asking about peptides\.
 
+__If You Still Meet the Criteria — How a First Protocol Actually Looks__
+
+If you have read the sections above honestly and still fit the narrow "might actually benefit" profile — already lean, training is dialed, sleep and skin are in order, and there is a specific goal a specific compound addresses — the mechanics of starting matter more than the compound selection\. The failure mode at this stage is not picking the wrong peptide\. It is starting a four\-compound stack without ever having injected anything, without evaluating what any single compound is doing, and without an exit criterion\.
+
+__Run one compound at a time, not a stack__
+
+Running multiple peptides simultaneously as a first protocol is the most common mistake here\. If something works, you cannot tell which compound did it\. If a side effect appears, you cannot tell which compound caused it\. If nothing changes, you cannot tell whether the compound was ineffective or the dosing was wrong\. Single\-compound trials — long enough to give the compound a real test window — are the only way to build actual signal about what does and does not work for your body\. Stacks come later, after each component has been individually evaluated\.
+
+__Pick the compound with the strongest case for your specific goal__
+
+For injury recovery or a tendon issue, BPC\-157 has the most defensible practical case\. For mild general recovery and subtle body composition support on top of an already\-strong foundation, CJC\-1295 with Ipamorelin is the category default\. For skin, GHK\-Cu applied topically has the cleanest risk profile by a wide margin — injectable GHK\-Cu is an advanced application with far less support\. If the goal is fat loss, the answer is not in this document; it is in the GLP\-1 document\. Do not use Melanotan II as a first peptide — the risk\-to\-cosmetic\-benefit ratio is wrong for someone still learning protocol mechanics\.
+
+__The operational reality__
+
+Subcutaneous injection, sterile technique, and correct reconstitution are real skills on first use, not formalities\. The mechanics are well\-documented in clinical references, and the supervised path below is the safest place to learn them\. If self\-administration is the direction chosen, treat the learning curve as part of the commitment rather than something to figure out on the fly — budget the time to get it right before the first dose, not during it\.
+
+__Sourcing is the real risk, and there is no clean answer__
+
+The supply chain concern named earlier is not a footnote — it is the largest uncontrolled variable in this entire space\. Pricing alone does not indicate quality\. Vendor reputation within community forums is noisy and manipulated\. Third\-party testing, when available, helps but is not universally trustworthy\. The honest framing is: if the uncertainty about what is in the vial is unacceptable to you, this category is not appropriate to experiment with\. If it is acceptable, accept it explicitly rather than assuming that a confident\-looking website means a clean product\.
+
+__Length of trial and evaluation__
+
+Four to eight weeks is the standard window for evaluating whether a peptide is producing a detectable effect\. Shorter trials underestimate slow\-accumulating compounds; longer trials without clear signal waste money and tolerance\. Track specifically what you expect the compound to change — recovery time between sessions, injury pain on specific movements, skin texture at a specific site, morning energy — rather than a vague sense of how you feel\. Vague tracking guarantees a vague conclusion, and vague conclusions are how people convince themselves a stack is working when it is not\.
+
+__Exit criteria — decided in advance__
+
+Before the first injection, write down the outcome that would justify continuing past the trial window and the outcome that would end it\. Without this, every protocol drifts toward "keep running it just in case" because the sunk cost of sourcing, reconstitution, and injection discipline is real\. The most common failure mode at the end of a trial is not a clearly negative result; it is an ambiguous result where the compound cannot be proven to be doing anything, and the user continues anyway\. Pre\-committed exit criteria break that loop\.
+
+__Supervision is the better path where available__
+
+The cleanest way to run any peptide protocol is under a physician who knows the space — increasingly available through longevity and performance\-focused clinics\. This removes most of the sourcing risk, most of the reconstitution error, and most of the ambiguity about whether a side effect warrants stopping\. The cost is higher\. The quality of information about what you are actually injecting, and what to do when something feels off, is not comparable to self\-sourcing\. If the budget allows for a clinic, use it\. If it does not, the self\-experimentation framing above is honest about what you are taking on\.
+
+__When to continue past the first protocol__
+
+Stay in a single\-compound trial until either the pre\-committed continuation outcome is met or the trial window ends\. Only then consider adding a second compound — and evaluate that one in isolation the same way\. Attempting to stack before any single compound has been individually cleared is how the coherent system above turns into the disorganized optimization loop this document is meant to prevent\.
+
 __Tier Placement__
 
 __Peptides are not a looksmax cheat code\. They are a niche tool with limited upside and real uncertainty\. GLP\-1s are the only peptide\-adjacent compounds with genuinely strong evidence for dramatic results — and they are prescription medications, not research chemicals\. Everything else in this category is marginal optimization on top of a strong foundation, or a distraction from building one\. Most people asking about peptides would get ten times better results from getting lean, fixing their hair, improving skin, and dressing better\.__

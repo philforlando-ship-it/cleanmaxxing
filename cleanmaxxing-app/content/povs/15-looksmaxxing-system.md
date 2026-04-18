@@ -273,6 +273,38 @@ __Phase 4 — Advanced and Optional__
 - Pharmacological tools if medically appropriate and fundamentals are solid
 - Niche enhancements and finishing details
 
+__The First 90 Days — How to Actually Start__
+
+The four phases above are the correct shape of a complete system, but the single most common failure mode is reading the phase list as a checklist to execute in parallel\. Addressing sleep, diet, training, skincare, and gut health simultaneously from a starting point of doing none of them is a recipe for habit collapse within three weeks\. The phases describe the order of priority\. The activation sequence below describes the order of introduction — one variable at a time, layered into existence rather than installed all at once\.
+
+__If you can only start with one thing, start with sleep__
+
+Sleep is Tier 1, requires no new skill, and produces visible effect on skin, face, energy, and training performance within days\. Fix a consistent wake time seven days a week, cap caffeine after early afternoon, and get the bedroom dark and cool\. That is the entire first\-variable intervention\. One to two weeks of this before adding the next layer is not wasted time — it is the base every subsequent habit compounds from\.
+
+__Days 1 to 14 — Sleep and the absolute minimum skincare__
+
+Sleep baseline as above, plus a three\-step skincare routine: gentle cleanser at night, moisturizer morning and night, SPF 30\+ every morning\. Nothing else\. No retinoid yet\. No actives yet\. No supplement stack yet\. No training program yet\. Resist the pull to optimize further during these two weeks — the point is to make these two variables automatic before adding the next\.
+
+__Days 15 to 30 — Add protein and movement__
+
+Keep everything from the first two weeks\. Add a protein target — roughly 0\.7 to 1 gram per pound of goal bodyweight, spread across meals — without worrying about anything else macro\-related yet\. Add movement: two to three gym sessions or structured workouts per week, whatever is realistic to actually show up for\. If never trained before, the beginner protocol in Doc 19 is the correct entry point\. Do not yet try to track calories precisely\. Do not yet adjust diet structure beyond protein\. The goal is to make showing up and hitting protein automatic before adding more\.
+
+__Days 31 to 60 — Tighten diet structure and add one grooming upgrade__
+
+With sleep, skincare, protein, and training stable, add controlled diet structure: consistent meal timing, a rough calorie ceiling aligned with goal \(cut, maintain, or lean gain\), and whole\-food defaults\. Add one Phase 2 grooming upgrade: a better haircut, eyebrow cleanup, or a proper shaving routine\. Just one\. The compound effect of these earlier habits will be starting to show visibly by the end of this window, which is deliberate — visible return reinforces the habit stack\.
+
+__Days 61 to 90 — Add the next Phase 2 layer and begin the first refinement__
+
+By now the foundation is genuinely installed\. Add a second Phase 2 layer: clothing fit and basic style if hair was handled first, or vice versa\. Address hair loss if it is a factor — early intervention window matters, and this is the point to evaluate rather than delay\. Introduce a retinoid into the evening skincare routine\. Layer in a tan if skin is clear and body composition is trending correctly\.
+
+__What to explicitly not do in the first 90 days__
+
+No peptides\. No TRT conversation unless confirmed medical indication\. No cosmetic procedures\. No supplement stack beyond the basic foundation \(creatine, vitamin D, omega\-3, magnesium if sleep is actively being disrupted\)\. No niche enhancements\. No photography coaching\. No tier 4 or 5 interventions\. The tier list exists; it does not apply yet\. Ignoring it during the activation window is not premature — it is correct\.
+
+__How to know you are ready to move past activation__
+
+The signals are behavioral, not aesthetic: the Phase 1 habits run without decision fatigue, sleep is consistent without active effort, training has been missed fewer than two times in the last month, and protein and calorie structure feel automatic at meals\. When those are true, the full tier list and phase framework above become the operating system\. Until they are, adding more is a reliable way to regress on the variables that matter most\.
+
 __The Deeper Philosophy__
 
 Looksmaxxing works best when it stops being a hunt for secret tricks and becomes a disciplined effort to improve visible signals in a coherent, prioritized order\. The order matters\. Handle the broadest, highest\-leverage variables first\. Then refine\. The advanced tier exists and has real value — but only after the foundation is built\.

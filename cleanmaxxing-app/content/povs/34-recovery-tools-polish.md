@@ -129,5 +129,37 @@ __Community reality check__
 
 User experience threads consistently describe results as slow, subtle, and consistency\-dependent — not transformative\. Confusion about protocols and dosing is a recurring theme: how long per session, what wavelength, how close to the device, how many times per week\. There is widespread skepticism about overpriced devices and whether budget options provide meaningful intensity\. Hair results are genuinely mixed — some report real improvement, others report no change, and some users describe unwanted facial hair growth or pigment irregularities after what they describe as over\-treating\. That last point is worth noting: more is not necessarily better, and protocol adherence matters as much as device quality\. The community experience reinforces the cautious framing — modest benefit at best, highly variable, and dependent on using a device with adequate intensity under a consistent protocol\.
 
+__If You Are Starting From Zero — The Minimum Viable Stack__
+
+The principle for anyone currently running none of these tools: start with free daily inputs, stabilize the basics, delay any gear purchase\. The failure mode is buying a sauna blanket, red light panel, and gua sha stone simultaneously, running everything for two weeks, and abandoning the category when novelty fades\. One tool at a time, judged on whether it produced a felt effect before the next is added\.
+
+__Week one — cold water on the face__
+
+The highest\-ROI entry point is free and tends to produce a visible result within a couple of days\. Splash the face with the coldest tap water available for thirty to sixty seconds each morning\. Nothing else\. Two weeks at this level establishes the habit and gives the feedback loop on whether this category is worth further investment for you specifically\.
+
+__Weeks three to four — facial massage__
+
+Add five to ten minutes of facial massage immediately after the cold exposure\. Hands alone work; a gua sha stone or roller is optional, not required\. The morning routine is now ten to fifteen minutes and addresses most of the daily facial appearance variables at no cost\.
+
+__Weeks five onward — sodium and hydration consistency__
+
+Not a new behavior — stabilization of existing behavior\. Stop alternating between very high and very low salt days\. Drink water consistently through the day\. Keep a couple of potassium\-rich foods in rotation\. Running the active tools on top of unstable sodium and hydration means the face keeps puffing up for reasons those tools cannot compensate for\.
+
+__Week six or later — heat or cold full\-body, only if the baseline holds__
+
+Gear is only worth considering once the morning routine runs automatically\. Sauna two to four times a week, cold shower exposure building toward one to three minutes, or an ice bath if budget and space allow\. Choose the tool that will actually be used three to four times a week for months — not the one with the best reported benefits\. A gym sauna on an existing commute beats a home sauna that requires a renovation\.
+
+__What to delay until later__
+
+Red light therapy, event\-day sodium manipulation, home sauna purchases, cold plunge tanks, specialized gua sha kits\. All are reasonable eventually\. None are reasonable as the first intervention\. Ninety days of consistent baseline before any major gear purchase\.
+
+__Age\-calibrated version__
+
+Under thirty with no recovery issues, the full system is genuinely optional — the morning cold\-and\-massage routine is still the most defensible thing to install early because the habit carries forward as the other variables increase in importance\. Mid\-thirties and beyond, the sequence above moves from optional to reasonable default\. Over forty, treat it as the actual system rather than a polish layer\.
+
+__When to add the next layer__
+
+Stay at each step until the prior habit runs without active attention\. If the face cold\-water splash is still something to remember to do, do not add massage yet\. If the ten\-minute morning routine still feels effortful, do not add the sodium and hydration work\. Adding the next tool is earned by the consistency of the prior one, not by the calendar\.
+
 __Sauna, cold exposure, facial massage, sodium management, and red light therapy are polish tools\. They produce real, visible improvements in daily appearance when used on top of strong fundamentals — good sleep, controlled diet, low body fat, and consistent training\. The age\-segmented reality: largely unnecessary in the teens, optional in the twenties, meaningfully useful in the thirties, and strategically important maintenance infrastructure in the forties\. The correct framing: these tools enhance what is already there\. They are the final layer, not the foundation\.__
 
