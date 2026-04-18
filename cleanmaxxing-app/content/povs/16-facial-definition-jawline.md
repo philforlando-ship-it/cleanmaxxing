@@ -108,7 +108,7 @@ __The jaw — frame of the lower face__
 
 The jaw matters primarily for the front and three\-quarter view rather than the side profile\. Visible mandibular lines — the jaw edge being defined rather than melting into the neck — are the primary aesthetic variable\. A jaw that is present and masculine without being exaggerated produces the clean lower\-face silhouette that reads as structured and athletic in real life and photographs well\. The relationship between jaw width and cheekbone width matters: a jaw significantly narrower than the upper face looks bottom\-light; a jaw wider than the cheekbones without upper\-face support looks heavy\.
 
-The "gigachad jaw" obsession online overstates how much jaw width matters in actual attractiveness\. The best male jaws in real life are usually clear, proportionate, and cleanly defined — not extreme\. Ramus height and lower\-face vertical support often matter more than raw width\. A man with good ramus height and vertical lower\-face presence looks structurally solid even without an exceptionally wide jaw\.
+The internet fixation on maximally\-wide jaws overstates how much jaw width matters in actual attractiveness\. The best male jaws in real life are usually clear, proportionate, and cleanly defined — not extreme\. Ramus height and lower\-face vertical support often matter more than raw width\. A man with good ramus height and vertical lower\-face presence looks structurally solid even without an exceptionally wide jaw\.
 
 __The lower third is a system__
 

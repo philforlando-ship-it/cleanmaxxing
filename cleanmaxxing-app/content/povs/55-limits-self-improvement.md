@@ -33,7 +33,7 @@ __Comparison Is a Distorted Lens__
 
 The reference pool for appearance in 2025 is algorithmically curated to show the most optimized examples of human appearance that exist anywhere in the world\. This is not what the average person looks like\. It is not what the people in your actual life look like\. It is a highlight reel of genetic outliers, filtered photography, lighting optimization, and in many cases surgical and pharmaceutical enhancement\. Comparing yourself to this reference pool as a baseline produces a distorted assessment of where you actually stand and what is actually achievable\.
 
-The relevant comparison for any individual is not the global top decile — it is the version of themselves that their actual genetic ceiling and consistent habits can produce\. That comparison is almost always more favorable and more motivating than the algorithmically curated alternative\.
+The relevant comparison for any individual is not the most optimized men currently visible online — it is the version of themselves that their actual genetic ceiling and consistent habits can produce\. That comparison is almost always more favorable and more motivating than the algorithmically curated alternative\.
 
 __When to Seek Support Outside the System__
 
