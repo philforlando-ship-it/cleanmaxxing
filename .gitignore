@@ -48,3 +48,7 @@ next-env.d.ts
 
 # Claude Code session state
 .claude/
+
+# Stripe CLI binary (if dropped in repo root)
+stripe.exe
+stripe_*_windows_x86_64.zip
