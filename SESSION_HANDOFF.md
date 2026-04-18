@@ -5,7 +5,144 @@ read it at the start of the next one.
 
 ---
 
-## Last session: 2026-04-15 — Week 4 AND Week 5 substantially shipped (full Today screen, all stickiness mechanics, full marketing surface, Rewardful + Stripe scaffold, settings + billing + step-away, committed in four clean commits)
+## Last session: 2026-04-17/18 — Stripe end-to-end, Resend pipeline proven, Thread B polish, tiered library layout, corpus audit complete (five commits)
+
+### Current repo state
+
+- **Dev server:** running on http://localhost:3000 at session end.
+- **Supabase project:** `zmdijizkxcconyisjcht`. No new migrations applied this session. Two ad-hoc SQL updates run via the SQL Editor: `update public.pov_docs set priority_tier='tier-2' where slug='23-cardio'` + the mirror update on `public.goals` for any users with cardio already added; and a one-off `update auth.users set email='philforlando@gmail.com' where email='philmington@outlook.com'` to consolidate two test accounts during Resend smoke testing.
+- **Working tree:** clean for session work. Pre-existing uncommitted changes on `.gitignore`, `content/povs/07-skincare-antiaging.md`, `19-strength-training.md`, `21-protein-creatine.md`, `33-niche-enhancements.md`, and `cleanmaxxing_mvp_spec.docx` carried in from before this session — intentionally untouched. Local test artifact `tests/mister_p_smoke_results.md` still untracked (same handling as prior sessions).
+- **Stripe test mode:** fully provisioned. `STRIPE_SECRET_KEY` / `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` populated with `sk_test_…` / `pk_test_…` values, `STRIPE_PRICE_MONTHLY` / `STRIPE_PRICE_ANNUAL` populated with test-mode price IDs, `STRIPE_WEBHOOK_SECRET` populated from `stripe listen`. Customer portal configured in the Stripe Dashboard under Settings → Billing → Customer Portal.
+- **Resend:** sandbox mode live. `RESEND_API_KEY` set to a real `re_…` key, `RESEND_FROM_EMAIL=onboarding@resend.dev` (sandbox domain, only delivers to the Resend account owner's email). Domain verification for `cleanmaxxing.com` is still pending DNS work — prod emails cannot reach arbitrary users until that happens.
+- **Mister P smoke test:** not re-run this session. No refusal-rule changes landed that would affect the 22/22 baseline; should still be 22/22.
+- **Onboarding:** new conditional follow-up field appears on the motivation question when the user picks "something specific is bothering me," persists to `users.motivation_specific_detail` via the expanded `/api/onboarding/answer` route.
+
+### Session — what shipped
+
+**Slice 1 — Stripe webhook and customer portal (commit `538835b`).**
+- `app/api/stripe/webhook/route.ts` — new. Signature-verified handler mapping `checkout.session.completed`, `customer.subscription.created/updated/deleted`, and `invoice.payment_failed` onto `public.users.subscription_status`. Maps Stripe's richer statuses into the schema's four values (`trial | active | canceled | past_due`). Uses `createServiceClient()` because the webhook has no auth cookie and `public.users` has RLS on `auth.uid() = id`. Raw body via `req.text()` for signature verification. Node runtime pinned explicitly.
+- `app/api/stripe/portal/route.ts` — new. Auth-gated POST that reads the user's `stripe_customer_id` and creates a `billingPortal.sessions.create()` session. 400s cleanly when the user has no customer on file.
+- `app/(app)/settings/billing/billing-portal-button.tsx` — new. Client button that POSTs and redirects.
+- `app/(app)/settings/billing/page.tsx` — replaced the "coming soon" copy with the portal button when `status === 'active'`.
+- **Verified end-to-end in test mode:** full checkout via `4242 4242 4242 4242` → redirect to `/today?billing=success` → `stripe listen` terminal logs `checkout.session.completed → 200` → `public.users.subscription_status` flips `trial → active` + `stripe_customer_id` populated. Portal button opens the Stripe-hosted management page and returns to `/settings/billing` correctly.
+- **Env gotcha encountered:** during testing the user's `.env.local` briefly contained `sk_live_…` / `pk_live_…` keys. Confirmed no real charges happened (test cards are rejected in live mode; `stripe listen` without `--live` only forwards test events; the test-mode event ID for the completed checkout loaded in `/test/events/…` but not in `/events/…`). Swapped back to test keys and retested cleanly. Worth flagging that the live/test key copy-paste surface in the Stripe Dashboard is a real foot-gun.
+
+**Slice 2 — Resend sandbox wiring.**
+- No code changes — the three email routes (`/api/email/welcome`, `/api/cron/weekly-email`, `/api/cron/onboarding-emails`) already gated on `RESEND_API_KEY` and dry-ran when empty.
+- Config: `RESEND_API_KEY=re_…` + `RESEND_FROM_EMAIL=onboarding@resend.dev` added to `.env.local`.
+- **Verified end-to-end:** hit `/api/cron/weekly-email` with one eligible user → response `{"total":1,"sent":1,"dry_run":0,"errors":0,"dry_run_mode":false}` → email landed in inbox.
+- **Still pending pre-launch:** DNS records for `cleanmaxxing.com` on the domain registrar (MX + SPF TXT + DKIM TXT, optional DMARC). Once verified, swap `RESEND_FROM_EMAIL` to `noreply@cleanmaxxing.com` and the weekly + welcome + onboarding sequences can reach real users. Code is already in place — this is purely config + DNS propagation.
+
+**Slice 3 — Thread B: motivation detail + tier explainers + tiered library (commit `c20dca9`).**
+- `app/api/onboarding/answer/route.ts` — accepts optional `detail` in the POST body. When the question is `motivation_segment` and the user picked `something-specific-bothering-me`, persists a second row to `survey_responses` under key `motivation_specific_detail` (500-char cap). Wipes any prior detail row on re-answer so a segment swap doesn't leave stale text.
+- `app/(app)/onboarding/[step]/page.tsx` — fetches prior `motivation_specific_detail` row when the current question is motivation, passes as `initialDetail` prop to the form.
+- `app/(app)/onboarding/[step]/question-form.tsx` — accepts `initialDetail`, shows a conditional 3-row textarea below the choice buttons when the trigger option is selected, includes `detail` in the POST body.
+- `app/api/onboarding/submit/route.ts` — reads the detail from `survey_responses` and writes it to `users.motivation_specific_detail`; nulls it if the segment isn't the triggering one (defense-in-depth against stale rows).
+- `lib/goals/tier.ts` — new shared util. `TierKey`, `tierLabel()`, `tierExplainer()`, `TIER_ORDER`, `tierRank()`. Six tier keys with one-line explainers. Replaces three duplicated `tierLabel()` functions that previously lived inline in `goals/page.tsx`, `library-browser.tsx`, and `goals-picker.tsx`.
+- `components/tier-badge.tsx` — new shared clickable badge component. Renders the pill and toggles an inline tooltip-style explainer on tap. Uses `stopPropagation` so it works inside parent click targets.
+- `app/(app)/goals/library/library-browser.tsx` — grouped the templates by tier (Foundation → High impact → Refinement → Top performers → Polish → Situational), each group with a large section header (`text-2xl font-semibold`, thicker underline, count pill). Category filter still works — grouping applies within the filtered view.
+- `app/(app)/goals/library/page.tsx` — added framing subtitle: "Build from the bottom up. Foundation first, then high impact, then refinement. Polish is last — easy to over-invest in before the real work is done. Tap any tier label to see what it means."
+- `app/(app)/onboarding/complete/goals-picker.tsx` — extended existing rationale line to name the hierarchy explicitly: "Cleanmaxxing runs a hierarchy — Foundation first, then high impact, then refinement. These start at the bottom of that ladder."
+- `app/(app)/goals/page.tsx` — replaced inline tierLabel + span with `<TierBadge>`.
+
+**Slice 4 — Cardio tier bump + v2 spec note (commit `5bfffe7`).**
+- `content/povs/_metadata.json` — `23-cardio` bumped from `tier-3` (Refinement) to `tier-2` (High impact). Rationale: the doc itself argues cardio is "necessary after 35" for longevity and metabolic health, and the Zone 2 content frames it as a foundation for metabolic flexibility. Tier-3 undersold that; tier-1 would have overstated it for the 18-32 aesthetic case. Tier-2 is the honest middle.
+- Live DB sync done via SQL Editor: `update public.pov_docs set priority_tier='tier-2' where slug='23-cardio'` + matching update on `public.goals` for users already added.
+- `cleanmaxxing_mvp_spec.md` — added new entry to §14 v2 Backlog: **Age-segment-specific tier overrides for goal templates.** Proposes `priority_tier_overrides: { "33-40": "tier-1" }` field on `_metadata.json` entries, scoped away from per-motivation and per-focus overrides (those belong in the scorer). Revisit trigger: 33-40 user feedback saying cardio/recovery/mobility should have been pushed harder earlier.
+
+**Slice 5 — Corpus expansion: eight new sections across five docs (commit `2622858`).**
+- Doc 05 (Supplements): new **B-Complex and B12** section. GLP-1 users, low-meat diets, and 50+ are the deficiency-prone populations. Methylcobalamin dosing. Bloodwork-first posture.
+- Doc 10 (Grooming): new **Naturally bushy brows — lean in, don't fight them** section. Reframes thick brows as an asset, explicit pushback against the thinning instinct. Also new **Styling around eye spacing** section for close-set and wide-set eyes — framed explicitly as normal human variation that can be styled around, not a problem to fix. Step 1 center cleanup expanded with tactical detail (direction-of-growth tweezing, nostril-distance gap reference, maintenance cadence, lighted magnifying mirror as the tool).
+- Doc 18 (Tanning): new **When Tanning Isn't the Right Path — Fair Complexions** section for Fitzpatrick I-II. Self-tanner as the primary tool, tinted moisturizer as adjunct, wardrobe shifts, and the long-run aging advantage of protecting fair skin through the 20s and 30s.
+- Doc 28 (Cosmetic Procedures): new **Non-surgical framing to try first** subsection inside the rhinoplasty section — chin projection, jaw definition, hair, beard, and glasses all pull perceived weight away from a prominent nose. Also new **Functional rhinoplasty and the insurance angle** subsection covering septoplasty vs cosmetic rhinoplasty, the septorhinoplasty combination option, and why bad-faith inflation of functional complaints is both wrong and increasingly impractical.
+- Doc 41 (Medical Conditions): new **Eye-Area Medical Conditions — Strabismus, Ptosis, and Chronic Dry Eye** section following the doc's standard What-changes / What-stays-the-same / Physician-involvement structure. Names ophthalmologist and oculoplastic surgeon as correct specialists. Flags that under-eye filler specifically should not be placed while an unmanaged medical eye condition is active.
+- Doc 05 also carried a pre-existing relocation of the "Why Not a Multivitamin?" section from C-tier up into the S-tier context — that change was landing in the working tree before this session started and was committed alongside the B12 addition.
+
+**Slice 6 — Pre-launch corpus audit + hierarchy-language cleanup (commit `3999ba2`).**
+- Full corpus scan completed. Clean on: `alpha male`, `beta male`, `sigma male`, `HVM`, `SMV`, `PSL`, `chad`, `mogger`, `looksmatch`, `blackpill`/`redpill`, percentile ranking, `out of league`, `dating market`, `objectively attractive`, `top N%`.
+- Two passages rewrote hierarchy vocabulary used in refutation (refuting the culture is good, but borrowing its words gives them oxygen):
+  - Doc 16 line 111: `"gigachad jaw" obsession` → `internet fixation on maximally-wide jaws`
+  - Doc 55 line 36: `the global top decile` → `the most optimized men currently visible online`
+- Deliberately kept: `incel forums` in doc 06 (factual origin citation for bone-smashing); `tier list` throughout doc 15 (refers to Cleanmaxxing's S/A/B/C *intervention* tier system, not human ranking); `genetic ceiling` framing in docs 15/16/55 (methodological concept, explicitly anti-hierarchy); the "Most people are not unattractive — they are under-optimized" line in doc 37 (dismissive reframe).
+- This completes the §13 pre-launch corpus audit commitment. Future content should stay on the right side of this: tier lists of *interventions* = OK, tier lists of *humans* = not OK.
+
+### Verified working this session
+
+- `npm run typecheck` — clean after every slice.
+- Browser end-to-end: full checkout → webhook fires → subscription flips → portal button renders and opens Stripe-hosted management page → cancellation fires `customer.subscription.deleted` webhook and flips back to canceled.
+- Resend: one real email delivered end-to-end via `/api/cron/weekly-email`.
+- Corpus: two flagged passages rewritten, full scan confirms clean.
+
+### Not verified (deliberately skipped or blocked on external)
+
+- **Stripe live mode** — keys were deliberately swapped back to test after a brief live-key scare. Live webhook endpoint still needs to be created in the Stripe Dashboard, pointed at `https://yourdomain.com/api/stripe/webhook`, and its signing secret pasted into prod env at deploy time.
+- **Resend real-domain sends** — DNS records pending. Sandbox is enough for local development but no prod emails land until cleanmaxxing.com is verified.
+- **Circuit breaker + proactive suggestion firing** — same carry-over from prior sessions. Both require real user query volume to eyeball.
+- **Monthly checkpoint card live-rendering** — same. Flip `CHECKPOINT_FORCE_ELIGIBLE=1` to eyeball locally.
+- **Mister P smoke test** — not re-run. No refusal rules changed, should still be 22/22.
+
+### Outstanding — what the next session should start with
+
+Week 5 code is effectively done. What's left is primarily non-code:
+
+1. **Resend production domain verification** — DNS records on the registrar, Resend dashboard verification, swap `RESEND_FROM_EMAIL`. ~15 min of work + propagation wait. Has to happen before any beta user gets real emails.
+2. **Stripe live mode cutover** — create the live webhook endpoint in the Dashboard, create live-mode products + prices, set prod env vars. Only at deploy time, not in `.env.local`.
+3. **Beta invites + watch sessions** — spec §9 Week 6. Still the next real gate. Invite 10-30 testers from a creator partner, watch PostHog daily, fix top 5 UX issues.
+4. **Optional corpus extensions** — if more gaps surface during beta testing (users asking about topics not covered), the pattern is: user identifies the gap, Claude drafts in-voice, Phil polishes. Worked well this session for 8 additions across 5 docs.
+5. **Mister P smoke test re-run** — worth doing once more before beta invites just as a sanity check, even though no refusal rules changed.
+
+**Recommendation for next session:** DNS for Resend → beta invite outreach → sit with PostHog after the first few sessions. That's the path to real feedback, which is what everything else in the system is built to respond to.
+
+### Known issues / limitations carried forward
+
+- **Title-based duplicate detection in `/api/goals/add`** — still pending. Should migrate to `source_slug` matching. One-line change, not blocking.
+- **In-memory topic similarity** scales to ~500 queries per user. Migrate to Postgres RPC when needed.
+- **Eye-area retrieval gap (Q9 smoke test)** — still deferred.
+- **Circuit breaker not manually verified end-to-end** — needs real user query volume.
+- **`NEXT_PUBLIC_REWARDFUL_API_KEY` empty** — Rewardful loader renders nothing, `getRewardfulReferral()` returns null, Stripe checkout gets null `client_reference_id`. Everything degrades cleanly. Set when the Rewardful account is set up.
+- **`CRON_SECRET` not set** — cron endpoints open in dev, fail-closed in production. Set at deploy time.
+- **`NEXT_PUBLIC_APP_URL`** — not set locally, defaults to `https://cleanmaxxing.com` in email templates. Set per environment.
+- **Build EPERM on Windows** — `.next/static/*` file locks when dev server is running. Kill dev server before `npm run build` for clean production builds locally.
+
+### Spec amendments landed this session
+
+- §14 v2 Backlog: **Age-segment-specific tier overrides for goal templates** — new entry capturing the cardio tier discussion. Scoped to per-age-segment only; per-motivation and per-focus weighting belong in the scorer.
+
+### How to resume next session
+
+```bash
+# Dev server may or may not still be running. If not:
+npm run dev
+
+# Sanity checks:
+npm run typecheck
+npm run smoke-test   # should still be 22/22
+
+# Quick eyeball pass:
+# - http://localhost:3000/goals/library (tier-grouped sections)
+# - http://localhost:3000/settings/billing (portal button visible when active)
+# - http://localhost:3000/onboarding/4 (motivation question with conditional textarea)
+#
+# Next session recommended order:
+# 1. DNS records for cleanmaxxing.com → Resend domain verification
+# 2. Once Resend is real-domain ready, swap RESEND_FROM_EMAIL, retest welcome + cron
+# 3. Create live-mode Stripe webhook endpoint in the Dashboard (only when deploying)
+# 4. Beta invite outreach — first creator partner, 10-30 testers
+```
+
+### Commits this session
+
+Five commits, all on `master`, not pushed to remote:
+
+1. **`538835b`** — Wire Stripe webhook and customer portal
+2. **`c20dca9`** — Add motivation detail field, tier explainers, and tiered library layout
+3. **`5bfffe7`** — Bump cardio to tier-2 and note age-segment tier overrides for v2
+4. **`2622858`** — Expand corpus: B12, fair complexions, eye medical, nose framing, bushy brows
+5. **`3999ba2`** — Remove hierarchy-culture vocabulary from docs 16 and 55
+
+---
+
+## Previous session: 2026-04-15 — Week 4 AND Week 5 substantially shipped (full Today screen, all stickiness mechanics, full marketing surface, Rewardful + Stripe scaffold, settings + billing + step-away, committed in four clean commits)
 
 ### Current repo state
 
