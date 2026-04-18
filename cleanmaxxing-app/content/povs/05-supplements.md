@@ -25,6 +25,16 @@ __Omega\-3 Fatty Acids__
 
 Reduces systemic inflammation and supports skin quality and overall health\. The effect on skin clarity and tone over time is real, even if gradual\. Also supports cortisol modulation and may modestly blunt the cortisol stress response\. A solid support supplement with a clean risk profile and meaningful indirect appearance benefits\.
 
+__Why Not a Multivitamin?__
+
+Multivitamins sit in an awkward place: they feel like a reasonable "insurance policy" but they rarely solve the problems that actually matter\. The issue is not that multivitamins are dangerous — it is that they underdose the things that actually move the needle and duplicate the things most men already get from food\.
+
+The S\-tier supplements — creatine, vitamin D, omega\-3, magnesium — all require therapeutic doses to deliver their documented benefits, and multivitamins do not provide those doses\. Vitamin D needs 1000\-4000 IU daily to correct deficiency; a typical men's multivitamin provides 400\-800 IU, enough for the label but not enough to move a deficient person into sufficient range\. Omega\-3 requires roughly one to two grams of combined EPA and DHA per day and is rarely included in multivitamins at meaningful amounts due to soft\-gel manufacturing constraints\. Magnesium needs to be in a well\-absorbed form like glycinate at 200\-400mg; multivitamins typically use magnesium oxide at 50\-100mg, which is both poorly absorbed and below the threshold where sleep and stress effects appear\. Creatine is not in multivitamins at all in any meaningful dose\.
+
+Meanwhile, the things multivitamins cover well — most B vitamins, vitamin C, iron, trace minerals — are already adequate in any varied diet that includes meat, eggs, dairy, fruit, and vegetables\. In the case of iron specifically, adult men usually should not supplement unless a blood test confirms deficiency; excess iron is associated with worse health outcomes in non\-deficient men\.
+
+The better framing: do not buy a package of underdosed stuff to feel covered\. Buy the three or four things you are actually short on, at doses that work\. The lean stack below does that in fewer pills, at lower total cost, with meaningfully better outcomes\.
+
 __A\-Tier Supplements — Situational but Useful__
 
 __Protein Powder__
@@ -57,6 +67,14 @@ __Zinc__
 
 Helpful if deficient, with minor testosterone support when deficiency is corrected\. Frequently marketed as a "test booster," which overstates its actual impact on men who are not zinc\-deficient\. Worth including if diet is low in red meat and shellfish\.
 
+__B\-Complex and B12__
+
+The B vitamins get less attention than they should in a supplement conversation focused on appearance, because the benefits are indirect — energy, cognition, red blood cell production — rather than visible muscle or skin\. That does not make them unimportant\. B12 deficiency is genuinely common in three populations: men on GLP\-1 medications \(which suppress appetite and often reduce meat intake\), men running low\-meat or fully plant\-based diets, and men over 50 whose stomach acid production declines enough to impair absorption from food\. The symptoms — fatigue, brain fog, reduced exercise recovery, and in severe cases neurological issues — read as stress or overtraining before they are recognized as deficiency, which delays treatment\.
+
+For the typical man eating meat, eggs, and dairy on a regular basis, supplementation is unnecessary\. For anyone in the three populations above, a standard B\-complex with 500\-1000 mcg of B12 \(methylcobalamin is the preferred form for absorption\) is low cost, zero risk, and corrects a problem that will otherwise silently undercut everything else in the system\. The rest of the B vitamins — thiamine, riboflavin, B6, folate — are adequately supplied by a reasonable diet and do not need individual supplementation\. A single B\-complex covers the whole group when supplementation is warranted\.
+
+Bloodwork simplifies the decision\. A single B12 serum test confirms whether supplementation is needed\. If levels are in the normal range, save the money\. If low, correct it and retest in three months\. This matches the posture the rest of this document takes: supplement when the evidence says supplement, not because the label suggests you should\.
+
 __Collagen__
 
 May slightly help skin elasticity and joint health over time when taken consistently\. Effects are subtle and cumulative rather than rapid\. Do not expect visible transformation — think of it as a long\-term support tool rather than an active intervention\.
@@ -76,16 +94,6 @@ __C\-Tier — Save Your Money__
 - "Pump" supplements \(nitric oxide boosters\) — produce temporary vascularity and fullness during training that disappears within hours; no lasting physique change
 - "Hormone optimizer" stacks \(tongkat ali blends, fad stacks\) — marginal at best unless correcting a specific deficiency; the category is aggressively marketed and consistently underdelivers
 - Random nootropic stacks — expensive, highly variable results, and most cognitive benefits are better achieved through sleep, exercise, and caffeine timing
-
-__Why Not a Multivitamin?__
-
-Multivitamins sit in an awkward place: they feel like a reasonable "insurance policy" but they rarely solve the problems that actually matter\. The issue is not that multivitamins are dangerous — it is that they underdose the things that actually move the needle and duplicate the things most men already get from food\.
-
-The S\-tier supplements — creatine, vitamin D, omega\-3, magnesium — all require therapeutic doses to deliver their documented benefits, and multivitamins do not provide those doses\. Vitamin D needs 1000\-4000 IU daily to correct deficiency; a typical men's multivitamin provides 400\-800 IU, enough for the label but not enough to move a deficient person into sufficient range\. Omega\-3 requires roughly one to two grams of combined EPA and DHA per day and is rarely included in multivitamins at meaningful amounts due to soft\-gel manufacturing constraints\. Magnesium needs to be in a well\-absorbed form like glycinate at 200\-400mg; multivitamins typically use magnesium oxide at 50\-100mg, which is both poorly absorbed and below the threshold where sleep and stress effects appear\. Creatine is not in multivitamins at all in any meaningful dose\.
-
-Meanwhile, the things multivitamins cover well — most B vitamins, vitamin C, iron, trace minerals — are already adequate in any varied diet that includes meat, eggs, dairy, fruit, and vegetables\. In the case of iron specifically, adult men usually should not supplement unless a blood test confirms deficiency; excess iron is associated with worse health outcomes in non\-deficient men\.
-
-The better framing: do not buy a package of underdosed stuff to feel covered\. Buy the three or four things you are actually short on, at doses that work\. The lean stack below does that in fewer pills, at lower total cost, with meaningfully better outcomes\.
 
 __The Illusion of Advanced Stacks__
 

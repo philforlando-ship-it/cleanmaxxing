@@ -71,6 +71,16 @@ __Eye contact quality__
 
 Good eye contact is calm visual steadiness, not a hard stare\. Many people undermine their facial attractiveness socially because their eye contact is either avoidant or unnervingly intense\. Calm, natural eye contact is part of how the eye area reads in real life — it is not just anatomy, it is use\.
 
+__Styling around eye spacing__
+
+Eye spacing is structural and not changeable without surgery, but how the eye area is styled affects how spacing is perceived more than most men realize\. Close\-set eyes \(inner corners less than one eye\-width apart\) and wide\-set eyes \(inner corners noticeably more than one eye\-width apart\) both sit within the normal human range, and neither is a problem to be fixed\. What styling can do is shift the visual weight around the eyes so the proportions read closer to typical without any structural change\.
+
+For close\-set eyes, the goal is to add perceived width\. Keep the inner ends of the brows cleanly groomed and slightly narrower — a heavy, connected\-looking brow line compresses the perceived distance between the eyes further\. Hair parted on the side rather than center\-parted or forward\-pushed creates asymmetry that draws the eye outward\. Glasses frames with light or transparent inner edges and bolder outer edges pull attention laterally\. Avoid tight, narrow frames that sit close to the nose bridge — they concentrate visual weight in the center of the face\.
+
+For wide\-set eyes, the goal is the inverse: add perceived density in the center of the face without overdoing it\. Brows that are slightly fuller at the inner edge, and a well\-groomed beard or stubble pattern that brings weight back to the center\-lower face, both help\. Glasses with a solid, visible bridge \(as opposed to frameless or rimless styles\) anchor the center of the face and narrow the perceived gap\. Center\-parted hair, when it fits the overall style, works here for the same reason it does not work for close\-set eyes\.
+
+None of these are transformative\. They are low\-effort, daily\-practice adjustments that tilt perception a few degrees in a consistent direction\. The compound effect over time is real, but no individual change should be expected to be dramatic\. The men who get the most out of this kind of styling are the ones who apply it quietly and consistently rather than trying to engineer a single dramatic reveal\.
+
 __Eyebrows — Frame Control for the Eye Area__
 
 Eyebrows control how the eyes are framed, affect perceived symmetry and emotional expression, and signal whether a man pays attention to himself\. They sit at the intersection of masculinity and grooming precision — too messy and the face looks unkempt; too shaped and it looks artificial\. The target is naturally disciplined: clean without looking styled\.
@@ -79,9 +89,21 @@ __The ideal male brow__
 
 Thick but controlled, mostly straight with a slight natural arch, clean edges without sculpting, and balanced \(not necessarily perfectly symmetrical, but balanced\)\. The natural shape of the brow should be preserved — the job is to remove chaos, not create a new structure\.
 
+__Naturally bushy brows — lean in, don't fight them__
+
+Thick, full, naturally bushy eyebrows are an asset on most male faces, not a problem to be solved\. The men who make them look good are doing less, not more — trimming length, cleaning the center, and leaving the density alone\. The men who ruin them are plucking to thin the brow, shaping aggressively to create a defined arch, or trimming so much length that the brow loses its natural weight\. All three are overcorrections that are harder to reverse than the perceived "flaw" they were trying to fix\.
+
+The framing to hold: bushy brows communicate maturity and masculine presence on most faces, and they age particularly well\. Men with naturally full brows typically look meaningfully younger than same\-age peers with thinner or over\-shaped brows, because thin brows read as aging regardless of the rest of the face\. Leading\-man archetypes in film and media trend fuller\-browed for exactly this reason — the brow carries a quiet authority that thin brows do not\.
+
+The correct work for this type of brow is entirely in the length\-control and center\-cleanup steps below\. Trim the occasional long hair that extends beyond the natural line, remove the unibrow as described, tidy obvious outliers, and stop\. Preserve the natural thickness\. This is the case where "less is more" is the literal instruction, not a platitude\. If the brows are genuinely unkempt rather than just bushy, the solution is still not thinning — it is length control\. A clean, controlled bushy brow and an unkempt bushy brow differ almost entirely in hair length, not hair density\.
+
 __Step 1 — Center cleanup \(non\-negotiable\)__
 
 Remove the unibrow\. This is the single highest\-impact eyebrow intervention for most men and the one with the clearest signal value\. A gap between the brows reads as clean and deliberate\. Hair connecting the brows reads as neglect\. Keep the natural spacing — do not widen the gap artificially\.
+
+The practical management is straightforward but worth getting right, because this is also one of the easier places to overdo it\. Tweeze the connecting hairs one at a time in the direction they grow — never pull across the grain, which weakens the follicle over time and produces an uneven regrowth pattern\. The target gap matches the natural space that would exist if the center hairs had never grown in; visually, the width is usually roughly equal to the distance between the nostrils, though this varies by face\. Going wider is the most common mistake and produces a surprised, artificially high\-arched look that takes months to grow back\. Going narrower — leaving a few connecting hairs "to look natural" — undoes the entire point of the cleanup\.
+
+Maintenance frequency matters more than aggressiveness\. Men with dense center growth should plan on a quick tweezing pass every five to seven days; the hair grows back fast, and the connected look returns within two weeks of a full cleanup\. Men with lighter growth can work on a two\-to\-three\-week cadence\. Avoid waxing and depilatory creams in this area — both are harder to control precisely than tweezers and increase the risk of over\-removal\. A lighted magnifying mirror is worth owning: the difference between a clean cleanup and an over\-removed gap is a few hairs, and good lighting is how you keep the count honest\.
 
 __Step 2 — Length control \(the most overlooked step\)__
 

@@ -117,6 +117,22 @@ __Physician involvement required before__
 
 Any changes to stimulant dosing or timing\. Combining stimulants with fat burners, pre\-workouts, or other stimulant\-containing supplements — the cardiovascular load compounds\. Adding any weight loss medication including GLP\-1s without physician awareness of stimulant medication\.
 
+__Eye\-Area Medical Conditions — Strabismus, Ptosis, and Chronic Dry Eye__
+
+__What changes__
+
+The eye area is disproportionately important for how a face reads, which creates a specific trap: men with strabismus \(including what is colloquially called lazy eye\), ptosis \(drooping eyelid\), or chronic dry eye will often try to solve what is actually a medical issue through skincare, eye creams, or grooming interventions\. That is the wrong approach, and it delays real treatment while producing no benefit\. The eye\-area content in Doc 10 is written for structurally intact eyes — it addresses skin quality, brow framing, tear trough management, and sleep\-driven appearance issues\. It does not address misalignment, lid drooping, or conditions that produce persistent redness and irritation regardless of lifestyle inputs\.
+
+Strabismus is a medical condition with a spectrum of severity and several treatment paths — from prism glasses and vision therapy in milder cases to surgical correction in more pronounced cases\. It is not a cosmetic problem with a cosmetic solution\. Ptosis follows the same logic: mild cases may respond to targeted eye drops or muscle\-strengthening work, more pronounced cases are corrected surgically by oculoplastic surgeons\. Chronic dry eye affects both comfort and appearance \(persistent redness, irritation\-driven puffiness\) and has a range of treatments from drops to procedural interventions\.
+
+__What stays the same__
+
+Once the medical condition is being appropriately managed, the eye\-area content in Doc 10 applies in full\. Skin quality around the eye, sleep sufficiency, inflammation management from diet and alcohol, brow framing, and hydration all contribute the way the doc describes\. What medical management does is remove the confound — you are no longer trying to cosmetic\-intervene around a structural or functional issue\.
+
+__Physician involvement required before__
+
+Any attempt to correct perceived eye alignment issues, droopy lids, or chronic eye irritation through supplements, eye exercises advertised online, or cosmetic procedures\. The relevant specialists are ophthalmologists for alignment and general eye health, and oculoplastic surgeons for lid position and eye\-area reconstructive work\. Dermatologists and general cosmetic physicians are the wrong first stop for these conditions\. Under\-eye filler specifically should not be placed while an unmanaged medical eye condition is active, because the filler interacts with tissue that may be surgically operated on later\.
+
 __What This Document Does Not Cover__
 
 Conditions with high enough variance or specialist requirement that a general modifier overlay would be more misleading than helpful: limb differences and amputation \(adaptive fitness requires a physiatrist or certified adaptive fitness specialist\), Type 1 diabetes \(insulin management complexity is beyond the scope of a looksmaxxing overlay\), active cancer or post\-treatment recovery, severe cardiovascular disease, and psychiatric conditions beyond ADHD\. For these, the honest answer is that the cleanmaxxing system's general principles remain valid where they apply, and a specialist familiar with the condition is the right partner for the specific adaptations required\.
