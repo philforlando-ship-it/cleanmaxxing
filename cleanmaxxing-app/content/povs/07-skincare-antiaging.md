@@ -130,36 +130,6 @@ __Night__
 
 That routine alone puts you ahead of the vast majority of people in terms of long\-term skin quality\.
 
-__Troubleshooting — When the Routine Causes Problems__
-
-This is the part most skincare content skips\. You start a routine and your skin gets worse\. Now what?
-
-__Purging vs\. a genuine reaction__
-
-When you introduce a retinoid or an exfoliant \(AHA, BHA\), your skin may break out more before it breaks out less\. This is called purging — accelerated cell turnover pushes existing clogs to the surface faster than they would have emerged on their own\. Purging typically peaks at two to six weeks after starting the product and resolves within eight to twelve weeks\. The breakouts appear in places where you normally break out, and each individual spot heals faster than your pre\-routine breakouts did\.
-
-A genuine adverse reaction looks different\. The breakouts appear in new areas where you do not normally break out\. The skin becomes red, tight, itchy, or stinging in a way that gets steadily worse rather than peaking and resolving\. If the irritation is escalating after two to three weeks rather than stabilizing, stop the product\. A purge gets better\. A reaction does not\.
-
-__The one\-at\-a\-time rule__
-
-Introduce one new product at a time and wait at least two weeks before adding another\. If you start a retinoid, a new cleanser, and a vitamin C serum in the same week and your skin freaks out, you have no way to isolate the cause\. One product at a time, two weeks of observation, then add the next\. This is slower\. It is also the only way to build a routine you can actually troubleshoot when something goes wrong\.
-
-__Sweat between applications — what to do mid\-day__
-
-If you work out or sweat significantly between your morning routine and your evening routine, the question is whether to wash your face again\. The answer depends on what you applied that morning\.
-
-If you applied sunscreen in the morning \(which you should have\): sweat and oil will have partially broken down the SPF layer\. If you are going back outside after the gym, rinse with water, pat dry, and reapply sunscreen\. If you are done with outdoor exposure for the day, a gentle water rinse or a micellar water wipe is sufficient — you do not need a full cleanser mid\-day unless your skin is visibly oily or dirty\.
-
-Do not reapply retinoids, vitamin C, or exfoliants mid\-day\. These are once\-daily products applied at the correct time in the routine sequence\. Extra applications increase irritation risk without meaningful additional benefit\.
-
-The general rule for mid\-day sweat: rinse with water, blot dry, reapply SPF if going back outside, otherwise leave the skin alone until your evening routine\. Over\-cleansing strips the skin barrier and creates more problems than the sweat would have\.
-
-__When to pivot the whole routine__
-
-If your skin is consistently worse after eight weeks on a new routine — more breakouts, more redness, more irritation, not less — the routine is not working for your skin and staying the course is not discipline, it is stubbornness\. Drop back to the minimal effective routine \(cleanser, moisturizer, SPF in the morning; cleanser, moisturizer at night\) for two weeks to let the skin reset\. Then reintroduce one active at a time\. Often the issue is not the active ingredient itself but the formulation — a different brand of retinoid with a different vehicle or concentration may work where the first one did not\.
-
-If the minimal routine itself causes irritation, the cleanser or moisturizer may be the problem\. Switch to a fragrance\-free, soap\-free cleanser and a basic ceramide\-based moisturizer\. If even that causes persistent issues, see a dermatologist — you may have an underlying sensitivity or condition \(rosacea, eczema, contact dermatitis\) that needs clinical management before a cosmetic routine can sit on top of it\.
-
 __Tier Placement__
 
 __Age\-Segmented Approach — Prevention to Correction__
