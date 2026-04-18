@@ -66,15 +66,19 @@ export async function POST(req: Request) {
     );
   }
 
-  // Refuse duplicates by title (crude but works — source_slug would be better,
-  // schema doesn't carry it yet).
-  const { data: existing } = await supabase
+  // Refuse duplicates. Prefer source_slug — it's the stable template
+  // identifier (multiple templates can share a slug) and correctly handles
+  // title rewrites without false positives on coincidental title matches.
+  // Fall back to title match only for legacy adds that somehow don't carry
+  // a slug (every current client supplies one).
+  const dupQuery = supabase
     .from('goals')
     .select('id')
     .eq('user_id', user.id)
-    .eq('status', 'active')
-    .eq('title', title)
-    .maybeSingle();
+    .eq('status', 'active');
+  const { data: existing } = source_slug
+    ? await dupQuery.eq('source_slug', source_slug).maybeSingle()
+    : await dupQuery.eq('title', title).maybeSingle();
   if (existing) {
     return NextResponse.json({ error: 'Already active.' }, { status: 409 });
   }
