@@ -66,9 +66,37 @@ read it at the start of the next one.
 - Deliberately kept: `incel forums` in doc 06 (factual origin citation for bone-smashing); `tier list` throughout doc 15 (refers to Cleanmaxxing's S/A/B/C *intervention* tier system, not human ranking); `genetic ceiling` framing in docs 15/16/55 (methodological concept, explicitly anti-hierarchy); the "Most people are not unattractive — they are under-optimized" line in doc 37 (dismissive reframe).
 - This completes the §13 pre-launch corpus audit commitment. Future content should stay on the right side of this: tier lists of *interventions* = OK, tier lists of *humans* = not OK.
 
+**Slice 7 — Beta invite toolkit (commit `f857e29`).**
+- Three drafts in `content/beta/` for polishing before outreach.
+- `creator-outreach.md` — email/DM Phil sends to creator partners (warm, cold, and short-DM variants). Names the Rewardful revenue share, dedicated `/from/[slug]` landing page, no-exclusivity posture. Rewardful split rate left blank for you to fill in.
+- `beta-invite.md` — text the creator forwards to their audience. Short (DM), medium (email), and long (YouTube description) versions. Written in the creator's voice, not Phil's. Explicit "still in beta, expect rough edges" framing.
+- `watch-notes.md` — internal reference for PostHog session replays. Golden paths, rage-click surfaces, drop-off checkpoints table, qualitative signals, what to ignore, feedback capture pattern capped at five items per iteration.
+
+**Slice 8 — Corpus audit automation (commit `f68139d`).**
+- `scripts/corpus-audit.ts` — new. Ten regex checks covering the hierarchy vocabulary the spec §13 commitment rejects: alpha/beta/sigma, HVM, SMV, PSL/mogging, pill language, gigachad/chad, decile/percentile ranking, out-of-league, incel (outside the one legitimate citation in doc 06), objectively attractive. Per-file allowlist handles the one legitimate case.
+- `npm run corpus-audit` — exits 0 when clean, 1 on violations, 2 on script error. Verified by planting a test violation and confirming fail; currently passes clean on 59 files × 10 patterns.
+- Scoped deliberately to `content/povs/` only. The spec file, Mister P prompt, and smoke-test questions legitimately contain the banned vocabulary because they exist to name and refuse it.
+- Locks in the anti-hierarchy discipline so a future corpus addition can't quietly regress.
+
+**Slice 9 — Motivation-segment ranker diagnostic + tuning (commits `abc35db`, `6cc36f8`).**
+- `scripts/motivation-differentiation.ts` — new. Simulates `rankCandidates` + `pickTopN` across all 6 motivation segments × 3 age segments × 2 focus scenarios (body-focused + surface-focused) and prints a per-cell table with a differentiation verdict. Loads metadata from `_metadata.json`; no Supabase or network calls.
+- `npm run motivation-diff` — safe to run anytime, ~1 second.
+- **What the diagnostic surfaced** on the first run: the ranker had a real problem. Motivation adjustments at ±2 were overridden by the tier hierarchy in every test case except `specific-event`. Tier-4 "Build daily mobility" was appearing in the top-3 for body-focused users because `pickTopN`'s strict category-diversity rule was picking it over same-category tier-1 goals.
+- **The tuning** that followed (commit `6cc36f8`):
+  - `motivationAdjustment` magnitudes bumped from ±2 to ±4 on process/outcome, and from +3 to +5 on the safety-category boost. These are the minimum sizes that actually flip picks rather than just shift scores.
+  - `pickTopN` rewritten: one pass instead of two, with a `CATEGORY_BREAK_SCORE = 4` threshold. Prefers category diversity by default but breaks it when a same-category candidate outscores the best cross-category candidate by 4+ points. Fixes the tier-4 mobility issue.
+- **Result after tuning**: body-focused scenario now shows MODERATE differentiation (5 unique picks / 18 across motivations). Surface-focused still shows 3 / 18 — but that's the correct answer there, because all surface-focused candidates are process goals in similar categories, so there's nothing structural for motivation to reorder. The script labels that case "LOW — expected: candidate pool is uniform goal_type/category" rather than flagging a bug.
+
+**Slice 10 — goals/add duplicate detection migrated to source_slug (commit `d4a9ef1`).**
+- `app/api/goals/add/route.ts` — dedupe query changed from `.eq('title', title)` to `.eq('source_slug', source_slug)` when a slug is present. Title match stays as a fallback for legacy payloads without a slug (every current client supplies one).
+- Closes the title-based-dedupe known-limitation flag that has been carried across the last several handoffs.
+- Side effect: users can now add templates with rewritten titles without false-positive conflicts against prior goals that share a slug but had a different title before.
+
 ### Verified working this session
 
 - `npm run typecheck` — clean after every slice.
+- `npm run corpus-audit` — 59 files × 10 patterns, clean.
+- `npm run motivation-diff` — runs clean, body-focused MODERATE, surface-focused correctly LOW-but-expected.
 - Browser end-to-end: full checkout → webhook fires → subscription flips → portal button renders and opens Stripe-hosted management page → cancellation fires `customer.subscription.deleted` webhook and flips back to canceled.
 - Resend: one real email delivered end-to-end via `/api/cron/weekly-email`.
 - Corpus: two flagged passages rewritten, full scan confirms clean.
@@ -95,7 +123,6 @@ Week 5 code is effectively done. What's left is primarily non-code:
 
 ### Known issues / limitations carried forward
 
-- **Title-based duplicate detection in `/api/goals/add`** — still pending. Should migrate to `source_slug` matching. One-line change, not blocking.
 - **In-memory topic similarity** scales to ~500 queries per user. Migrate to Postgres RPC when needed.
 - **Eye-area retrieval gap (Q9 smoke test)** — still deferred.
 - **Circuit breaker not manually verified end-to-end** — needs real user query volume.
@@ -116,7 +143,9 @@ npm run dev
 
 # Sanity checks:
 npm run typecheck
-npm run smoke-test   # should still be 22/22
+npm run corpus-audit        # anti-hierarchy vocabulary check
+npm run motivation-diff     # ranker differentiation sanity
+npm run smoke-test          # should still be 22/22 (not re-run this session)
 
 # Quick eyeball pass:
 # - http://localhost:3000/goals/library (tier-grouped sections)
@@ -127,18 +156,24 @@ npm run smoke-test   # should still be 22/22
 # 1. DNS records for cleanmaxxing.com → Resend domain verification
 # 2. Once Resend is real-domain ready, swap RESEND_FROM_EMAIL, retest welcome + cron
 # 3. Create live-mode Stripe webhook endpoint in the Dashboard (only when deploying)
-# 4. Beta invite outreach — first creator partner, 10-30 testers
+# 4. Beta invite outreach — creator-outreach draft in content/beta/ is ready to polish
 ```
 
 ### Commits this session
 
-Five commits, all on `master`, not pushed to remote:
+Eleven commits, all on `master`, not pushed to remote:
 
 1. **`538835b`** — Wire Stripe webhook and customer portal
 2. **`c20dca9`** — Add motivation detail field, tier explainers, and tiered library layout
 3. **`5bfffe7`** — Bump cardio to tier-2 and note age-segment tier overrides for v2
 4. **`2622858`** — Expand corpus: B12, fair complexions, eye medical, nose framing, bushy brows
 5. **`3999ba2`** — Remove hierarchy-culture vocabulary from docs 16 and 55
+6. **`35cd997`** — Update handoff for 2026-04-17/18 session (superseded by this entry)
+7. **`f857e29`** — Draft beta invite toolkit — creator outreach, user invite, watch notes
+8. **`f68139d`** — Add corpus audit script — lock in the anti-hierarchy discipline
+9. **`abc35db`** — Add motivation-segment ranker differentiation check
+10. **`6cc36f8`** — Tune ranker so motivation actually moves the top-3 picks
+11. **`d4a9ef1`** — Migrate goals/add duplicate detection from title to source_slug
 
 ---
 
