@@ -152,8 +152,8 @@ export default function Home() {
             <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
               An onboarding conversation — not a form — produces three
               starter goals matched to your age, focus areas, and where
-              you&rsquo;re actually starting from. Ranked by a hierarchy of
-              what actually moves the needle, not by what sounds impressive.
+              you&rsquo;re actually starting from. Ranked by how much they
+              actually move the needle, not by what sounds impressive.
             </dd>
           </div>
 
