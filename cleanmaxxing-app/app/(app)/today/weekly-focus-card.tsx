@@ -116,9 +116,12 @@ export function WeeklyFocusCard({ goals }: Props) {
                 </span>
               )}
             </div>
+            <div className="mt-2">
+              <AdjustBaseline goalId={entry.anchorGoalId} currentStage={entry.anchorStage} />
+            </div>
             {entry.state.kind === 'active' ? (
               <>
-                <p className="mt-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                <p className="mt-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">
                   {entry.state.block.focus}
                 </p>
                 <p className="mt-1 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
@@ -126,7 +129,7 @@ export function WeeklyFocusCard({ goals }: Props) {
                 </p>
               </>
             ) : (
-              <p className="mt-2 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+              <p className="mt-3 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
                 {entry.state.graduation}
               </p>
             )}
@@ -142,7 +145,6 @@ export function WeeklyFocusCard({ goals }: Props) {
               >
                 Open goal →
               </Link>
-              <AdjustBaseline goalId={entry.anchorGoalId} currentStage={entry.anchorStage} />
               {povExists(entry.slug) && (
                 <Link
                   href={`/povs/${entry.slug}`}

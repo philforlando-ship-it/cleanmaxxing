@@ -25,17 +25,17 @@ export default async function GoalsPage() {
             {goals?.length ?? 0} active
           </p>
         </div>
-        <a
+        <Link
           href="/goals/library"
           className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
         >
           Browse library
-        </a>
+        </Link>
       </div>
 
       {!goals || goals.length === 0 ? (
         <p className="mt-10 text-sm text-zinc-500">
-          No active goals yet. <a href="/goals/library" className="underline">Browse the library</a> to add some.
+          No active goals yet. <Link href="/goals/library" className="underline">Browse the library</Link> to add some.
         </p>
       ) : (
         <ul className="mt-8 flex flex-col gap-4">

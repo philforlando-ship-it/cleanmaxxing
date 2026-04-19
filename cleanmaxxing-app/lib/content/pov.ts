@@ -6,7 +6,7 @@
 // Used by app/(app)/povs/[slug]/page.tsx and the "Learn more" link gating
 // on goal surfaces.
 
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -46,6 +46,32 @@ export function povExists(slug: string | null | undefined): boolean {
 
 export function listPovSlugs(): string[] {
   return Array.from(getAvailableSlugs()).sort();
+}
+
+// Title cache. Populated lazily by scanning frontmatter on first request.
+// Used by the POV library index page to render titles without opening
+// every markdown file per request.
+let titlesCache: Record<string, string> | null = null;
+
+function loadTitles(): Record<string, string> {
+  if (titlesCache) return titlesCache;
+  const map: Record<string, string> = {};
+  for (const slug of getAvailableSlugs()) {
+    const filePath = path.join(POVS_DIR, `${slug}.md`);
+    try {
+      const raw = readFileSync(filePath, 'utf-8');
+      const m = raw.match(/^title:\s*"?([^"\r\n]+?)"?\s*$/m);
+      map[slug] = m ? m[1].trim() : slug;
+    } catch {
+      map[slug] = slug;
+    }
+  }
+  titlesCache = map;
+  return map;
+}
+
+export function povTitleFor(slug: string): string {
+  return loadTitles()[slug] ?? slug;
 }
 
 export type Pov = {

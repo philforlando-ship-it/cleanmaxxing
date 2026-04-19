@@ -58,6 +58,31 @@ export function ConfidenceTrendChart({ history }: Props) {
   const delta = previous !== null ? Number((latest - previous).toFixed(1)) : null;
   const ctx = contextFor(latest);
 
+  // Sparse variant: with one reflection, the area chart is a single dot
+  // which reads as awkward rather than informative. Show just the hero
+  // value with a nudge to return next week. Two data points onward gets
+  // the full chart since there's a real trend to draw.
+  if (data.length === 1) {
+    return (
+      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 className="text-lg font-medium">Weekly confidence</h2>
+        <div className="mt-4 flex items-end gap-5">
+          <div>
+            <div className="text-5xl font-semibold tabular-nums leading-none text-zinc-900 dark:text-zinc-100">
+              {formatScore(latest)}
+            </div>
+            <div className="mt-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              {ctx.label}
+            </div>
+          </div>
+        </div>
+        <p className="mt-5 text-xs text-zinc-500 dark:text-zinc-400">
+          Your first reflection is in. One more next week and the trend line starts drawing itself.
+        </p>
+      </section>
+    );
+  }
+
   const deltaColor =
     delta === null || delta === 0
       ? 'text-zinc-500'
