@@ -1,0 +1,33 @@
+{
+  "slug": "12-style-clothing",
+  "start_cue": "Fit beats brand every time. A $20 shirt that fits your shoulders outperforms a $300 piece that doesn't. Audit before you buy.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Fit audit — keep what fits, remove what doesn't",
+      "detail": "Try on every shirt, pant, and jacket you currently wear. Keep what meets the fit checks: shoulder seam ends at your actual shoulder point, sleeves end at the wrist bone, shirts don't billow at the waist, pants taper without clinging. Donate or retire the rest — keeping poorly-fitting items crowds the closet with ways to look worse. For borderline items, a local tailor can fix sleeves, hems, and waist suppression cheaply ($15-30 per alteration)."
+    },
+    {
+      "range": "3-4",
+      "focus": "Build the simple wardrobe in core colors",
+      "detail": "The repeatable-winner list: fitted plain tees in black, white, grey, navy; dark and light wash jeans; well-fitted chinos; minimal sneakers (one white pair, one black or dark); one versatile jacket (denim, bomber, or leather, picked for your vibe). This covers ~80% of real occasions. Neutral colors near the face, avoid horizontal-stripe patterns that read as wider, nothing flashy until the baseline is running."
+    },
+    {
+      "range": "5-8",
+      "focus": "Pick an archetype and build consistency",
+      "detail": "Choose one base style and stick with it: clean minimalist (neutral, sharp fits, effortless), athletic casual (fitted, performance-inspired, subtly shows physique), or rugged (denim, boots, heavier textures). The archetype should match your face and build — softer face does poorly in aggressive styles, bulkier build needs structure over tightness. Consistency within one archetype creates identity; mixing archetypes reads as disconnected."
+    },
+    {
+      "range": "9+",
+      "focus": "Occasion awareness and targeted upgrades",
+      "detail": "Learn to dress to the room — overdressed reads as insecure, consistently underdressed reads as careless. Keep shoes clean; scuffed or beat-up shoes undermine the entire outfit regardless of what's above them. One good watch (see the niche-enhancements walkthrough if you have that goal). Color accents near the upper body only — lower-half color is usually noise."
+    }
+  ],
+  "graduation": "When fit is reliable, the core palette works without thinking, an archetype has settled in, and you can dress for any common occasion without a second thought, the system is installed. Further upgrades become about quality (one excellent piece every few months) rather than quantity or trend-chasing.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 5,
+    "established": null
+  }
+}

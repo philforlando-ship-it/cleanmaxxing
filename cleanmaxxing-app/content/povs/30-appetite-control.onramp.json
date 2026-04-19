@@ -1,0 +1,33 @@
+{
+  "slug": "30-appetite-control",
+  "start_cue": "You do not fix food problems by trying harder. You fix them by making failure harder — design the environment before testing the willpower.",
+  "weeks": [
+    {
+      "range": "1",
+      "focus": "Track triggers — when and why you eat",
+      "detail": "For three to five days, note the time you eat, your emotional state, and what you consumed. No judgment, no restriction — just data. Patterns emerge quickly: the same triggers (stress, boredom, late-night, specific locations, hyper-palatable foods) keep showing up. You cannot address what you cannot see."
+    },
+    {
+      "range": "2-3",
+      "focus": "Control the environment",
+      "detail": "Remove the trigger foods from the house. Access determines consumption far more reliably than intention. Stock protein-rich defaults and ingredients for simple, repeatable meals. Do not shop while hungry. If trigger foods are genuinely not present, the decision to eat them becomes making a special trip — which is a much higher bar than opening a cabinet."
+    },
+    {
+      "range": "4-6",
+      "focus": "Install a simple eating structure",
+      "detail": "Two to three meals per day with protein in every meal, eaten at consistent times. Hunger is dramatically easier to manage when it's predictable — the body adapts to regular feeding windows and between-meal cravings quiet down. Keep the default meals boring but effective; variety and palatability drive overconsumption."
+    },
+    {
+      "range": "7+",
+      "focus": "Replace rewards, delay cravings, cut invisible calories",
+      "detail": "For the reward-loop cravings (stress, comfort, stimulation rather than hunger), build alternative outlets — walking, music, controlled caffeine, carbonated water. For in-the-moment cravings, delay-do-not-deny: \"I will wait twenty minutes.\" Most cravings peak and fade. Meanwhile, cut the three invisible-calorie categories: liquid calories, mindless snacking, late-night eating. None require restriction on actual meals."
+    }
+  ],
+  "graduation": "When the environment is reliably free of triggers, structured meals feel automatic, and cravings are quieter than they were at the start, the system is working. Relapses will happen — the rule is 'never miss twice' rather than 'never miss at all.' If the relationship with food still feels out of control at this point, professional support (therapy, structured programs, GLP-1 medications under a physician) is appropriate and effective.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 2,
+    "partial": 4,
+    "established": null
+  }
+}

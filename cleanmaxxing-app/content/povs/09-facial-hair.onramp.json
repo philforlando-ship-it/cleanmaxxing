@@ -1,0 +1,28 @@
+{
+  "slug": "09-facial-hair",
+  "start_cue": "Match the style to what's actually growing, not to what you wish were. Stubble is the highest-ROI default if you're unsure.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Pick a length honest to your density, then keep clean lines",
+      "detail": "Look at your growth in good light: thick and even, patchy, or somewhere in between. Thick/even opens up short beard or stubble options; patchy means stubble or clean shave — forcing a full beard over patchy growth is the most common mistake in the category. Decide the length and commit for two weeks. The three lines that matter most: neckline just above the Adam's apple, natural cheek line (clean but not over-sculpted), mustache above the lip. Trim weekly."
+    },
+    {
+      "range": "3-6",
+      "focus": "Refine lines and match style to face shape",
+      "detail": "Once the length is stable, dial in the shape: weak jaw/chin benefits from a short boxed beard or angular stubble; strong jaw does better with clean shave or light stubble; round face wants tighter sides and slight chin length; long face wants fuller sides and shorter chin. Book a barber appointment specifically for a beard line-up if you haven't been maintaining cheek and neck lines with precision at home."
+    },
+    {
+      "range": "7+",
+      "focus": "Optional — upgrades within your density ceiling",
+      "detail": "If density is genuinely thick and even, a short beard becomes a viable alternative to stubble — requires more maintenance (regular trimming, shape upkeep, beard oil if skin runs dry) but can significantly reshape the lower face. If density is patchy and bothering you, topical minoxidil has evidence for filling in over 4-6+ months of consistent application. Genetics ultimately cap density — work within what you have rather than chase a fantasy beard."
+    }
+  ],
+  "graduation": "When the length choice is clearly right for your density, the three lines (neck, cheek, mustache) are maintained weekly without thinking, and the presentation reads as intentional rather than neglected, facial hair is doing its job. From here it's a maintenance habit, not a project.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 7,
+    "established": null
+  }
+}

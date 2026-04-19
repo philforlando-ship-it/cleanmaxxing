@@ -1,0 +1,33 @@
+{
+  "slug": "48-skin-tone-guidance",
+  "start_cue": "Generic skincare advice is written for light skin, straight hair, and low PIH risk. If those aren't you, the defaults underperform — the protocol below corrects for that.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Tinted SPF + PIH-appropriate skincare",
+      "detail": "Identify your Fitzpatrick type (I-II very fair and burn-first; III-IV medium with moderate tan; V-VI darker with minimal sunburn but real UV aging). For III+ with any hyperpigmentation history, switch daily sunscreen to a tinted mineral SPF with iron oxides — it blocks visible light that worsens PIH. For darker skin specifically, the 'I don't burn so I don't need sunscreen' assumption is the single most damaging skincare error in the category."
+    },
+    {
+      "range": "3-6",
+      "focus": "PIH treatment (if applicable)",
+      "detail": "If you have post-inflammatory hyperpigmentation from acne, ingrowns, or cuts, introduce one evidence-based brightening ingredient at moderate concentration: niacinamide 5-10% (most tolerated starting point), azelaic acid 10-20% (also anti-inflammatory), or vitamin C 10-15% in the morning. Add only one at a time; give each 8-12 weeks before evaluating. For severe or stubborn PIH, prescription tretinoin or hydroquinone via a dermatologist is the next step up."
+    },
+    {
+      "range": "7-12",
+      "focus": "Textured hair routine (if applicable)",
+      "detail": "If your hair is Type 3 or 4 (defined curls to tight coils), switch away from daily washing and regular shampoo. Sulfate-free shampoo or co-wash every 3-7 days depending on texture. Deep condition every 1-2 weeks. Detangle only when wet with conditioner, using fingers or wide-tooth comb. For Type 4 specifically, the LOC/LCO method (liquid, oil, cream layering) is the standard moisture protocol. Avoid products with mineral oil or petrolatum as primary ingredients."
+    },
+    {
+      "range": "13+",
+      "focus": "Shaving strategy if PFB is present",
+      "detail": "If you get razor bumps (pseudofolliculitis barbae), the standard 'close shave with multi-blade razor' advice is the opposite of correct. Switch to a single-blade or safety razor, always shave with the grain, apply a warm towel for 1-2 minutes before, use a hydrating shave cream. Or bypass the ingrown mechanism entirely with an electric trimmer at a short guard length, or chemical depilatories (patch test first). Persistent severe PFB warrants a dermatology consult — prescription topicals exist and work."
+    }
+  ],
+  "graduation": "When your sunscreen is correctly matched to your tone (tinted for III+), PIH is visibly fading rather than compounding, hair texture is being managed with the right frequency and products for your type, and shaving is producing clean results without bumps or cuts, the tone-specific layer is handled. From here, the generic skincare and grooming guidance applies normally.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 7,
+    "established": null
+  }
+}

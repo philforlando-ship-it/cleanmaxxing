@@ -1,0 +1,33 @@
+{
+  "slug": "45-meal-plans",
+  "start_cue": "Repeated meals change bodies. Variety is overrated. Pick a calorie tier, run the three-day plan on repeat, and let consistency do the work.",
+  "weeks": [
+    {
+      "range": "1",
+      "focus": "Pick a tier and run it as-written",
+      "detail": "Choose 1,800 (aggressive cut), 2,200 (moderate cut or low-activity maintenance), 2,600 (maintenance or lean bulk), or 3,000 (lean bulk with high activity). Every tier anchors 180g of protein minimum. Run the three-day plan as written for the first week — don't improvise, don't swap yet. The point is to feel what the calorie and protein totals actually look like on a plate before you start modifying."
+    },
+    {
+      "range": "2-3",
+      "focus": "Run the Sunday batch-prep protocol",
+      "detail": "Under an hour of active cooking on Sunday covers five days. Rice (6 cups cooked from 2 cups dry, runs 30 min unattended), a sheet pan of roasted vegetables (25 min), 1-1.2kg chicken breast (25-30 min at 400°F), 8-10 hard-boiled eggs (12 min). Portion snacks into containers, label with the day. Everything stores refrigerated for 4-5 days. The prep is what makes the plan survive the week."
+    },
+    {
+      "range": "4-6",
+      "focus": "Rotate within your tier using the swap lists",
+      "detail": "Use the function-based swap lists in the POV to rotate proteins, carbs, and vegetables within your chosen tier without changing the macros. Chicken to turkey to fish. Rice to quinoa to potato. Broccoli to cauliflower to zucchini. The macro framework stays; the inputs rotate. This is where you keep the plan sustainable without drifting."
+    },
+    {
+      "range": "7+",
+      "focus": "Build meals off the template instead of following it",
+      "detail": "By this point you know what 220g of protein across the day looks like on a plate. You know what the right portion of rice is. You know which vegetables you actually eat. You can build meals off the framework — protein + carb + vegetable + controlled fat — without the template. Return to the written plan when travel, stress, or life disruption makes improvisation unreliable."
+    }
+  ],
+  "graduation": "When you can hit your tier's macros eyeballing portions, when Sunday prep is an automatic habit rather than a chore, and when improvisation during the week doesn't blow up the day's totals, the plan has done its job. From there, the template is a fallback for chaotic weeks rather than a daily prescription.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 2,
+    "partial": 4,
+    "established": null
+  }
+}

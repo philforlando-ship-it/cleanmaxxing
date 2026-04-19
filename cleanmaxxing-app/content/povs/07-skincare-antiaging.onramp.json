@@ -1,0 +1,28 @@
+{
+  "slug": "07-skincare-antiaging",
+  "start_cue": "Three products, one order: cleanser, moisturizer, SPF. Retinoid is the fourth, added only after the base is calm and consistent.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "The minimal effective routine, every day",
+      "detail": "Morning: cleanser, moisturizer, SPF 30+. Night: cleanser, moisturizer. Nothing else for the first two weeks — no retinoid, no actives, no new tools. The goal is to make three products applied in order feel automatic before you add the one ingredient that actually moves the needle on aging."
+    },
+    {
+      "range": "3-6",
+      "focus": "Introduce a retinoid at night, twice a week",
+      "detail": "Add a low-strength retinoid to the evening routine, two to three nights per week. Apply after cleanser, before moisturizer. Dry skin types can use the sandwich method — moisturizer, retinoid, moisturizer — which reduces irritation without meaningfully reducing efficacy. Expect some dryness or flaking in the first two weeks; that is the adjustment, not a failure. If it is painful or the barrier feels raw, drop back to once a week."
+    },
+    {
+      "range": "7-12",
+      "focus": "Build retinoid tolerance toward nightly use",
+      "detail": "Move from 2-3 nights to 4-5 nights over several weeks as tolerance builds. Once nightly retinoid is comfortable, optionally add a vitamin C serum in the morning between cleanser and moisturizer for antioxidant protection. Do not combine a strong exfoliant (AHA/BHA) with a retinoid on the same night until well past week 12 — the combined irritation routinely wrecks barriers that were working fine."
+    }
+  ],
+  "graduation": "When the AM and PM routines run without thinking, the retinoid is in consistent nightly use, and skin is calm and predictable day to day, the foundation is installed. Advanced actives (exfoliants, niacinamide, azelaic acid, targeted treatments) become reasonable considerations from this point — not before.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 7,
+    "established": null
+  }
+}

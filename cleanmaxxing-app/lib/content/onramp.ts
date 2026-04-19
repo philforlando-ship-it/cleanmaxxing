@@ -12,15 +12,30 @@
 // migration 0007_goals_baseline_stage.sql.
 
 import onramp04 from '@/content/povs/04-peptides.onramp.json';
+import onramp07 from '@/content/povs/07-skincare-antiaging.onramp.json';
 import onramp08 from '@/content/povs/08-head-hair-balding.onramp.json';
+import onramp09 from '@/content/povs/09-facial-hair.onramp.json';
+import onramp10 from '@/content/povs/10-grooming.onramp.json';
+import onramp11 from '@/content/povs/11-teeth-smile.onramp.json';
+import onramp12 from '@/content/povs/12-style-clothing.onramp.json';
 import onramp15 from '@/content/povs/15-looksmaxxing-system.onramp.json';
 import onramp16 from '@/content/povs/16-facial-definition-jawline.onramp.json';
 import onramp17 from '@/content/povs/17-environment-lifestyle-design.onramp.json';
+import onramp18 from '@/content/povs/18-tanning.onramp.json';
 import onramp19 from '@/content/povs/19-strength-training.onramp.json';
+import onramp20 from '@/content/povs/20-diet-macros.onramp.json';
+import onramp21 from '@/content/povs/21-protein-creatine.onramp.json';
+import onramp23 from '@/content/povs/23-cardio.onramp.json';
 import onramp24 from '@/content/povs/24-alcohol-cannabis.onramp.json';
+import onramp30 from '@/content/povs/30-appetite-control.onramp.json';
+import onramp31 from '@/content/povs/31-calorie-macro-framework.onramp.json';
 import onramp33 from '@/content/povs/33-niche-enhancements.onramp.json';
 import onramp34 from '@/content/povs/34-recovery-tools-polish.onramp.json';
 import onramp41 from '@/content/povs/41-medical-conditions.onramp.json';
+import onramp42 from '@/content/povs/42-sleep.onramp.json';
+import onramp45 from '@/content/povs/45-meal-plans.onramp.json';
+import onramp48 from '@/content/povs/48-skin-tone-guidance.onramp.json';
+import onramp50 from '@/content/povs/50-posture.onramp.json';
 import onramp51 from '@/content/povs/51-dating-apps.onramp.json';
 
 export type BaselineStage = 'new' | 'light' | 'partial' | 'established';
@@ -57,15 +72,30 @@ const DEFAULT_STAGE_WEEKS: Record<BaselineStage, number | null> = {
 
 const BY_SLUG: Record<string, Onramp> = {
   '04-peptides': onramp04 as Onramp,
+  '07-skincare-antiaging': onramp07 as Onramp,
   '08-head-hair-balding': onramp08 as Onramp,
+  '09-facial-hair': onramp09 as Onramp,
+  '10-grooming': onramp10 as Onramp,
+  '11-teeth-smile': onramp11 as Onramp,
+  '12-style-clothing': onramp12 as Onramp,
   '15-looksmaxxing-system': onramp15 as Onramp,
   '16-facial-definition-jawline': onramp16 as Onramp,
   '17-environment-lifestyle-design': onramp17 as Onramp,
+  '18-tanning': onramp18 as Onramp,
   '19-strength-training': onramp19 as Onramp,
+  '20-diet-macros': onramp20 as Onramp,
+  '21-protein-creatine': onramp21 as Onramp,
+  '23-cardio': onramp23 as Onramp,
   '24-alcohol-cannabis': onramp24 as Onramp,
+  '30-appetite-control': onramp30 as Onramp,
+  '31-calorie-macro-framework': onramp31 as Onramp,
   '33-niche-enhancements': onramp33 as Onramp,
   '34-recovery-tools-polish': onramp34 as Onramp,
   '41-medical-conditions': onramp41 as Onramp,
+  '42-sleep': onramp42 as Onramp,
+  '45-meal-plans': onramp45 as Onramp,
+  '48-skin-tone-guidance': onramp48 as Onramp,
+  '50-posture': onramp50 as Onramp,
   '51-dating-apps': onramp51 as Onramp,
 };
 

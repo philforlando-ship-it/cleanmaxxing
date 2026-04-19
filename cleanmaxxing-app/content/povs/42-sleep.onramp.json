@@ -1,0 +1,28 @@
+{
+  "slug": "42-sleep",
+  "start_cue": "Schedule first, duration second, quality third, gadgets and supplements last. Most people get this backwards.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Consistent wake time + morning light",
+      "detail": "Wake at the same time every day, including weekends. This anchors the circadian rhythm more powerfully than any supplement. Within thirty to sixty minutes of waking, get five to fifteen minutes of natural light exposure — outdoors, even on cloudy days, provides far more photons than indoor lighting. These two habits are free, require no equipment, and fix most 'I can't fall asleep' problems at the root rather than patching the symptom."
+    },
+    {
+      "range": "3-4",
+      "focus": "Caffeine cutoff + cool, dark bedroom",
+      "detail": "No caffeine after 12-1pm. Caffeine's half-life is 5-6 hours — afternoon coffee still has meaningful stimulant load at bedtime. Bedroom temperature at 65-68°F (18-20°C). Complete darkness — blackout curtains or a sleep mask. For noise, a fan or white noise addresses the primary disruptor (sudden sounds) consistently. Phone charger out of the bedroom."
+    },
+    {
+      "range": "5-8",
+      "focus": "Alcohol discipline + optional supplement",
+      "detail": "Alcohol sedates the nervous system initially but wrecks the back half of the night — fragmented REM, earlier waking, facial inflammation the next morning. Cut or meaningfully reduce. Heavy late meals similarly disrupt sleep architecture. If sleep anxiety or restlessness persist after the above is in place, magnesium glycinate (200-400mg before bed) is a reasonable low-risk supplement to try. Melatonin is for circadian shifting (jet lag, shift work), not for general sleep quality."
+    }
+  ],
+  "graduation": "When the wake time holds without an alarm fight, mornings feel energized rather than reluctant, and facial puffiness and under-eye darkness are visibly reduced from the starting point, the protocol is installed. Trackers can be used for broad trend awareness at this point, but nightly sleep-score optimization is counterproductive — anxiety about sleep data reliably worsens sleep. If fatigue persists despite adequate duration, or if there are signs of sleep apnea (loud snoring, witnessed pauses, morning headaches), escalate to a sleep study — this is not a supplement problem.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 5,
+    "established": null
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "slug": "31-calorie-macro-framework",
+  "start_cue": "A calibration system, not a one-time calculation. The formula gets you close. Two to three weeks of consistent tracking gets you accurate.",
+  "weeks": [
+    {
+      "range": "1",
+      "focus": "Calculate BMR, TDEE, and goal calories",
+      "detail": "Use the Mifflin-St Jeor equation for BMR, multiply by the activity multiplier for TDEE (most people overestimate — when in doubt, pick the lower multiplier). Set a goal: TDEE minus 300-500 for fat loss, TDEE for maintenance, TDEE plus 200-300 for lean bulk. Set macro targets: protein at 0.7-1g per pound, fat at 20-30% of calories, carbs filling the rest."
+    },
+    {
+      "range": "2-3",
+      "focus": "Track daily and verify",
+      "detail": "Hit the calorie and protein targets every day. Weigh yourself once per week — first thing in the morning, same clothes, same scale. Compare week to week, not day to day. Two to three weeks of consistent intake tells you whether the calculated number matches your real number. MyFitnessPal, Cronometer, or MacroFactor are all fine; the tool matters less than daily consistency."
+    },
+    {
+      "range": "4-6",
+      "focus": "Reality adjustment",
+      "detail": "Not losing weight after 2-3 weeks of consistent tracking? Reduce intake by 200 calories and reassess. Losing faster than 1.5 lbs/week consistently? Add 100-200 calories. Low energy or poor training performance? Add carbohydrates before adjusting total calories. No calculated TDEE is perfectly accurate for every individual — the results tell you the truth the formula can only approximate."
+    },
+    {
+      "range": "7+",
+      "focus": "From tracking to intuition",
+      "detail": "After several months of consistent logging, most people develop a strong intuitive sense of portion sizes, calorie density, and how different foods affect intake. Strict tracking can be reduced to periodic check-ins at that point — a weekly or biweekly rough audit rather than every-meal logging. The goal is competence, not permanent dependence on the tracker."
+    }
+  ],
+  "graduation": "When calorie and macro targets are hit reliably without strict tracking, the scale trend matches the calculation (or has been adjusted to match real metabolism), and weekly weigh-ins feel informative rather than anxiety-producing, the framework is internalized. From here, check-ins every few weeks are enough; daily logging is optional.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 2,
+    "partial": 4,
+    "established": null
+  }
+}

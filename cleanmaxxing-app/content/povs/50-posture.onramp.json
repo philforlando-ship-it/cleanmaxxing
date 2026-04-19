@@ -1,0 +1,33 @@
+{
+  "slug": "50-posture",
+  "start_cue": "Posture is the free appearance intervention most men underuse. Immediate visible effect from conscious correction, habitual change in 6-12 weeks.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Workstation correction",
+      "detail": "Most postural problems are driven by positions held 8+ hours a day — no exercise fully overcomes bad desk setup. Monitor top at or slightly below eye level, head and neck in neutral with the torso, shoulders relaxed, elbows close to body, lumbar support, feet flat on floor. Phone at eye level, not neck-flexion. Raise the laptop on books or a stand. These are environmental fixes that stop the daily damage; the movement work later compounds on top of a non-worsening baseline."
+    },
+    {
+      "range": "3-4",
+      "focus": "Daily resets and movement snacks",
+      "detail": "Every 60-90 minutes of sitting, stand and move for 2-3 minutes. A daily 5-minute mobility reset (cat-cow, thoracic rotation, hip flexor stretch, chin tucks) done consistently beats occasional long stretching sessions. Frequency matters more than duration here — set phone reminders if the rhythm doesn't establish on its own."
+    },
+    {
+      "range": "5-8",
+      "focus": "Gym support — the postural muscles",
+      "detail": "The muscles that need strengthening in typical desk workers: lower traps and serratus for scapular control, rear delts for external rotation, deep cervical flexors for head positioning, glutes for pelvic positioning, deep abdominals for core stability. In training terms: rows, face pulls, band pull-aparts, glute bridges, dead bugs, rear delt work. Two sessions per week of 15-20 minutes is sufficient — this is support work, not the main program."
+    },
+    {
+      "range": "9+",
+      "focus": "Automaticity",
+      "detail": "Goal is a default resting position requiring no active effort. Cues that accelerate this: imagine a string pulling the crown of the head upward; hourly phone reminders to check position; practice the correction while walking and standing, not just at the desk. For photos specifically, a slight chin tuck plus shoulder roll-back produces visibly different results than the default slouch."
+    }
+  ],
+  "graduation": "When workstation is corrected, movement snacks happen without reminders, the gym support work is a habit rather than an assignment, and the default resting position has shifted visibly toward neutral (compare a photo from week 1), posture is installed. Forward head posture correction alone can reveal an inch or more of neck length and meaningfully improve chin-neck definition — that's a free win from an intervention that costs nothing.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 5,
+    "established": null
+  }
+}

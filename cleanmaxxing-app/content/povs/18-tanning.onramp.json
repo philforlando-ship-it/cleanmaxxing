@@ -1,0 +1,28 @@
+{
+  "slug": "18-tanning",
+  "start_cue": "A multiplier with a cost. Pursue color without damage — warm and even, not maximum darkness. Fit the method to your skin type.",
+  "weeks": [
+    {
+      "range": "1",
+      "focus": "Decide whether tanning works for your skin",
+      "detail": "If your skin goes pink → red → peels rather than developing color (Fitzpatrick I or II), forcing a tan is damage, not adaptation. Use self-tanner or gradual tanning lotion as the default — the playbook for fair complexions is in the POV. For medium to darker skin that tans easily, controlled sun exposure or self-tanner both work. Either way: daily SPF 30+ is non-negotiable, and tinted mineral SPF with iron oxides is specifically better for anyone managing hyperpigmentation."
+    },
+    {
+      "range": "2-3",
+      "focus": "Build the base — gradually",
+      "detail": "Controlled sun: 10-30 minutes per side, 3-5 times per week, avoiding burns at all costs. Build evenly across two to three weeks, rotating coverage so one area doesn't get disproportionate exposure. Stop before any redness develops. Self-tanner: exfoliate first, apply evenly with a mitt, build gradually rather than going dark immediately. Face gets less direct exposure than body — the facial skin is thinner and ages faster."
+    },
+    {
+      "range": "4+",
+      "focus": "Maintain at low frequency",
+      "detail": "Once the base is established, 1-2 sessions per week is enough to hold the color. More frequent sessions start accumulating damage without adding visible benefit. For events (photos, a date, a specific occasion), mild gradual-tan product 24-48 hours before works better than trying to force intensity late. Tanning beds remain not recommended — they accelerate aging faster than outdoor sun at equivalent exposure levels."
+    }
+  ],
+  "graduation": "When color is warm, even, and subtle — visibly enhancing the face and physique without reading as artificial — tanning is doing its job. The correct endpoint is 'looks healthier,' not 'looks darker.' Maintenance is low-frequency and indefinite; further escalation is almost always damage rather than gain.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 2,
+    "partial": 4,
+    "established": null
+  }
+}

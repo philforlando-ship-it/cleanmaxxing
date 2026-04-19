@@ -1,0 +1,28 @@
+{
+  "slug": "23-cardio",
+  "start_cue": "Diet drives fat loss; cardio is the support tool that makes diet sustainable and builds the metabolic engine. Steps first, Zone 2 second, HIIT last.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Daily step count — 6,000 to 10,000",
+      "detail": "Before any formal cardio, lock in a daily step baseline. Phone or watch tracker is fine — accuracy matters less than trend. If your current baseline is under 4,000/day, aim for +2,000 per week of progression until you're consistently at 7,000-10,000. NEAT (non-exercise activity thermogenesis) at this range reliably supports leanness and is the foundation formal sessions build on."
+    },
+    {
+      "range": "3-6",
+      "focus": "Add Zone 2 — two sessions per week, 20-30 min",
+      "detail": "Zone 2 is the conversational-pace intensity — you can talk but are breathing with clear effort, roughly 60-70% of max heart rate. Incline walking on a treadmill, easy cycling, rowing at a steady pace, or slow jogging all work. Start with two 20-30 minute sessions per week, ideally on non-lifting days. This is the workhorse for metabolic capacity and sustainable leanness; unlike HIIT, it has almost no recovery cost and does not compete with lifting."
+    },
+    {
+      "range": "7+",
+      "focus": "Build Zone 2 up; add HIIT sparingly if at all",
+      "detail": "Progress Zone 2 to 3-4 sessions per week of 30-45 min each. Only then consider HIIT — one to two short sessions per week maximum. HIIT produces real cardiovascular adaptation and VO2 max gains but adds meaningful recovery cost; more than two sessions per week on top of lifting routinely produces the flat, overtrained look. Keep HIIT sessions genuinely short (15-20 minutes of actual work)."
+    }
+  ],
+  "graduation": "When the daily step baseline is consistent without effort, 3-4 Zone 2 sessions per week fit the schedule naturally, and conditioning is visibly better than the starting point (breathing easier, recovering faster between lifting sets, energy higher across the day), cardio is doing its job. Past 35, this system transitions from optional to foundational — staying lean without it gets meaningfully harder.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 7,
+    "established": null
+  }
+}

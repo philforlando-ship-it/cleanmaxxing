@@ -1,0 +1,33 @@
+{
+  "slug": "11-teeth-smile",
+  "start_cue": "Hygiene before whitening before orthodontics. Skipping the foundation to chase visible results is how otherwise-good dental work reads as uneven.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Hygiene foundation",
+      "detail": "Brush twice daily, floss every evening, clean the tongue. If you have not been to a dentist in over a year, book a cleaning — this alone addresses surface stains and tartar that whitening cannot reach. Rinse with water after coffee instead of brushing immediately (brushing softened enamel spreads erosion). Wait 30 minutes after acidic food or drink before brushing."
+    },
+    {
+      "range": "3-6",
+      "focus": "Cut the decay and staining drivers",
+      "detail": "Soda is the worst single item — sugar plus direct acid. Drink through a straw if unavoidable, or replace with water or unsweetened sparkling. Reduce snacking frequency on sugary foods; frequency of exposure matters more than total quantity. If you smoke, this is the single change that delivers the most dental appearance improvement of anything in the category. Coffee stains but does not cause decay at soda-level — rinse with water after, don't quit if you don't want to."
+    },
+    {
+      "range": "7-12",
+      "focus": "Whitening",
+      "detail": "With hygiene solid and the worst staining drivers reduced, whitening will actually hold. Over-the-counter strips (Crest or similar) used consistently over 2-4 weeks produce meaningful results. Professional in-office whitening is faster and more uniform but significantly more expensive. Space sessions to manage sensitivity — every other day for strips, or per your dentist's protocol."
+    },
+    {
+      "range": "13+",
+      "focus": "Orthodontics, only if alignment warrants it",
+      "detail": "For significant misalignment that disrupts facial harmony, clear aligners (Invisalign, or the cheaper mail-order options with appropriate due diligence) are the modern default. This is a 6-18 month commitment and a real budget. Not every set of slightly imperfect teeth needs orthodontic correction — do this if alignment genuinely draws the eye, not because someone sold you the idea."
+    }
+  ],
+  "graduation": "When hygiene runs daily without thinking, the major staining drivers are under control, teeth are a shade or two lighter than the starting point, and the smile feels relaxed rather than self-conscious, the category is handled. Ongoing maintenance is cleanings every 6 months and occasional whitening touch-ups.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 7,
+    "established": null
+  }
+}

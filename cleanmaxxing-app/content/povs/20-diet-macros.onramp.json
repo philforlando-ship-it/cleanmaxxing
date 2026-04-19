@@ -1,0 +1,28 @@
+{
+  "slug": "20-diet-macros",
+  "start_cue": "Anchor protein first. Calories second. Food selection third. Doing all three at once fails; doing them in order compounds.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Hit protein daily — nothing else changes yet",
+      "detail": "Target roughly 0.7-1 gram of protein per pound of goal bodyweight, every day. Track it however you want (app, note, mental tally). Do not yet track calories, do not yet change meal structure, do not yet restrict anything. The only measure this week is: did I hit protein today, yes or no. Protein is the variable that determines whether any later calorie change translates into the physique you want or just weight loss."
+    },
+    {
+      "range": "3-6",
+      "focus": "Add a calorie target aligned with your goal",
+      "detail": "Calculate TDEE (see the calorie-macro framework) and set a target: TDEE minus 300-500 for fat loss, TDEE for maintenance, TDEE plus 200-300 for lean bulk. Protein stays anchored; carbs and fats flex to fill the remaining calories. Do not obsess over the non-protein macro ratios yet — adherence to calories and protein matters far more than hitting exact carb/fat percentages."
+    },
+    {
+      "range": "7-12",
+      "focus": "Tighten food selection for satiety",
+      "detail": "Most of the deficit-sustainability problem is food choice, not willpower. Lean proteins as the anchor of every meal. Fruits and vegetables for volume and fiber. Whole grains over refined carbs. Reduce ultra-processed foods that are high-calorie and low-satiety. Cheat meals (contained deviations) are fine and useful; cheat days erase weekly deficits and should be avoided."
+    }
+  ],
+  "graduation": "When protein is automatic, calorie targets feel intuitive without strict tracking, and meal choices default to lean-protein + volume + fiber without decision fatigue, the framework is installed. Longer-term, tracking can be reduced to periodic check-ins rather than daily logging.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 7,
+    "established": null
+  }
+}

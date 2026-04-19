@@ -1,0 +1,28 @@
+{
+  "slug": "21-protein-creatine",
+  "start_cue": "Protein first, creatine only after protein is dialed. Creatine amplifies training output — it has nothing to multiply if protein is insufficient.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Hit the daily total — bodyweight in grams",
+      "detail": "Target roughly bodyweight in pounds, expressed as grams of protein per day. A 180-pound person aims for ~180g daily. Do not yet worry about distribution across meals or post-workout timing — just hit the daily number consistently. Whole-food sources are not superior to protein powder; use whichever actually gets you to the number."
+    },
+    {
+      "range": "3-6",
+      "focus": "Distribute across 3-5 meals with a per-meal cap",
+      "detail": "Spread intake across three to five meals, each roughly 30-50g (bodyweight ÷ 4 is the practical per-meal ceiling). Multiple daily stimulations of muscle protein synthesis outperform one or two very large protein meals. Lock in a post-workout meal or shake within 60 minutes of finishing training — not rigidly, but consistently."
+    },
+    {
+      "range": "7+",
+      "focus": "Add creatine monohydrate, 5g daily",
+      "detail": "Only now, with protein reliably in place, add 5g of creatine monohydrate per day. No loading phase required — saturation happens in 3-4 weeks on the standard dose. Time of day does not matter. Expect slight intracellular water retention (visible as fuller muscles, not softer face). Creatine monohydrate only — the flashier forms cost more and work no better."
+    }
+  ],
+  "graduation": "When protein hits without active counting most days, meal distribution is automatic, and creatine is a boring daily default, the supplement layer is doing its job. Further supplementation (vitamin D, omega-3, magnesium) becomes reasonable — everything else in the category stays optional and evidence-limited.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 7,
+    "established": null
+  }
+}

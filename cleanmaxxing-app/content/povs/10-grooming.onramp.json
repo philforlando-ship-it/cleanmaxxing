@@ -1,0 +1,33 @@
+{
+  "slug": "10-grooming",
+  "start_cue": "Micro-grooming is a compounding signal — individually minor, collectively powerful. Sequence it so each layer runs automatic before the next is added.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Eye area — the highest-ROI facial zone",
+      "detail": "The eye area signals energy, health, and age before anything else registers. Fix sleep first (it's the dominant driver — no eye cream overcomes chronic sleep deprivation), add moisturizer morning and night to the under-eye, and SPF every morning. If you already have decent skincare, extend it to the eye zone rather than buying separate eye products."
+    },
+    {
+      "range": "3-4",
+      "focus": "Eyebrows — clean strays, preserve shape",
+      "detail": "The goal is naturally disciplined, not sculpted. Remove obvious strays between the brows and on the upper cheek; do not thin the brow body. Trim downward-sticking long hairs with small scissors. A professional shape once (brow specialist, $30-50) establishes the map; then you maintain it at home. Target: thick, controlled, mostly straight with the natural slight arch preserved."
+    },
+    {
+      "range": "5-8",
+      "focus": "Ear and nose hair, nails, scent",
+      "detail": "Weekly: check ears and nose with a small trimmer (a $20 unit handles both). Trim nails and push back cuticles. Apply one subtle scent (cologne, body wash, or aftershave) you actually like — not three competing layers. None of these are glamorous but each one is an immediate signal of 'manages himself' vs 'does not,' and the absence registers more than the presence."
+    },
+    {
+      "range": "9+",
+      "focus": "Resting face and expression tension",
+      "detail": "Unconscious jaw clenching, brow tension, and tight lips distort the face and age it. Notice your resting face in the mirror without posing. Relax the jaw by letting it hang slightly open. Release the brow. This is a habit, not an exercise — once you notice the pattern, you can interrupt it throughout the day. Good eye contact is calm steadiness, not a hard stare."
+    }
+  ],
+  "graduation": "When the eye-area habits are automatic, eyebrows stay clean without weekly battles, ear/nose/nails are routine, and resting face reads relaxed rather than tense, micro-grooming has done its work. Advanced interventions (tear trough filler, eye-area cosmetic work) become reasonable considerations only after these fundamentals are consistently in place.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 5,
+    "established": null
+  }
+}
