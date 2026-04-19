@@ -136,6 +136,12 @@ export function WeeklyFocusCard({ goals }: Props) {
               </p>
             )}
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <Link
+                href={`/goals/${entry.anchorGoalId}`}
+                className="text-xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+              >
+                Open goal →
+              </Link>
               <AdjustBaseline goalId={entry.anchorGoalId} currentStage={entry.anchorStage} />
               {povExists(entry.slug) && (
                 <Link

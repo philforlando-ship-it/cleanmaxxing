@@ -19,15 +19,7 @@ export default async function SettingsPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
-      <div className="flex items-baseline justify-between">
-        <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
-        <Link
-          href="/today"
-          className="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-        >
-          ← Today
-        </Link>
-      </div>
+      <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
 
       <div className="mt-10 space-y-4">
         <Link

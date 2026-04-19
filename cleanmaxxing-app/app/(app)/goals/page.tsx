@@ -25,20 +25,12 @@ export default async function GoalsPage() {
             {goals?.length ?? 0} active
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <a
-            href="/goals/library"
-            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          >
-            Browse library
-          </a>
-          <a
-            href="/today"
-            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          >
-            Back to Today
-          </a>
-        </div>
+        <a
+          href="/goals/library"
+          className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+        >
+          Browse library
+        </a>
       </div>
 
       {!goals || goals.length === 0 ? (
@@ -64,22 +56,35 @@ export default async function GoalsPage() {
                   {goal.goal_type}
                 </span>
               </div>
-              <h2 className="text-lg font-semibold leading-tight">{goal.title}</h2>
+              <h2 className="text-lg font-semibold leading-tight">
+                <Link
+                  href={`/goals/${goal.id}`}
+                  className="hover:text-zinc-700 dark:hover:text-zinc-300"
+                >
+                  {goal.title}
+                </Link>
+              </h2>
               {goal.description && (
                 <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
                   {goal.description}
                 </p>
               )}
-              {povExists(goal.source_slug) && (
-                <div className="mt-3">
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+                <Link
+                  href={`/goals/${goal.id}`}
+                  className="text-xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+                >
+                  Open →
+                </Link>
+                {povExists(goal.source_slug) && (
                   <Link
                     href={`/povs/${goal.source_slug}`}
                     className="text-xs text-zinc-600 underline decoration-dotted underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
                   >
                     Read the full POV →
                   </Link>
-                </div>
-              )}
+                )}
+              </div>
             </li>
           ))}
         </ul>
