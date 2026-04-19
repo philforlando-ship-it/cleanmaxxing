@@ -1,0 +1,28 @@
+{
+  "slug": "17-environment-lifestyle-design",
+  "start_cue": "A one-weekend physical setup. After that, the Sunday reset is the entire maintenance load.",
+  "weeks": [
+    {
+      "range": "1",
+      "focus": "The one-weekend setup",
+      "detail": "Friday evening, 90 minutes: bedroom — thermostat 65–68°F, blackout curtains or sleep mask, phone charger out of the bedroom, morning-light setup placed where you'll encounter it. Saturday morning, 2–3 hours: kitchen reset — donate the autopilot junk, stock protein and vegetable defaults, put the good options at eye level. Saturday afternoon, 45 min: bathroom station — single visible grooming kit grouped by morning/evening/tools. Sunday: workspace lighting + commit to a specific gym, specific days, specific time."
+    },
+    {
+      "range": "2",
+      "focus": "Run the Sunday reset",
+      "detail": "Fifteen minutes Sunday evening. Restock grocery defaults, reset the grooming station, reset the bedroom (charger out, temperature set, curtains ready), confirm the training schedule for the week. This is the maintenance that lets every other habit run without willpower the rest of the week."
+    },
+    {
+      "range": "3+",
+      "focus": "Let the environment compound",
+      "detail": "No new environmental changes for at least four weeks after the initial setup. The compounding effect — better sleep every night, kitchen that feeds you correctly, gym that is already part of the week — needs time to show. If a layer drifts, the Sunday reset catches it. If something structural feels wrong after a full month, adjust one thing, not five."
+    }
+  ],
+  "graduation": "When the Sunday reset is automatic and the Phase 1 habits (sleep, skincare, protein, movement) are all running, environment design has done its job. It compounds indefinitely without further intervention — the next layer of work is inside the habits, not inside the environment.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 2,
+    "partial": 3,
+    "established": null
+  }
+}

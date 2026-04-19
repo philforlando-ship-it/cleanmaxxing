@@ -1,0 +1,33 @@
+{
+  "slug": "15-looksmaxxing-system",
+  "start_cue": "One variable at a time, layered into existence rather than installed all at once. The weeks below are the order of introduction, not a checklist to run in parallel.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Sleep + the absolute minimum skincare",
+      "detail": "Consistent wake time seven days a week. Cap caffeine after early afternoon. Bedroom dark and cool. Three-step skincare: gentle cleanser at night, moisturizer morning and night, SPF 30+ every morning. Nothing else. No retinoid yet, no actives, no supplements, no training program. The point is to make these two variables automatic before adding the next."
+    },
+    {
+      "range": "3-4",
+      "focus": "Add protein and movement",
+      "detail": "Protein target: roughly 0.7–1 gram per pound of goal bodyweight, spread across meals. Add 2–3 gym sessions or structured workouts per week — whatever you will actually show up for. If never trained before, full-body sessions at low intensity are the correct entry (if you have a strength-training goal active, its walkthrough covers this in depth). Do not yet track calories precisely or adjust other diet structure."
+    },
+    {
+      "range": "5-8",
+      "focus": "Tighten diet structure and one grooming upgrade",
+      "detail": "Add controlled diet structure: consistent meal timing, a rough calorie ceiling aligned with goal (cut, maintain, lean gain), whole-food defaults. Add exactly one Phase 2 grooming upgrade — a better haircut, eyebrow cleanup, or a proper shaving routine. Just one. Visible return starts to appear in this window."
+    },
+    {
+      "range": "9-12",
+      "focus": "Second Phase 2 layer + first refinement",
+      "detail": "Add a second Phase 2 layer — clothing fit and basic style if hair was handled first, or vice versa. Address hair loss if it is a factor. Introduce a retinoid into the evening skincare routine. Layer in a tan if skin is clear and body composition is trending correctly."
+    }
+  ],
+  "graduation": "When Phase 1 habits run without decision fatigue — sleep consistent without active effort, training missed fewer than two times in the last month, protein and calorie structure automatic at meals — the full tier list and phase framework become the operating system. Until then, adding more will regress the variables that matter most.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 5,
+    "established": null
+  }
+}

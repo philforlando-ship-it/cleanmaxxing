@@ -1,0 +1,33 @@
+{
+  "slug": "08-head-hair-balding",
+  "start_cue": "If the decision is to commit to the bald look, the variables below get judged harder than they did with hair. The order matters.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Scalp care automatic",
+      "detail": "Shave or buzz on a consistent schedule so length stays even. Moisturize scalp daily using facial products. SPF 30+ on the scalp every morning — not just sunny days. Light exfoliation 1–2× a week if flakes or bumps accumulate. Treat the scalp like facial skin, because it is. Two weeks at this level before adding anything else."
+    },
+    {
+      "range": "3-6",
+      "focus": "Skincare on top of the scalp habit",
+      "detail": "Add the core skincare routine on top of the scalp habit. Cleanser at night, moisturizer AM and PM, SPF every morning, retinoid in the evening rotated up as tolerated. With no hair framing the face, the threshold for 'good enough skin' rises."
+    },
+    {
+      "range": "7-10",
+      "focus": "Beard design + eyebrow upkeep",
+      "detail": "Beard is now doing the face-framing work hair used to do. Get a proper shape appointment — sharp cheek lines, clean neckline where the underside of the chin meets the neck, length matched to face shape. Add eyebrows to the weekly grooming list — strong natural brows do the upper-face framing on a shaved head."
+    },
+    {
+      "range": "11+",
+      "focus": "Physique and face leanness compound in the background",
+      "detail": "Training work — biased toward shoulders, chest, lats, traps, and neck — should already be running in parallel from earlier weeks. Face leanness is a multi-month project; keep it stacked with everything else rather than waiting. Style and hats are the last layer: a hat on a weak foundation does not rescue the look, it just moves the eye to the other problems."
+    }
+  ],
+  "graduation": "When scalp care, skincare, and beard design all run without active attention, and the physique work has produced visible shoulder/chest/neck development, the bald look is operating at full weight. Further gains come from continued fat loss and the style layer — not from more scalp products.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 7,
+    "established": null
+  }
+}

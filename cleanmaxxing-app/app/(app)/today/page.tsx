@@ -7,6 +7,7 @@ import { MisterPChatCard } from './mister-p-chat-card';
 import { WeeklyReflectionCard } from './weekly-reflection-card';
 import { ConfidenceTrendChart } from './confidence-trend-chart';
 import { MonthlyCheckpointCard } from './monthly-checkpoint-card';
+import { WeeklyFocusCard } from './weekly-focus-card';
 import { getTodayCheckInState } from '@/lib/check-in/service';
 import { getWeeklyReflectionState } from '@/lib/weekly-reflection/service';
 import { getCheckpointState } from '@/lib/checkpoint/service';
@@ -25,11 +26,19 @@ export default async function TodayPage() {
 
   const steppedAway = Boolean(profile.tracking_paused_at);
 
-  const [checkInState, reflectionState, checkpointState] = await Promise.all([
-    getTodayCheckInState(supabase, user.id),
-    getWeeklyReflectionState(supabase, user.id),
-    getCheckpointState(supabase, user.id),
-  ]);
+  const [checkInState, reflectionState, checkpointState, { data: goalsRaw }] =
+    await Promise.all([
+      getTodayCheckInState(supabase, user.id),
+      getWeeklyReflectionState(supabase, user.id),
+      getCheckpointState(supabase, user.id),
+      supabase
+        .from('goals')
+        .select('id, title, source_slug, created_at, baseline_stage')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('created_at', { ascending: true }),
+    ]);
+  const activeGoals = goalsRaw ?? [];
   const isDev = process.env.NODE_ENV === 'development';
 
   return (
@@ -74,6 +83,7 @@ export default async function TodayPage() {
           </section>
         )}
 
+        {!steppedAway && <WeeklyFocusCard goals={activeGoals} />}
         {!steppedAway && <DailyCheckInCard initialState={checkInState} />}
         {/* Chart and chat stay accessible even when stepped away — the
             chart is history (useful for reflection) and the chat has no

@@ -15,6 +15,15 @@ type Goal = {
   score: number;
 };
 
+type BaselineStage = 'new' | 'light' | 'partial' | 'established';
+
+const BASELINE_LABEL: Record<BaselineStage, string> = {
+  new: 'Just starting',
+  light: 'Some experience',
+  partial: 'Mostly consistent',
+  established: 'Already consistent',
+};
+
 type SuggestionsResponse = {
   suggested: Goal[];
   alternatives: Goal[];
@@ -36,6 +45,9 @@ export function GoalsPicker() {
   // dismissed for this onboarding completion run.
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
   const [showNudge, setShowNudge] = useState(false);
+  // Baseline stage per goal, keyed by source_slug. Defaults to 'new' for
+  // any goal the user hasn't explicitly set — same as the DB default.
+  const [baselines, setBaselines] = useState<Record<string, BaselineStage>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -126,6 +138,7 @@ export function GoalsPicker() {
           category,
           priority_tier,
           goal_type,
+          baseline_stage: baselines[source_slug] ?? 'new',
         })),
       }),
     });
@@ -213,6 +226,30 @@ export function GoalsPicker() {
                 Outcome goals work well for some people and trigger others. Process goals are safer by default.
               </p>
             )}
+            <div className="mt-4">
+              <label
+                htmlFor={`baseline-${goal.source_slug}`}
+                className="block text-xs text-zinc-600 dark:text-zinc-400"
+              >
+                How much of this are you already doing?
+              </label>
+              <select
+                id={`baseline-${goal.source_slug}`}
+                value={baselines[goal.source_slug] ?? 'new'}
+                onChange={(e) =>
+                  setBaselines((prev) => ({
+                    ...prev,
+                    [goal.source_slug]: e.target.value as BaselineStage,
+                  }))
+                }
+                className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              >
+                <option value="new">{BASELINE_LABEL.new}</option>
+                <option value="light">{BASELINE_LABEL.light}</option>
+                <option value="partial">{BASELINE_LABEL.partial}</option>
+                <option value="established">{BASELINE_LABEL.established}</option>
+              </select>
+            </div>
             <button
               type="button"
               onClick={() => swap(i)}

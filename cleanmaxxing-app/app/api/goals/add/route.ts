@@ -11,6 +11,8 @@ const ALLOWED_TIERS = new Set([
   'advanced',
 ]);
 
+const ALLOWED_BASELINE_STAGES = new Set(['new', 'light', 'partial', 'established']);
+
 // Active goal cap (spec §13). Users at or above this count trigger a
 // soft override nudge on add. Client can retry with force: true to bypass.
 const ACTIVE_GOAL_SOFT_CAP = 5;
@@ -22,6 +24,7 @@ type AddPayload = {
   priority_tier?: string;
   goal_type?: 'process' | 'outcome';
   source_slug?: string;
+  baseline_stage?: string;
   force?: boolean;
 };
 
@@ -42,7 +45,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { title, description, category, priority_tier, goal_type, source_slug, force } = body;
+  const { title, description, category, priority_tier, goal_type, source_slug, baseline_stage, force } = body;
 
   if (!title || typeof title !== 'string') {
     return NextResponse.json({ error: 'Missing title' }, { status: 400 });
@@ -52,6 +55,10 @@ export async function POST(req: Request) {
   }
   if (goal_type !== 'process' && goal_type !== 'outcome') {
     return NextResponse.json({ error: 'Invalid goal_type' }, { status: 400 });
+  }
+  const stage = baseline_stage ?? 'new';
+  if (!ALLOWED_BASELINE_STAGES.has(stage)) {
+    return NextResponse.json({ error: 'Invalid baseline_stage' }, { status: 400 });
   }
 
   const { data: profile } = await supabase
@@ -114,6 +121,7 @@ export async function POST(req: Request) {
     priority_tier,
     goal_type,
     source_slug: source_slug ?? null,
+    baseline_stage: stage,
     status: 'active',
     source: 'system_suggested',
   });

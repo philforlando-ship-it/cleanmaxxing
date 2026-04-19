@@ -8,6 +8,7 @@ type IncomingGoal = {
   priority_tier: string;
   goal_type: 'process' | 'outcome';
   source_slug?: string;
+  baseline_stage?: string;
 };
 
 const ALLOWED_TIERS = new Set([
@@ -19,6 +20,8 @@ const ALLOWED_TIERS = new Set([
   'conditional-tier-1',
   'advanced',
 ]);
+
+const ALLOWED_BASELINE_STAGES = new Set(['new', 'light', 'partial', 'established']);
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -53,6 +56,9 @@ export async function POST(req: Request) {
     if (g.goal_type !== 'process' && g.goal_type !== 'outcome') {
       return NextResponse.json({ error: 'Invalid goal_type.' }, { status: 400 });
     }
+    if (g.baseline_stage !== undefined && !ALLOWED_BASELINE_STAGES.has(g.baseline_stage)) {
+      return NextResponse.json({ error: `Invalid baseline_stage: ${g.baseline_stage}` }, { status: 400 });
+    }
   }
 
   // Confirm the user has actually submitted the survey.
@@ -74,6 +80,7 @@ export async function POST(req: Request) {
     priority_tier: g.priority_tier,
     goal_type: g.goal_type,
     source_slug: g.source_slug ?? null,
+    baseline_stage: g.baseline_stage ?? 'new',
     status: 'active',
     source: 'system_suggested',
   }));

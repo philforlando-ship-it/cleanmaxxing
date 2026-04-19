@@ -1,0 +1,33 @@
+{
+  "slug": "41-medical-conditions",
+  "start_cue": "If symptoms suggest a condition but you don't have a diagnosis, the optimization work can't compensate. The path below is the diagnostic on-ramp.",
+  "weeks": [
+    {
+      "range": "1",
+      "focus": "Identify signals + plan which tests to ask for",
+      "detail": "Write down the symptoms that have persisted across several weeks — fatigue, hair thinning pattern, fat distribution, skin flares, mood, recovery, morning erections, energy. Write down the specific tests to request: TSH + free T4 + free T3 for thyroid; fasting glucose + insulin + HbA1c for metabolic; morning total + free testosterone for low-T suspicion; psychiatrist referral for ADHD. This is the list you bring to the appointment."
+    },
+    {
+      "range": "2",
+      "focus": "Book the appointment with the right specialist",
+      "detail": "Primary care physician for thyroid, glucose, and testosterone panels. Dermatologist for persistent skin conditions. Ophthalmologist or oculoplastic surgeon for eye-area concerns. Psychiatrist for ADHD. Bring your symptom list, family history, current supplement and medication list, and any prior bloodwork."
+    },
+    {
+      "range": "3-5",
+      "focus": "Wait for results — Phase 1 foundation only",
+      "detail": "Two mistakes here: aggressive self-experimentation before results arrive, or complete paralysis. Sit between them. Continue with a minimal Phase 1 foundation — sleep consistency, basic skincare, protein target, 2–3 workouts per week. These are safe across the common conditions this walkthrough covers and produce independent benefit regardless of what the diagnosis turns out to be. Defer any condition-specific or pharmacological intervention until results are in hand."
+    },
+    {
+      "range": "6+",
+      "focus": "Act on results with the condition-specific overlay",
+      "detail": "Once a diagnosis is confirmed and the relevant medical intervention is underway — thyroid replacement stabilized, glucose protocol in place, skin condition being treated, ADHD medication dialed in — proceed with the condition-specific adjustments your physician advises. The looksmaxxing system then runs on top of a functional biological substrate rather than trying to compensate for what is medically off."
+    }
+  ],
+  "graduation": "Diagnosis confirmed and medically managed is the graduation state. The standard priority stack resumes from there. A diagnosis is not the end — it is the point at which the cleanmaxxing system can actually work on a functional biological substrate.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 2,
+    "partial": 3,
+    "established": null
+  }
+}

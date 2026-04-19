@@ -1,0 +1,33 @@
+{
+  "slug": "51-dating-apps",
+  "start_cue": "Pick one platform to start. An actively optimized single-app profile outperforms three neglected ones.",
+  "weeks": [
+    {
+      "range": "1",
+      "focus": "Get the photos",
+      "detail": "Nothing else matters until the photo stack exists. Choose one route: solo with tripod, friend with phone, or professional photographer. Outdoor natural light, golden hour, 50–100 frames of the primary face shot. Capture the full six-photo stack (face, body, social, activity, style, warmth) in the same week. Do not go live yet."
+    },
+    {
+      "range": "2",
+      "focus": "Select, sequence, write bio, go live",
+      "detail": "Choose the primary face photo — the one that reads most clearly as a face at thumbnail size, not the one that's 'best' at full size. Sequence the other five to cover, in order: full body or three-quarter frame, a social or context shot with friends, an activity shot showing you doing something real, a style shot, and a warmth or personality photo. Draft one bio in a single sitting: specific, lightly self-aware, no defensive language. For Hinge, three concrete slightly-unexpected prompt answers. Launch, and resist changing anything for the rest of the week."
+    },
+    {
+      "range": "3-4",
+      "focus": "First full testing window — do not touch it",
+      "detail": "Two weeks is the minimum window for any conclusion. The instinct to adjust after three days is the largest source of A/B testing contamination. Do not change photos or bio. Do not buy premium boosts. Do not ask for friend feedback. Let the data accumulate."
+    },
+    {
+      "range": "5+",
+      "focus": "Test one variable at a time",
+      "detail": "Apply the A/B testing rules. Bottleneck order: primary photo quality, absence of a full-body photo, generic bio, photo variety. Change one variable, wait two weeks, evaluate match-to-conversation conversion (not raw swipes). Three to four two-week cycles produces a meaningfully better profile than daily tweaking ever does."
+    }
+  ],
+  "graduation": "When match-to-conversation conversion stabilizes and profile changes no longer produce meaningful shifts, the profile has reached its useful ceiling. Further returns come from conversation quality, first-message discipline, and the underlying appearance variables the rest of the system addresses — not from more profile tweaks.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 2,
+    "partial": 3,
+    "established": null
+  }
+}

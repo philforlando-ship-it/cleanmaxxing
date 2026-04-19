@@ -1,0 +1,28 @@
+{
+  "slug": "16-facial-definition-jawline",
+  "start_cue": "This runs alongside whatever fat-loss work is already in progress — posture and neck training amplify the fat-loss result rather than replace it.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Daily wall resets, three times a day",
+      "detail": "Stand against a wall with heels, buttocks, and upper back touching. Pull the back of the head toward the wall by tucking the chin slightly (not tilting down). Hold ten seconds, three times. Do this morning, midday, evening. Fix pillow height (neutral neck) and raise your laptop to eye level. Screens are the forcing function — fix them first."
+    },
+    {
+      "range": "3-8",
+      "focus": "Add neck training, two sessions per week",
+      "detail": "Two short sessions per week: chin tucks against towel resistance, band-resisted lateral neck flexion, controlled neck extension, weighted shrugs. 3–4 exercises, 10–15 reps each. Bodyweight or light band resistance only for the first two to three weeks. Range of motion and control matter more than load."
+    },
+    {
+      "range": "9-12",
+      "focus": "Continue + reassess against a photo from the start",
+      "detail": "Keep the resets and the neck sessions running. Compare a photo to one from week one, not the mirror — the mirror adapts to gradual change. If posture has improved and neck has filled in, these habits are installed; keep them running while fat loss continues underneath."
+    }
+  ],
+  "graduation": "When the wall resets run without reminding, neck training has been consistent for two consecutive months, and there is a visible photo delta versus week one, the jawline framework applies at full weight. Further gains come from continued fat loss — not from adding more posture work.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 9,
+    "established": null
+  }
+}

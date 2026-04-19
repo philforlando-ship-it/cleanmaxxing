@@ -1,0 +1,33 @@
+{
+  "slug": "24-alcohol-cannabis",
+  "start_cue": "Pick a target first — elimination, explicit numeric cap, or a 30-to-90-day experiment. If you don't know which, run the experiment and let data decide.",
+  "weeks": [
+    {
+      "range": "1",
+      "focus": "Cut drinks per occasion in half",
+      "detail": "Same nights out, same social context — just half the drinks at each. Nothing else changes this week. The point is to establish that reduction is possible without removing the occasions themselves."
+    },
+    {
+      "range": "2",
+      "focus": "Remove one drinking occasion",
+      "detail": "Pick a weekly drinking occasion and make it a non-drinking night. A Thursday is usually easiest. Friday and Saturday can stay at the week-one reduced count. For cannabis: apply a time-of-day restriction (no use before evening) or a context restriction (no use on training days)."
+    },
+    {
+      "range": "3",
+      "focus": "Remove a second occasion",
+      "detail": "A second occasion comes out. Down to one or two drinking occasions per week with drinks-per-occasion halved. Pre-commit rules for any scheduled events in the coming weeks: decide now what you'll do at each, not in the moment."
+    },
+    {
+      "range": "4",
+      "focus": "Hold the reduced level and evaluate",
+      "detail": "One to two occasions per week at halved count. Track drinks-per-week or days-of-use-per-week in a phone note. The tracking is for signal, not accountability — so you can honestly answer 'is this working' at 30 days."
+    }
+  ],
+  "graduation": "Reassess at 30 and 90 days. Appearance changes show up on the sobriety timeline; performance changes show up in training logs and sleep. If the expected changes are showing, the plan is working — continue or tighten. If they are not, the intake target is probably still too high, not too low.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 2,
+    "partial": 3,
+    "established": null
+  }
+}

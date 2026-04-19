@@ -1,0 +1,28 @@
+{
+  "slug": "19-strength-training",
+  "start_cue": "Three full-body sessions a week, about two days apart. Monday, Wednesday, Friday is the cleanest default. Show up before you optimize.",
+  "weeks": [
+    {
+      "range": "1-4",
+      "focus": "3 sessions/week full-body at 3–4 reps in reserve",
+      "detail": "Each session covers the major patterns: a squat or leg-press variant and a hip hinge as lower-body foundation, then the aesthetic priority — horizontal push, horizontal pull, vertical pull, lateral raise, and one arm movement alternated between biceps and triceps. 2–3 working sets per exercise. Train at 3–4 RIR — sets that could clearly have gone further. Bias your best energy toward the upper-body work; the leg patterns are in for base and injury-proofing, not for the appearance lever."
+    },
+    {
+      "range": "5-8",
+      "focus": "Same structure; move to 2–3 RIR",
+      "detail": "Keep the three-session full-body layout. Start pushing closer to failure on the main movements of each session. Add a rep or the smallest load increment each week you complete all sets with clean form. Some weeks the linear progression stalls on one or two exercises — that is expected, not a signal to change the program."
+    },
+    {
+      "range": "9-12",
+      "focus": "Hold 2 RIR on most sets; watch for progression stalls",
+      "detail": "Working at 2 RIR on most sets is appropriate by this point. Linear progression will begin to stall on the compounds somewhere in this window — that is the signal the beginner block has done its job."
+    }
+  ],
+  "graduation": "When weekly progression has stalled on the main compounds, sessions feel sustainable rather than exhausting, and you can consistently judge what 2 RIR feels like, move to the 5-day split and the main framework. If any of those are not yet true, stay in the beginner block another month.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 5,
+    "partial": 9,
+    "established": null
+  }
+}

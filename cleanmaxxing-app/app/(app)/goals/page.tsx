@@ -1,6 +1,8 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { TierBadge } from '@/components/tier-badge';
+import { povExists } from '@/lib/content/pov';
 
 export default async function GoalsPage() {
   const supabase = await createClient();
@@ -9,7 +11,7 @@ export default async function GoalsPage() {
 
   const { data: goals } = await supabase
     .from('goals')
-    .select('id, title, description, category, priority_tier, goal_type, status, created_at')
+    .select('id, title, description, category, priority_tier, goal_type, status, created_at, source_slug')
     .eq('user_id', user.id)
     .eq('status', 'active')
     .order('created_at', { ascending: true });
@@ -67,6 +69,16 @@ export default async function GoalsPage() {
                 <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
                   {goal.description}
                 </p>
+              )}
+              {povExists(goal.source_slug) && (
+                <div className="mt-3">
+                  <Link
+                    href={`/povs/${goal.source_slug}`}
+                    className="text-xs text-zinc-600 underline decoration-dotted underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                  >
+                    Read the full POV →
+                  </Link>
+                </div>
               )}
             </li>
           ))}

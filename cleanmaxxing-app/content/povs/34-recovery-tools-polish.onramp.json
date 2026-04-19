@@ -1,0 +1,33 @@
+{
+  "slug": "34-recovery-tools-polish",
+  "start_cue": "Start with free daily inputs. Stabilize basics. Delay gear.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Cold water on the face",
+      "detail": "Splash the face with the coldest tap water available for 30–60 seconds each morning. Nothing else. Two weeks at this level establishes the habit and gives the feedback loop on whether this category is worth further investment for you specifically."
+    },
+    {
+      "range": "3-4",
+      "focus": "Add facial massage",
+      "detail": "Five to ten minutes of facial massage immediately after the cold exposure. Hands alone work; a gua sha stone or roller is optional. The morning routine is now 10–15 minutes and addresses most of the daily facial appearance variables at no cost."
+    },
+    {
+      "range": "5-6",
+      "focus": "Sodium and hydration consistency",
+      "detail": "Stabilize existing behavior rather than adding new. Stop alternating between very-high and very-low salt days. Drink water consistently through the day. Keep a couple of potassium-rich foods in rotation. Running the active tools on top of chaotic sodium and hydration means the face keeps puffing up for reasons those tools cannot fix."
+    },
+    {
+      "range": "7+",
+      "focus": "Heat or cold full-body, only if the baseline holds",
+      "detail": "Gear is only worth considering once the morning routine runs automatically. Sauna 2–4× a week, cold shower exposure building toward 1–3 minutes, or an ice bath if budget and space allow. Choose the tool that will actually get used 3–4× a week for months — not the one with the best reported benefits."
+    }
+  ],
+  "graduation": "Stay at each step until the prior habit runs without active attention. If the face cold-water splash is still something to remember to do, do not add massage yet. If the 10-minute morning routine still feels effortful, do not add sodium and hydration work. The next tool is earned by the consistency of the prior one, not by the calendar.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 5,
+    "established": null
+  }
+}

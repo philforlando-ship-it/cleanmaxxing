@@ -1,0 +1,38 @@
+{
+  "slug": "33-niche-enhancements",
+  "start_cue": "One item at a time, ordered by cost and reversibility. The foundations — body composition, skin, hair, grooming — do far more than anything in this category.",
+  "weeks": [
+    {
+      "range": "1",
+      "focus": "Nail and hand care",
+      "detail": "Basic nail kit (clippers, file, cuticle tool — under $15) and a hand cream. Trim, file smooth, moisturize on Sunday evening. Repeat weekly. Within two weeks the hands read meaningfully cleaner in close interaction — handshakes, gestures, anywhere hands are visible."
+    },
+    {
+      "range": "2-3",
+      "focus": "Hydration baseline",
+      "detail": "Roughly half an ounce to 0.7 ounces of water per pound of bodyweight daily. A water bottle at your desk refilled a set number of times — no tracking app needed. Tier-3 effort; stacks with everything else at effectively zero cost."
+    },
+    {
+      "range": "4-5",
+      "focus": "Glasses audit (if you wear them)",
+      "detail": "One optical-shop appointment. Ask the optician for frames that oppose your face shape rather than echo it — angular frames for a round face, softer rounded frames for an angular or square face. Try five to seven pairs, photograph each, compare, choose. If you don't wear glasses, skip this step entirely — the watch decision moves up."
+    },
+    {
+      "range": "6-8",
+      "focus": "The watch decision",
+      "detail": "One clean minimal analog watch, metal or leather strap, unfussy face, worn daily. Entry under $200; mid-range $200–800; high-end above. A $300 watch worn every day outperforms a $3,000 watch worn for events. Buy the one that will actually sit on your wrist through a workday."
+    },
+    {
+      "range": "9+",
+      "focus": "Selective additions, not stacking",
+      "detail": "At this point the foundations are running. Add at most one additional item per quarter — a thin chain if the neck and collarbone are lean enough, a simple ring if the hands read well, eye-whitening drops for specific contexts. Evaluate each addition after a month against: is this making the presentation read more intentional, or cluttered?"
+    }
+  ],
+  "graduation": "Nails, hydration, glasses (if applicable), and watch all running automatically is the graduation signal. Further additions should be quarterly at most. Reassess the overall presentation quarterly rather than weekly — quiet layering only reads as intentional when each layer has had time to settle.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 2,
+    "partial": 6,
+    "established": null
+  }
+}

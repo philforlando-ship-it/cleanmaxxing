@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TierBadge } from '@/components/tier-badge';
@@ -16,6 +17,22 @@ type Template = {
   already_active: boolean;
 };
 
+type BaselineStage = 'new' | 'light' | 'partial' | 'established';
+
+const BASELINE_LABEL: Record<BaselineStage, string> = {
+  new: 'Just starting',
+  light: 'Some experience',
+  partial: 'Mostly consistent',
+  established: 'Already consistent',
+};
+
+type Props = {
+  // POV slugs that have a published doc at content/povs/[slug].md. Used
+  // to gate the "Read the full POV" link so it only renders when the
+  // doc actually exists (gracefully handles missing corpus entries).
+  availableSlugs: string[];
+};
+
 const CATEGORY_LABELS: Record<string, string> = {
   'biological-foundation': 'Biological Foundation',
   'structural-framing': 'Structural & Framing',
@@ -25,13 +42,17 @@ const CATEGORY_LABELS: Record<string, string> = {
   'safety': 'Self-acceptance',
 };
 
-export function LibraryBrowser() {
+export function LibraryBrowser({ availableSlugs }: Props) {
   const router = useRouter();
+  const availableSlugSet = useMemo(() => new Set(availableSlugs), [availableSlugs]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [busySlug, setBusySlug] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Baseline stage per template, keyed by source_slug. Defaults to 'new'
+  // for any template the user hasn't adjusted.
+  const [baselines, setBaselines] = useState<Record<string, BaselineStage>>({});
   // Soft goal-cap nudge state. When the server returns goal_limit_reached
   // for a given template, we stash the template here so the nudge can
   // render inline below that card. Confirming "Add anyway" re-posts with
@@ -69,6 +90,7 @@ export function LibraryBrowser() {
         category: t.category,
         priority_tier: t.priority_tier,
         goal_type: t.goal_type,
+        baseline_stage: baselines[t.source_slug] ?? 'new',
         force: force || undefined,
       }),
     });
@@ -214,7 +236,33 @@ export function LibraryBrowser() {
                 </p>
               </details>
             )}
-            <div className="mt-4">
+            {!t.already_active && (
+              <div className="mt-4">
+                <label
+                  htmlFor={`baseline-${t.source_slug}`}
+                  className="block text-xs text-zinc-600 dark:text-zinc-400"
+                >
+                  How much of this are you already doing?
+                </label>
+                <select
+                  id={`baseline-${t.source_slug}`}
+                  value={baselines[t.source_slug] ?? 'new'}
+                  onChange={(e) =>
+                    setBaselines((prev) => ({
+                      ...prev,
+                      [t.source_slug]: e.target.value as BaselineStage,
+                    }))
+                  }
+                  className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                >
+                  <option value="new">{BASELINE_LABEL.new}</option>
+                  <option value="light">{BASELINE_LABEL.light}</option>
+                  <option value="partial">{BASELINE_LABEL.partial}</option>
+                  <option value="established">{BASELINE_LABEL.established}</option>
+                </select>
+              </div>
+            )}
+            <div className="mt-4 flex items-center gap-4">
               {t.already_active ? (
                 <span className="text-xs text-zinc-500">Already active</span>
               ) : (
@@ -226,6 +274,14 @@ export function LibraryBrowser() {
                 >
                   {busySlug === t.source_slug ? 'Adding…' : 'Add this goal'}
                 </button>
+              )}
+              {availableSlugSet.has(t.source_slug) && (
+                <Link
+                  href={`/povs/${t.source_slug}`}
+                  className="text-xs text-zinc-600 underline decoration-dotted underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                >
+                  Read the full POV →
+                </Link>
               )}
             </div>
             {capNudge?.template.source_slug === t.source_slug && (

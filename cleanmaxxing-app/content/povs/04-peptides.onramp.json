@@ -1,0 +1,28 @@
+{
+  "slug": "04-peptides",
+  "start_cue": "A four-to-eight-week single-compound trial with pre-committed exit criteria. Not a stack, not a permanent routine — a test.",
+  "weeks": [
+    {
+      "range": "1",
+      "focus": "Plan and source before the first dose",
+      "detail": "Pick one compound aligned with the single goal you're testing (BPC-157 for injury, CJC/Ipamorelin for mild recovery, topical GHK-Cu for skin). Write down the outcome that would justify continuing past the trial window and the outcome that would end it — before, not during, the trial. Set up tracking for the specific metric you expect to change (recovery time, injury pain at a specific site, skin texture, morning energy)."
+    },
+    {
+      "range": "2-5",
+      "focus": "Run the trial and track the specific metric",
+      "detail": "Single compound, single metric, consistent application. Track the specific variable you pre-committed to, not a vague sense of how you feel. Vague tracking produces vague conclusions; vague conclusions are how people convince themselves a compound is working when it is not."
+    },
+    {
+      "range": "6-8",
+      "focus": "Evaluate against pre-committed criteria",
+      "detail": "Read your tracking. Does the data match the continuation criterion you wrote down in week one? If yes, continue or refine. If no, or if the result is ambiguous, stop — ambiguous results that nobody wants to end are the most common failure mode in this category."
+    }
+  ],
+  "graduation": "If the continuation criterion was met, the single-compound protocol becomes part of your standing stack. Only then is a second compound worth considering — evaluated the same way, in isolation, with its own exit criteria. Stacking before a single compound has been individually cleared is how the whole system drifts into optimization-theater.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 2,
+    "partial": 6,
+    "established": null
+  }
+}
