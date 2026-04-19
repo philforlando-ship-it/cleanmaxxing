@@ -8,6 +8,7 @@ import { WeeklyReflectionCard } from './weekly-reflection-card';
 import { ConfidenceTrendChart } from './confidence-trend-chart';
 import { MonthlyCheckpointCard } from './monthly-checkpoint-card';
 import { WeeklyFocusCard } from './weekly-focus-card';
+import { FirstRunCard } from './first-run-card';
 import { getTodayCheckInState } from '@/lib/check-in/service';
 import { getWeeklyReflectionState } from '@/lib/weekly-reflection/service';
 import { getCheckpointState } from '@/lib/checkpoint/service';
@@ -25,6 +26,15 @@ export default async function TodayPage() {
   if (!profile?.onboarding_completed_at) redirect('/onboarding');
 
   const steppedAway = Boolean(profile.tracking_paused_at);
+
+  // First-run window: seven days from onboarding completion. The card is
+  // only mounted while the window is open; the client component then
+  // decides whether to render based on localStorage dismissal.
+  const onboardedAt = new Date(profile.onboarding_completed_at as string);
+  const daysSinceOnboarding = Math.floor(
+    (Date.now() - onboardedAt.getTime()) / 86_400_000,
+  );
+  const isFirstRun = daysSinceOnboarding >= 0 && daysSinceOnboarding < 7;
 
   const [checkInState, reflectionState, checkpointState, { data: goalsRaw }] =
     await Promise.all([
@@ -51,6 +61,8 @@ export default async function TodayPage() {
       </div>
 
       <div className="mt-10 space-y-6">
+        {isFirstRun && !steppedAway && <FirstRunCard />}
+
         {checkpointState.status === 'eligible' && !steppedAway && (
           <MonthlyCheckpointCard summary={checkpointState.summary} />
         )}
