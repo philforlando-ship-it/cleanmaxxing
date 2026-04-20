@@ -13,7 +13,6 @@ import Link from 'next/link';
 import { onrampFor, currentState, isBaselineStage } from '@/lib/content/onramp';
 import type { BaselineStage, OnrampState } from '@/lib/content/onramp';
 import { povExists } from '@/lib/content/pov';
-import { AdjustBaseline } from './adjust-baseline';
 
 type ActiveGoal = {
   id: string;
@@ -29,12 +28,11 @@ type Props = {
 
 type Entry = {
   slug: string;
-  // Goal that drives the week computation (earliest-accepted in the group).
-  // Its id is also the target for baseline-stage adjustments — per-group
-  // rather than per-individual-goal, since goals sharing a POV share the
-  // walkthrough progression by design.
+  // Earliest-accepted goal in the group drives the week computation and
+  // is the link target for "Open goal →". Goals sharing a POV share the
+  // walkthrough progression by design; baseline-stage editing happens on
+  // the goal detail page, not here.
   anchorGoalId: string;
-  anchorStage: BaselineStage;
   goalTitles: string[];
   state: OnrampState;
 };
@@ -71,7 +69,6 @@ export function WeeklyFocusCard({ goals }: Props) {
     withOnramp.push({
       slug,
       anchorGoalId: earliest.id,
-      anchorStage,
       goalTitles: group.map((g) => g.title),
       state,
     });
@@ -115,9 +112,6 @@ export function WeeklyFocusCard({ goals }: Props) {
                   Walkthrough complete
                 </span>
               )}
-            </div>
-            <div className="mt-2">
-              <AdjustBaseline goalId={entry.anchorGoalId} currentStage={entry.anchorStage} />
             </div>
             {entry.state.kind === 'active' ? (
               <>
