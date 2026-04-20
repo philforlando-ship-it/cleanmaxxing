@@ -92,14 +92,19 @@ export default async function TodayPage() {
           </section>
         )}
 
-        {!steppedAway && <WeeklyFocusCard goals={activeGoals} />}
-        {!steppedAway && <DailyCheckInCard initialState={checkInState} />}
-        {/* Chart and chat stay accessible even when stepped away — the
+        {/* Order reflects what the user is actually here to do today.
+            Daily check-in is the primary action (returning users'
+            reason for opening the page). Weekly focus is secondary
+            context. Reflection sits above the chart so the flow reads
+            action → resulting trend rather than trend → action.
+            Chart and chat stay accessible even when stepped away — the
             chart is history (useful for reflection) and the chat has no
             tracking side effects (asking Mister P something isn't the
             same as self-surveillance). */}
-        <ConfidenceTrendChart history={reflectionState.history} />
+        {!steppedAway && <DailyCheckInCard initialState={checkInState} />}
+        {!steppedAway && <WeeklyFocusCard goals={activeGoals} />}
         {!steppedAway && <WeeklyReflectionCard initialState={reflectionState} />}
+        <ConfidenceTrendChart history={reflectionState.history} />
         <MisterPChatCard />
       </div>
     </main>
