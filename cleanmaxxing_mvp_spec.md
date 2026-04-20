@@ -1,9 +1,11 @@
 # Cleanmaxxing MVP Specification
 
-**Version:** 0.1 (drafted with Claude, April 2026)
+**Version:** 0.2 (updated 2026-04-19 with shipped features)
 **Owner:** Phil
 **Build window:** ~6 weeks, ~4 hours/day solo
 **Purpose of this doc:** Single source of truth for the MVP build. Paste into Claude Code at the start of build sessions. Update as decisions change.
+
+**What changed in 0.2:** §2.6 added (a roster of surfaces shipped beyond the original six features — goal detail page, baseline stages + per-POV walkthroughs, progress photos at 90 days, weekly summary strip, per-goal weekly count, dark mode, persistent nav, scoped /povs, goal-alignment insights on monthly checkpoint, first-run card, Mister P proactive-advisory gating). §5 data model corrected (removed `check_ins.confidence_score`, added `weekly_reflections`, `progress_photos`, and the `source_slug` / `goal_type` / `baseline_stage` columns on `goals`). §6 Mister P system prompt updated to match the shipped prompt (citations removed; active-goals block and per-turn advisories documented). §2 Feature 4 updated to reflect the current Today-screen card stack.
 
 ---
 
@@ -113,7 +115,7 @@ None of this is shown to the user as "you are in segment X." It just changes wha
 - "Already checked in today" state handled gracefully
 
 ### Feature 3: Mister P (RAG Chat)
-**What it does:** Personified chat interface grounded in the POV corpus. Users ask questions ("should I take creatine?", "what should I do about my hairline?") and get answers in Mister P's voice, citing the POV docs they came from.
+**What it does:** Personified chat interface grounded in the POV corpus. Users ask questions ("should I take creatine?", "what should I do about my hairline?") and get answers in Mister P's voice, grounded in the POV corpus but written as plain prose without parenthetical source citations (0.2 change — see §6).
 
 **Why it's core:** This is the feature that makes Cleanmaxxing feel smart. It's also the feature that creates the most "wow" moment in the first session.
 
@@ -121,23 +123,36 @@ None of this is shown to the user as "you are in segment X." It just changes wha
 
 **Done when:**
 - User can ask a question and get a grounded answer in <5 seconds
-- Answers cite the POV doc(s) used
+- Answers stay inside the retrieved context without naming the source docs (0.2 change — citations removed; the proactive-advisory is the only path that surfaces a doc title, and only when it backs one of the user's goals — see §2.6 and §6)
 - Out-of-scope questions get refused gracefully in Mister P's voice
 - All user questions are logged to a table for roadmap review
 - Refusals for truly unsafe topics (synthol, DNP, clenbuterol, extreme restriction, sourcing guidance, DIY dental) fire reliably
 
 ### Feature 4: Today Screen
-**What it does:** The home screen after login. Shows, in order: today's check-in (or confirmation), confidence trend chart, active goals as a short list, and an "Ask Mister P" entry point.
+**What it does:** The home screen after login. Orchestrates the day's surfaces in a deliberate order — action first, context second, history last. The shipped card stack, top-to-bottom:
 
-**Why it's core:** This is where the retention loop lives. Users come back to do the check-in and see the chart.
+1. **First-run card** — shown only during the user's first 7 days post-onboarding, self-dismissible.
+2. **Progress-photo nudge** — two variants: `baseline` (during first-run window, before baseline photo exists) and `progress_90d` (90 days after onboarding, before comparison photo exists). See §2.6 for the feature.
+3. **Monthly checkpoint card** — fires when `checkpointState.status === 'eligible'` (roughly every 30 days). Now includes per-goal alignment insights correlating each goal with its mapped confidence dimension.
+4. **Stepped-away notice** — replaces the interactive cards (but not the chart/chat) when `users.tracking_paused_at` is set.
+5. **Daily check-in card** — the primary action. One checkbox per active goal.
+6. **Weekly summary strip** — rolling 7-day "N/M boxes ticked across your goals." Quiet, no streaks. Refreshes on check-in save via `router.refresh()`.
+7. **Weekly focus card** — groups active goals by `source_slug`, shows the current walkthrough week per group.
+8. **Weekly reflection card** — four-dimension confidence sliders + optional notes (see §2 Feature 2).
+9. **Confidence trend chart** — AreaChart with gradient; sparse-data variant when history has a single entry.
+10. **Mister P chat card** — the chat entry point.
 
-**Design principle:** Calm and minimal. Not a dashboard. Four things, nothing else. No widgets, notifications, or cards. Apple Fitness rings energy, not Bloomberg terminal energy.
+**Why it's core:** This is where the retention loop lives. Users come back to do the check-in, see the weekly total, and check the chart.
+
+**Design principle:** Calm and minimal. Not a dashboard. Order reflects what the user is here to do: action → reinforcement → context → history. No widgets, notifications, push badges. The weekly summary strip is intentionally a text line, not a progress bar — quiet signal, not a score.
 
 **Done when:**
 - Renders in <1 second on mobile
-- Confidence chart updates immediately after check-in
+- Confidence chart updates on reflection save
 - Goals list shows current state accurately
 - "Ask Mister P" is always one tap away
+- Weekly summary strip shows rolling 7-day totals and updates after each check-in
+- Stepped-away state hides interactive cards but leaves chart and chat accessible
 
 ### Feature 5: "Is Clav Right?" Content Page
 **What it does:** Standalone public-facing page that breaks down 3–5 of Clav's methods into "right," "partially right," and "wrong" with reasoning grounded in the corpus. Public, indexable, shareable.
@@ -242,6 +257,66 @@ Mister P: "Short answer: for your age, probably not. Long answer: I've got a det
 
 ---
 
+## 2.6 Shipped Beyond the Six Features (as of 2026-04-19)
+
+Everything below was built on top of the MVP six, usually in response to a real gap surfaced in use or audit. Listed roughly in the order it was built. Each entry is one paragraph: what it is, why it exists, where it lives.
+
+### Goal detail page (`/goals/[id]`)
+Consolidated per-goal surface replacing the need to hunt across Today / Goals / POVs. Shows the walkthrough's current week, the adjust-baseline control, a "read the full POV" link (only when the POV exists for that slug), and status actions (complete / abandon, with a two-step confirm on abandon). Also shows the per-goal weekly count (*"Ticked N of the last M days"*). Code: `app/(app)/goals/[id]/page.tsx`.
+
+### Baseline stages + per-POV walkthroughs
+Goals carry a `baseline_stage` in `{new, light, partial, established}` captured at acceptance or adjusted later via the inline picker. Each POV with a walkthrough provides a `stage_weeks` map (`new → 1`, `light → 5`, `partial → 9`, `established → null`) in its `.onramp.json`, so users who start further along jump into the ramp at a later week rather than starting everyone at week 1. The walkthrough advances one week per real-world week elapsed; when the effective week passes the last defined range, the graduation string is shown. Code: `lib/content/onramp.ts`, `content/povs/*.onramp.json`, migration `0007_goals_baseline_stage.sql`.
+
+### Weekly focus card (walkthrough surface on Today)
+Active goals are grouped by `source_slug`; the earliest-accepted goal in each group drives the week. One card per group showing "This week's focus" + detail. The card surfaces the same underlying walkthrough the goal detail page uses, so the two stay in sync. Code: `app/(app)/today/weekly-focus-card.tsx`.
+
+### First-run welcome card
+Shown only during the 7-day window after `onboarding_completed_at`. Self-dismissible via `localStorage` with `useSyncExternalStore` (no set-state-in-effect). Sets expectations for the check-in/reflection cadence without adding dashboard chrome for returning users. Code: `app/(app)/today/first-run-card.tsx`.
+
+### Progress photos at 90 days
+Two slots only: `baseline` (captured during the first-run window) and `progress_90d` (available 90 days after onboarding). No AI analysis, no PSL/ranking framing — user-judged comparison only. Bytes live in Supabase Storage with folder-based RLS (`(storage.foldername(name))[1] = auth.uid()::text`); metadata lives in `progress_photos`. 8MB cap; per-photo and bulk deletion built in from day one. Signed URL TTL 60 min. Nudges on `/today` are gated by onboarding age; the `/progress` page has four states (no baseline / with countdown / window open / both present). Code: `app/(app)/progress/*`, `app/api/progress-photos/*`, `migrations/0008_progress_photos.sql`, `app/(app)/settings/progress-photos-section.tsx`.
+
+### Weekly summary strip + per-goal weekly count
+Rolling 7-day completion totals, shipped as two quiet text surfaces: a strip under the daily check-in card on `/today` (*"This week: N/M boxes ticked across your goals"*), and a line inside the "This week's focus" card on `/goals/[id]` (*"Ticked N of the last M days"*). `possible`/`daysPossible` is capped per goal to `min(7, days_since_created + 1)` so a goal accepted two days ago reads *"1 of the last 2 days"* not *"1 of the last 7."* Abandoned/completed goals excluded — this is "what am I showing up for right now," not lifetime stats. No streaks, no emojis, no celebratory copy. The check-in card calls `router.refresh()` on save/undo so the strip updates without a reload. Code: `lib/check-in/service.ts`, `app/(app)/today/weekly-summary-strip.tsx`.
+
+### Monthly checkpoint with goal-alignment insights
+The §2.5b checkpoint now also correlates each active goal to its mapped confidence dimension (social / work / physical / appearance) via `lib/goals/confidence-mapping.ts`, and classifies the goal timeline × dimension trend into seven copy variants (e.g. *"You've been working on X for five weeks and social confidence ticked up — keep going"*). Code: `lib/goals/goal-insights.ts`, `lib/checkpoint/service.ts`, `app/(app)/today/monthly-checkpoint-card.tsx`.
+
+### Persistent top nav
+Header on all `(app)` routes: Today / Goals / Library / POVs / Settings + theme toggle + sign out. Longest-prefix active highlighting (so `/goals/library` highlights Library, not Goals). Hides itself on `/onboarding/*` and `/povs/*` — those are focused surfaces where dashboard chrome is a distraction. Code: `components/app-nav.tsx`.
+
+### POV reader (`/povs/[slug]`) — scoped to user's goals
+The POV index at `/povs` is filtered to the user's own goal `source_slug` set (any status — completed and abandoned goals keep their POV listed as reference). The full 60-doc corpus is never shown wholesale. POV reader uses react-markdown; frontmatter `__Section__` bold lines are promoted to H2. Code: `app/(app)/povs/page.tsx`, `app/(app)/povs/[slug]/page.tsx`, `lib/content/pov.ts`.
+
+### Mister P proactive advisory gated on user goals
+Stickiness §2.5c is implemented but gated: Mister P only offers a "full breakdown in the X doc" nudge when the top retrieved chunk's slug is in the user's goal set. Otherwise the advisory is skipped and the answer reads as self-contained prose. The system prompt itself already forbids naming POV docs in ordinary answers, so this is the only pathway that can surface a full-doc pointer. Code: `app/api/mister-p/ask/route.ts`, `lib/mister-p/prompt.ts` (`buildProactiveSuggestionAdvisory`).
+
+### Mister P circuit breaker
+Implemented per §13 — when a topic-cluster analysis finds 5+ related queries in 7 days (3+ for the `something-specific-bothering-me` motivation segment), the advisory injects the "less checking" framing. At most one advisory per turn; circuit breaker takes priority over proactive suggestion when both would fire. Code: `lib/mister-p/topic.ts`, `CIRCUIT_BREAKER_ADVISORY` in `prompt.ts`.
+
+### Step-away mode
+Implemented per §13 as `users.tracking_paused_at`. When set, `/today` hides the interactive cards (check-in, weekly focus, reflection, summary strip, monthly checkpoint, progress nudges) but keeps the chart and Mister P chat visible. Resume is one tap in settings. Code: `app/(app)/settings/step-away-card.tsx`, `app/api/settings/tracking-paused/route.ts`.
+
+### Dark mode toggle (system / light / dark)
+Three-state cycling button in the nav. Class-based Tailwind dark variant via `@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *))`. Inline no-FOUC script in `app/layout.tsx` sets the class before hydration based on `localStorage` or OS preference. `ThemeApplier` keeps the class in sync mid-session. Default is "system." Code: `components/theme-toggle.tsx`, `components/theme-applier.tsx`, `lib/theme.ts`, `app/globals.css`.
+
+### Confidence trend chart — AreaChart with sparse-data variant
+Recharts AreaChart with an emerald gradient fill and reference line at the current average. Sparse-data variant activates when `history.length === 1` (shows a single point with contextual copy instead of a misleading flat line). Code: `app/(app)/today/confidence-trend-chart.tsx`.
+
+### Adjust-baseline inline picker
+Per-goal control letting users correct their baseline stage after acceptance (*"I said 'just starting' but I'm actually further along"*). Updates `goals.baseline_stage` via `PUT /api/goals/[id]/baseline`, calls `router.refresh()` so the walkthrough card recomputes the current week. Shown inside the weekly-focus card and the goal detail page. Code: `app/(app)/today/adjust-baseline.tsx`, `app/api/goals/[id]/baseline/route.ts`.
+
+### Goal status actions (complete / abandon)
+Two-step confirm for abandon (the destructive action). Moves goal to `completed` or `abandoned`, preserves history, removes from the active set. Code: `app/(app)/goals/[id]/status-actions.tsx`, `app/api/goals/[id]/status/route.ts`.
+
+### Goal duplicate detection via `source_slug`
+Goals store `source_slug` pointing at the POV they were templated from. The library's duplicate-detection migrated from title-matching (which broke when we renamed templates, e.g. "Strength train 3 times per week" → "Strength train 3-5 times per week") to `source_slug` matching. Code: `content/goal-templates.ts`, `app/(app)/goals/library/library-browser.tsx`.
+
+### Active-goals block in Mister P system prompt
+Active goals (title, duration, source-slug prior-citation count) are injected into the system prompt via `formatGoalsBlock`. Lets Mister P anchor answers to what the user is working on and calibrate depth ("user has seen this doc 4 times in prior chats → skip the foundations"). Code: `lib/mister-p/prompt.ts`.
+
+---
+
 ## 3. Explicitly Out of Scope (v2+)
 
 **Do not build in MVP.** If you catch yourself starting to build any of these, stop and reread this section.
@@ -322,7 +397,10 @@ goals
   description
   category (one of the 5 Layers from doc 15: 'biological-foundation', 'structural-framing', 'grooming-refinement', 'behavioral-aesthetics', 'perception-identity', or meta categories 'system', 'safety', 'context')
   priority_tier (one of: 'tier-1', 'tier-2', 'tier-3', 'tier-4', 'tier-5', 'conditional-tier-1', 'advanced', 'monitor', 'avoid', 'meta' — from doc 15 looksmaxxing system; 'monitor' = manageable-cost substances like alcohol/nicotine)
+  goal_type (enum: 'process' | 'outcome', default 'process' — per §13)
   status (active, completed, abandoned)
+  source_slug (nullable text — POV slug this goal was templated from; used for duplicate detection and walkthrough lookup, see §2.6)
+  baseline_stage (nullable text, one of: 'new' | 'light' | 'partial' | 'established' — captured at acceptance, drives the walkthrough starting week per §2.6; migration 0007)
   created_at
   completed_at (nullable)
   source (user_created, system_suggested)
@@ -331,14 +409,35 @@ check_ins
   id
   user_id
   date (unique per user per day)
-  confidence_score (int 1–10)
   created_at
+
+(Note: no confidence_score column — removed per §13. Confidence lives on weekly_reflections.)
 
 goal_check_ins
   id
   check_in_id
   goal_id
   completed (bool)
+
+weekly_reflections
+  id
+  user_id
+  week_start (date — Monday of the reflection week; unique per (user_id, week_start))
+  social_confidence (int 1–10)
+  work_confidence (int 1–10)
+  physical_confidence (int 1–10)
+  appearance_confidence (int 1–10)
+  notes (nullable text)
+  created_at
+
+progress_photos (§2.6)
+  id
+  user_id
+  slot (enum: 'baseline' | 'progress_90d')
+  storage_path (text — folder-based RLS: (storage.foldername(name))[1] = auth.uid()::text)
+  captured_at
+  -- bytes live in Supabase Storage bucket; metadata is here
+  -- migration 0008
 
 survey_responses
   id
@@ -410,8 +509,13 @@ If the context does not contain information to answer the question, say:
 "That's not something I cover yet. I've logged it and I'll add it to my list."
 
 Do not draw on general knowledge. Do not speculate. Do not improvise beyond
-what the context supports. When you cite something, name the POV doc it came
-from in parentheses at the end of the relevant sentence.
+what the context supports. Do not name the POV docs the context came from —
+answer as if the information is yours, in plain prose, without parenthetical
+source citations. (Updated 0.2: earlier drafts told Mister P to cite docs;
+that produced pedagogical-sounding answers and made ordinary questions feel
+like footnoted essays. The only pathway that now surfaces a POV doc by name
+is the proactive-suggestion advisory, and that is gated on the user's own
+active goals — see §2.6.)
 
 Your voice:
 - Direct and a little dry
@@ -481,6 +585,14 @@ Context provided:
 User question:
 {user_question}
 ```
+
+### Additional blocks injected per request (shipped in 0.2)
+
+Three optional blocks may be appended to the system prompt on each turn, driven by the ask handler in `app/api/mister-p/ask/route.ts`:
+
+- **Active-goals block** (`formatGoalsBlock` in `lib/mister-p/prompt.ts`) — always injected when the user has any active goals. Lists each goal with its duration and how many prior Mister P answers cited its source doc (so Mister P can skip foundations for a user who has already seen them). Includes instructions: anchor answers to what the user is working on when the question overlaps, calibrate depth by goal age and prior-chat coverage, do not force a connection when the question is unrelated.
+- **Proactive-suggestion advisory** (§2.5c) — injected when `shouldTriggerProactiveSuggestion(topicAnalysis)` is true, `chunks.length > 0`, **and** the top retrieved chunk's `doc_slug` is in the user's active goal `source_slug` set. Tells Mister P to offer one optional "full breakdown in the X doc" line after the main answer. Gated on the user-goal set because a doc that isn't backing one of their goals wouldn't be on `/povs` — the nudge would dead-end.
+- **Circuit-breaker advisory** (§13) — injected when `shouldTriggerCircuitBreaker(topicAnalysis)` is true (5+ similar-topic queries in 7 days; 3+ for the `something-specific-bothering-me` motivation segment). Takes priority over the proactive-suggestion advisory when both would fire — at most one advisory per turn.
 
 ### Iteration plan
 - Write 20 test questions before shipping (10 in-scope, 5 edge cases, 5 hard refusals)
