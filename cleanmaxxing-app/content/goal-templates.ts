@@ -55,9 +55,9 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
   },
   'strength-train-3x-week': {
     source_slug: '19-strength-training',
-    title: 'Strength train three times per week',
+    title: 'Strength train 3-5 times per week',
     description:
-      'Upper body biased toward the muscles that drive how a physique reads — shoulders, chest, back, arms — with a squat or leg-press variant and a hinge as posterior-chain foundation. Progressive overload tracked. Consistency beats intensity for the first year.',
+      'Upper body biased toward the muscles that drive how a physique reads — shoulders, chest, back, arms — with a squat or leg-press variant and a hinge as posterior-chain foundation. Three sessions is the beginner floor or the right starting point if you haven\'t trained in 1-2 years; four to five is the working range once a base is built. Progressive overload tracked. Consistency beats intensity for the first year.',
     goal_type: 'process',
   },
   'macros-daily': {
