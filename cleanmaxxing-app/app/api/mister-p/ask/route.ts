@@ -107,6 +107,15 @@ export async function POST(req: NextRequest) {
     };
   });
 
+  // Set of POV slugs the user has actually accepted as goals. Mister P
+  // should only point to a full POV doc when it backs one of the user's
+  // own goals — otherwise the /povs index wouldn't have it listed and
+  // the nudge would dead-end.
+  const userGoalSlugs = new Set<string>();
+  for (const g of goals) {
+    if (g.source_slug) userGoalSlugs.add(g.source_slug);
+  }
+
   // Advisory selection — at most one advisory per turn. Circuit breaker
   // takes priority because it signals an obsessive loop that overrides the
   // proactive-suggestion nudge. In practice the two are mutually exclusive
@@ -115,7 +124,11 @@ export async function POST(req: NextRequest) {
   let advisory: string | null = null;
   if (triggerCircuitBreaker) {
     advisory = CIRCUIT_BREAKER_ADVISORY;
-  } else if (shouldTriggerProactiveSuggestion(topicAnalysis) && chunks.length > 0) {
+  } else if (
+    shouldTriggerProactiveSuggestion(topicAnalysis) &&
+    chunks.length > 0 &&
+    userGoalSlugs.has(chunks[0].doc_slug)
+  ) {
     advisory = buildProactiveSuggestionAdvisory(chunks[0].doc_title, chunks[0].doc_slug);
   }
 
