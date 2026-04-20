@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: Tailwind's `dark:` variants activate when any
+   element has `.dark` in its ancestry. The ThemeApplier component sets
+   this class on <html> based on the user's preference (or system
+   default when they haven't explicitly chosen). See lib/theme.ts. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -12,11 +18,9 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 body {

@@ -7,6 +7,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 type Props = {
   userEmail: string;
@@ -82,6 +83,7 @@ export function AppNav({ userEmail }: Props) {
           >
             {userEmail}
           </span>
+          <ThemeToggle />
           <form action="/api/auth/signout" method="post">
             <button
               type="submit"
