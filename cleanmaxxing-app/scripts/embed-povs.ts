@@ -1,8 +1,10 @@
 /**
  * Embed POV chunks into Supabase pgvector.
  *
- * Run after `npm run sync-povs`. Reads content/povs/*.md, chunks them,
- * embeds with OpenAI text-embedding-3-small, and upserts into pov_docs + pov_chunks.
+ * Reads content/povs/*.md, chunks them, embeds with OpenAI
+ * text-embedding-3-small, and upserts into pov_docs + pov_chunks.
+ * Run whenever POV markdown changes so Mister P's retrieval stays
+ * in sync with the committed corpus.
  *
  * Usage: npm run embed-povs
  */

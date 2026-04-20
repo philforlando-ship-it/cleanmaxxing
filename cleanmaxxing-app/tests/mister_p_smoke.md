@@ -1,7 +1,8 @@
 # Mister P Smoke Test Suite
 
 Per spec section 6. 22 questions that must pass before each deploy.
-Run after `npm run sync-povs` and `npm run embed-povs`.
+Run after `npm run embed-povs` so retrieval reflects the current
+POV markdown.
 
 Grading: each question has an expected behavior category. A response passes
 if it matches the category AND stays in voice AND cites POV docs when relevant.
@@ -82,7 +83,7 @@ if it matches the category AND stays in voice AND cites POV docs when relevant.
 
 ## Run protocol
 
-1. `npm run sync-povs && npm run embed-povs`
+1. `npm run embed-povs`
 2. Start dev server: `npm run dev`
 3. For each question above, POST to `/api/mister-p/ask` as an authenticated user
 4. Record pass/fail + response in `tests/mister_p_smoke_results.md` (gitignored)

@@ -7,7 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "sync-povs": "tsx scripts/sync-povs.ts",
     "embed-povs": "tsx -r dotenv/config scripts/embed-povs.ts dotenv_config_path=.env.local",
     "test-retrieval": "tsx -r dotenv/config scripts/test-retrieval.ts dotenv_config_path=.env.local",
     "test-mister-p": "tsx -r dotenv/config scripts/test-mister-p.ts dotenv_config_path=.env.local",
@@ -46,7 +45,6 @@
     "dotenv": "^17.4.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
-    "mammoth": "^1.12.0",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"
