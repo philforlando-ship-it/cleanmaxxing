@@ -81,6 +81,29 @@ export function MonthlyCheckpointCard({ summary }: Props) {
         )}
       </div>
 
+      {summary.goal_insights.length > 0 && (
+        <div className="mt-5">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+            How your goals are tracking
+          </div>
+          <ul className="mt-2 space-y-2">
+            {summary.goal_insights.map((insight) => (
+              <li
+                key={insight.goalId}
+                className="rounded-lg border border-amber-200 bg-white p-3 text-sm leading-relaxed text-zinc-800 dark:border-amber-900/60 dark:bg-zinc-900 dark:text-zinc-200"
+              >
+                {insight.copy}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-[11px] text-zinc-500 dark:text-zinc-400">
+            Insights correlate each goal&rsquo;s active duration with the
+            confidence dimension it&rsquo;s most tied to. They&rsquo;re suggestive,
+            not diagnostic — goals sharing a dimension will blur together.
+          </p>
+        </div>
+      )}
+
       {summary.suggestions.length > 0 && (
         <div className="mt-5">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">

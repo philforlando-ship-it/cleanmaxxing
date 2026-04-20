@@ -22,6 +22,11 @@ import {
 import type { AgeSegment } from '@/lib/onboarding/types';
 import { averageConfidence } from '@/lib/weekly-reflection/service';
 import { contextFor, deltaPhrase } from '@/lib/confidence/context';
+import {
+  buildGoalInsights,
+  type GoalInsight,
+  type ReflectionRow,
+} from '@/lib/goals/goal-insights';
 
 const DISMISS_KEY = 'monthly_checkpoint_dismissed_at';
 const CHECKPOINT_DAY_THRESHOLD = 30;
@@ -38,6 +43,11 @@ export type CheckpointSummary = {
   total_goal_check_ins: number;
   completed_goal_check_ins: number;
   suggestions: SuggestedGoal[];
+  // Per-goal alignment insights correlating goal-active duration with
+  // the relevant confidence dimension's trend. Empty array when there
+  // isn't enough data (< 4 reflections, or no goals with enough weeks
+  // active). Capped internally at 5 to avoid card overload.
+  goal_insights: GoalInsight[];
 };
 
 export type CheckpointState =
@@ -162,6 +172,26 @@ export async function getCheckpointState(
     suggestions = pickTopN(fresh, 3);
   }
 
+  // Goal-alignment insights. Pull the user's active goals and
+  // correlate each against the relevant confidence dimension over its
+  // active window. Uses the same reflection rows already loaded above.
+  const { data: activeGoalsRaw } = await supabase
+    .from('goals')
+    .select('id, title, source_slug, created_at')
+    .eq('user_id', userId)
+    .eq('status', 'active');
+  const activeGoals = (activeGoalsRaw ?? []).map((g) => ({
+    id: g.id as string,
+    title: g.title as string,
+    source_slug: (g.source_slug as string | null) ?? null,
+    created_at: g.created_at as string,
+  }));
+  const goalInsights = buildGoalInsights(
+    activeGoals,
+    refRows as ReflectionRow[],
+    now,
+  );
+
   const summary: CheckpointSummary = {
     days_since_start: daysSinceStart,
     confidence_from: confidenceFrom,
@@ -175,6 +205,7 @@ export async function getCheckpointState(
     total_goal_check_ins: totalChecks,
     completed_goal_check_ins: completedChecks,
     suggestions,
+    goal_insights: goalInsights,
   };
 
   return { status: 'eligible', summary };
