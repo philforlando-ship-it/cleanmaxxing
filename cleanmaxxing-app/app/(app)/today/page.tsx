@@ -10,7 +10,8 @@ import { MonthlyCheckpointCard } from './monthly-checkpoint-card';
 import { WeeklyFocusCard } from './weekly-focus-card';
 import { FirstRunCard } from './first-run-card';
 import { ProgressPhotoCard } from './progress-photo-card';
-import { getTodayCheckInState } from '@/lib/check-in/service';
+import { WeeklySummaryStrip } from './weekly-summary-strip';
+import { getTodayCheckInState, getWeeklyCheckInSummary } from '@/lib/check-in/service';
 import { getWeeklyReflectionState } from '@/lib/weekly-reflection/service';
 import { getCheckpointState } from '@/lib/checkpoint/service';
 
@@ -53,12 +54,14 @@ export default async function TodayPage() {
     checkInState,
     reflectionState,
     checkpointState,
+    weeklySummary,
     { data: goalsRaw },
     { data: photoRowsRaw },
   ] = await Promise.all([
     getTodayCheckInState(supabase, user.id),
     getWeeklyReflectionState(supabase, user.id),
     getCheckpointState(supabase, user.id),
+    getWeeklyCheckInSummary(supabase, user.id),
     supabase
       .from('goals')
       .select('id, title, source_slug, created_at, baseline_stage')
@@ -140,6 +143,7 @@ export default async function TodayPage() {
             tracking side effects (asking Mister P something isn't the
             same as self-surveillance). */}
         {!steppedAway && <DailyCheckInCard initialState={checkInState} />}
+        {!steppedAway && <WeeklySummaryStrip summary={weeklySummary} />}
         {!steppedAway && <WeeklyFocusCard goals={activeGoals} />}
         {!steppedAway && <WeeklyReflectionCard initialState={reflectionState} />}
         <ConfidenceTrendChart history={reflectionState.history} />

@@ -157,6 +157,123 @@ export async function saveTodayCheckIn(
   return getTodayCheckInState(supabase, userId, date);
 }
 
+export type WeeklyCheckInSummary = {
+  ticked: number;
+  possible: number;
+  goalCount: number;
+};
+
+/**
+ * Rolling 7-day check-in totals across the user's currently-active goals.
+ *
+ * `possible` caps each goal at min(7, days_since_created + 1) so a goal
+ * accepted three days ago contributes three slots, not seven. `ticked`
+ * counts goal_check_ins.completed=true rows whose parent check_in falls
+ * in the same window. Abandoned/completed goals are excluded — this is
+ * a "what am I showing up for right now" view, not lifetime stats.
+ */
+export async function getWeeklyCheckInSummary(
+  supabase: SupabaseClient,
+  userId: string,
+  now: Date = new Date()
+): Promise<WeeklyCheckInSummary> {
+  const endDate = todayDateString(now);
+  const startObj = new Date(now);
+  startObj.setDate(startObj.getDate() - 6);
+  const startDate = todayDateString(startObj);
+
+  const { data: goalRows } = await supabase
+    .from('goals')
+    .select('id, created_at')
+    .eq('user_id', userId)
+    .eq('status', 'active');
+
+  const activeGoals = (goalRows ?? []) as Array<{ id: string; created_at: string }>;
+  const goalIds = activeGoals.map((g) => g.id);
+  const goalCount = goalIds.length;
+
+  const MS_PER_DAY = 86_400_000;
+  const nowMs = now.getTime();
+  let possible = 0;
+  for (const g of activeGoals) {
+    const daysSince = Math.floor((nowMs - new Date(g.created_at).getTime()) / MS_PER_DAY) + 1;
+    possible += Math.max(0, Math.min(7, daysSince));
+  }
+
+  if (goalCount === 0 || possible === 0) {
+    return { ticked: 0, possible, goalCount };
+  }
+
+  const { data: checkInRows } = await supabase
+    .from('check_ins')
+    .select('id')
+    .eq('user_id', userId)
+    .gte('date', startDate)
+    .lte('date', endDate);
+
+  const checkInIds = (checkInRows ?? []).map((c) => c.id as string);
+  if (checkInIds.length === 0) {
+    return { ticked: 0, possible, goalCount };
+  }
+
+  const { data: tickedRows } = await supabase
+    .from('goal_check_ins')
+    .select('id')
+    .in('check_in_id', checkInIds)
+    .in('goal_id', goalIds)
+    .eq('completed', true);
+
+  return { ticked: (tickedRows ?? []).length, possible, goalCount };
+}
+
+export type GoalWeeklySummary = {
+  daysCompleted: number;
+  daysPossible: number;
+};
+
+/**
+ * Per-goal rolling 7-day completion count. `daysPossible` is capped by the
+ * goal's age so a goal accepted two days ago reads "1 of the last 2 days"
+ * instead of "1 of the last 7."
+ */
+export async function getGoalWeeklySummary(
+  supabase: SupabaseClient,
+  userId: string,
+  goalId: string,
+  createdAt: string,
+  now: Date = new Date()
+): Promise<GoalWeeklySummary> {
+  const endDate = todayDateString(now);
+  const startObj = new Date(now);
+  startObj.setDate(startObj.getDate() - 6);
+  const startDate = todayDateString(startObj);
+
+  const MS_PER_DAY = 86_400_000;
+  const daysSince = Math.floor((now.getTime() - new Date(createdAt).getTime()) / MS_PER_DAY) + 1;
+  const daysPossible = Math.max(0, Math.min(7, daysSince));
+
+  if (daysPossible === 0) return { daysCompleted: 0, daysPossible: 0 };
+
+  const { data: checkInRows } = await supabase
+    .from('check_ins')
+    .select('id')
+    .eq('user_id', userId)
+    .gte('date', startDate)
+    .lte('date', endDate);
+
+  const checkInIds = (checkInRows ?? []).map((c) => c.id as string);
+  if (checkInIds.length === 0) return { daysCompleted: 0, daysPossible };
+
+  const { data: tickedRows } = await supabase
+    .from('goal_check_ins')
+    .select('id')
+    .in('check_in_id', checkInIds)
+    .eq('goal_id', goalId)
+    .eq('completed', true);
+
+  return { daysCompleted: (tickedRows ?? []).length, daysPossible };
+}
+
 /**
  * Undo today's check-in: delete the check_in row (cascades to goal_check_ins).
  * Used when the user wants to re-enter their check-in for the day.

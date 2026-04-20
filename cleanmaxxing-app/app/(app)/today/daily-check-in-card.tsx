@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { TodayCheckInState } from '@/lib/check-in/service';
 
@@ -9,6 +10,7 @@ type Props = {
 };
 
 export function DailyCheckInCard({ initialState }: Props) {
+  const router = useRouter();
   const [state, setState] = useState<TodayCheckInState>(initialState);
   const [draft, setDraft] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(initialState.goals.map((g) => [g.goal_id, g.completed]))
@@ -50,6 +52,7 @@ export function DailyCheckInCard({ initialState }: Props) {
         setDraft(
           Object.fromEntries(next.goals.map((g) => [g.goal_id, g.completed]))
         );
+        router.refresh();
       } catch (err) {
         setError((err as Error).message);
       }
@@ -67,6 +70,7 @@ export function DailyCheckInCard({ initialState }: Props) {
         setDraft(
           Object.fromEntries(next.goals.map((g) => [g.goal_id, g.completed]))
         );
+        router.refresh();
       } catch (err) {
         setError((err as Error).message);
       }

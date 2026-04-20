@@ -14,6 +14,7 @@ import {
   type BaselineStage,
 } from '@/lib/content/onramp';
 import { povExists } from '@/lib/content/pov';
+import { getGoalWeeklySummary } from '@/lib/check-in/service';
 import { AdjustBaseline } from '@/app/(app)/today/adjust-baseline';
 import { StatusActions } from './status-actions';
 
@@ -62,6 +63,10 @@ export default async function GoalDetailPage({ params }: Props) {
     : null;
 
   const isActive = goal.status === 'active';
+
+  const weekly = isActive
+    ? await getGoalWeeklySummary(supabase, user.id, goal.id, goal.created_at)
+    : null;
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -127,6 +132,12 @@ export default async function GoalDetailPage({ params }: Props) {
               {state.graduation}
             </p>
           )}
+          {weekly && weekly.daysPossible > 0 && (
+            <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-400">
+              Ticked {weekly.daysCompleted} of the last {weekly.daysPossible} day
+              {weekly.daysPossible === 1 ? '' : 's'}.
+            </p>
+          )}
           <div className="mt-4 border-t border-zinc-200 pt-4 dark:border-zinc-800">
             <AdjustBaseline goalId={goal.id} currentStage={stage} />
           </div>
@@ -140,6 +151,12 @@ export default async function GoalDetailPage({ params }: Props) {
             This goal doesn&rsquo;t have a weekly walkthrough authored yet. Read
             the full POV for the complete framework.
           </p>
+          {weekly && weekly.daysPossible > 0 && (
+            <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-400">
+              Ticked {weekly.daysCompleted} of the last {weekly.daysPossible} day
+              {weekly.daysPossible === 1 ? '' : 's'}.
+            </p>
+          )}
         </section>
       )}
 
