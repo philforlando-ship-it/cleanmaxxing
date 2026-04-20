@@ -1,0 +1,33 @@
+{
+  "slug": "47-eye-health",
+  "start_cue": "Most eye-area problems are function issues — dryness, redness, irritation — not grooming issues. Fixing the mechanism produces more visible improvement than any eye cream.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Lubricating drops and basic dry-eye management",
+      "detail": "If your eyes are chronically red, dry, or irritated, start with preservative-free artificial tears 2-4 times a day. These are safe at any frequency. Avoid vasoconstrictor drops (the 'get the red out' products like Visine) as a daily habit — repeated use produces rebound redness that's often worse than the original. Check for the obvious lifestyle contributors: low blink rate from screens, ambient air dryness, contact lens overwear, seasonal allergies. Most chronic redness resolves from this alone within a week or two."
+    },
+    {
+      "range": "3-4",
+      "focus": "Glasses audit if you wear them",
+      "detail": "If your glasses are older than 2-3 years or you've never really thought about frame fit, book an optical-shop visit specifically to audit. Frame width should match or slightly exceed face width at the temples. Bridge should sit cleanly without leaving marks or slipping. Frame visual weight should match the face — strong bone structure can handle heavier frames; softer features read better in thinner rims. Frame shape contrasts with face shape (angular frames on round face, softer frames on square face) as a starting rule. Photograph yourself in 5-7 candidates and compare."
+    },
+    {
+      "range": "5-8",
+      "focus": "Screen habits and the 20-20-20 rule",
+      "detail": "Digital eye strain is real, but blue-light glasses aren't the effective intervention — the American Academy of Ophthalmology specifically does not recommend them for digital eye strain. What actually works: every 20 minutes of screen work, look at something 20 feet away for 20 seconds. Match screen brightness to ambient room light (too bright in a dark room strains the eyes; too dim in a bright room also strains). Take real breaks from the screen — not a phone break, an away-from-screens break. Dry eye from reduced blink rate is the biggest driver of chronic screen-related fatigue."
+    },
+    {
+      "range": "9+",
+      "focus": "Contacts, LASIK, or professional evaluation",
+      "detail": "If glasses still feel wrong after the audit, try daily disposable contacts for a week — some men read better without the frame variable, others don't. If refractive surgery is on your mind, LASIK has excellent outcomes in well-selected candidates (stable prescription 1-2+ years, adequate corneal thickness, no significant baseline dry eye, no keratoconus). The consultation is where candidacy gets assessed — don't try to convince a surgeon you're a candidate if they tell you otherwise. Escalate to an eye care professional immediately for: noticeable vision changes, flashes or new floaters (urgent), eye pain (urgent), persistent redness not explained by dry eye or allergy, or any symptoms interfering with daily function."
+    }
+  ],
+  "graduation": "When dryness and redness are reliably under control, frames (if you wear them) are actually complementing your face, screen habits include real breaks, and you've made an informed decision about contacts or LASIK if relevant, eye-area function is handled. The aesthetic work on top of a functional eye area is in the grooming walkthrough (10-grooming).",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 5,
+    "established": null
+  }
+}

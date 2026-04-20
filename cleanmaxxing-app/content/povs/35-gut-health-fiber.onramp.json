@@ -1,0 +1,33 @@
+{
+  "slug": "35-gut-health-fiber",
+  "start_cue": "Clear skin, flatter stomach, and better energy are downstream of a healthy gut. Fiber is the single biggest lever — most men consume about half what they should.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Cut the biggest disruptors",
+      "detail": "Before adding anything, remove what's actively wrecking gut health. Ultra-processed foods (low fiber, high additives) as the main offender. Sugar alcohols (maltitol, sorbitol, xylitol — check labels on protein bars and low-cal drinks) are a silent driver of unexplained bloating; maltitol in particular. Heavy alcohol use directly damages the gut lining. You don't have to eliminate any of these entirely — just cut the daily-driver exposures and replace with whole food options for the bulk of your diet."
+    },
+    {
+      "range": "3-4",
+      "focus": "Start psyllium husk, 5g daily",
+      "detail": "Psyllium is the gold-standard fiber supplement — best balance of effectiveness, tolerability, and research support. Start at 5 grams (roughly one tablespoon) per day, mixed in a full glass of water. Hydration is mandatory; psyllium without adequate water causes constipation rather than preventing it. Take it before a meal for appetite control. Bulk raw psyllium is significantly cheaper than branded Metamucil and functionally equivalent — if you prefer the branded format, pick the sugar-free version."
+    },
+    {
+      "range": "5-6",
+      "focus": "Build toward 25-40g total fiber per day",
+      "detail": "After the first two weeks of 5g psyllium without digestive issues, increase to 10g/day. Combined with dietary fiber (fruits, vegetables, oats, legumes), target 25-40g total per day. Most men on a meat-and-carb diet sit around 10-15g without trying. The gap is usually closed by adding a serving of oats at breakfast, a piece of fruit as a snack, and a legume-based side with one meal. Track actual intake for a few days to see where you're starting from."
+    },
+    {
+      "range": "7+",
+      "focus": "Add fermented foods and post-meal movement",
+      "detail": "Introduce fermented foods as a daily habit — yogurt, kefir, sauerkraut, kimchi, or similar. One serving per day is enough; variety across the week beats the same product every day. Walk for 10-15 minutes after the largest meal of the day — supports digestive motility and reduces bloating measurably. If bloating still persists after 6-8 weeks of consistent fiber + fermented food + walking, consider an elimination trial (temporarily cut one suspect food group for 2 weeks and reintroduce) — common culprits are dairy, gluten, or FODMAP-heavy foods."
+    }
+  ],
+  "graduation": "When fiber intake is reliably in the 25-40g range, fermented foods are a routine daily habit, and bloating is noticeably reduced from where it started (measurable: abdominal distension after meals, belt-notch flexibility through the day), gut-health fundamentals are installed. Skin improvements trail gut improvements by weeks to months — stay patient and track through photos rather than day-to-day mirror checks.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 5,
+    "established": null
+  }
+}

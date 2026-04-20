@@ -1,0 +1,33 @@
+{
+  "slug": "05-supplements",
+  "start_cue": "Supplements support a solid base; they don't replace one. One habit at a time — the S-tier three (creatine, vitamin D, omega-3) do more than any curated stack of twelve.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Creatine monohydrate, 5g per day",
+      "detail": "Single scoop (5g) of creatine monohydrate, any time of day, with water or in a drink. No loading phase needed — saturation happens over 3-4 weeks at the standard dose. Only the monohydrate form; the flashier versions cost more and work no better. Expect slightly fuller muscles within a month. The cognitive benefit is real but smaller for men with regular meat intake. One habit this week, nothing else."
+    },
+    {
+      "range": "3-4",
+      "focus": "Add vitamin D",
+      "detail": "2,000–4,000 IU daily, especially if you have limited sun exposure or live above roughly 37° latitude. Vitamin D deficiency is genuinely common and affects hormone production, energy, and immune function. Best taken with a fat-containing meal for absorption. If you want certainty, a single blood test ($30-50 through a direct-to-consumer lab) confirms whether you're actually deficient and what dose corrects it."
+    },
+    {
+      "range": "5-6",
+      "focus": "Omega-3 + magnesium glycinate if sleep needs support",
+      "detail": "Omega-3: 1–2g combined EPA and DHA daily. Fish oil capsules or algae-based for vegetarians. Reduces systemic inflammation and supports skin quality over time. Magnesium glycinate: 200–400mg before bed, only if sleep onset is slow or stress is running high. The glycinate form is the one that reliably affects sleep; oxide is cheaper but poorly absorbed."
+    },
+    {
+      "range": "7+",
+      "focus": "Situational additions",
+      "detail": "Electrolytes during aggressive cuts, high caffeine use, or GLP-1 medication — prevents the flat, depleted look. Glycine (3g before bed) alongside magnesium for sleep and collagen support. Protein powder if daily protein is short — a convenience tool, not nutritionally superior to food. Skip multivitamins — they underdose the things that matter and duplicate what food already provides. Skip C-tier supplements entirely (testosterone boosters, nootropic stacks, anti-aging pills)."
+    }
+  ],
+  "graduation": "When the S-tier three are running daily without thinking, and you can honestly answer 'what is this supplement doing for me' for every bottle on the shelf, the category is handled. Additions past this point should be evidence-based and problem-specific, not aspirational.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 5,
+    "established": null
+  }
+}

@@ -12,6 +12,7 @@
 // migration 0007_goals_baseline_stage.sql.
 
 import onramp04 from '@/content/povs/04-peptides.onramp.json';
+import onramp05 from '@/content/povs/05-supplements.onramp.json';
 import onramp07 from '@/content/povs/07-skincare-antiaging.onramp.json';
 import onramp08 from '@/content/povs/08-head-hair-balding.onramp.json';
 import onramp09 from '@/content/povs/09-facial-hair.onramp.json';
@@ -29,13 +30,17 @@ import onramp23 from '@/content/povs/23-cardio.onramp.json';
 import onramp24 from '@/content/povs/24-alcohol-cannabis.onramp.json';
 import onramp25 from '@/content/povs/25-acne.onramp.json';
 import onramp27 from '@/content/povs/27-hair-loss-treatments.onramp.json';
+import onramp29 from '@/content/povs/29-body-hair-methods.onramp.json';
 import onramp30 from '@/content/povs/30-appetite-control.onramp.json';
 import onramp31 from '@/content/povs/31-calorie-macro-framework.onramp.json';
+import onramp32 from '@/content/povs/32-skin-texture-scarring.onramp.json';
 import onramp33 from '@/content/povs/33-niche-enhancements.onramp.json';
 import onramp34 from '@/content/povs/34-recovery-tools-polish.onramp.json';
+import onramp35 from '@/content/povs/35-gut-health-fiber.onramp.json';
 import onramp41 from '@/content/povs/41-medical-conditions.onramp.json';
 import onramp42 from '@/content/povs/42-sleep.onramp.json';
 import onramp45 from '@/content/povs/45-meal-plans.onramp.json';
+import onramp47 from '@/content/povs/47-eye-health.onramp.json';
 import onramp48 from '@/content/povs/48-skin-tone-guidance.onramp.json';
 import onramp50 from '@/content/povs/50-posture.onramp.json';
 import onramp51 from '@/content/povs/51-dating-apps.onramp.json';
@@ -74,6 +79,7 @@ const DEFAULT_STAGE_WEEKS: Record<BaselineStage, number | null> = {
 
 const BY_SLUG: Record<string, Onramp> = {
   '04-peptides': onramp04 as Onramp,
+  '05-supplements': onramp05 as Onramp,
   '07-skincare-antiaging': onramp07 as Onramp,
   '08-head-hair-balding': onramp08 as Onramp,
   '09-facial-hair': onramp09 as Onramp,
@@ -91,13 +97,17 @@ const BY_SLUG: Record<string, Onramp> = {
   '24-alcohol-cannabis': onramp24 as Onramp,
   '25-acne': onramp25 as Onramp,
   '27-hair-loss-treatments': onramp27 as Onramp,
+  '29-body-hair-methods': onramp29 as Onramp,
   '30-appetite-control': onramp30 as Onramp,
   '31-calorie-macro-framework': onramp31 as Onramp,
+  '32-skin-texture-scarring': onramp32 as Onramp,
   '33-niche-enhancements': onramp33 as Onramp,
   '34-recovery-tools-polish': onramp34 as Onramp,
+  '35-gut-health-fiber': onramp35 as Onramp,
   '41-medical-conditions': onramp41 as Onramp,
   '42-sleep': onramp42 as Onramp,
   '45-meal-plans': onramp45 as Onramp,
+  '47-eye-health': onramp47 as Onramp,
   '48-skin-tone-guidance': onramp48 as Onramp,
   '50-posture': onramp50 as Onramp,
   '51-dating-apps': onramp51 as Onramp,

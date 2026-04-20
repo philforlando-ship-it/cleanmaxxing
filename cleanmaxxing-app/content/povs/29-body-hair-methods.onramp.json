@@ -1,0 +1,33 @@
+{
+  "slug": "29-body-hair-methods",
+  "start_cue": "Start with the high-ROI visible zones: back of neck, upper back, shoulders, lower back. Permanent decisions come later — trimming handles the baseline fine.",
+  "weeks": [
+    {
+      "range": "1",
+      "focus": "Audit the visible zones",
+      "detail": "Check yourself in a mirror (or have someone check) for the four high-ROI zones: back of neck visible above a collar, upper back and shoulders visible in fitted shirts, lower back visible when bending or in a shirtless context, chest and abdomen density relative to your physique. These are the silent-signal zones — no one compliments them when done right, but neglect registers subconsciously. Identify which of the four you actually need to address; the others stay natural."
+    },
+    {
+      "range": "2-3",
+      "focus": "Trim the chest and abdomen if needed",
+      "detail": "An electric trimmer with a guard ($30-100, one-time cost) is the baseline tool. For the chest and abdomen, aim for controlled density — not bare, just shorter so muscle definition reads clearly. Full removal on most men's chests looks unnatural unless the physique is very lean. Weekly upkeep is usually enough. Trimming is the safest method: no ingrown risk, no irritation, natural result."
+    },
+    {
+      "range": "4-6",
+      "focus": "Clean the back of neck — the single highest-ROI intervention",
+      "detail": "The back of neck is visible in almost every social interaction above a shirt collar and in photos from any angle. Clean it weekly with a razor (short, shallow strokes, shave cream, no pressure) or a trimmer with the shortest guard. If ingrowns are a recurring problem here, laser hair removal at this spot specifically is a high-return investment — small area, fast sessions, significant quality-of-life payoff."
+    },
+    {
+      "range": "7+",
+      "focus": "Permanent decisions for zones you consistently manage",
+      "detail": "For back, shoulders, lower back — areas where you consistently want less hair — laser hair removal is the most efficient long-term play. 6-10 sessions initially at $200-600 per session per area, then 1-2 annual touch-ups. IPL at-home devices ($200-500) are a cheaper alternative for lighter hair but require more sessions and ongoing maintenance. Waxing works as a short-term alternative ($40-100 per session, results last 3-6 weeks) but the ongoing cost accumulates past 8-10 sessions beyond what laser would have cost outright. The question is not 'do I want no hair forever' — it's 'do I want less, cleaner, easier-to-manage hair long-term' for these specific zones."
+    }
+  ],
+  "graduation": "When the visible zones read clean in real-world contexts (fitted shirts, photos, shirtless settings), upkeep is weekly at most, and you've made an informed decision about whether to invest in permanent reduction for the zones you consistently manage, body hair is handled. Most men don't need to go further than this — arms and legs natural is fine.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 2,
+    "partial": 4,
+    "established": null
+  }
+}

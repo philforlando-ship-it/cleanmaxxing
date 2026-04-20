@@ -1,0 +1,33 @@
+{
+  "slug": "32-skin-texture-scarring",
+  "start_cue": "Timeline is months, not weeks. Three months of consistent retinoid is the earliest point real change shows — people who stop at four weeks are quitting right before the compounding starts.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Establish the retinoid baseline",
+      "detail": "If you don't already have a retinoid in the evening routine, this is where texture work starts. OTC adapalene 0.1% (Differin) or a prescription tretinoin — apply pea-sized amount to the full face after cleansing, 2-3 nights per week. Moisturize after. Dry, flaky skin in the first 2-4 weeks is the adjustment phase, not a failure — sandwich method (moisturizer, retinoid, moisturizer) reduces irritation. Do not add any other active yet."
+    },
+    {
+      "range": "3-8",
+      "focus": "Build retinoid tolerance; add gentle exfoliation",
+      "detail": "Move from 2-3 nights per week to 4-5 nights over this window as tolerance builds. Add a chemical exfoliant 2-3 times per week on separate nights from the retinoid — glycolic acid (AHA) for general surface texture, salicylic acid (BHA) if pores and blackheads are also a concern. Do not exfoliate and retinoid on the same night in the first 8 weeks; the combined irritation routinely damages the barrier. Vitamin C in the morning (10-15%) supports brightening and collagen synthesis."
+    },
+    {
+      "range": "9-16",
+      "focus": "Three-month evaluation + hyperpigmentation focus",
+      "detail": "Take a comparison photo under consistent lighting. At 3 months of consistent use, early improvement should be visible — smoother surface, reduced fine texture, faded post-inflammatory marks. If you also have PIH (dark spots from past acne), this is the window to add niacinamide 5-10% or azelaic acid 10-20% to the routine. Be patient with the timeline — 6 months is when a clearly different skin quality appears for most people, and 12 months is when the full transformation reveals itself."
+    },
+    {
+      "range": "17+",
+      "focus": "Professional escalation for textural issues that remain",
+      "detail": "For atrophic acne scars or textural irregularities that topicals alone don't address, book a dermatology or aesthetic-medicine consult. Microneedling (3-6 sessions, 4-6 weeks apart, $200-500 each) is the standard next step — collagen remodeling gradually fills depressed scars over 6-12 months. Fractional laser resurfacing is the step up for more significant scarring. Results from both show at 3-6 months after the series begins and continue improving for up to a year. For raised birthmarks or moles that distract from the face, get them dermatologist-evaluated before any removal decision — melanoma occasionally presents as atypical moles."
+    }
+  ],
+  "graduation": "When nightly retinoid is automatic, surface texture reads noticeably smoother than the starting photo, and you've made an informed decision about whether professional treatments are worth the investment for your specific texture concerns, the topical foundation is installed. Continued consistency over years is what produces the compounding result — texture work never fully finishes.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 9,
+    "established": null
+  }
+}
