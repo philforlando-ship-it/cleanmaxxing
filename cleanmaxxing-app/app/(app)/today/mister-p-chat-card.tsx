@@ -138,8 +138,8 @@ export function MisterPChatCard() {
       {messages.length === 0 ? (
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           Ask about anything Cleanmaxxing covers — training, skin, hair,
-          supplements, sleep, style. Mister P answers from the corpus and
-          cites the doc he pulled from.
+          supplements, sleep, style. Mister P answers from the full corpus
+          in plain language.
         </p>
       ) : (
         <div

@@ -1,9 +1,12 @@
-// POV library index. Lists all published POV docs grouped by tier,
-// each linking to /povs/[slug]. Users can browse the full corpus
-// independently of which goals they've accepted.
+// POV index scoped to the user's own goals. Users see the docs behind
+// the goals they've actually picked, not the full 60-doc corpus — the
+// corpus exists for educational grounding, the viewer exists for depth
+// on what the user is working on right now.
 
 import Link from 'next/link';
-import { listPovSlugs, povTitleFor } from '@/lib/content/pov';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+import { povExists, povTitleFor } from '@/lib/content/pov';
 import { plainLanguageFor } from '@/lib/content/plain-language';
 import metadataRaw from '@/content/povs/_metadata.json';
 
@@ -61,26 +64,69 @@ function tierFor(slug: string): TierKey | null {
   return null;
 }
 
-export default function PovsIndexPage() {
-  const slugs = listPovSlugs();
+export default async function PovsIndexPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  // Pull every source_slug the user has ever accepted, regardless of
+  // status. Completed and abandoned goals still get their POV listed —
+  // a user who just finished a goal may want to revisit the doc, and
+  // an abandoned goal's doc is still relevant reference material.
+  const { data: goalsRaw } = await supabase
+    .from('goals')
+    .select('source_slug')
+    .eq('user_id', user.id);
+
+  const userSlugs = new Set<string>();
+  for (const row of goalsRaw ?? []) {
+    const slug = (row as { source_slug: string | null }).source_slug;
+    if (slug && povExists(slug)) userSlugs.add(slug);
+  }
+
+  const sortedSlugs = Array.from(userSlugs).sort();
 
   const bySlug: Record<TierKey, string[]> = Object.fromEntries(
     TIER_ORDER.map((t) => [t, [] as string[]]),
   ) as Record<TierKey, string[]>;
   const ungrouped: string[] = [];
 
-  for (const slug of slugs) {
+  for (const slug of sortedSlugs) {
     const tier = tierFor(slug);
     if (tier) bySlug[tier].push(slug);
     else ungrouped.push(slug);
   }
 
+  if (sortedSlugs.length === 0) {
+    return (
+      <main className="mx-auto max-w-2xl px-6 py-12">
+        <h1 className="text-3xl font-semibold tracking-tight">Your POVs</h1>
+        <p className="mt-4 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+          You haven&rsquo;t accepted any goals yet, so there are no POVs to
+          show here. The POV docs are the backing material for individual
+          goals — pick a few from the library and their docs will show up
+          here as reference.
+        </p>
+        <div className="mt-6">
+          <Link
+            href="/goals/library"
+            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+          >
+            Browse the library
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
-      <h1 className="text-3xl font-semibold tracking-tight">POV library</h1>
+      <h1 className="text-3xl font-semibold tracking-tight">Your POVs</h1>
       <p className="mt-3 max-w-xl text-sm text-zinc-600 dark:text-zinc-400">
-        The docs behind the goals. Tap any title to read the full POV. Foundation first,
-        then high impact, then refinement — the same priority order the goal library uses.
+        The docs backing your goals. Tap any title to read the full POV.
+        Grouped by priority tier so the foundational ones read first.
       </p>
 
       <div className="mt-10 flex flex-col gap-8">
