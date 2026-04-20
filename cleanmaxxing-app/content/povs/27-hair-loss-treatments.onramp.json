@@ -1,0 +1,33 @@
+{
+  "slug": "27-hair-loss-treatments",
+  "start_cue": "Finasteride and minoxidil are the backbone — everything else is adjunct, cosmetic, or escalation. Consistency at the foundation matters more than cleverness at the margins.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Document the baseline and confirm the foundation",
+      "detail": "Take reference photos under consistent lighting: hairline from the front, crown from above, sides, part. These are the before shots you'll compare against at month 3, 6, and 12 — photos reveal change that the mirror hides. Confirm the foundation: are you on finasteride and minoxidil? If not, that's the right first intervention (see the head-hair walkthrough or book a telehealth consultation) — no adjunct compensates for skipping the backbone."
+    },
+    {
+      "range": "3-8",
+      "focus": "Run the protocol consistently; add a low-risk adjunct",
+      "detail": "Daily finasteride, daily (or twice-daily) topical minoxidil. Set a fixed time so it becomes automatic. Add ketoconazole shampoo 2-3x per week — low-cost, low-risk, mild anti-androgenic benefit as a supporting element. LLLT device (laser cap or comb) is a reasonable adjunct if you're willing to spend $200-500 and use it 3-5x/week, but it's optional. Expect shedding around months 1-2 — this is the treatment working, not failing. Quitting during the shed is the single most common mistake."
+    },
+    {
+      "range": "9-16",
+      "focus": "First real assessment window — photo comparison",
+      "detail": "Three to four months is the earliest point the data is meaningful. Retake the reference photos under the same lighting and compare to week one. Density improvements show up at the crown and mid-scalp before the hairline. Hairline regrowth is slower and less reliable. If density has stabilized or improved, you're on the right protocol — keep running it. If it looks worse, the protocol is either not being run consistently or needs adjustment — book the dermatologist conversation now, not at month nine."
+    },
+    {
+      "range": "17+",
+      "focus": "Six-to-twelve-month evaluation and escalation decisions",
+      "detail": "Six-month photo comparison is when most responders see clear improvement; twelve months is when the pattern is fully revealed. If stabilized or improving: stay the course indefinitely — discontinuation loses gains within a year. If not responding adequately, discuss dutasteride (more potent DHT inhibitor, prescription only) with a dermatologist. Hair fibers are the highest-ROI cosmetic addition for diffuse thinning in the meantime — temporary, wash-out, under $30, can be invisible when applied sparingly. Transplant conversations belong here, after 12+ months stable on medication — a transplant on top of unstable native hair loss wastes donor supply."
+    }
+  ],
+  "graduation": "When photo comparisons at 6 and 12 months show stabilization or improvement, the protocol is running automatically, and you have a clear framework for whether cosmetic additions (fibers, SMP for a shaved-head aesthetic) or medical escalation (dutasteride, transplant) fit your long-term plan, treatment is working. Minoxidil and finasteride continue indefinitely — this isn't a course with a finish line. Discontinuation loses the gains.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 9,
+    "established": null
+  }
+}

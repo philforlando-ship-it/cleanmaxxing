@@ -1,0 +1,33 @@
+{
+  "slug": "25-acne",
+  "start_cue": "Consistency over intensity. A simple routine held for months outperforms an aggressive one run for three weeks. Fix the baseline first, then add one active at a time.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Baseline: stop making it worse",
+      "detail": "Gentle cleanser at night (no harsh scrubs, no daily exfoliant), non-comedogenic moisturizer morning and night, SPF every morning. Stop whatever you're currently piling on until the skin calms. Hygiene basics: wash pillowcases weekly, stop touching your face, shower right after training rather than letting sweat sit on the skin. Most acne gets measurably better in two weeks of this alone, just from removing the irritation cycle."
+    },
+    {
+      "range": "3-6",
+      "focus": "Introduce one active — match to your pattern",
+      "detail": "Pick the one ingredient that matches your acne type. Salicylic acid (a BHA) for blackheads, whiteheads, and clogged pores — cleanser or toner, used daily. Benzoyl peroxide for inflamed active breakouts — start at 2.5% not 10%, leave-on or wash-off, once daily to build tolerance. One active, not both at once. Add it for four weeks before evaluating. Watch for barrier damage (burning, peeling, dryness that doesn't resolve) — that's the signal to scale back, not push harder."
+    },
+    {
+      "range": "7-12",
+      "focus": "Add a retinoid — the long-term mechanism",
+      "detail": "OTC retinoid (adapalene 0.1%) or prescription (tretinoin) at night. Start two to three nights a week, build to nightly as tolerated. This is the single most important ingredient for prevention rather than treatment — it normalizes cell turnover so pores stop clogging in the first place. Sandwich method (moisturizer, retinoid, moisturizer) reduces irritation for sensitive skin. Audit diet during this window: high sugar and dairy are the two most commonly implicated food variables. Cut one for three weeks, see if it changes the breakout pattern."
+    },
+    {
+      "range": "13+",
+      "focus": "Escalate to a dermatologist if still persistent",
+      "detail": "If acne is still moderate-to-severe after three months of consistent routine, book a dermatologist appointment — do not keep cycling OTC products. Prescription options: stronger topical retinoids, topical antibiotics, hormonal medications, oral antibiotics for a limited course, or isotretinoin for severe or scarring cases. These are the appropriate level of response, not excessive intervention. Delaying professional treatment is the most common mistake — active acne leaves more scarring the longer it runs unchecked, and scar treatment is significantly harder than prevention."
+    }
+  ],
+  "graduation": "When the routine runs without thinking, breakouts are infrequent and heal within days rather than weeks, and you can step up or down based on how your skin is behaving rather than reactive product-hopping, acne is managed. Concealer remains a legitimate presentation tool for the rare breakout — use a non-comedogenic formula, match to the jawline, blend invisibly.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 7,
+    "established": null
+  }
+}

@@ -27,6 +27,8 @@ import onramp20 from '@/content/povs/20-diet-macros.onramp.json';
 import onramp21 from '@/content/povs/21-protein-creatine.onramp.json';
 import onramp23 from '@/content/povs/23-cardio.onramp.json';
 import onramp24 from '@/content/povs/24-alcohol-cannabis.onramp.json';
+import onramp25 from '@/content/povs/25-acne.onramp.json';
+import onramp27 from '@/content/povs/27-hair-loss-treatments.onramp.json';
 import onramp30 from '@/content/povs/30-appetite-control.onramp.json';
 import onramp31 from '@/content/povs/31-calorie-macro-framework.onramp.json';
 import onramp33 from '@/content/povs/33-niche-enhancements.onramp.json';
@@ -87,6 +89,8 @@ const BY_SLUG: Record<string, Onramp> = {
   '21-protein-creatine': onramp21 as Onramp,
   '23-cardio': onramp23 as Onramp,
   '24-alcohol-cannabis': onramp24 as Onramp,
+  '25-acne': onramp25 as Onramp,
+  '27-hair-loss-treatments': onramp27 as Onramp,
   '30-appetite-control': onramp30 as Onramp,
   '31-calorie-macro-framework': onramp31 as Onramp,
   '33-niche-enhancements': onramp33 as Onramp,
