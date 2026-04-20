@@ -33,6 +33,58 @@ __Retinoids__
 
 Among the most powerful tools for long\-term acne management\. Retinoids normalize skin cell turnover, which prevents the clogged pores that lead to breakouts in the first place\. Unlike benzoyl peroxide or salicylic acid, which treat existing breakouts, retinoids address the underlying process\. This makes them particularly valuable for sustained improvement over time\. Prescription\-strength retinoids are significantly more effective than OTC versions for moderate to severe acne\.
 
+__Integrating Acne Treatment With a Baseline Skincare Routine__
+
+Men who adopt the baseline skincare routine — cleanser, moisturizer, SPF, retinoid — and also have acne \(whether treated over the counter or prescribed by a dermatologist\) run into a practical problem the standard routine does not address: how do you layer an acne active with the rest of the stack without canceling it out, wrecking your skin barrier, or making the acne worse? The short answer is that the two are not separate routines\. They are one routine, sequenced correctly, with a few specific adjustments\.
+
+The principles below apply whether the acne treatment is over\-the\-counter \(benzoyl peroxide, salicylic acid, adapalene gel\) or prescription \(tretinoin, clindamycin, dapsone, isotretinoin\)\. Where a prescription is involved, your dermatologist's specific instructions override any general principle below\.
+
+__Layering order — active, then moisturizer, then SPF__
+
+The standard sequence is: cleanse, apply the acne active to clean dry skin, wait a minute or two for it to absorb, apply moisturizer over it, and finish with SPF in the morning\. The worry that moisturizer "dilutes" or "blocks" the active is mostly a myth for modern formulations — the active has already penetrated the skin by the time moisturizer goes on\. What moisturizer does do is reduce the irritation and peeling that actives cause, which means you can tolerate the active longer and get a better result\. Skipping moisturizer to "keep the active strong" usually produces an inflamed face and a user who quits the active by week three\.
+
+At night the sequence is cleanse, active, wait, moisturizer\. In the morning it is cleanse, any morning\-use active, moisturizer, SPF\.
+
+__Do not double up retinoids__
+
+The baseline skincare routine calls for a retinoid — retinol, retinaldehyde, or prescription tretinoin — primarily for anti\-aging and skin\-turnover reasons\. Acne treatment also frequently uses a retinoid: adapalene and tretinoin are the two most common\. These are the same category of ingredient, not two separate categories, and running both at once produces irritation without additional benefit\.
+
+Pick one\. If your dermatologist has you on tretinoin or adapalene for acne, that is your retinoid for the whole routine — it is already doing the anti\-aging work at the same time it is treating acne\. If you are using an OTC retinol for anti\-aging and do not have active acne, that is your retinoid\. Do not layer a prescription retinoid over an OTC one, and do not apply a separate anti\-aging retinoid on top of adapalene\.
+
+__Benzoyl peroxide and retinoid together__
+
+Older guidance said benzoyl peroxide chemically inactivates tretinoin and that the two should never be applied at the same time\. For a long time this drove the standard advice to use benzoyl peroxide in the morning and tretinoin at night\. Modern formulations — particularly micronized and encapsulated tretinoin, and the FDA\-approved clindamycin\-benzoyl peroxide\-adapalene combination — have largely resolved this\. Many dermatologists now say layering is fine\.
+
+If your skin tolerates it, layer them in the evening: cleanse, benzoyl peroxide to affected areas, wait, retinoid, wait, moisturizer\. If your skin is sensitive or already irritated, split them: benzoyl peroxide in the morning, retinoid at night\. Either approach works\. The key is consistency, not perfect timing\.
+
+__Barrier repair when things get irritated__
+
+Actives that treat acne — benzoyl peroxide, retinoids, exfoliating acids — all disrupt the skin barrier as part of how they work\. Mild dryness, light peeling, and transient redness are normal\. Burning, stinging, bleeding, or severe flaking are not\. They are signs that the barrier is compromised and the routine is doing more damage than good\.
+
+When this happens, the move is not to power through\. Scale back the active — use it every other night instead of nightly, or skip it entirely for three to five days — and bump up the moisturizer\. A richer, ceramide\-containing moisturizer or a dedicated barrier\-repair cream used for a week will restore the skin, after which the active can resume\. This is not failure\. It is calibration\. Skin barrier damage from over\-aggressive routines is one of the most common ways men with acne make their acne worse\.
+
+__SPF choice when skin is inflamed__
+
+SPF is non\-negotiable for anyone on a retinoid, anyone using benzoyl peroxide, and absolutely mandatory for anyone on isotretinoin — all of these increase photosensitivity\. But SPF selection matters more when acne is active\. The specific things to look for: non\-comedogenic \(will not clog pores\), fragrance\-free or low\-fragrance \(irritation risk\), and a light texture \(heavy occlusive SPFs trap sweat and oil on already\-struggling skin\)\.
+
+Mineral sunscreens \(zinc oxide, titanium dioxide\) are generally better tolerated on inflamed acne\-prone skin than chemical sunscreens, which can sting on a compromised barrier\. Modern mineral formulations have largely solved the white\-cast problem that made them unusable a decade ago\. If you are currently on a retinoid or benzoyl peroxide and your chemical SPF stings, switch to mineral\.
+
+__Purging is real and has a timeline__
+
+When starting a new active — particularly retinoids, adapalene, and chemical exfoliants — skin often gets worse for four to eight weeks before improving\. This is called purging: the active is accelerating skin cell turnover, which pushes existing microcomedones to the surface faster than they would otherwise appear\. Users who do not know this happens often quit at week three, convinced the product is breaking them out, right before it would have started clearing them\.
+
+The distinction between purging and a bad reaction: purging happens in the places you normally break out, on a similar timeline to a normal breakout cycle, and improves week over week after about eight weeks\. A bad reaction happens in new places, appears as unusual inflammation or rash, and gets worse rather than better\. If you are unsure which is happening, that is a question for a dermatologist, not for online guessing\.
+
+__Isotretinoin — the stripped\-down routine__
+
+If you are on isotretinoin \(Accutane\), the baseline skincare routine changes meaningfully and your dermatologist's instructions govern\. The general pattern: cut all other actives — retinoids, benzoyl peroxide, acids, exfoliants\. Isotretinoin is doing that work systemically, and layering topicals on top produces severe irritation without additional benefit\. What remains is a gentle non\-foaming cleanser, a rich moisturizer applied multiple times a day, a lip balm permanently within reach, and SPF every morning without exception\. Photosensitivity on isotretinoin is significant — skipping SPF during a course produces burns that would not occur otherwise\.
+
+Concealer is fine during a course\. Training is fine\. Waxing, threading, laser, and any procedure that traumatizes the skin should be paused until six months post\-course\. Dermatologists will flag these\. The short version: during isotretinoin your routine becomes gentle\-everything, and you add complexity back gradually after the course ends\.
+
+__When in doubt, defer to your dermatologist__
+
+If you are on a prescription acne treatment, your dermatologist has seen your skin and knows your history\. General\-principle guidance like the above is useful for understanding mechanism and avoiding obvious mistakes, but it does not override specific instructions from the person treating you\. If your dermatologist says alternate nights, alternate nights\. If they say split AM and PM, split AM and PM\. Where this POV and your dermatologist disagree, your dermatologist wins\.
+
 __Lifestyle Integration__
 
 Acne does not exist in isolation from the rest of the system\. Poor sleep, chronic stress, and diet all increase inflammation and hormonal fluctuations that worsen breakouts\. High intake of processed foods, excess sugar, and in some individuals dairy, can contribute to acne activity\. While diet is not the sole cause, it is a meaningful modifier — and one of the controllable variables worth addressing alongside topical treatment\.
