@@ -40,10 +40,12 @@ import onramp35 from '@/content/povs/35-gut-health-fiber.onramp.json';
 import onramp41 from '@/content/povs/41-medical-conditions.onramp.json';
 import onramp42 from '@/content/povs/42-sleep.onramp.json';
 import onramp45 from '@/content/povs/45-meal-plans.onramp.json';
+import onramp46 from '@/content/povs/46-mobility.onramp.json';
 import onramp47 from '@/content/povs/47-eye-health.onramp.json';
 import onramp48 from '@/content/povs/48-skin-tone-guidance.onramp.json';
 import onramp50 from '@/content/povs/50-posture.onramp.json';
 import onramp51 from '@/content/povs/51-dating-apps.onramp.json';
+import onramp56 from '@/content/povs/56-identity-beyond-appearance.onramp.json';
 
 export type BaselineStage = 'new' | 'light' | 'partial' | 'established';
 
@@ -107,10 +109,12 @@ const BY_SLUG: Record<string, Onramp> = {
   '41-medical-conditions': onramp41 as Onramp,
   '42-sleep': onramp42 as Onramp,
   '45-meal-plans': onramp45 as Onramp,
+  '46-mobility': onramp46 as Onramp,
   '47-eye-health': onramp47 as Onramp,
   '48-skin-tone-guidance': onramp48 as Onramp,
   '50-posture': onramp50 as Onramp,
   '51-dating-apps': onramp51 as Onramp,
+  '56-identity-beyond-appearance': onramp56 as Onramp,
 };
 
 export function onrampFor(slug: string | null | undefined): Onramp | null {

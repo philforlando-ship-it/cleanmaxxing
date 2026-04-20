@@ -1,0 +1,33 @@
+{
+  "slug": "56-identity-beyond-appearance",
+  "start_cue": "Appearance work clears obstacles; it doesn't build the life on the other side. This walkthrough is about redirecting the freed attention toward capability, character, and contribution.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Audit the current allocation",
+      "detail": "For one week, roughly track where your discretionary attention goes — appearance-related research, planning, execution, scrolling, product-hunting, grooming, training — versus everything else. Not in granular minutes; in rough daily totals. At the end of the week, look at the split. If appearance work is more than half of your discretionary attention, that's the signal the system has outgrown its role. The system was supposed to make daily life easier so capability, connection, and contribution could compound — check whether that redirection has actually happened."
+    },
+    {
+      "range": "3-6",
+      "focus": "Redirect one hour per week toward capability",
+      "detail": "Pick one skill or craft — something non-appearance-mediated that you can become genuinely better at. Programming, writing, cooking, a musical instrument, a sport played for performance rather than aesthetics, a language, a specific professional skill. Commit one hour per week minimum to deliberate practice on it. This is not filler — it's the beginning of compound returns that appearance optimization cannot produce. The goal is to be measurably better at something real six months from now than you are today."
+    },
+    {
+      "range": "7-12",
+      "focus": "Deepen one relationship",
+      "detail": "Identify one specific person whose relationship with you would be stronger with consistent attention: a close friend, a family member, a romantic partner, a mentor. Add or strengthen one regular interaction with them — weekly phone call, monthly dinner, consistent presence at an event they care about. This is slower-compounding than capability work but more durable. The men who seem most at ease in the world are not the most optimized; they're the ones with a small number of genuinely close relationships they've actually invested in."
+    },
+    {
+      "range": "13+",
+      "focus": "Find your contribution",
+      "detail": "Identify one way you produce genuine value for other people that isn't appearance-mediated. Professional work that helps clients or colleagues in specific, measurable ways. Volunteer or community work. A creative output others benefit from. Mentoring someone earlier in a path you've walked. The contribution doesn't have to be grand — it has to be real. This is the longest-timeline variable: it takes years for contribution to compound into identity. Start small and hold it for long enough that it stops being an activity and starts being part of who you are."
+    }
+  ],
+  "graduation": "When discretionary attention is split more toward capability, connection, and contribution than toward appearance optimization — and appearance maintenance runs automatically without being the center of identity — the redirection has happened. This doesn't mean stopping the appearance work; it means the work is doing its job (reducing friction) while the life it enables is the actual thing being built. The final mark: you can describe yourself in one minute without mentioning what you look like.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 7,
+    "established": null
+  }
+}

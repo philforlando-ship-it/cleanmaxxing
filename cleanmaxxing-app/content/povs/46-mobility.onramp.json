@@ -1,0 +1,33 @@
+{
+  "slug": "46-mobility",
+  "start_cue": "Assess before you pick a protocol. Random stretches don't fix specific restrictions — targeted work on your actual bottleneck does.",
+  "weeks": [
+    {
+      "range": "1-2",
+      "focus": "Run the self-assessments + 5-minute daily reset",
+      "detail": "Four quick screens: hip flexor test (knee-to-chest, does the other leg lift?), thoracic rotation (90° each side from seated?), shoulder/pec wall test (arms overhead against wall without lumbar arch?), ankle dorsiflexion (knee to wall over toes without heel lift?). Note which are restricted. Daily: 5-minute reset — cat-cow 10 reps, thoracic rotation 8 each side, half-kneeling hip flexor stretch 45s each side, doorway pec stretch 30s each side, neck circles. This is the minimum effective dose — measurable postural change within 3-4 weeks of daily consistency."
+    },
+    {
+      "range": "3-6",
+      "focus": "Add a targeted 10-minute protocol based on your bottleneck",
+      "detail": "Pick one: the desk-worker protocol (thoracic extension over foam roller, 90/90 hip mobility, couch stretch, world's greatest stretch, wall slides) if you sit most of the day and your hip flexor or thoracic tests flagged; or the pre-lift dynamic sequence (foam roll specific areas, leg swings, hip circles, arm circles, bodyweight squats, band pull-aparts, hip flexor lunge with rotation) if you train regularly and your bottleneck is training positions. Not both. Work into tightness; stop at pain — sharp, shooting, or nerve sensations are a stop signal, not a push-through."
+    },
+    {
+      "range": "7-12",
+      "focus": "Layer in the 15-minute recovery session",
+      "detail": "Three times per week, post-training or in the evening: pigeon pose 90s each side, hamstring stretch 60s each leg, thoracic foam rolling 90s, doorway pec stretch 45s each side, child's pose, supine spinal twist, couch stretch. This is where range-of-motion gains become durable. Combined with the daily reset and the bottleneck protocol, expected timeline: visible postural change at 4 weeks, training position improvements at 6-8 weeks, shoulder and chest presentation changes at 8-12 weeks."
+    },
+    {
+      "range": "13+",
+      "focus": "Reassess and target remaining restrictions",
+      "detail": "Retake the four self-assessment screens. Compare to week one. For any that are still flagged, add targeted work: ankle dorsiflexion (wall ankle stretches, loaded dorsiflexion) if squats still feel restricted; dedicated shoulder CARs (controlled articular rotations) if overhead reach is still limited. Consider a PT or mobility coach for persistent restrictions that don't respond — sometimes the underlying issue is mechanical (impingement, disc) rather than soft-tissue, and mobility work won't fix it."
+    }
+  ],
+  "graduation": "When the daily 5-minute reset runs without thinking, the self-assessment screens clear cleanly, and training positions feel open rather than fought, mobility is installed. This is maintenance territory — mobility work doesn't end, it just shifts from remediation to upkeep. Past 40, the 40+ framework in the strength-training POV treats this layer as non-negotiable.",
+  "stage_weeks": {
+    "new": 1,
+    "light": 3,
+    "partial": 7,
+    "established": null
+  }
+}
