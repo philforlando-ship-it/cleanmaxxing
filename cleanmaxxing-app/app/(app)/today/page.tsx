@@ -9,9 +9,14 @@ import { ConfidenceTrendChart } from './confidence-trend-chart';
 import { MonthlyCheckpointCard } from './monthly-checkpoint-card';
 import { WeeklyFocusCard } from './weekly-focus-card';
 import { FirstRunCard } from './first-run-card';
+import { ProgressPhotoCard } from './progress-photo-card';
 import { getTodayCheckInState } from '@/lib/check-in/service';
 import { getWeeklyReflectionState } from '@/lib/weekly-reflection/service';
 import { getCheckpointState } from '@/lib/checkpoint/service';
+
+// Ninety-day progress-photo window. Matches the /progress page's
+// PROGRESS_WINDOW_DAYS and the POVs' typical visible-change timeline.
+const PROGRESS_WINDOW_DAYS = 90;
 
 // Pulled out of the component body so the impure Date.now() call is
 // isolated to a single, explicit location. This is a server component
@@ -44,19 +49,45 @@ export default async function TodayPage() {
   // decides whether to render based on localStorage dismissal.
   const isFirstRun = computeIsFirstRun(profile.onboarding_completed_at as string);
 
-  const [checkInState, reflectionState, checkpointState, { data: goalsRaw }] =
-    await Promise.all([
-      getTodayCheckInState(supabase, user.id),
-      getWeeklyReflectionState(supabase, user.id),
-      getCheckpointState(supabase, user.id),
-      supabase
-        .from('goals')
-        .select('id, title, source_slug, created_at, baseline_stage')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .order('created_at', { ascending: true }),
-    ]);
+  const [
+    checkInState,
+    reflectionState,
+    checkpointState,
+    { data: goalsRaw },
+    { data: photoRowsRaw },
+  ] = await Promise.all([
+    getTodayCheckInState(supabase, user.id),
+    getWeeklyReflectionState(supabase, user.id),
+    getCheckpointState(supabase, user.id),
+    supabase
+      .from('goals')
+      .select('id, title, source_slug, created_at, baseline_stage')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('progress_photos')
+      .select('slot')
+      .eq('user_id', user.id),
+  ]);
   const activeGoals = goalsRaw ?? [];
+
+  // Progress photo surface decisions: which nudge (if any) fires on /today.
+  // Card hides itself via localStorage dismissal — we only decide whether
+  // to mount it based on server-side state.
+  const photoSlots = new Set(
+    (photoRowsRaw ?? []).map((r) => (r as { slot: string }).slot),
+  );
+  const hasBaseline = photoSlots.has('baseline');
+  const hasProgress90d = photoSlots.has('progress_90d');
+  const onboardedAt = new Date(profile.onboarding_completed_at as string);
+  const daysSinceOnboarding = Math.floor(
+    (Date.now() - onboardedAt.getTime()) / 86_400_000,
+  );
+  const showBaselineNudge = !hasBaseline && isFirstRun;
+  const show90dNudge =
+    hasBaseline && !hasProgress90d && daysSinceOnboarding >= PROGRESS_WINDOW_DAYS;
+
   const isDev = process.env.NODE_ENV === 'development';
 
   return (
@@ -70,6 +101,13 @@ export default async function TodayPage() {
 
       <div className="mt-10 space-y-6">
         {isFirstRun && !steppedAway && <FirstRunCard />}
+
+        {show90dNudge && !steppedAway && (
+          <ProgressPhotoCard variant="progress_90d" />
+        )}
+        {showBaselineNudge && !steppedAway && (
+          <ProgressPhotoCard variant="baseline" />
+        )}
 
         {checkpointState.status === 'eligible' && !steppedAway && (
           <MonthlyCheckpointCard summary={checkpointState.summary} />
