@@ -17,9 +17,13 @@ const SIGNED_URL_TTL_SECONDS = 60 * 60; // 1 hour
 // interventions.
 const PROGRESS_WINDOW_DAYS = 90;
 
+// Mid-point capture becomes eligible at day 30. Optional — the 90-day
+// flow still works without a 30-day photo in between.
+const MID_WINDOW_DAYS = 30;
+
 type PhotoRow = {
   id: string;
-  slot: 'baseline' | 'progress_90d';
+  slot: 'baseline' | 'progress_30d' | 'progress_90d';
   storage_path: string;
   captured_at: string;
   signedUrl: string | null;
@@ -54,6 +58,8 @@ export default async function ProgressPage() {
     ? Math.floor((Date.now() - onboardedAt.getTime()) / 86_400_000)
     : 0;
   const daysUntil90d = Math.max(0, PROGRESS_WINDOW_DAYS - daysSinceOnboarding);
+  const daysUntil30d = Math.max(0, MID_WINDOW_DAYS - daysSinceOnboarding);
+  const progress30dEligible = onboardedAt && daysSinceOnboarding >= MID_WINDOW_DAYS;
   const progress90dEligible = onboardedAt && daysSinceOnboarding >= PROGRESS_WINDOW_DAYS;
 
   const { data: rowsRaw } = await supabase
@@ -65,7 +71,7 @@ export default async function ProgressPage() {
     (rowsRaw ?? []).map(async (r) => {
       const row = r as {
         id: string;
-        slot: 'baseline' | 'progress_90d';
+        slot: 'baseline' | 'progress_30d' | 'progress_90d';
         storage_path: string;
         captured_at: string;
       };
@@ -83,15 +89,17 @@ export default async function ProgressPage() {
   );
 
   const baseline = rows.find((r) => r.slot === 'baseline') ?? null;
+  const progress30d = rows.find((r) => r.slot === 'progress_30d') ?? null;
   const progress90d = rows.find((r) => r.slot === 'progress_90d') ?? null;
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
       <h1 className="text-3xl font-semibold tracking-tight">Progress photos</h1>
       <p className="mt-3 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-        Two photos, ninety days apart. The comparison is for you — your own
-        eyes on your own face. No AI analysis, no ranking, no &ldquo;score.&rdquo;
-        You can delete either photo at any time from Settings → Progress photos.
+        A baseline photo, an optional mid-point at 30 days, and a 90-day
+        comparison. The comparison is for you — your own eyes on your own
+        face. No AI analysis, no ranking, no &ldquo;score.&rdquo; You can
+        delete any photo at any time.
       </p>
 
       {!baseline && (
@@ -109,79 +117,13 @@ export default async function ProgressPage() {
         </section>
       )}
 
-      {baseline && !progress90d && !progress90dEligible && (
+      {baseline && (
         <section className="mt-10">
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="grid gap-6 sm:grid-cols-2">
-              <div>
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                  Baseline · {formatDate(baseline.captured_at)}
-                </div>
-                {baseline.signedUrl && (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={baseline.signedUrl}
-                    alt="Baseline"
-                    className="mt-3 w-full rounded-lg object-cover"
-                  />
-                )}
-              </div>
-              <div className="flex flex-col justify-center">
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                  90-day photo
-                </div>
-                <p className="mt-3 text-sm text-zinc-700 dark:text-zinc-300">
-                  Available in <strong>{daysUntil90d}</strong>{' '}
-                  {daysUntil90d === 1 ? 'day' : 'days'}. We&rsquo;ll surface a
-                  capture prompt here and on Today when the window opens.
-                </p>
-                <p className="mt-2 text-xs text-zinc-500">
-                  Ninety days matches the POVs&rsquo; typical visible-change
-                  windows — earlier is mostly puffiness and noise.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {baseline && !progress90d && progress90dEligible && (
-        <section className="mt-10 space-y-6">
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-              Baseline · {formatDate(baseline.captured_at)}
-            </div>
-            {baseline.signedUrl && (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={baseline.signedUrl}
-                alt="Baseline"
-                className="mt-3 w-full rounded-lg object-cover sm:max-w-sm"
-              />
-            )}
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight">
-              Capture your 90-day photo
-            </h2>
-            <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
-              Match the conditions as closely as you can — same lighting, same
-              angle, neutral expression. That&rsquo;s what makes the comparison
-              honest.
-            </p>
-            <div className="mt-5">
-              <CapturePhoto slot="progress_90d" />
-            </div>
-          </div>
-        </section>
-      )}
-
-      {baseline && progress90d && (
-        <section className="mt-10">
-          <div className="grid gap-6 sm:grid-cols-2">
+          <h2 className="text-xl font-semibold tracking-tight">Your photos</h2>
+          <div className="mt-4 grid gap-6 sm:grid-cols-3">
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                Baseline · {formatDate(baseline.captured_at)}
+                Baseline &middot; {formatDate(baseline.captured_at)}
               </div>
               {baseline.signedUrl && (
                 /* eslint-disable-next-line @next/next/no-img-element */
@@ -197,22 +139,111 @@ export default async function ProgressPage() {
             </div>
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                90-day · {formatDate(progress90d.captured_at)}
+                {progress30d
+                  ? `30-day \u00b7 ${formatDate(progress30d.captured_at)}`
+                  : '30-day (optional)'}
               </div>
-              {progress90d.signedUrl && (
+              {progress30d?.signedUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={progress30d.signedUrl}
+                  alt="30-day"
+                  className="mt-3 w-full rounded-lg object-cover"
+                />
+              ) : (
+                <div className="mt-3 flex aspect-square w-full items-center justify-center rounded-lg border border-dashed border-zinc-300 text-xs text-zinc-500 dark:border-zinc-700">
+                  {progress30dEligible
+                    ? 'Not captured yet'
+                    : `Available in ${daysUntil30d} ${daysUntil30d === 1 ? 'day' : 'days'}`}
+                </div>
+              )}
+              {progress30d && (
+                <div className="mt-3">
+                  <DeletePhotoButton photoId={progress30d.id} label="Delete 30-day" />
+                </div>
+              )}
+            </div>
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                {progress90d
+                  ? `90-day \u00b7 ${formatDate(progress90d.captured_at)}`
+                  : '90-day'}
+              </div>
+              {progress90d?.signedUrl ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={progress90d.signedUrl}
                   alt="90-day"
                   className="mt-3 w-full rounded-lg object-cover"
                 />
+              ) : (
+                <div className="mt-3 flex aspect-square w-full items-center justify-center rounded-lg border border-dashed border-zinc-300 text-xs text-zinc-500 dark:border-zinc-700">
+                  {progress90dEligible
+                    ? 'Not captured yet'
+                    : `Available in ${daysUntil90d} ${daysUntil90d === 1 ? 'day' : 'days'}`}
+                </div>
               )}
-              <div className="mt-3">
-                <DeletePhotoButton photoId={progress90d.id} label="Delete 90-day" />
-              </div>
+              {progress90d && (
+                <div className="mt-3">
+                  <DeletePhotoButton photoId={progress90d.id} label="Delete 90-day" />
+                </div>
+              )}
             </div>
           </div>
-          <div className="mt-6 rounded-xl border border-zinc-200 bg-zinc-50 p-5 text-sm leading-relaxed text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
+        </section>
+      )}
+
+      {baseline && !progress30d && progress30dEligible && !progress90dEligible && (
+        <section className="mt-10">
+          <h2 className="text-xl font-semibold tracking-tight">
+            Capture your 30-day photo
+          </h2>
+          <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
+            Optional mid-point. Most visible change still takes the full 90
+            days, but having a middle reference point is useful when you get
+            there. Match the baseline conditions — same lighting, same angle,
+            neutral expression.
+          </p>
+          <div className="mt-5">
+            <CapturePhoto slot="progress_30d" />
+          </div>
+        </section>
+      )}
+
+      {baseline && !progress90d && progress90dEligible && (
+        <section className="mt-10 space-y-6">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">
+              Capture your 90-day photo
+            </h2>
+            <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
+              Match the conditions as closely as you can — same lighting, same
+              angle, neutral expression. That&rsquo;s what makes the comparison
+              honest.
+            </p>
+            <div className="mt-5">
+              <CapturePhoto slot="progress_90d" />
+            </div>
+          </div>
+          {!progress30d && progress30dEligible && (
+            <div>
+              <h2 className="text-xl font-semibold tracking-tight">
+                Still want a 30-day photo?
+              </h2>
+              <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
+                You can still add one retroactively as a mid-point reference.
+              </p>
+              <div className="mt-5">
+                <CapturePhoto slot="progress_30d" />
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {baseline && progress90d && (
+        <section className="mt-10">
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-5 text-sm leading-relaxed text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
             <strong className="font-medium text-zinc-900 dark:text-zinc-100">
               What to look for:
             </strong>{' '}

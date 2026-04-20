@@ -69,6 +69,19 @@ const FOCUS_TO_SLUGS: Record<string, string[]> = {
   style: ['12-style-clothing', '18-tanning', '48-skin-tone-guidance'],
   posture: ['50-posture', '46-mobility'],
   grooming: ['10-grooming', '09-facial-hair', '29-body-hair-methods', '11-teeth-smile'],
+  // Anti-aging (spec §2 Feature 1). Motivation for this focus area
+  // overlaps with skin + sleep + eye-health; listing the slugs here
+  // lets a user who explicitly picks "Anti-aging" get those goals
+  // surfaced without having to also pick "Skin" or infer the stack.
+  // 38-aging-appearance has no goal template anchored to it but is
+  // included so onboarding ranking stays consistent with the /povs
+  // age-relevance surface.
+  anti_aging: [
+    '07-skincare-antiaging',
+    '42-sleep',
+    '47-eye-health',
+    '38-aging-appearance',
+  ],
 };
 
 export function focusSlugsFor(focusAreas: string[]): Set<string> {

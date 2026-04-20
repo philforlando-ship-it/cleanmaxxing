@@ -19,6 +19,12 @@ import { getCheckpointState } from '@/lib/checkpoint/service';
 // PROGRESS_WINDOW_DAYS and the POVs' typical visible-change timeline.
 const PROGRESS_WINDOW_DAYS = 90;
 
+// Optional mid-point capture. Most interventions don't produce large
+// visible change at 30 days, but the photo gives users a middle
+// reference point before the 90-day window and surfaces a visible
+// milestone during the span where first-month churn otherwise bites.
+const MID_WINDOW_DAYS = 30;
+
 // Pulled out of the component body so the impure Date.now() call is
 // isolated to a single, explicit location. This is a server component
 // running once per request, so the value is stable per-render — the
@@ -31,7 +37,13 @@ function computeIsFirstRun(onboardingCompletedAt: string): boolean {
   return daysSince >= 0 && daysSince < 7;
 }
 
-export default async function TodayPage() {
+type Props = {
+  searchParams: Promise<{ welcome?: string }>;
+};
+
+export default async function TodayPage({ searchParams }: Props) {
+  const params = await searchParams;
+  const welcome = params.welcome === '1';
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
@@ -82,12 +94,21 @@ export default async function TodayPage() {
     (photoRowsRaw ?? []).map((r) => (r as { slot: string }).slot),
   );
   const hasBaseline = photoSlots.has('baseline');
+  const hasProgress30d = photoSlots.has('progress_30d');
   const hasProgress90d = photoSlots.has('progress_90d');
   const onboardedAt = new Date(profile.onboarding_completed_at as string);
   const daysSinceOnboarding = Math.floor(
     (Date.now() - onboardedAt.getTime()) / 86_400_000,
   );
   const showBaselineNudge = !hasBaseline && isFirstRun;
+  // 30-day nudge window: open from day 30 until the 90-day nudge
+  // takes over. Users who skip this still get the 90-day prompt on
+  // schedule — the 30-day photo is optional scaffolding, not a gate.
+  const show30dNudge =
+    hasBaseline &&
+    !hasProgress30d &&
+    daysSinceOnboarding >= MID_WINDOW_DAYS &&
+    daysSinceOnboarding < PROGRESS_WINDOW_DAYS;
   const show90dNudge =
     hasBaseline && !hasProgress90d && daysSinceOnboarding >= PROGRESS_WINDOW_DAYS;
 
@@ -107,6 +128,9 @@ export default async function TodayPage() {
 
         {show90dNudge && !steppedAway && (
           <ProgressPhotoCard variant="progress_90d" />
+        )}
+        {show30dNudge && !steppedAway && (
+          <ProgressPhotoCard variant="progress_30d" />
         )}
         {showBaselineNudge && !steppedAway && (
           <ProgressPhotoCard variant="baseline" />
@@ -142,7 +166,12 @@ export default async function TodayPage() {
             chart is history (useful for reflection) and the chat has no
             tracking side effects (asking Mister P something isn't the
             same as self-surveillance). */}
-        {!steppedAway && <DailyCheckInCard initialState={checkInState} />}
+        {!steppedAway && (
+          <DailyCheckInCard
+            initialState={checkInState}
+            spotlight={welcome && checkInState.check_in_id === null}
+          />
+        )}
         {!steppedAway && <WeeklySummaryStrip summary={weeklySummary} />}
         {!steppedAway && <WeeklyFocusCard goals={activeGoals} />}
         {!steppedAway && <WeeklyReflectionCard initialState={reflectionState} />}

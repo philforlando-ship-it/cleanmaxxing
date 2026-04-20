@@ -17,8 +17,21 @@ import {
 } from '@/lib/weekly-reflection/service';
 import { contextFor } from '@/lib/confidence/context';
 
+type PendingPoint = {
+  // MM-DD week label for the preview point. Must match the label shape
+  // used for real history entries so the x-axis stays consistent.
+  week: string;
+  confidence: number;
+};
+
 type Props = {
   history: WeeklyReflection[];
+  // Optional ghost point appended (or replacing the last entry if it
+  // matches `week`) so the reflection form can preview where the
+  // current draft would land while the user slides. When present,
+  // the final point is drawn with a dashed stroke.
+  pendingPoint?: PendingPoint | null;
+  compact?: boolean;
 };
 
 // Strip a trailing ".0" so "6.0" displays as "6" but "6.5" stays "6.5".
@@ -36,8 +49,12 @@ function formatDelta(delta: number): string {
 // inherit whatever currentColor happens to resolve to.
 const ACCENT = '#059669';
 
-export function ConfidenceTrendChart({ history }: Props) {
-  if (history.length === 0) {
+export function ConfidenceTrendChart({
+  history,
+  pendingPoint = null,
+  compact = false,
+}: Props) {
+  if (history.length === 0 && !pendingPoint) {
     return (
       <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
         <h2 className="text-lg font-medium">Weekly confidence</h2>
@@ -48,10 +65,30 @@ export function ConfidenceTrendChart({ history }: Props) {
     );
   }
 
-  const data = history.map((r) => ({
+  const baseData = history.map((r) => ({
     week: r.week_start.slice(5), // MM-DD
     confidence: Number(averageConfidence(r).toFixed(2)),
+    pending: false,
   }));
+
+  // Splice the pending point in — replacing a same-week entry if one
+  // exists (the user is editing this week's reflection, so the saved
+  // value for this week should be overwritten in the preview) or
+  // appending if the current week hasn't been saved yet.
+  let data = baseData;
+  if (pendingPoint) {
+    const lastIdx = baseData.findIndex((d) => d.week === pendingPoint.week);
+    const entry = {
+      week: pendingPoint.week,
+      confidence: Number(pendingPoint.confidence.toFixed(2)),
+      pending: true,
+    };
+    if (lastIdx >= 0) {
+      data = baseData.map((d, i) => (i === lastIdx ? entry : d));
+    } else {
+      data = [...baseData, entry];
+    }
+  }
 
   const latest = data[data.length - 1].confidence;
   const previous = data.length >= 2 ? data[data.length - 2].confidence : null;
@@ -63,21 +100,30 @@ export function ConfidenceTrendChart({ history }: Props) {
   // value with a nudge to return next week. Two data points onward gets
   // the full chart since there's a real trend to draw.
   if (data.length === 1) {
+    const onlyPoint = data[0];
+    const sparseHint = onlyPoint.pending
+      ? 'Slide the dimensions below to see this week\u2019s preview.'
+      : 'Your first reflection is in. One more next week and the trend line starts drawing itself.';
     return (
-      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 className="text-lg font-medium">Weekly confidence</h2>
-        <div className="mt-4 flex items-end gap-5">
+      <section className={compact ? '' : 'rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900'}>
+        {!compact && <h2 className="text-lg font-medium">Weekly confidence</h2>}
+        <div className={compact ? 'flex items-end gap-4' : 'mt-4 flex items-end gap-5'}>
           <div>
-            <div className="text-5xl font-semibold tabular-nums leading-none text-zinc-900 dark:text-zinc-100">
+            <div className={compact ? 'text-3xl font-semibold tabular-nums leading-none text-zinc-900 dark:text-zinc-100' : 'text-5xl font-semibold tabular-nums leading-none text-zinc-900 dark:text-zinc-100'}>
               {formatScore(latest)}
             </div>
             <div className="mt-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
               {ctx.label}
+              {onlyPoint.pending && (
+                <span className="ml-1 text-xs font-normal text-zinc-500">
+                  &middot; preview
+                </span>
+              )}
             </div>
           </div>
         </div>
-        <p className="mt-5 text-xs text-zinc-500 dark:text-zinc-400">
-          Your first reflection is in. One more next week and the trend line starts drawing itself.
+        <p className={compact ? 'mt-3 text-xs text-zinc-500 dark:text-zinc-400' : 'mt-5 text-xs text-zinc-500 dark:text-zinc-400'}>
+          {sparseHint}
         </p>
       </section>
     );
@@ -91,17 +137,24 @@ export function ConfidenceTrendChart({ history }: Props) {
         : 'text-amber-700 dark:text-amber-400';
   const deltaArrow = delta === null ? '' : delta > 0 ? '↑' : delta < 0 ? '↓' : '→';
 
-  return (
-    <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-      <h2 className="text-lg font-medium">Weekly confidence</h2>
+  const lastIsPending = data[data.length - 1].pending;
 
-      <div className="mt-4 flex items-end justify-between gap-4">
+  return (
+    <section className={compact ? '' : 'rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900'}>
+      {!compact && <h2 className="text-lg font-medium">Weekly confidence</h2>}
+
+      <div className={compact ? 'flex items-end justify-between gap-4' : 'mt-4 flex items-end justify-between gap-4'}>
         <div>
-          <div className="text-5xl font-semibold tabular-nums leading-none text-zinc-900 dark:text-zinc-100">
+          <div className={compact ? 'text-3xl font-semibold tabular-nums leading-none text-zinc-900 dark:text-zinc-100' : 'text-5xl font-semibold tabular-nums leading-none text-zinc-900 dark:text-zinc-100'}>
             {formatScore(latest)}
           </div>
           <div className="mt-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
             {ctx.label}
+            {lastIsPending && (
+              <span className="ml-1 text-xs font-normal text-zinc-500">
+                &middot; preview
+              </span>
+            )}
           </div>
         </div>
         {delta !== null && (
@@ -115,7 +168,7 @@ export function ConfidenceTrendChart({ history }: Props) {
       </div>
 
       <div
-        className="mt-6 h-52 w-full"
+        className={compact ? 'mt-4 h-36 w-full' : 'mt-6 h-52 w-full'}
         role="img"
         aria-label={`Confidence trend over ${data.length} weekly reflection${data.length === 1 ? '' : 's'}, currently ${formatScore(latest)} (${ctx.label}).`}
       >
@@ -178,7 +231,34 @@ export function ConfidenceTrendChart({ history }: Props) {
               stroke={ACCENT}
               strokeWidth={2.5}
               fill="url(#confidence-gradient)"
-              dot={{ r: 3, strokeWidth: 0, fill: ACCENT }}
+              dot={(props) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const { cx, cy, payload, index } = props as any;
+                if (payload?.pending) {
+                  return (
+                    <circle
+                      key={`dot-${index}`}
+                      cx={cx}
+                      cy={cy}
+                      r={4}
+                      fill="#fff"
+                      stroke={ACCENT}
+                      strokeWidth={2}
+                      strokeDasharray="2 2"
+                    />
+                  );
+                }
+                return (
+                  <circle
+                    key={`dot-${index}`}
+                    cx={cx}
+                    cy={cy}
+                    r={3}
+                    fill={ACCENT}
+                    strokeWidth={0}
+                  />
+                );
+              }}
               activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff', fill: ACCENT }}
             />
           </AreaChart>

@@ -31,7 +31,40 @@ type SuggestionsResponse = {
 
 const MIN_PROCESS_GOALS = 2;
 
-export function GoalsPicker() {
+const AGE_SEGMENT_LABEL: Record<string, string> = {
+  '18-24': '18\u201324',
+  '25-32': '25\u201332',
+  '33-40': '33\u201340',
+};
+
+// Labels mirror the survey question options in lib/onboarding/questions.ts.
+// Duplicated intentionally rather than re-imported so this client component
+// doesn't pull the full question catalog into its bundle.
+const FOCUS_AREA_LABEL: Record<string, string> = {
+  fitness: 'fitness',
+  body_composition: 'body composition',
+  skin: 'skin',
+  hair: 'hair',
+  facial_aesthetics: 'facial aesthetics',
+  style: 'style',
+  posture: 'posture',
+  grooming: 'grooming',
+  anti_aging: 'anti-aging',
+};
+
+function joinWithAnd(parts: string[]): string {
+  if (parts.length === 0) return '';
+  if (parts.length === 1) return parts[0];
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  return `${parts.slice(0, -1).join(', ')}, and ${parts[parts.length - 1]}`;
+}
+
+type GoalsPickerProps = {
+  ageSegment: string;
+  focusAreas: string[];
+};
+
+export function GoalsPicker({ ageSegment, focusAreas }: GoalsPickerProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -148,7 +181,7 @@ export function GoalsPicker() {
       return;
     }
     startSubmitTransition(() => {
-      router.push('/today');
+      router.push('/today?welcome=1');
       router.refresh();
     });
   }
@@ -180,15 +213,53 @@ export function GoalsPicker() {
     );
   }
 
+  const focusLabels = focusAreas
+    .map((f) => FOCUS_AREA_LABEL[f])
+    .filter((l): l is string => Boolean(l));
+  const ageLabel = AGE_SEGMENT_LABEL[ageSegment] ?? ageSegment;
+  const processInCurrent = processCount(current);
+  const outcomeInCurrent = current.length - processInCurrent;
+
   return (
     <div className="flex flex-1 flex-col">
-      <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-        We suggested these three because they&rsquo;re the highest-impact starting
-        points for your age segment and the focus areas you picked. Cleanmaxxing
-        runs a hierarchy &mdash; Foundation first, then high impact, then
-        refinement. These start at the bottom of that ladder. Tap any tier
-        label to see what it means.
-      </p>
+      <section className="mb-6 rounded-xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 className="text-sm font-semibold tracking-wide text-zinc-900 dark:text-zinc-100">
+          Why these three?
+        </h2>
+        <ul className="mt-3 space-y-2 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+          <li>
+            <strong className="font-medium text-zinc-900 dark:text-zinc-100">
+              Your inputs:
+            </strong>{' '}
+            age {ageLabel}
+            {focusLabels.length > 0 && (
+              <> &middot; focused on {joinWithAnd(focusLabels)}</>
+            )}
+            .
+          </li>
+          <li>
+            <strong className="font-medium text-zinc-900 dark:text-zinc-100">
+              The hierarchy:
+            </strong>{' '}
+            Cleanmaxxing ranks interventions Foundation &rarr; high impact
+            &rarr; refinement. We start you at the bottom of that ladder
+            because those returns compound into everything above them.
+          </li>
+          <li>
+            <strong className="font-medium text-zinc-900 dark:text-zinc-100">
+              Process over outcome:
+            </strong>{' '}
+            you&rsquo;ve got {processInCurrent} process goal
+            {processInCurrent === 1 ? '' : 's'} (things you do) and{' '}
+            {outcomeInCurrent} outcome goal
+            {outcomeInCurrent === 1 ? '' : 's'} (things you&rsquo;re becoming).
+            Process-heavy tends to stick; you can swap below.
+          </li>
+        </ul>
+        <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
+          Tap any tier label on a goal to see what that tier means.
+        </p>
+      </section>
       <ul className="flex flex-col gap-4">
         {current.map((goal, i) => (
           <li

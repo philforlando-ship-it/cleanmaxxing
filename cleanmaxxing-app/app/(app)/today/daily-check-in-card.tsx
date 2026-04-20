@@ -7,9 +7,14 @@ import type { TodayCheckInState } from '@/lib/check-in/service';
 
 type Props = {
   initialState: TodayCheckInState;
+  // When the user just finished onboarding, the /today page passes
+  // spotlight=true so the first check-in reads as the finale of
+  // onboarding rather than a cold-open. Effect stops as soon as the
+  // user saves a check-in (parent recomputes spotlight off).
+  spotlight?: boolean;
 };
 
-export function DailyCheckInCard({ initialState }: Props) {
+export function DailyCheckInCard({ initialState, spotlight = false }: Props) {
   const router = useRouter();
   const [state, setState] = useState<TodayCheckInState>(initialState);
   const [draft, setDraft] = useState<Record<string, boolean>>(() =>
@@ -96,10 +101,16 @@ export function DailyCheckInCard({ initialState }: Props) {
 
   const completedCount = state.goals.filter((g) => g.completed).length;
 
+  const sectionClass = spotlight
+    ? 'rounded-xl border-2 border-emerald-400 bg-white p-6 ring-4 ring-emerald-100 dark:border-emerald-500 dark:bg-zinc-900 dark:ring-emerald-950/40'
+    : 'rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900';
+
   return (
-    <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+    <section className={sectionClass}>
       <div className="flex items-baseline justify-between">
-        <h2 className="text-lg font-medium">Daily check-in</h2>
+        <h2 className="text-lg font-medium">
+          {spotlight ? 'Your first check-in' : 'Daily check-in'}
+        </h2>
         {alreadyCheckedIn && (
           <span className="text-xs text-zinc-500">
             {completedCount}/{state.goals.length} done today
@@ -107,7 +118,9 @@ export function DailyCheckInCard({ initialState }: Props) {
         )}
       </div>
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-        Did you work on this today? Check the ones you moved forward on.
+        {spotlight
+          ? 'You\u2019re in. Tap any goal below to log your first day \u2014 that\u2019s the whole loop.'
+          : 'Did you work on this today? Check the ones you moved forward on.'}
       </p>
 
       <ul className="mt-4 space-y-2">

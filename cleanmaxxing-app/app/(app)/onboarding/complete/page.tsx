@@ -19,17 +19,37 @@ export default async function OnboardingCompletePage() {
     redirect('/onboarding');
   }
 
+  // Personalisation inputs for the "why these three?" explainer. Pulled
+  // server-side so the first render already has the user's segment +
+  // focus areas embedded — no loading flicker on the header copy.
+  const { data: focusRow } = await supabase
+    .from('survey_responses')
+    .select('response_value')
+    .eq('user_id', user.id)
+    .eq('question_key', 'focus_areas')
+    .maybeSingle();
+
+  let focusAreas: string[] = [];
+  if (focusRow?.response_value) {
+    try {
+      const parsed = JSON.parse(focusRow.response_value);
+      if (Array.isArray(parsed)) focusAreas = parsed;
+    } catch {
+      // treat as empty
+    }
+  }
+
   return (
     <main className="mx-auto flex min-h-[100svh] max-w-xl flex-col px-6 py-10">
       <header className="mb-8">
         <h1 className="text-2xl font-semibold tracking-tight">
           Here are your three starter goals
         </h1>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Based on your age and focus areas. You can swap any of them, then start.
-        </p>
       </header>
-      <GoalsPicker />
+      <GoalsPicker
+        ageSegment={profile.age_segment as string}
+        focusAreas={focusAreas}
+      />
     </main>
   );
 }

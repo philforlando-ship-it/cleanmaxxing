@@ -1,18 +1,19 @@
 'use client';
 
-// Progress photo nudge card on /today. Two states:
+// Progress photo nudge card on /today. Three states:
 //   - no baseline: prompt to capture one
+//   - 30-day window open, no 30d photo: optional mid-point prompt
 //   - 90-day window open, no 90d photo: prompt to capture progress
-// Silent otherwise (between baseline capture and day 89, or when
-// both photos exist).
+// Silent otherwise (between baseline capture and day 29, between 30d
+// capture and day 89, or when all three photos exist).
 //
 // Dismissal persists per-state via localStorage — dismissing the
-// baseline nudge doesn't auto-dismiss the 90-day nudge 90 days later.
+// baseline nudge doesn't auto-dismiss the 30d or 90d nudges later.
 
 import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 
-type Variant = 'baseline' | 'progress_90d';
+type Variant = 'baseline' | 'progress_30d' | 'progress_90d';
 
 type Props = {
   variant: Variant;
@@ -20,6 +21,7 @@ type Props = {
 
 const STORAGE_KEYS: Record<Variant, string> = {
   baseline: 'cleanmaxxing:progress-baseline-dismissed:v1',
+  progress_30d: 'cleanmaxxing:progress-30d-dismissed:v1',
   progress_90d: 'cleanmaxxing:progress-90d-dismissed:v1',
 };
 
@@ -84,6 +86,34 @@ export function ProgressPhotoCard({ variant }: Props) {
           className="mt-4 inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
         >
           Take baseline photo
+        </Link>
+      </section>
+    );
+  }
+
+  if (variant === 'progress_30d') {
+    return (
+      <section className="rounded-xl border border-zinc-300 bg-zinc-50 p-6 dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="text-lg font-medium">Thirty days in. Want a mid-point photo?</h2>
+          <button
+            type="button"
+            onClick={dismiss}
+            className="shrink-0 text-xs text-zinc-500 underline hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+          >
+            Skip
+          </button>
+        </div>
+        <p className="mt-2 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+          Optional. Most visible change shows up around day 90, but a 30-day
+          capture gives you a middle reference point when you get there.
+          Match the lighting and angle of your baseline.
+        </p>
+        <Link
+          href="/progress"
+          className="mt-4 inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+        >
+          Take 30-day photo
         </Link>
       </section>
     );

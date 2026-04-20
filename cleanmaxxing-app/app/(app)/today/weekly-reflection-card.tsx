@@ -6,7 +6,9 @@ import type {
   ReflectionDimensions,
   WeeklyReflectionState,
 } from '@/lib/weekly-reflection/service';
+import { averageConfidence } from '@/lib/weekly-reflection/service';
 import { contextFor } from '@/lib/confidence/context';
+import { ConfidenceTrendChart } from './confidence-trend-chart';
 
 type Props = {
   initialState: WeeklyReflectionState;
@@ -129,12 +131,36 @@ export function WeeklyReflectionCard({ initialState }: Props) {
     );
   }
 
+  // Live preview of the trend chart driven by the draft sliders. Users
+  // see exactly where this week's reflection would land before they
+  // save — the chart becomes the payoff for filling out the form,
+  // rather than a thing that updates later and out of context.
+  const pendingAvg = averageConfidence(draft);
+  const pendingPoint = {
+    week: state.week_start.slice(5),
+    confidence: Number(pendingAvg.toFixed(2)),
+  };
+
   return (
     <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
       <h2 className="text-lg font-medium">Weekly reflection</h2>
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
         Takes about a minute. Four dimensions, 1–10, plus a note if you want one.
       </p>
+
+      <div className="mt-5 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+        <div className="mb-2 flex items-baseline justify-between gap-3">
+          <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Your trend (live preview)
+          </span>
+          <span className="text-xs text-zinc-500">dashed = this week</span>
+        </div>
+        <ConfidenceTrendChart
+          history={state.history}
+          pendingPoint={pendingPoint}
+          compact
+        />
+      </div>
 
       <div className="mt-5 space-y-5">
         {DIMENSIONS.map((d) => {

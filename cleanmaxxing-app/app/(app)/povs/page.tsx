@@ -48,6 +48,17 @@ const TIER_ORDER: TierKey[] = [
   'avoid',
 ];
 
+// POV slugs that become relevant to read even when the user hasn't
+// picked a goal anchored to them, keyed by age segment. Most of these
+// never become goal suggestions because they're reference/longform
+// rather than action-shaped (aging-appearance, cosmetic-procedures).
+// Surfacing them age-contextually is how users discover the content.
+const AGE_RELEVANT_SLUGS: Record<string, string[]> = {
+  '18-24': ['07-skincare-antiaging', '38-aging-appearance'],
+  '25-32': ['38-aging-appearance', '07-skincare-antiaging', '47-eye-health'],
+  '33-40': ['38-aging-appearance', '28-cosmetic-procedures', '47-eye-health'],
+};
+
 type PovMetaEntry = {
   priority_tier?: string;
   category?: string;
@@ -71,6 +82,16 @@ export default async function PovsIndexPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  // Age segment drives the "relevant for your age" surface below. Users
+  // without a submitted survey (rare — this page is gated behind
+  // onboarding elsewhere) just see their own goal-anchored POVs.
+  const { data: profile } = await supabase
+    .from('users')
+    .select('age_segment')
+    .eq('id', user.id)
+    .maybeSingle();
+  const ageSegment = (profile?.age_segment as string | null) ?? null;
+
   // Pull every source_slug the user has ever accepted, regardless of
   // status. Completed and abandoned goals still get their POV listed —
   // a user who just finished a goal may want to revisit the doc, and
@@ -88,6 +109,16 @@ export default async function PovsIndexPage() {
 
   const sortedSlugs = Array.from(userSlugs).sort();
 
+  // Age-relevant slugs the user hasn't already picked as a goal. Filter
+  // against povExists so we never render a dead link if a slug in the
+  // AGE_RELEVANT_SLUGS map gets removed from the corpus.
+  const ageRelevantSlugs =
+    ageSegment && AGE_RELEVANT_SLUGS[ageSegment]
+      ? AGE_RELEVANT_SLUGS[ageSegment].filter(
+          (slug) => povExists(slug) && !userSlugs.has(slug),
+        )
+      : [];
+
   const bySlug: Record<TierKey, string[]> = Object.fromEntries(
     TIER_ORDER.map((t) => [t, [] as string[]]),
   ) as Record<TierKey, string[]>;
@@ -99,7 +130,7 @@ export default async function PovsIndexPage() {
     else ungrouped.push(slug);
   }
 
-  if (sortedSlugs.length === 0) {
+  if (sortedSlugs.length === 0 && ageRelevantSlugs.length === 0) {
     return (
       <main className="mx-auto max-w-2xl px-6 py-12">
         <h1 className="text-3xl font-semibold tracking-tight">Your POVs</h1>
@@ -189,6 +220,46 @@ export default async function PovsIndexPage() {
                   </Link>
                 </li>
               ))}
+            </ul>
+          </section>
+        )}
+
+        {ageRelevantSlugs.length > 0 && (
+          <section>
+            <div className="mb-4 flex items-baseline gap-3 border-b border-zinc-200 pb-2 dark:border-zinc-800">
+              <h2 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                Relevant for your age
+              </h2>
+              <span className="text-xs text-zinc-500">
+                {ageRelevantSlugs.length}
+              </span>
+            </div>
+            <p className="mb-4 text-xs text-zinc-500 dark:text-zinc-400">
+              Not tied to your current goals &mdash; reading material worth
+              having in your back pocket for where you are right now.
+            </p>
+            <ul className="flex flex-col gap-3">
+              {ageRelevantSlugs.map((slug) => {
+                const title = povTitleFor(slug);
+                const summary = plainLanguageFor(slug);
+                return (
+                  <li key={slug}>
+                    <Link
+                      href={`/povs/${slug}`}
+                      className="block rounded-lg border border-zinc-200 bg-white p-4 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-800/50"
+                    >
+                      <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                        {title}
+                      </div>
+                      {summary && (
+                        <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+                          {summary}
+                        </p>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         )}
