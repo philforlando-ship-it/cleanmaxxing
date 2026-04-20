@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CheckpointSummary } from '@/lib/checkpoint/service';
@@ -107,12 +108,12 @@ export function MonthlyCheckpointCard({ summary }: Props) {
               </li>
             ))}
           </ul>
-          <a
+          <Link
             href="/goals/library"
             className="mt-3 inline-block rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
           >
             Browse the library
-          </a>
+          </Link>
         </div>
       )}
 

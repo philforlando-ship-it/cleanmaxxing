@@ -20,7 +20,6 @@ export default function AppError({ error, reset }: Props) {
   useEffect(() => {
     // Surface the error in the console in dev so it's actually debuggable.
     // In production this is silent for the user but can hook into telemetry.
-    // eslint-disable-next-line no-console
     console.error('App error boundary caught:', error);
   }, [error]);
 

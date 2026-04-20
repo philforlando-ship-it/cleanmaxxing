@@ -62,7 +62,7 @@ export async function getTodayCheckInState(
     .eq('date', date)
     .maybeSingle();
 
-  let completedByGoal = new Map<string, boolean>();
+  const completedByGoal = new Map<string, boolean>();
   if (checkIn) {
     const { data: goalCheckIns } = await supabase
       .from('goal_check_ins')

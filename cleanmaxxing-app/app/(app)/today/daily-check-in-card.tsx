@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import type { TodayCheckInState } from '@/lib/check-in/service';
 
@@ -79,12 +80,12 @@ export function DailyCheckInCard({ initialState }: Props) {
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           No active goals yet. Head to the library to pick some.
         </p>
-        <a
+        <Link
           href="/goals/library"
           className="mt-4 inline-block rounded-lg border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
         >
           Browse goals
-        </a>
+        </Link>
       </section>
     );
   }

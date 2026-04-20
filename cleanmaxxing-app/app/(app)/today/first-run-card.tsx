@@ -9,39 +9,51 @@
 // who qualify. Dismissal persists via localStorage — cross-device
 // sync isn't worth a column for a first-run hint that expires in a week.
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 
 const STORAGE_KEY = 'cleanmaxxing:first-run-dismissed:v1';
 
-export function FirstRunCard() {
-  // mounted is used to gate the first render so SSR output always
-  // matches the client's pre-localStorage state. Without this, a user
-  // who dismissed the card sees a flash of the card before it hides.
-  const [mounted, setMounted] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+// useSyncExternalStore gives us the React-idiomatic pattern for reading
+// external state (localStorage) without the setState-in-effect lint
+// warning. Server snapshot always returns false so the card renders on
+// first paint and hydrates consistently; post-hydration the client
+// snapshot reads the real value and re-renders if dismissed.
+function subscribe(callback: () => void): () => void {
+  window.addEventListener('storage', callback);
+  return () => window.removeEventListener('storage', callback);
+}
 
-  useEffect(() => {
-    try {
-      if (localStorage.getItem(STORAGE_KEY) === 'true') {
-        setDismissed(true);
-      }
-    } catch {
-      // localStorage can throw in private browsing or with storage
-      // quota issues. Fall through — worst case the card stays visible.
-    }
-    setMounted(true);
-  }, []);
+function getClientSnapshot(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function getServerSnapshot(): boolean {
+  return false;
+}
+
+export function FirstRunCard() {
+  const dismissed = useSyncExternalStore(
+    subscribe,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
 
   function dismiss() {
     try {
       localStorage.setItem(STORAGE_KEY, 'true');
+      // Manually notify subscribers since setItem doesn't trigger the
+      // storage event in the same tab that wrote it.
+      window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY }));
     } catch {
-      // Non-fatal — the card hides for this session either way.
+      // Non-fatal — if storage throws the card just stays visible.
     }
-    setDismissed(true);
   }
 
-  if (!mounted || dismissed) return null;
+  if (dismissed) return null;
 
   return (
     <section className="rounded-xl border border-zinc-300 bg-zinc-50 p-6 dark:border-zinc-700 dark:bg-zinc-900">

@@ -13,6 +13,18 @@ import { getTodayCheckInState } from '@/lib/check-in/service';
 import { getWeeklyReflectionState } from '@/lib/weekly-reflection/service';
 import { getCheckpointState } from '@/lib/checkpoint/service';
 
+// Pulled out of the component body so the impure Date.now() call is
+// isolated to a single, explicit location. This is a server component
+// running once per request, so the value is stable per-render — the
+// purity lint warning doesn't reflect real instability here.
+function computeIsFirstRun(onboardingCompletedAt: string): boolean {
+  const onboardedAt = new Date(onboardingCompletedAt);
+  const daysSince = Math.floor(
+    (Date.now() - onboardedAt.getTime()) / 86_400_000,
+  );
+  return daysSince >= 0 && daysSince < 7;
+}
+
 export default async function TodayPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -30,11 +42,7 @@ export default async function TodayPage() {
   // First-run window: seven days from onboarding completion. The card is
   // only mounted while the window is open; the client component then
   // decides whether to render based on localStorage dismissal.
-  const onboardedAt = new Date(profile.onboarding_completed_at as string);
-  const daysSinceOnboarding = Math.floor(
-    (Date.now() - onboardedAt.getTime()) / 86_400_000,
-  );
-  const isFirstRun = daysSinceOnboarding >= 0 && daysSinceOnboarding < 7;
+  const isFirstRun = computeIsFirstRun(profile.onboarding_completed_at as string);
 
   const [checkInState, reflectionState, checkpointState, { data: goalsRaw }] =
     await Promise.all([
