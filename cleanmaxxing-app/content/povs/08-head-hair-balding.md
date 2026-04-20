@@ -277,6 +277,38 @@ __Ages 40\+ — aesthetic optimization, not recovery__
 
 By this point, hair loss trajectory is largely determined and the realistic intervention set changes\. The strategy becomes aesthetic optimization rather than full recovery\. Options include maintaining remaining hair with continued medication, transplant if the donor area still supports meaningful density restoration, or embracing appearance\-optimizing alternatives like a well\-executed buzzcut or shaved head\. Scalp micropigmentation is a legitimate option for creating the visual impression of density or a clean buzz\. The key shift is psychological and practical: work with the current reality rather than against it\. A bald head with strong grooming, a lean physique, and a dark well\-maintained beard consistently outperforms a thinning hairline being managed ineffectively\.
 
+__Going Gray — Intentional Beats Fought__
+
+Gray hair looks best when it reads as a deliberate choice rather than something being battled\. Most men switch to natural later than they should — the window where clumsy dye jobs or obvious regrowth lines are actively aging is longer than the window where the hair is ambiguously graying\. Reframing gray as a style variable to work with, rather than a problem to disguise, is the core mindset shift for this phase\.
+
+__When to go natural__
+
+The signal that gray has crossed into "work with it" territory is that the graying is showing as a pattern, not a mistake\. Even distribution at the temples, scattered strands through the top, or a clear salt\-and\-pepper effect — these are patterns worth keeping and styling around\. A single random streak or patchy sparse gray on otherwise\-dark hair is not that point yet\.
+
+The regrowth\-line test is simpler and more visible\. If you're currently coloring and the root line is becoming obviously darker between touchups, natural will read cleaner than continuing to fight it\. Harsh root contrast is consistently more aging than well\-kept gray\.
+
+__When to blend instead__
+
+For men who are not ready for a full transition, or whose gray is patchy rather than evenly distributed \(particularly common on originally\-dark hair\), blending is the right tool\. Demi\-permanent or semi\-permanent color softens the transition toward natural rather than fully concealing, and the regrowth grows out unobtrusively rather than with a hard line\. Permanent color is for full concealment — keep it only if you strongly dislike gray and are committed to the ongoing maintenance cycle\.
+
+The "quiet silver" approach is essentially this: soften the contrast between old dyed color and incoming gray so the transition happens gradually, rather than fighting every new silver hair with another salon visit\.
+
+__What actually makes gray look sharp__
+
+Gray is aging only when the grooming around it is aging\. The rest of the presentation carries more weight than the color itself\.
+
+- Cut — sharper and more intentional than the shaggy version that worked in your twenties\. Gray reads sloppy when the cut is sloppy\.
+- Beard — controlled and clean\-lined\. An untrimmed or overgrown gray beard ages faster than the hair on top ever does\.
+- Texture — gray hair tends to run drier, coarser, and wirier than pigmented hair\. A lightweight conditioner or hair oil on damp hair keeps it from reading brittle\.
+- Brassiness — gray that has drifted yellow reads as unmanaged\. Purple shampoo once a week \(not more — overuse shifts the color too cool\) keeps the tone clean\.
+- Moisture — gray hair is functionally different hair\. Condition it more than you needed to before\.
+
+__The three practical paths__
+
+Go natural if the gray is becoming evenly distributed and you are willing to maintain a sharp cut\. Blend if the distribution is patchy or you want a softer transition — demi\- or semi\-permanent is the right tool\. Fully cover only if you actively dislike gray and will do the maintenance consistently\.
+
+The framing that makes the decision easier for most men: you do not need to hide it\. You need to style it on purpose\.
+
 __Styling Products — What Each Does and When to Use It__
 
 Most men either skip product entirely or default to whatever they grew up using without understanding what the different formulas actually do\. The right product depends on your hair type, your desired finish, and the hold level the style requires\. Using the wrong product is one of the most common reasons a good haircut fails to look as good as it did leaving the barbershop\.

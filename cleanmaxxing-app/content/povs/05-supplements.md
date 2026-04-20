@@ -75,6 +75,16 @@ For the typical man eating meat, eggs, and dairy on a regular basis, supplementa
 
 Bloodwork simplifies the decision\. A single B12 serum test confirms whether supplementation is needed\. If levels are in the normal range, save the money\. If low, correct it and retest in three months\. This matches the posture the rest of this document takes: supplement when the evidence says supplement, not because the label suggests you should\.
 
+__B12 specifics worth knowing__
+
+Form matters\. Methylcobalamin is the bioactive form the body uses directly; cyanocobalamin is cheaper and more common on shelves but has to be converted first\. For men who genuinely need supplementation, methylcobalamin is the better choice — the cost difference is small and absorption and retention are both better\.
+
+Medications deplete B12 in ways most men do not realize\. Metformin — commonly prescribed for type 2 diabetes and occasionally off\-label for insulin resistance — measurably reduces B12 absorption and is associated with deficiency in roughly 10 to 30 percent of long\-term users\. Proton pump inhibitors \(omeprazole, pantoprazole\) and H2 blockers \(famotidine, ranitidine\) suppress stomach acid, which impairs the release of B12 from food proteins and reduces absorption substantially over time\. Chronic recreational nitrous oxide use \(whippits, inhaled canisters\) inactivates B12 via cobalt oxidation and can produce severe functional deficiency within weeks — this is distinct from dietary intake and not something a multivitamin corrects\. For anyone on metformin or chronic PPI/H2 therapy, supplementation is essentially mandatory regardless of diet\.
+
+Standard serum B12 testing can miss functional deficiency\. Values in the common "normal" range of roughly 200 to 900 pg/mL do not rule out a cellular\-level problem if symptoms persist\. If fatigue, brain fog, or neurological symptoms \(numbness, tingling, balance issues\) continue despite a normal B12 reading, ask for methylmalonic acid \(MMA\) or holotranscobalamin — both are more sensitive markers of actual cellular B12 status\. Elevated homocysteine is another functional indicator\.
+
+For men with confirmed absorption issues — post\-GI surgery, pernicious anemia, chronic medication use — sublingual B12 at 1,000 to 5,000 mcg dissolved under the tongue bypasses the intrinsic\-factor pathway and is significantly more effective than swallowed tablets that rely on normal absorption\. Injectable B12 remains the standard for severe or confirmed absorption failure, administered by a physician\. The body stores three to five years' worth of B12 in the liver, so deficiency develops slowly — but once symptomatic, it takes weeks to months of consistent supplementation to correct, not days\.
+
 __Collagen__
 
 May slightly help skin elasticity and joint health over time when taken consistently\. Effects are subtle and cumulative rather than rapid\. Do not expect visible transformation — think of it as a long\-term support tool rather than an active intervention\.
