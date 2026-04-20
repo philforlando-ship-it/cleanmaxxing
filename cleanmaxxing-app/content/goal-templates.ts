@@ -57,7 +57,7 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     source_slug: '19-strength-training',
     title: 'Strength train three times per week',
     description:
-      'Compound lifts as the base, progressive overload tracked. Consistency beats intensity for the first year.',
+      'Upper body biased toward the muscles that drive how a physique reads — shoulders, chest, back, arms — with a squat or leg-press variant and a hinge as posterior-chain foundation. Progressive overload tracked. Consistency beats intensity for the first year.',
     goal_type: 'process',
   },
   'macros-daily': {
@@ -245,7 +245,7 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     source_slug: '19-strength-training',
     title: 'Add 10 pounds of muscle in 6 months',
     description:
-      'Realistic for most trained lifters in a small calorie surplus. Requires four sessions a week, protein at target, and sleep as the recovery anchor.',
+      'Realistic for most trained lifters in a small calorie surplus. Four sessions a week biased toward the muscles that visibly move the needle — lateral delts, upper chest, lats, arms — with protein at target and sleep as the recovery anchor.',
     goal_type: 'outcome',
   },
   'hair-retention-one-year': {
