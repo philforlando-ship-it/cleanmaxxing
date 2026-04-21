@@ -274,6 +274,138 @@ export async function getGoalWeeklySummary(
   return { daysCompleted: (tickedRows ?? []).length, daysPossible };
 }
 
+export type StaleGoal = {
+  goal_id: string;
+  title: string;
+  daysSinceLastTick: number | null; // null when the goal has never been ticked
+};
+
+/**
+ * Identify the single most-stale active goal that warrants a re-entry
+ * nudge on /today. Scoped so users see at most one nudge at a time (a
+ * list of stale goals reads as nagging; one contextual prompt reads as
+ * awareness).
+ *
+ * Rules:
+ *   - Goals younger than `graceDays` (default 14) are always fresh —
+ *     onboarding + baseline calibration deserves space before we nudge.
+ *   - A goal is "stale" when its most-recent completed goal_check_in
+ *     is older than `staleDays` (default 9), OR when the goal has
+ *     never been ticked and its age exceeds `graceDays`.
+ *   - Tie-break: pick the goal with the oldest last-tick date (or
+ *     oldest created_at when never ticked). Surfaces the one the user
+ *     has drifted furthest from.
+ *
+ * Returns null when nothing qualifies — the nudge card is then absent
+ * from /today entirely.
+ */
+export async function getStalestGoal(
+  supabase: SupabaseClient,
+  userId: string,
+  now: Date = new Date(),
+  staleDays = 9,
+  graceDays = 14,
+): Promise<StaleGoal | null> {
+  const { data: goalsRaw } = await supabase
+    .from('goals')
+    .select('id, title, created_at')
+    .eq('user_id', userId)
+    .eq('status', 'active');
+  const goals = (goalsRaw ?? []) as Array<{
+    id: string;
+    title: string;
+    created_at: string;
+  }>;
+  if (goals.length === 0) return null;
+
+  const MS_PER_DAY = 86_400_000;
+  const nowMs = now.getTime();
+
+  // Filter to goals past the grace window. Younger goals never trigger.
+  const eligible = goals.filter((g) => {
+    const age = Math.floor((nowMs - new Date(g.created_at).getTime()) / MS_PER_DAY);
+    return age >= graceDays;
+  });
+  if (eligible.length === 0) return null;
+
+  // Pull the most recent completed goal_check_in per eligible goal via
+  // a single join query. RLS scopes goal_check_ins through check_ins.user_id
+  // so we don't need to filter by user_id here.
+  const goalIds = eligible.map((g) => g.id);
+  const { data: tickRowsRaw } = await supabase
+    .from('goal_check_ins')
+    .select('goal_id, check_ins!inner(date)')
+    .in('goal_id', goalIds)
+    .eq('completed', true)
+    .order('check_ins(date)', { ascending: false });
+
+  // Reduce to latest tick date per goal. rows come sorted desc so the
+  // first hit per goal wins.
+  const latestTickByGoal = new Map<string, string>();
+  for (const row of tickRowsRaw ?? []) {
+    const r = row as { goal_id: string; check_ins: { date: string } | { date: string }[] };
+    // Supabase's embed return shape varies (object vs array) depending
+    // on FK cardinality inference. Normalise to the single date string.
+    const dateField = Array.isArray(r.check_ins)
+      ? r.check_ins[0]?.date
+      : r.check_ins?.date;
+    if (!dateField) continue;
+    if (!latestTickByGoal.has(r.goal_id)) {
+      latestTickByGoal.set(r.goal_id, dateField);
+    }
+  }
+
+  // Score each eligible goal. A goal qualifies as stale when either:
+  //   (a) it's never been ticked AND age > graceDays (already enforced), or
+  //   (b) last tick was more than staleDays ago.
+  let winner: {
+    goal_id: string;
+    title: string;
+    daysSinceLastTick: number | null;
+    sortKey: number;
+  } | null = null;
+
+  for (const g of eligible) {
+    const lastTick = latestTickByGoal.get(g.id);
+    let daysSinceLastTick: number | null;
+    let sortKey: number; // higher = staler; we pick max
+
+    if (!lastTick) {
+      daysSinceLastTick = null;
+      // Never ticked: treat as "days since creation" for staleness ranking
+      // but cap so a very old never-ticked goal doesn't dominate every
+      // tie-break. Age already cleared graceDays.
+      const ageDays = Math.floor(
+        (nowMs - new Date(g.created_at).getTime()) / MS_PER_DAY,
+      );
+      sortKey = ageDays;
+    } else {
+      // `lastTick` is YYYY-MM-DD; midnight-local comparison is fine since
+      // we're in whole-day granularity.
+      const lastMs = new Date(lastTick + 'T00:00:00').getTime();
+      daysSinceLastTick = Math.floor((nowMs - lastMs) / MS_PER_DAY);
+      if (daysSinceLastTick < staleDays) continue; // still fresh
+      sortKey = daysSinceLastTick;
+    }
+
+    if (!winner || sortKey > winner.sortKey) {
+      winner = {
+        goal_id: g.id,
+        title: g.title,
+        daysSinceLastTick,
+        sortKey,
+      };
+    }
+  }
+
+  if (!winner) return null;
+  return {
+    goal_id: winner.goal_id,
+    title: winner.title,
+    daysSinceLastTick: winner.daysSinceLastTick,
+  };
+}
+
 /**
  * Undo today's check-in: delete the check_in row (cascades to goal_check_ins).
  * Used when the user wants to re-enter their check-in for the day.

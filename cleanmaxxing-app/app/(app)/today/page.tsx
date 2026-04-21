@@ -11,7 +11,12 @@ import { WeeklyFocusCard } from './weekly-focus-card';
 import { FirstRunCard } from './first-run-card';
 import { ProgressPhotoCard } from './progress-photo-card';
 import { WeeklySummaryStrip } from './weekly-summary-strip';
-import { getTodayCheckInState, getWeeklyCheckInSummary } from '@/lib/check-in/service';
+import { StaleGoalCard } from './stale-goal-card';
+import { StuckConfidenceCard } from './stuck-confidence-card';
+import { QuarterlySurveyCard } from './quarterly-survey-card';
+import { getTodayCheckInState, getWeeklyCheckInSummary, getStalestGoal } from '@/lib/check-in/service';
+import { getStuckConfidenceSignal } from '@/lib/confidence/stuck-signal';
+import { getQuarterlySurveyState } from '@/lib/quarterly-survey/service';
 import { getWeeklyReflectionState } from '@/lib/weekly-reflection/service';
 import { getCheckpointState } from '@/lib/checkpoint/service';
 
@@ -67,6 +72,9 @@ export default async function TodayPage({ searchParams }: Props) {
     reflectionState,
     checkpointState,
     weeklySummary,
+    staleGoal,
+    stuckSignal,
+    quarterlyState,
     { data: goalsRaw },
     { data: photoRowsRaw },
   ] = await Promise.all([
@@ -74,6 +82,9 @@ export default async function TodayPage({ searchParams }: Props) {
     getWeeklyReflectionState(supabase, user.id),
     getCheckpointState(supabase, user.id),
     getWeeklyCheckInSummary(supabase, user.id),
+    getStalestGoal(supabase, user.id),
+    getStuckConfidenceSignal(supabase, user.id),
+    getQuarterlySurveyState(supabase, user.id),
     supabase
       .from('goals')
       .select('id, title, source_slug, created_at, baseline_stage')
@@ -138,6 +149,18 @@ export default async function TodayPage({ searchParams }: Props) {
 
         {checkpointState.status === 'eligible' && !steppedAway && (
           <MonthlyCheckpointCard summary={checkpointState.summary} />
+        )}
+
+        {quarterlyState.status === 'eligible' && !steppedAway && (
+          <QuarterlySurveyCard prior={quarterlyState.prior} />
+        )}
+
+        {staleGoal && !steppedAway && (
+          <StaleGoalCard staleGoal={staleGoal} />
+        )}
+
+        {stuckSignal && !steppedAway && (
+          <StuckConfidenceCard signal={stuckSignal} />
         )}
 
         {steppedAway && (
