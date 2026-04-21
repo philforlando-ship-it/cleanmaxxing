@@ -13,6 +13,7 @@ import {
   buildProactiveSuggestionAdvisory,
   CIRCUIT_BREAKER_ADVISORY,
   formatGoalsBlock,
+  formatUserStateBlock,
   type GoalContext,
 } from '@/lib/mister-p/prompt';
 import {
@@ -20,6 +21,7 @@ import {
   shouldTriggerCircuitBreaker,
   shouldTriggerProactiveSuggestion,
 } from '@/lib/mister-p/topic';
+import { getMisterPUserState } from '@/lib/mister-p/user-state';
 
 const RequestSchema = z.object({
   question: z.string().min(1).max(2000),
@@ -133,7 +135,20 @@ export async function POST(req: NextRequest) {
   }
 
   const goalsBlock = formatGoalsBlock(goals);
-  const systemPrompt = buildSystemPromptFull(contextBlock, advisory, goalsBlock);
+
+  // Behavioral state — specific_thing, tenure, weekly completion,
+  // confidence trajectory, stuck dimensions. Cheap to fetch alongside
+  // everything else already on this request; the prompt-side copy
+  // enforces "context only, don't narrate it back."
+  const userState = await getMisterPUserState(supabase, user.id);
+  const userStateBlock = formatUserStateBlock(userState);
+
+  const systemPrompt = buildSystemPromptFull(
+    contextBlock,
+    advisory,
+    goalsBlock,
+    userStateBlock,
+  );
 
   const result = streamText({
     model: anthropic('claude-sonnet-4-6'),

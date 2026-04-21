@@ -81,6 +81,21 @@ export function MonthlyCheckpointCard({ summary }: Props) {
         )}
       </div>
 
+      {summary.specific_thing && (
+        <div className="mt-5 rounded-lg border border-amber-200 bg-white/60 p-4 text-sm leading-relaxed text-zinc-800 dark:border-amber-900/60 dark:bg-zinc-900/60 dark:text-zinc-200">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+            What you said preoccupied you
+          </div>
+          <p className="mt-2 italic text-zinc-700 dark:text-zinc-300">
+            &ldquo;{summary.specific_thing}&rdquo;
+          </p>
+          <p className="mt-2 text-zinc-700 dark:text-zinc-300">
+            A month on &mdash; is this still the thing? If it&rsquo;s shifted,
+            that&rsquo;s useful data. Mister P can help you think through it.
+          </p>
+        </div>
+      )}
+
       {summary.goal_insights.length > 0 && (
         <div className="mt-5">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">

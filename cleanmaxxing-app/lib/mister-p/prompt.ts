@@ -161,10 +161,73 @@ ${lines.join('\n')}
 export function buildSystemPromptFull(
   retrievedChunks: string,
   advisory: string | null,
-  goalsBlock: string | null
+  goalsBlock: string | null,
+  userStateBlock: string | null = null
 ): string {
   let prompt = MISTER_P_SYSTEM_PROMPT.replace('{retrieved_chunks}', retrievedChunks);
+  if (userStateBlock) prompt += '\n\n' + userStateBlock;
   if (goalsBlock) prompt += '\n\n' + goalsBlock;
   if (advisory) prompt += '\n\n' + advisory;
   return prompt;
+}
+
+// Behavioral state block — injected so Mister P can calibrate substance
+// to where the user actually is rather than treating every question as
+// a blank slate. The block is strictly context: the prompt copy below
+// forbids narrating observations back to the user ("I see you've been
+// doing X for Y days…") which is the failure mode this feature is
+// most vulnerable to.
+import type { MisterPUserState } from './user-state';
+
+export function formatUserStateBlock(state: MisterPUserState): string | null {
+  const lines: string[] = [];
+
+  if (state.specificThing) {
+    // The free-text is deliberately passed through unmodified — it's
+    // the highest-signal piece of self-description the user has given
+    // and paraphrasing risks losing the specificity that makes it
+    // useful. Length cap happens at the survey write side, not here.
+    lines.push(`specific_thing: ${state.specificThing}`);
+  }
+
+  lines.push(`days_since_onboarding: ${state.daysSinceOnboarding}`);
+
+  if (state.weeklyCompletionRate !== null) {
+    const pct = Math.round(state.weeklyCompletionRate * 100);
+    lines.push(`weekly_goal_completion_rate: ${pct}% over the last 7 days`);
+  }
+
+  if (state.confidence) {
+    const rows = (
+      ['social', 'work', 'physical', 'appearance'] as const
+    ).map((k) => {
+      const entry = state.confidence![k];
+      const trendTag = entry.trend ? ` [${entry.trend}]` : '';
+      return `  ${k}: ${entry.value}/10${trendTag}`;
+    });
+    lines.push('latest_confidence (1-10 scale):');
+    lines.push(...rows);
+  }
+
+  if (state.stuckDimensions.length > 0) {
+    lines.push(
+      `stuck_dimensions: ${state.stuckDimensions.join(', ')} (under 4 across the last 3 reflections)`,
+    );
+  }
+
+  if (lines.length === 0) return null;
+
+  return `--- USER BEHAVIORAL STATE ---
+The data below is the user's current state as captured by the app. Treat it as background — what you should know about who they are, what they've been doing, where things are stuck. Let it inform the substance and depth of your answer.
+
+Hard rule: do NOT narrate this data back to them. No "I see you haven't checked in much lately," no "looking at your confidence scores," no "you mentioned you're focused on X." That reads as surveillance. Just let the state quietly change what you choose to emphasize.
+
+Calibration guidance:
+- When specific_thing is set and the question touches it, the answer should speak to their specific case rather than the generic case. Don't quote their text back.
+- When stuck_dimensions includes appearance or social and the user asks "what more can I do," lean toward the POV material about limits of self-improvement rather than suggesting additional interventions.
+- When weekly_goal_completion_rate is under 40% and the user asks about adding something new, the better answer is often depth on what they already have, not more volume.
+- When days_since_onboarding is under 14, assume they're still in the foundations phase and pitch accordingly. When it's over 60 and confidence hasn't moved, assume they've heard the basics.
+
+${lines.join('\n')}
+--- END USER BEHAVIORAL STATE ---`;
 }

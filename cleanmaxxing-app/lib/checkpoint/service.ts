@@ -48,6 +48,11 @@ export type CheckpointSummary = {
   // isn't enough data (< 4 reflections, or no goals with enough weeks
   // active). Capped internally at 5 to avoid card overload.
   goal_insights: GoalInsight[];
+  // The specific_thing free-text from onboarding (or the quarterly
+  // re-survey update when set). One month in is the right moment for a
+  // mirror — "is this still the thing?" — so the card can surface it
+  // as a reflection prompt. Null when the user skipped the question.
+  specific_thing: string | null;
 };
 
 export type CheckpointState =
@@ -192,6 +197,24 @@ export async function getCheckpointState(
     now,
   );
 
+  // Specific-thing lookup — quarterly answer wins over onboarding answer
+  // so a user who updated their framing at day 90 sees the current text,
+  // not the stale one.
+  const { data: specificRows } = await supabase
+    .from('survey_responses')
+    .select('question_key, response_value')
+    .eq('user_id', userId)
+    .in('question_key', ['specific_thing', 'specific_thing_q1']);
+  const specificByKey = new Map<string, string>();
+  for (const row of specificRows ?? []) {
+    const r = row as { question_key: string; response_value: string | null };
+    if (r.response_value) specificByKey.set(r.question_key, r.response_value);
+  }
+  const specificThing =
+    specificByKey.get('specific_thing_q1') ??
+    specificByKey.get('specific_thing') ??
+    null;
+
   const summary: CheckpointSummary = {
     days_since_start: daysSinceStart,
     confidence_from: confidenceFrom,
@@ -206,6 +229,7 @@ export async function getCheckpointState(
     completed_goal_check_ins: completedChecks,
     suggestions,
     goal_insights: goalInsights,
+    specific_thing: specificThing,
   };
 
   return { status: 'eligible', summary };
