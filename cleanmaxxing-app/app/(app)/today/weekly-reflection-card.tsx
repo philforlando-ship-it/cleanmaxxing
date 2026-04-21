@@ -183,17 +183,10 @@ export function WeeklyReflectionCard({ initialState, weeklySummary }: Props) {
         : null;
     return (
       <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-lg font-medium">Weekly reflection</h2>
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-          >
-            Update
-          </button>
-        </div>
-        <p className="mt-1 text-xs text-zinc-500">Week of {current.week_start}</p>
+        <h2 className="text-lg font-medium">Weekly reflection</h2>
+        <p className="mt-1 text-xs text-zinc-500">
+          Week of {current.week_start} &middot; saved
+        </p>
         <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
           {DIMENSIONS.map((d) => {
             const score = current[d.key];
@@ -218,6 +211,10 @@ export function WeeklyReflectionCard({ initialState, weeklySummary }: Props) {
           prior={priorReflection}
           summary={weeklySummary}
         />
+        <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-400">
+          Locked for this week. Next reflection unlocks Monday &mdash;
+          weekly is a fixed snapshot, not a running dial.
+        </p>
       </section>
     );
   }
