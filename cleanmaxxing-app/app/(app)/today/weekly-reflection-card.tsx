@@ -9,10 +9,89 @@ import type {
 import { averageConfidence } from '@/lib/weekly-reflection/service';
 import { contextFor } from '@/lib/confidence/context';
 import { ConfidenceTrendChart } from './confidence-trend-chart';
+import type { WeeklyCheckInSummary } from '@/lib/check-in/service';
 
 type Props = {
   initialState: WeeklyReflectionState;
+  // Rolling 7-day check-in totals, used to render the post-reflection
+  // recap inside the saved view. Optional — the card still works
+  // without it (recap just skips the completion line).
+  weeklySummary?: WeeklyCheckInSummary;
 };
+
+// Rendered inside the saved view of the reflection card. Pulls numbers
+// from data already on hand (current reflection, prior reflection,
+// weekly summary) so there's no extra query. Scoped to the handful of
+// data points that actually matter the moment after reflection save:
+// completion for the week just reflected on, and per-dimension deltas
+// vs. the prior reflection (only surfaced when the move is 1+ point —
+// sub-1-point noise isn't signal).
+function WeeklyRecap({
+  current,
+  prior,
+  summary,
+}: {
+  current: ReflectionDimensions;
+  prior: ReflectionDimensions | null;
+  summary: WeeklyCheckInSummary | undefined;
+}) {
+  const deltas: Array<{ label: string; delta: number }> = [];
+  if (prior) {
+    const dims: Array<[keyof ReflectionDimensions, string]> = [
+      ['social_confidence', 'Social'],
+      ['work_confidence', 'Work'],
+      ['physical_confidence', 'Physical'],
+      ['appearance_confidence', 'Appearance'],
+    ];
+    for (const [key, label] of dims) {
+      const d = current[key] - prior[key];
+      if (Math.abs(d) >= 1) deltas.push({ label, delta: d });
+    }
+  }
+
+  const showCompletion =
+    summary !== undefined && summary.goalCount > 0 && summary.possible > 0;
+  if (!showCompletion && deltas.length === 0 && !prior) return null;
+
+  return (
+    <div className="mt-5 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+        This week in one glance
+      </div>
+      <ul className="mt-2 space-y-1 text-sm text-zinc-800 dark:text-zinc-200">
+        {showCompletion && (
+          <li>
+            Ticked <strong>{summary.ticked}</strong> of{' '}
+            <strong>{summary.possible}</strong> possible goal slots over the
+            last 7 days.
+          </li>
+        )}
+        {!prior && (
+          <li className="text-zinc-600 dark:text-zinc-400">
+            First reflection saved. Next week&rsquo;s will show deltas.
+          </li>
+        )}
+        {deltas.map((d) => {
+          const sign = d.delta > 0 ? '+' : '';
+          const tone =
+            d.delta > 0
+              ? 'text-emerald-700 dark:text-emerald-400'
+              : 'text-amber-700 dark:text-amber-400';
+          return (
+            <li key={d.label}>
+              {d.label}:{' '}
+              <span className={`font-medium ${tone}`}>
+                {sign}
+                {d.delta}
+              </span>{' '}
+              vs. last reflection.
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
 
 const DIMENSIONS: Array<{
   key: keyof ReflectionDimensions;
@@ -48,7 +127,7 @@ const DEFAULTS: ReflectionDimensions = {
   appearance_confidence: 5,
 };
 
-export function WeeklyReflectionCard({ initialState }: Props) {
+export function WeeklyReflectionCard({ initialState, weeklySummary }: Props) {
   const [state, setState] = useState<WeeklyReflectionState>(initialState);
   const [editing, setEditing] = useState<boolean>(initialState.current === null);
   const [draft, setDraft] = useState<ReflectionDimensions>(() =>
@@ -95,6 +174,13 @@ export function WeeklyReflectionCard({ initialState }: Props) {
   const current = state.current;
 
   if (!editing && current) {
+    // Prior reflection for the recap's delta line. state.history is
+    // sorted oldest-first and includes `current` at the tail when
+    // saved, so the entry immediately before is last week's reflection.
+    const priorReflection =
+      state.history.length >= 2
+        ? state.history[state.history.length - 2]
+        : null;
     return (
       <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex items-baseline justify-between">
@@ -127,6 +213,11 @@ export function WeeklyReflectionCard({ initialState }: Props) {
             {current.notes}
           </p>
         )}
+        <WeeklyRecap
+          current={current}
+          prior={priorReflection}
+          summary={weeklySummary}
+        />
       </section>
     );
   }

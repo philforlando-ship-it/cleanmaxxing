@@ -180,26 +180,36 @@ export default async function TodayPage({ searchParams }: Props) {
           </section>
         )}
 
-        {/* Order reflects what the user is actually here to do today.
-            Daily check-in is the primary action (returning users'
-            reason for opening the page). Weekly focus is secondary
-            context. Reflection sits above the chart so the flow reads
-            action → resulting trend rather than trend → action.
-            Chart and chat stay accessible even when stepped away — the
-            chart is history (useful for reflection) and the chat has no
-            tracking side effects (asking Mister P something isn't the
-            same as self-surveillance). */}
+        {/* Order reflects what the user is here to do today. Daily
+            check-in is the primary action (the returning user's reason
+            for opening the page), so it leads. Mister P sits second —
+            after state-threading (specific_thing, confidence trajectory,
+            completion rate, stuck dimensions) he is now the most
+            personalized surface in the product, and keeping him buried
+            at the bottom undersold that. The flow reads "log what I
+            did → now what should I be thinking about." Weekly summary /
+            focus / reflection / chart follow as reference material the
+            user scrolls to when they want it. Chat and chart stay
+            accessible when stepped away — the chart is history (useful
+            for reflection) and the chat has no tracking side effects
+            (asking Mister P something isn't the same as
+            self-surveillance). */}
         {!steppedAway && (
           <DailyCheckInCard
             initialState={checkInState}
             spotlight={welcome && checkInState.check_in_id === null}
           />
         )}
+        <MisterPChatCard />
         {!steppedAway && <WeeklySummaryStrip summary={weeklySummary} />}
         {!steppedAway && <WeeklyFocusCard goals={activeGoals} />}
-        {!steppedAway && <WeeklyReflectionCard initialState={reflectionState} />}
+        {!steppedAway && (
+          <WeeklyReflectionCard
+            initialState={reflectionState}
+            weeklySummary={weeklySummary}
+          />
+        )}
         <ConfidenceTrendChart history={reflectionState.history} />
-        <MisterPChatCard />
       </div>
     </main>
   );
