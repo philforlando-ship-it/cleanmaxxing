@@ -7,10 +7,10 @@ export const QUESTIONS: Question[] = [
   {
     key: 'age',
     prompt: 'How old are you?',
-    helper: 'Cleanmaxxing is 18+ only.',
+    helper: 'Cleanmaxxing is designed for men 18\u201345.',
     type: 'number',
     min: 18,
-    max: 99,
+    max: 45,
     required: true,
   },
   {
@@ -220,5 +220,6 @@ export function ageToSegment(age: number): AgeSegment | null {
   if (age >= 18 && age <= 24) return '18-24';
   if (age >= 25 && age <= 32) return '25-32';
   if (age >= 33 && age <= 40) return '33-40';
+  if (age >= 41 && age <= 45) return '41-45';
   return null;
 }

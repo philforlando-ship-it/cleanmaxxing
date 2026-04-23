@@ -34,6 +34,17 @@ export async function POST() {
     return NextResponse.json({ error: 'Age must be 18+.' }, { status: 400 });
   }
   const segment = ageToSegment(age);
+  // Belt-and-suspenders: the onboarding survey caps age at 45 via the
+  // question's max, but a direct POST with a larger age would slip past
+  // that client-side check and leave age_segment null downstream (which
+  // creates a redirect loop between /onboarding and /onboarding/complete).
+  // Reject explicitly at the API so the failure is a clear 400 instead.
+  if (segment === null) {
+    return NextResponse.json(
+      { error: 'Cleanmaxxing is currently designed for men 18\u201345.' },
+      { status: 400 },
+    );
+  }
 
   const clinicalFlagged = byKey.get('clinical_screen') === 'yes';
 

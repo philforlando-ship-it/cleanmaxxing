@@ -34,7 +34,7 @@ const MOTIVATIONS: MotivationSegment[] = [
   'not-sure-yet',
 ];
 
-const AGES: AgeSegment[] = ['18-24', '25-32', '33-40'];
+const AGES: AgeSegment[] = ['18-24', '25-32', '33-40', '41-45'];
 
 type FocusScenario = { name: string; focusAreas: string[] };
 

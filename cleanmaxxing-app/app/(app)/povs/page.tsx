@@ -57,6 +57,10 @@ const AGE_RELEVANT_SLUGS: Record<string, string[]> = {
   '18-24': ['07-skincare-antiaging', '38-aging-appearance'],
   '25-32': ['38-aging-appearance', '07-skincare-antiaging', '47-eye-health'],
   '33-40': ['38-aging-appearance', '28-cosmetic-procedures', '47-eye-health'],
+  // 41-45 inherits the 33-40 set until the POV corpus is audited for
+  // segment-specific content. Aging-appearance, cosmetic-procedures,
+  // and eye-health all apply cleanly to early 40s.
+  '41-45': ['38-aging-appearance', '28-cosmetic-procedures', '47-eye-health'],
 };
 
 type PovMetaEntry = {

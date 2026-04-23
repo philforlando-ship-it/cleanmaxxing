@@ -169,7 +169,15 @@ function baseTierScore(tier: string | null): number {
 
 function appliesToAge(doc: PovDocRow, segment: AgeSegment): boolean {
   if (!doc.age_segments || doc.age_segments.length === 0) return false;
-  return doc.age_segments.includes(segment);
+  if (doc.age_segments.includes(segment)) return true;
+  // 41-45 inheritance: until POV `_metadata.json` is bulk-updated to
+  // list '41-45' explicitly, users in the 41-45 segment fall back to
+  // docs tagged for 33-40. The aging/health content written for the
+  // late-30s case still applies cleanly to early 40s; this fallback
+  // avoids leaving 41-45 users with an empty candidate pool while the
+  // metadata catches up.
+  if (segment === '41-45' && doc.age_segments.includes('33-40')) return true;
+  return false;
 }
 
 export function rankCandidates({

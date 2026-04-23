@@ -20,4 +20,4 @@ export type Question = {
   required: boolean;
 };
 
-export type AgeSegment = '18-24' | '25-32' | '33-40';
+export type AgeSegment = '18-24' | '25-32' | '33-40' | '41-45';
