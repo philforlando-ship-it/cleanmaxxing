@@ -177,7 +177,39 @@ Not all muscles contribute equally to an aesthetic physique\. The goal is not si
 
 The three highest\-impact muscle groups are the shoulders, chest, and arms\. The shoulders, especially the lateral delts, are arguably the most important\. Well\-developed side delts create width that enhances the V\-taper and makes the waist appear smaller by contrast — a single visual effect that dramatically improves overall proportions\. The upper chest adds thickness and structure to the front profile, filling out clothing and creating a more elevated, squared look\. The arms, particularly the biceps, are almost always partially visible in everyday life, giving them an outsized impact on perceived aesthetics despite being smaller muscles\.
 
-The back — specifically the lats — plays a critical supporting role\. While less immediately visible from the front, the lats contribute heavily to overall width and the V\-taper from both front and rear, preventing the physique from looking flat\. The legs remain important for overall development and balance, but they contribute less to day\-to\-day perceived attractiveness compared to the upper body\.
+The back — specifically the lats — plays a critical supporting role\. While less immediately visible from the front, the lats contribute heavily to overall width and the V\-taper from both front and rear, preventing the physique from looking flat\. The legs remain important for overall development and balance, but they contribute less to day\-to\-day perceived attractiveness compared to the upper body — with one specific exception addressed in the next section\.
+
+__Glutes — The Over-35 Aesthetic Variable__
+
+The section above names glutes in the list of muscles that matter for aesthetics but treats them as a side-note behind shoulders, chest, arms, and lats. For men under thirty with reasonable body composition that ordering holds. For men over thirty-five, it does not. Glute development becomes one of the highest-ROI aesthetic variables specifically at the age when it starts degrading invisibly — the muscle atrophies while the rest of the body gains fat, and the resulting silhouette is what most men in their late thirties and forties mean when they say "my pants don't fit right anymore."
+
+The mechanism is three things compounding.
+
+First, incidental movement collapses. The average twenty-five-year-old walks more, squats more casually, climbs stairs more, and carries more things than the same person ten years later. The glutes depend heavily on this background load to stay shaped; they atrophy faster than quads or hamstrings when it disappears. For someone who sits eight or more hours a day, the glutes are simply not being recruited in the way they were when he was younger and moving through the world more physically.
+
+Second, anterior pelvic tilt progresses with desk time. Doc 50 covers the mechanism in detail — hip flexors shorten, glutes disengage, the lower back hyperextends, the lower belly is pushed forward, and the glutes visually flatten even when not atrophied. Two men with the same body fat percentage and the same raw glute mass will look materially different from the side if one has neutral pelvic position and one does not. The tilt is specifically the pattern that produces a "muffin top" read on a man who is not actually overweight.
+
+Third, body-fat distribution shifts in ways that draw the eye to the waist. Testosterone trends down from the mid-thirties; fat preferentially deposits around the midsection; the V-taper between chest and waist compresses. Meanwhile the glute — an area that would normally balance the silhouette from the side and rear — is contributing less structural shape than it used to. The combined effect is that pants fit through the waist but hang off the seat. Men in this window start needing a belt to hold pants up rather than to finish a look. That belt requirement is a readable signal, not a neutral fact.
+
+__What this means for training__
+
+Glute training stops being optional accessory work for this cohort. The muscle group moves up the priority stack — from "important but secondary" to "one of the variables that actually decides how clothes fit." The training approach has three layers.
+
+The foundation: one heavy hip-hinge pattern twice a week, Romanian deadlifts or conventional deadlifts. RDLs are often the cleaner pick at forty-plus because the lower-back load is more controllable and the stretch on the glute-hamstring tie-in is directly what grows the muscle. Three sets of eight to twelve reps, finished two to three reps shy of failure, progressed with the same MEV/MAV/MRV logic the rest of the program uses.
+
+The builders: one dedicated glute-hypertrophy session per week. Hip thrusts — barbell or machine — are the single highest-ROI exercise for aesthetic glute development because they load the muscle in its shortened position with maximal tension, which is the biomechanical setup that drives hypertrophy for this muscle specifically. Split squats, Bulgarian split squats, and walking lunges add unilateral work that exposes asymmetries the bilateral compounds hide. Cable kickbacks and hip-abduction work finish off the glute medius, which is what creates the upper-outer shape that reads as a full silhouette from behind and from the side. Three to four exercises per session, ten to fifteen sets total across the training week, in the eight-to-fifteen rep range.
+
+The correction: the anterior-tilt fixes from doc 50 run in parallel and compound with the training. Hip-flexor stretching, dead bugs, and conscious pelvic neutral positioning during standing and walking do half the aesthetic work that training alone cannot. A forty-five-year-old with moderate glute training and a corrected pelvic alignment will typically look better in pants than a man of the same body fat with heavier glute training and a collapsed tilt. The two interventions are multiplicative, not additive. Training grows the muscle; posture determines whether the muscle reads.
+
+__The style piece — a readable diagnostic__
+
+A man who needs a belt to hold pants up, rather than to finish a look, is usually signaling one of three things: pants cut for a different body type (too wide in the waist relative to the seat), low glute development relative to waist circumference, or anterior pelvic tilt collapsing the lower back and creating the illusion of a loose waistband even when measurements match. The first is a fit problem — doc 12 covers wardrobe-fit principles. The other two are the case this section exists to address.
+
+Signal to watch for in the mirror: the side profile at a relaxed stance. A neutral pelvis, developed glutes, and a controlled midsection produce a silhouette where the belt line runs roughly horizontal front-to-back. A collapsed pelvis with low glute development produces a silhouette where the belt line angles downward from front to back, the lower belly protrudes, and the seat of the pants looks empty. Fixing this is not a cardio problem or a diet problem in isolation — it is a training-plus-posture problem specifically, and it is one of the highest-leverage aesthetic moves available to men over thirty-five.
+
+__How this integrates with the rest of the system__
+
+This section is not an argument for a leg-dominant program. The shoulders/chest/arms/lats ordering in the prior section still holds for overall aesthetic return across the male lifespan. What changes after thirty-five is that the glute — historically low on the priority list — moves up specifically because its decline becomes visible in a way the other muscles' decline does not, and because the fix ladders cleanly with the posture work already indicated for that cohort. In practical terms: keep the upper-body priority for hypertrophy volume, but add the glute-specific block described above rather than leaving glutes to whatever casual lower-body work happens to be in the program. Pair it with the doc 50 postural interventions. Pair it with the doc 20 body-composition work, because neither training nor posture fixes the silhouette alone at thirty percent body fat.
 
 __Training Around Soreness__
 
