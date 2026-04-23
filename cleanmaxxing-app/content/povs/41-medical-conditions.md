@@ -163,6 +163,36 @@ __Physician involvement required before__
 
 Any attempt to correct perceived eye alignment issues, droopy lids, or chronic eye irritation through supplements, eye exercises advertised online, or cosmetic procedures\. The relevant specialists are ophthalmologists for alignment and general eye health, and oculoplastic surgeons for lid position and eye\-area reconstructive work\. Dermatologists and general cosmetic physicians are the wrong first stop for these conditions\. Under\-eye filler specifically should not be placed while an unmanaged medical eye condition is active, because the filler interacts with tissue that may be surgically operated on later\.
 
+__Low Testosterone — Lifestyle First, Medical Second__
+
+__What changes__
+
+Testosterone decline in men from the mid-thirties onward is partly intrinsic and partly downstream of sleep, body composition, training, alcohol, and stress. The practical consequence: for the typical 42-year-old experiencing symptoms that suggest low T — declining libido, reduced morning erections, flattening motivation, slower recovery, softer physique response despite unchanged training — the first-line question is not "should I start TRT?" It is "are the lifestyle inputs actually optimized?" Most men who think they have a testosterone problem have a sleep problem, a body-fat problem, or an alcohol problem that is producing the same symptom set. Pursuing TRT before the lifestyle variables are genuinely in order produces an attribution problem (it becomes impossible to tell which part of the improvement the TRT is actually responsible for) and sets up a medication dependency that a fully-optimized substrate may not have needed.
+
+The highest-leverage lifestyle inputs, roughly in order of return:
+
+Sleep. Seven to nine hours in a dark, cool room with consistent wake time. Chronic short sleep under six hours alone suppresses testosterone by meaningful margins in measured studies; restoring it is the largest single lifestyle-driven shift available. Doc 42 covers the protocol. For any man considering TRT without having first fixed sleep, fixing sleep comes first.
+
+Body fat. Body fat above the mid-twenty-percent range creates aromatase-driven conversion of testosterone to estrogen. The feedback loop is self-reinforcing — higher body fat drives lower T drives reduced muscle mass drives easier fat gain. Resetting body composition into the fifteen-to-twenty-percent range, sustained over months, typically moves total testosterone upward without medical intervention. Doc 20's body-composition framework applies directly.
+
+Resistance training at real intensity. Heavy compound lifting done consistently and progressed over time supports testosterone more than higher-volume bodybuilding-style work. This is a frequently-overlooked variable in men who "train" but rarely approach meaningful effort. Doc 19's heavy-hinge, heavy-press-pull foundation is the right target.
+
+Alcohol. Chronic intake — four or more drinks per day, or regular binge episodes — is a significant testosterone suppressor. Moderate intake is roughly neutral. Heavy drinkers who reduce meaningfully often see T improve without any other change.
+
+Stress and cortisol. Sustained high cortisol — chronic under-recovery, prolonged job stress, poor sleep — suppresses testosterone via HPA-axis crosstalk. Doc 17 covers the environmental design piece.
+
+Micronutrients that matter specifically here: zinc, magnesium, vitamin D. Deficiency in any one is a potential contributor. A basic blood panel catches this cheaply.
+
+The important counterpoint: there is a genuine category of men with biologically low testosterone that does not respond to any of this. Doc 39 covers the community reality — men with exceptional lifestyles who remained clinically low until TRT. That case exists. The position taken here is not "TRT is always premature." It is that the lifestyle variables should be genuinely exhausted (not as a formality — as a real three-to-six-month attempt) before TRT is pursued, and that confirmatory labs are run in both windows so the before/after is legible.
+
+__What stays the same__
+
+The full cleanmaxxing priority stack remains valid — body composition, training, sleep, skin, grooming, style. Low T does not change what to work on; it changes the expected pace. A man with genuinely low testosterone and an untreated cause will see muscle-building, fat-loss, and recovery progress run slower than the framework predicts, and the frustration that produces is often what drives the premature jump to TRT.
+
+__Physician involvement required before__
+
+Any decision to start TRT. The starter diagnostic path earlier in this doc covers what to ask for: total and free testosterone drawn in the morning on two separate occasions at least a week apart, plus LH and FSH to distinguish primary from secondary hypogonadism. A single low reading is not a diagnosis. If both confirmatory readings come back clinically low and lifestyle variables have been genuinely addressed for at least three months, the case for TRT becomes substantially stronger. Men's health clinics and endocrinologists with hormone-replacement experience are the appropriate specialists; a generalist may engage but often does not have the specific background. Testosterone should not be sourced from unregulated channels — the risks are significant and a legitimate pathway exists.
+
 __What This Document Does Not Cover__
 
 Conditions with high enough variance or specialist requirement that a general modifier overlay would be more misleading than helpful: limb differences and amputation \(adaptive fitness requires a physiatrist or certified adaptive fitness specialist\), Type 1 diabetes \(insulin management complexity is beyond the scope of a looksmaxxing overlay\), active cancer or post\-treatment recovery, severe cardiovascular disease, and psychiatric conditions beyond ADHD\. For these, the honest answer is that the cleanmaxxing system's general principles remain valid where they apply, and a specialist familiar with the condition is the right partner for the specific adaptations required\.

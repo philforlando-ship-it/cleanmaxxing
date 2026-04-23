@@ -295,6 +295,18 @@ __9\. Sleep and nutrition consistency matter more than before__
 
 Recovery capacity declines with age but is substantially supported by consistent sleep and adequate nutrition\. At forty\-plus, these are not optional lifestyle preferences — they are functional requirements for the training system to produce results\.
 
+__Reading the Body — Normal Wear vs. Warning Signs at 40+__
+
+The nine non-negotiables above are the system. Running the system still produces signals worth distinguishing: some sensations are normal wear for a 45-year-old training body, and some are early warning of an injury brewing that will cost weeks of training if ignored. The practical distinction is narrow enough to teach and broad enough that most men miss it until damage has already happened.
+
+Normal wear at 40+: general post-session soreness that fades by forty-eight hours; mild stiffness in the morning that resolves within a few movements; a joint that feels "used" during warm-up but loosens with proper dynamic work; symmetric soreness across trained muscle groups; recovery improving rather than worsening as warm-up minutes accumulate.
+
+Warning signs: sharp or stabbing pain during a specific exercise or range of motion (not soreness — pain); pain that persists beyond seventy-two hours from a single session; asymmetric soreness where one side is meaningfully worse without asymmetric loading; pain that wakes you up at night or is present at rest (tendon or joint territory, not muscle); stiffness that does not resolve with warm-up; mobility decline in a specific joint over weeks without training volume change; pain that gets worse with warm-up rather than better. Doc 46 covers the pain-versus-tightness distinction for mobility work; the same logic applies inside lifting.
+
+The second-order variable worth watching: trend over weeks, not days. A single bad session is noise. The same discomfort in the same pattern across three consecutive sessions is signal. Once a pattern is visible, the right move is almost always to reduce load by twenty to thirty percent, substitute the offending exercise for a joint-friendlier alternative (see the swaps in #2 above), and hold for two to three weeks rather than push through. At forty-five the cost of ignoring signal is weeks of forced layoff and a strength drop that takes months to rebuild. The cost of a three-week reduction is nearly zero in a long training life.
+
+What this is not: an invitation to catastrophize normal training discomfort. Most signals resolve on their own with competent warm-up and modest load adjustment. The skill is not avoiding all discomfort — that produces untrained, overcautious men who never got stronger because they were afraid to work. The skill is catching the signals that differ from normal wear before they become structural damage. A forty-two-year-old who ignores these signals tends to lose a rotator cuff, a lumbar disc, or a patellar tendon at some point in the next decade. A forty-two-year-old who reads them tends to be lifting at sixty the way most sixty-year-olds never will.
+
 __Sample 40\+ Training Template__
 
 An upper/lower four\-day split offers the best balance of volume, frequency, and recovery at this stage:
