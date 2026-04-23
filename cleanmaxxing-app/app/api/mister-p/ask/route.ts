@@ -5,15 +5,17 @@ import { z } from 'zod';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import {
   embedQuestion,
-  retrieveChunksWithEmbedding,
+  retrievePersonalized,
   formatChunksForPrompt,
 } from '@/lib/mister-p/retrieve';
+import { getSemanticContextText } from '@/lib/mister-p/semantic-context';
 import {
   buildSystemPromptFull,
   buildProactiveSuggestionAdvisory,
   CIRCUIT_BREAKER_ADVISORY,
   formatGoalsBlock,
   formatUserStateBlock,
+  formatConversationHistoryBlock,
   type GoalContext,
 } from '@/lib/mister-p/prompt';
 import {
@@ -22,6 +24,7 @@ import {
   shouldTriggerProactiveSuggestion,
 } from '@/lib/mister-p/topic';
 import { getMisterPUserState } from '@/lib/mister-p/user-state';
+import { getRecentConversation } from '@/lib/mister-p/conversation';
 
 const RequestSchema = z.object({
   question: z.string().min(1).max(2000),
@@ -41,15 +44,58 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Embed the question once — used for both chunk retrieval and topic clustering.
+  // Embed the question once — used for retrieval and topic clustering.
   const questionEmbedding = await embedQuestion(question);
 
-  // Retrieve relevant POV chunks for RAG context.
-  const chunks = await retrieveChunksWithEmbedding(questionEmbedding, 5);
+  // Semantic-context augmentation. If the user has a specific_thing
+  // set or recent reflection notes, embed that text separately and
+  // pass it into retrieval as a secondary query vector. The retrieval
+  // layer finds relevant chunks automatically — Mister P does not need
+  // to be told "the user is struggling with evening routines."
+  const contextText = await getSemanticContextText(supabase, user.id);
+  const contextEmbedding = contextText
+    ? await embedQuestion(contextText)
+    : null;
+
+  const service = createServiceClient();
+
+  // Prior citation history — feeds the retrieval reranker (de-ranks
+  // docs the user has been shown 3+ times, boosts unseen docs) and the
+  // active-goals block (so Mister P can calibrate depth on familiar
+  // source docs).
+  const { data: priorQueries } = await service
+    .from('mister_p_queries')
+    .select('citations')
+    .eq('user_id', user.id)
+    .not('citations', 'is', null);
+
+  const citationCounts = new Map<string, number>();
+  for (const row of priorQueries ?? []) {
+    const citations = row.citations as Array<{ slug?: string }> | null;
+    if (!Array.isArray(citations)) continue;
+    // Count each slug once per query so a single answer citing 5 chunks
+    // of doc 21 doesn't inflate the count artificially.
+    const seenThisQuery = new Set<string>();
+    for (const c of citations) {
+      if (c?.slug && !seenThisQuery.has(c.slug)) {
+        seenThisQuery.add(c.slug);
+        citationCounts.set(c.slug, (citationCounts.get(c.slug) ?? 0) + 1);
+      }
+    }
+  }
+
+  // Personalized retrieval: question embedding + optional context
+  // embedding merged with dedupe, then reranked by slug citation
+  // counts (unseen +0.04, 3+-cited decays down to -0.15). Returns the
+  // top 5 for the prompt's retrieved-context block.
+  const chunks = await retrievePersonalized(questionEmbedding, {
+    contextEmbedding,
+    citationCounts,
+    returnCount: 5,
+  });
   const contextBlock = formatChunksForPrompt(chunks);
 
   // Topic cluster analysis — feeds §13 circuit breaker.
-  const service = createServiceClient();
   const topicAnalysis = await analyzeTopicCluster(
     service as unknown as Parameters<typeof analyzeTopicCluster>[0],
     user.id,
@@ -65,30 +111,6 @@ export async function POST(req: NextRequest) {
     .eq('user_id', user.id)
     .eq('status', 'active')
     .order('created_at', { ascending: true });
-
-  // Prior citation history — count how many past answers cited each slug.
-  // Lets Mister P calibrate depth (user has seen this doc 4 times, skip the
-  // foundations) without needing to re-explain from scratch.
-  const { data: priorQueries } = await service
-    .from('mister_p_queries')
-    .select('citations')
-    .eq('user_id', user.id)
-    .not('citations', 'is', null);
-
-  const citationCounts = new Map<string, number>();
-  for (const row of priorQueries ?? []) {
-    const citations = row.citations as Array<{ slug?: string }> | null;
-    if (!Array.isArray(citations)) continue;
-    // Count each slug once per query so a single answer citing 5 chunks of
-    // doc 21 doesn't inflate the count artificially.
-    const seenThisQuery = new Set<string>();
-    for (const c of citations) {
-      if (c?.slug && !seenThisQuery.has(c.slug)) {
-        seenThisQuery.add(c.slug);
-        citationCounts.set(c.slug, (citationCounts.get(c.slug) ?? 0) + 1);
-      }
-    }
-  }
 
   const nowMs = Date.now();
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -143,11 +165,19 @@ export async function POST(req: NextRequest) {
   const userState = await getMisterPUserState(supabase, user.id);
   const userStateBlock = formatUserStateBlock(userState);
 
+  // Rolling conversation history — last 8 Q&A pairs with truncated
+  // answers. Lets Mister P avoid repeating himself across turns and
+  // go deeper when topics recur. Uses the authed client so RLS on
+  // mister_p_queries applies; the service client would bypass it.
+  const recentPairs = await getRecentConversation(supabase, user.id);
+  const conversationHistoryBlock = formatConversationHistoryBlock(recentPairs);
+
   const systemPrompt = buildSystemPromptFull(
     contextBlock,
     advisory,
     goalsBlock,
     userStateBlock,
+    conversationHistoryBlock,
   );
 
   const result = streamText({

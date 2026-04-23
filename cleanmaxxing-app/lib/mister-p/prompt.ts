@@ -162,10 +162,12 @@ export function buildSystemPromptFull(
   retrievedChunks: string,
   advisory: string | null,
   goalsBlock: string | null,
-  userStateBlock: string | null = null
+  userStateBlock: string | null = null,
+  conversationHistoryBlock: string | null = null
 ): string {
   let prompt = MISTER_P_SYSTEM_PROMPT.replace('{retrieved_chunks}', retrievedChunks);
   if (userStateBlock) prompt += '\n\n' + userStateBlock;
+  if (conversationHistoryBlock) prompt += '\n\n' + conversationHistoryBlock;
   if (goalsBlock) prompt += '\n\n' + goalsBlock;
   if (advisory) prompt += '\n\n' + advisory;
   return prompt;
@@ -178,6 +180,32 @@ export function buildSystemPromptFull(
 // doing X for Y days…") which is the failure mode this feature is
 // most vulnerable to.
 import type { MisterPUserState } from './user-state';
+import type { ConversationPair } from './conversation';
+
+export function formatConversationHistoryBlock(
+  pairs: ConversationPair[],
+): string | null {
+  if (pairs.length === 0) return null;
+
+  const rendered = pairs
+    .map((p, i) => {
+      const n = i + 1;
+      return `[${n}] USER: ${p.question}\n[${n}] MISTER P: ${p.answer}`;
+    })
+    .join('\n\n');
+
+  return `--- CONVERSATION HISTORY ---
+The user's most recent exchanges with you, oldest first. Treat this as memory of what you've already covered with this person.
+
+Rules:
+- If the current question repeats a topic from history, do NOT restate the same answer. Go to the next layer, offer a different angle, or redirect: "We covered X last time — if it's not working, tell me what's actually stuck." Never say the same thing twice to the same user.
+- Do NOT narrate that you remember. No "As we discussed before," no "Last time you asked…," no "Circling back to your earlier question." Just don't repeat yourself. The user feels continuity when you avoid redundancy, not when you announce it.
+- If the current question is genuinely new, treat the history as context only — don't strain to connect to it.
+- If the same topic is surfacing repeatedly across many turns, consider whether the answer is "less checking, not more advice" rather than another pass at the content. The circuit-breaker advisory (when active) will formalize that; absent it, your own judgment applies.
+
+${rendered}
+--- END CONVERSATION HISTORY ---`;
+}
 
 export function formatUserStateBlock(state: MisterPUserState): string | null {
   const lines: string[] = [];
