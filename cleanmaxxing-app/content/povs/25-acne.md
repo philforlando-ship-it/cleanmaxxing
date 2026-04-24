@@ -85,6 +85,32 @@ __When in doubt, defer to your dermatologist__
 
 If you are on a prescription acne treatment, your dermatologist has seen your skin and knows your history\. General\-principle guidance like the above is useful for understanding mechanism and avoiding obvious mistakes, but it does not override specific instructions from the person treating you\. If your dermatologist says alternate nights, alternate nights\. If they say split AM and PM, split AM and PM\. Where this POV and your dermatologist disagree, your dermatologist wins\.
 
+__Body Acne — Back, Chest, Shoulders__
+
+The mechanisms and ingredients in this document were written around facial acne, which is what most men mean when they say "acne." A meaningful subset of adult men — particularly those who sweat heavily, train regularly, or live in warm climates — also deal with acne on the back, chest, and shoulders. The underlying mechanism is the same; the treatment approach is different enough that scaling up a facial routine rarely works. Body acne is sometimes called "bacne" when it is on the back specifically; the protocol below applies to all three regions.
+
+What makes body acne behave differently. Sweat and friction dominate. The face gets washed multiple times a day with a proper cleanser; the back gets a ten-second shower rinse and then immediately sits under a shirt for the next ten hours, often still damp. Gym gear, backpacks, and even waistbands introduce friction that traps bacteria and oil against the skin. Sustained training increases the load significantly — men who train hard and do not shower promptly after are the single largest cohort of body-acne sufferers. Surface area is larger and less accessible, which means spot-treating twenty scattered back breakouts is impractical and area-wide treatment (leave-on body washes, foams) has to replace spot products. The follicles on body skin tend to be larger and deeper, producing fewer but bigger lesions that are harder to clear and more likely to leave hyperpigmentation marks — which on body skin, particularly on darker skin tones, can persist for many months to years.
+
+__The protocol__
+
+Benzoyl peroxide body wash is the workhorse. Four to ten percent concentration, used three to five times per week (not daily unless well tolerated). Lather, leave on for two to three minutes before rinsing — contact time is what makes it work. PanOxyl 10%, CeraVe, and similar over-the-counter products cover this. Note the fabric-bleaching effect from the core-ingredients section: white towels and white bedding only, or expect stained patches on anything colored.
+
+Post-workout shower discipline is not optional. Skin that sits damp and bacterial for two or more hours after training is the primary body-acne driver for most active men. Shower within thirty minutes when possible; when actual showering is not available, change out of sweaty gear and wipe the back, chest, and shoulders down with a clean towel as an interim step. Sitting in sweaty training clothes through a commute home is the single most common mistake this protocol has to correct.
+
+Salicylic acid at two percent — body wash or spray — is useful as a rotation with benzoyl peroxide to reduce dryness, and as a lighter primary option for chest and abdomen where skin is typically thinner than back skin. Salicylic acid penetrates pores and handles surface congestion without the drying or bleaching of benzoyl peroxide.
+
+Fabric and fit matter. Tight, non-breathable synthetic workout shirts worn through a long workday produce more body acne than looser cotton or moisture-wicking technical fabrics that actually wick. Backpacks create localized breakout patterns on the upper back from friction and trapped heat — rotate bag position, use breathable straps, or switch to a messenger or sling bag if the pattern is severe.
+
+Laundry hygiene. Face acne responds to pillowcase rotation; body acne responds to training gear, towels, and bed sheets. Wash gym clothes after every session rather than re-wearing. Bed sheets weekly. Cheap routine hygiene, disproportionate impact.
+
+__When over-the-counter is not enough__
+
+If eight to twelve weeks of the above protocol do not clear body acne meaningfully, or if the acne is cystic, scarring, or leaving significant hyperpigmentation, the answer is dermatologist territory. Prescription options for body acne include topical clindamycin or dapsone applied to affected areas, oral antibiotics (doxycycline is the most common first-line for moderate body acne), and isotretinoin for severe cases. The isotretinoin cautions earlier in this doc apply in full; the relevant addition is that body skin is often less reactive than facial skin, so topical tretinoin used on the back can sometimes run at higher concentrations than the face tolerates. A dermatologist who regularly treats body acne will calibrate this.
+
+__Interaction with hair removal__
+
+Laser and waxing on acne-prone skin require sequencing. Do not laser or wax over actively inflamed acne. Do not start a new hair-removal treatment within two weeks of beginning a new acne active (topical or oral). Do not wax the back in the week before starting isotretinoin, and do not schedule waxing or laser in the six months following an isotretinoin course — the skin is too fragile. Doc 29 covers body-hair methods in detail and flags these interactions in the relevant sections.
+
 __Lifestyle Integration__
 
 Acne does not exist in isolation from the rest of the system\. Poor sleep, chronic stress, and diet all increase inflammation and hormonal fluctuations that worsen breakouts\. High intake of processed foods, excess sugar, and in some individuals dairy, can contribute to acne activity\. While diet is not the sole cause, it is a meaningful modifier — and one of the controllable variables worth addressing alongside topical treatment\.
