@@ -169,7 +169,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     key: 'confidence_work',
-    prompt: 'How confident do you feel at work or school?',
+    prompt: 'How confident do you feel at work or in your daily life?',
     helper: '1 = not at all, 10 = extremely',
     type: 'slider',
     min: 1,

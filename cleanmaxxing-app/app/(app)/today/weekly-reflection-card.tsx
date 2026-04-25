@@ -106,7 +106,7 @@ const DIMENSIONS: Array<{
   {
     key: 'work_confidence',
     label: 'Work',
-    prompt: 'This week, at work or school, I felt…',
+    prompt: 'This week, at work or in my daily life, I felt…',
   },
   {
     key: 'physical_confidence',

@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Cleanmaxxing — the no-bullshit appearance playbook for men over 30',
   description:
-    'Looking your best matters more after 30, not less. Cleanmaxxing is the structured, evidence-based appearance playbook for men in the years that count. No PSL scores, no alpha nonsense, no looksmaxxing radicalism.',
+    'Looking your best matters more after 30, not less. Cleanmaxxing is the structured, evidence-based appearance playbook for men in the years that count. No alpha nonsense, no looksmaxxing radicalism.',
   openGraph: {
     title: 'Cleanmaxxing — for men over 30',
     description:
@@ -227,13 +227,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Read first — essays demonstrating the brand's posture */}
+      {/* Read first — articles demonstrating the brand's posture */}
       <section className="border-t border-zinc-200 bg-zinc-50 mx-auto w-full max-w-5xl px-6 py-24 dark:border-zinc-800 dark:bg-zinc-950/40">
         <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
           Read first
         </div>
         <h2 className="mt-4 text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-          Two essays. The same posture.
+          Two articles. The same posture.
         </h2>
         <div className="mt-10 grid gap-6 md:grid-cols-2">
           <div className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-900">
@@ -250,7 +250,7 @@ export default function Home() {
               href="/tom-brady-face"
               className="mt-6 inline-flex items-center text-sm font-medium text-zinc-900 underline underline-offset-4 dark:text-zinc-100"
             >
-              Read the essay &rarr;
+              Read the article &rarr;
             </Link>
           </div>
           <div className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-900">
@@ -313,7 +313,7 @@ export default function Home() {
               href="/tom-brady-face"
               className="hover:text-zinc-700 dark:hover:text-zinc-300"
             >
-              The Brady essay
+              The Brady article
             </Link>
             <Link
               href="/is-clav-right"
