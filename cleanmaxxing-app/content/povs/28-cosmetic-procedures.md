@@ -213,6 +213,20 @@ __5\. Surgeon quality determines outcome__
 
 This is the variable that matters more than any other\. A technically skilled surgeon with a conservative aesthetic and genuine experience with male facial proportions will produce an invisible, natural result\. An inexperienced or trend\-driven surgeon will produce a result that reads as altered\. Research extensively, view results on male patients specifically, and prioritize conservatism over ambition in the consultation\.
 
+__Age-Appropriateness — When Each Procedure Lands Right__
+
+The procedures in this doc are described in technical terms — what they do, what they cost, what to look for in a surgeon. The question users in their 30s, 40s, and 50s actually ask is different: "Is this premature for me, on-time for me, or already past the optimal window?" The framework below sorts the most common procedures by the age window in which they land best, with the understanding that individual aging trajectories vary by a decade or more in either direction.
+
+Premature (mostly wrong before mid-30s for most men). Botox before age 30 is generally premature unless a specific expression line is already deeply etched, which is rare in this age range. Filler in the cheeks or tear troughs before mid-30s usually addresses a structural deficit that does not yet meaningfully exist; the result reads as altered rather than restorative. Buccal fat removal under 30 is one of the highest-regret procedures in the entire doc because the face continues losing fat naturally over the next two decades — what looks sharp at 28 looks gaunt at 45. Hair transplants under 25 are usually premature because the loss pattern has not stabilized.
+
+On-time at 35-50. This is the window in which most of the higher-ROI procedures land best. Botox for established expression lines (forehead, between brows, crow's feet) is age-appropriate here — the lines exist enough to address, the skin still responds well, and conservative dosing produces a refreshed-but-not-altered result. Microneedling and laser for skin texture, sun damage, and early collagen laxity land well in this window. Cheek-area filler (placed conservatively) addresses the early mid-face volume loss that becomes visible at 38-45. Hair transplants for stabilized loss patterns are squarely in this window. Chin implants and chin filler land best here because the underlying bone structure is stable and the surrounding facial tissue still has the support to integrate the result naturally.
+
+On-time at 50+. Procedures that address structural aging rather than fine lines. Mid-face filler restoring lost cheek and tear-trough volume is often the single highest-ROI cosmetic intervention in this window. Laser resurfacing for accumulated sun damage is more impactful at 55 than at 35 because the underlying damage is more pronounced. Eyelid surgery (blepharoplasty) for excess upper-lid skin or under-eye bags becomes age-appropriate. SMP for advanced hair loss patterns (doc 27 covers the full late-stage hair decision frame). Botox continues to work but at this age is more about preventing further deepening of existing lines than producing a dramatic refreshing.
+
+Past optimal at 50+. Buccal fat removal at this age is rarely the right move because the face has already lost significant fat naturally; further removal accelerates a hollow appearance. Aggressive jaw or chin filler chasing a sharp jawline that the underlying bone never had reads as obviously altered on a 55-year-old face. Rhinoplasty becomes harder past 55 because skin elasticity is lower and recovery is slower; not impossible, but the calculus shifts.
+
+The general rule. Procedures that add structure or restore lost volume tend to age better than procedures that subtract structure or chase a feature the face never had. This rule explains most of the regret patterns in the doc — the regret is rarely about the technical execution, it is about the procedure being wrong for the age. Pick the right procedure for where you actually are and the regret risk drops sharply.
+
 __Clean Looksmax Ranking — Male Cosmetic Procedures__
 
 __S\-tier — safe, high ROI, recommended entry points__

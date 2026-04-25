@@ -128,6 +128,22 @@ __Poor candidate__
 - Not training and not managing protein — will lose muscle and produce the Ozempic body aesthetic
 - No plan for what happens when the medication stops
 
+__GLP-1s in the Late 40s and 50s — A Different Calculation__
+
+The candidate framework above applies at every adult age, but the conversation lands differently for men in their late 40s and 50s and warrants its own treatment. The mechanism does not change; the surrounding context does.
+
+What is different in this cohort. Lifestyle interventions for weight loss have lower marginal return at 50 than at 30. The same six-month cut that produced 25 pounds at 32 produces 12-15 at 52 with the same effort, partly because of the metabolic and sleep variables doc 20 covers and partly because the recovery cost of the deficit is higher. The "have I really exhausted the lifestyle option" question that gates the GLP-1 conversation in younger candidates is sharper here — many men in this window have genuinely done the work for years and are still carrying weight that resists. The medication option is more legitimately on the table.
+
+Comorbidity load is higher. A 50-year-old considering GLP-1s often has at least one of: elevated blood pressure, prediabetes or insulin resistance, lipid abnormalities, sleep apnea, joint issues that make sustained training harder. These conditions both make the GLP-1 case stronger (the medication has demonstrated cardiovascular and metabolic benefits independent of the weight loss) and complicate the prescribing conversation (drug interactions, dose titration tolerance, comorbid medication adjustments). This is not a do-it-yourself decision in this cohort. The doctor's involvement becomes less optional than it sometimes is for a younger candidate self-pursuing telehealth scripts.
+
+Muscle preservation is harder. Doc 20 covers the anabolic-resistance shift in this window. Combined with a GLP-1's known muscle-loss bias, a 52-year-old on semaglutide without aggressive protein and resistance training is at materially higher risk of sarcopenic outcomes than a 32-year-old on the same protocol. Strategy 2 in the doc above (temporary use with habit installation) becomes effectively the only viable strategy for this cohort if the goal is to look better rather than just weigh less. Long-term passive use without training and protein discipline produces the Ozempic body aesthetic specifically on this age group, and the recovery from it is harder.
+
+Discontinuation regain risk is the same biology, materially worse outcome. Coming off a GLP-1 at 32 and regaining 60 percent of the loss is annoying. Coming off at 54 and regaining the same percentage produces a body that re-enters this age window with worse insulin sensitivity, worse joint loading, and worse metabolic markers than before treatment started. Phil's strategy 2 is not just optimal in this cohort — it is approximately mandatory if the goal is sustained outcome. The habit installation is the whole point; the medication is the temporary unlock that makes it possible.
+
+Ozempic Face shows up worse. The structural face changes covered in doc 38 are already underway in this window. Adding rapid GLP-1-driven fat loss to a face that is already losing volume produces a more pronounced hollowing than the same loss does in a younger user. This is not a reason to skip the medication; it is a reason to plan for it — slower titration, conservative end-weight, possibly considering filler-based volume restoration after weight stabilization rather than continuing to lose past the optimal aesthetic point. A surgeon-experienced consult on the latter is the right partner, not the GP managing the script.
+
+The decision frame for this cohort. Three questions in order: have I genuinely worked the lifestyle case for at least twelve months and seen it stall, do I have a doctor who will manage this against my full health picture rather than just write a script, and am I committed to the strategy-2 protocol of training, protein, and habit installation rather than passive medication-only use? Most men in this window who would benefit from GLP-1s have answered yes to the first question and not yet thought hard about the second and third.
+
 __The Strategic Protocol__
 
 - Lift three to five times per week — non\-negotiable for muscle preservation
