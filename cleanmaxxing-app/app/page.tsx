@@ -232,27 +232,49 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Read more / Clav page */}
-      <section className="mx-auto w-full max-w-3xl px-6 py-24">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-            Read first
+      {/* Read first — essays demonstrating the brand's posture */}
+      <section className="mx-auto w-full max-w-5xl px-6 py-24">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+          Read first
+        </div>
+        <h2 className="mt-4 text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+          Two essays. The same posture.
+        </h2>
+        <div className="mt-10 grid gap-6 md:grid-cols-2">
+          <div className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-900">
+            <h3 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+              Is Clav right?
+            </h3>
+            <p className="mt-3 flex-1 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+              A critical read of one of the most prominent voices in the
+              category. What holds up, what&rsquo;s partially right, and
+              what&rsquo;s wrong. This is the kind of second opinion our
+              members come for.
+            </p>
+            <Link
+              href="/is-clav-right"
+              className="mt-6 inline-flex items-center text-sm font-medium text-zinc-900 underline underline-offset-4 dark:text-zinc-100"
+            >
+              Read the full breakdown &rarr;
+            </Link>
           </div>
-          <h2 className="mt-4 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-            Is Clav right?
-          </h2>
-          <p className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-            A critical read of one of the most prominent voices in the
-            category. What holds up, what&rsquo;s partially right, and
-            what&rsquo;s wrong. This is the kind of second opinion our
-            members come for.
-          </p>
-          <Link
-            href="/is-clav-right"
-            className="mt-5 inline-flex items-center text-sm font-medium text-zinc-900 underline underline-offset-4 dark:text-zinc-100"
-          >
-            Read the full breakdown →
-          </Link>
+          <div className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-900">
+            <h3 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+              Tom Brady&rsquo;s face did more for his brand than six rings.
+            </h3>
+            <p className="mt-3 flex-1 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+              A case study in the halo effect. How appearance counteracted
+              the reasons people had to dislike Brady &mdash; and what
+              Burrow and Dart show about the same pattern in the next
+              generation.
+            </p>
+            <Link
+              href="/tom-brady-face"
+              className="mt-6 inline-flex items-center text-sm font-medium text-zinc-900 underline underline-offset-4 dark:text-zinc-100"
+            >
+              Read the essay &rarr;
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -285,7 +307,7 @@ export default function Home() {
 
       <footer className="border-t border-zinc-200 dark:border-zinc-800">
         <div className="mx-auto w-full max-w-3xl px-6 py-10 text-center text-xs text-zinc-500">
-          <div className="flex items-center justify-center gap-5">
+          <div className="flex flex-wrap items-center justify-center gap-5">
             <Link
               href="/mister-p"
               className="hover:text-zinc-700 dark:hover:text-zinc-300"
@@ -297,6 +319,12 @@ export default function Home() {
               className="hover:text-zinc-700 dark:hover:text-zinc-300"
             >
               Is Clav right?
+            </Link>
+            <Link
+              href="/tom-brady-face"
+              className="hover:text-zinc-700 dark:hover:text-zinc-300"
+            >
+              The Brady essay
             </Link>
           </div>
           <div className="mt-4">© Cleanmaxxing. 18+ only.</div>
