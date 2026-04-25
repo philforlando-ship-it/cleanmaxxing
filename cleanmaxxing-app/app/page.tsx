@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Cleanmaxxing — the no-bullshit appearance playbook for men over 30',
   description:
-    'Looking your best matters more after 30, not less. Cleanmaxxing is the structured, evidence-based appearance playbook for men in the years that count. No alpha nonsense, no looksmaxxing radicalism.',
+    'Looking your best matters more after 30, not less. Cleanmaxxing is the structured, evidence-based appearance playbook for men in the years that count. Real evidence, process over hype.',
   openGraph: {
     title: 'Cleanmaxxing — for men over 30',
     description:
