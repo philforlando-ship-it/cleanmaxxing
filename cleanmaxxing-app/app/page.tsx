@@ -226,19 +226,35 @@ export default function Home() {
       </section>
 
       {/* Read first — articles demonstrating the brand's posture */}
-      <section className="border-t border-zinc-200 bg-zinc-50 mx-auto w-full max-w-5xl px-6 py-24 dark:border-zinc-800 dark:bg-zinc-950/40">
+      <section className="border-t border-zinc-200 bg-zinc-50 mx-auto w-full max-w-6xl px-6 py-24 dark:border-zinc-800 dark:bg-zinc-950/40">
         <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
           Read first
         </div>
         <h2 className="mt-4 text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-          Two articles. The same posture.
+          Three articles. The same posture.
         </h2>
-        <div className="mt-10 grid gap-6 md:grid-cols-2">
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
           <div className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-900">
-            <h3 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+            <h3 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+              Appearance is two things at once.
+            </h3>
+            <p className="mt-3 flex-1 font-serif text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+              The visual layer everyone optimizes for, and the second layer
+              almost no one names. Why most men over 30 hit a wall doing
+              pure-visual work &mdash; and what compounds with age instead.
+            </p>
+            <Link
+              href="/two-layers"
+              className="mt-6 inline-flex items-center text-sm font-medium text-zinc-900 underline underline-offset-4 dark:text-zinc-100"
+            >
+              Read the article &rarr;
+            </Link>
+          </div>
+          <div className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-900">
+            <h3 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
               Tom Brady&rsquo;s face did more for his brand than six rings.
             </h3>
-            <p className="mt-3 flex-1 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+            <p className="mt-3 flex-1 font-serif text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
               A case study in the halo effect. How appearance counteracted
               the reasons people had to dislike Brady &mdash; and what
               Burrow and Dart show about the same pattern in the next
@@ -252,10 +268,10 @@ export default function Home() {
             </Link>
           </div>
           <div className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-900">
-            <h3 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+            <h3 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
               Is Clav right?
             </h3>
-            <p className="mt-3 flex-1 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+            <p className="mt-3 flex-1 font-serif text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
               A critical read of one of the most prominent voices in the
               category. What holds up, what&rsquo;s partially right, and
               what&rsquo;s wrong. The kind of second opinion this audience
@@ -306,6 +322,12 @@ export default function Home() {
               className="hover:text-zinc-700 dark:hover:text-zinc-300"
             >
               Who is Mister P?
+            </Link>
+            <Link
+              href="/two-layers"
+              className="hover:text-zinc-700 dark:hover:text-zinc-300"
+            >
+              Two layers
             </Link>
             <Link
               href="/tom-brady-face"
