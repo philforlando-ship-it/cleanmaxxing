@@ -44,8 +44,8 @@ export default function Home() {
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
           Cleanmaxxing is the no-bullshit appearance playbook for men in the
-          years that count. Real evidence. Process over hype. No PSL scores,
-          no alpha nonsense, no &ldquo;you should have started at 14.&rdquo;
+          years that count. Real evidence. Process over hype. No alpha
+          nonsense, no &ldquo;you should have started at 14.&rdquo;
         </p>
         <div className="mt-10 flex flex-wrap items-center gap-4">
           <Link
