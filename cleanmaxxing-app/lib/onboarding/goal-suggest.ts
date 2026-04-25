@@ -11,6 +11,7 @@ export type MotivationSegment =
   | 'specific-event'
   | 'structured-plan'
   | 'something-specific-bothering-me'
+  | 'maintenance-aging'
   | 'not-sure-yet'
   | null;
 
@@ -136,6 +137,15 @@ function motivationAdjustment(
       // match the magnitude on the other side — a user prepping for a
       // specific event should see outcome goals prominently.
       return goalType === 'outcome' ? 4 : 0;
+    case 'maintenance-aging':
+      // Maintenance/preservation frame, typically the 35+ entry-story
+      // ("things are sliding, want a structured way to defend"). Process
+      // goals dominate by definition for this case — habits that
+      // compound, not transformation projects. Magnitude is tighter
+      // than feel-better-in-own-skin (±3 vs ±4) because there's no
+      // self-acceptance vulnerability to protect against here, just a
+      // bias toward sustainable habits over before-and-after stunts.
+      return goalType === 'process' ? 3 : -3;
     case 'structured-plan':
     case 'social-professional-confidence':
     case 'something-specific-bothering-me':
@@ -170,13 +180,20 @@ function baseTierScore(tier: string | null): number {
 function appliesToAge(doc: PovDocRow, segment: AgeSegment): boolean {
   if (!doc.age_segments || doc.age_segments.length === 0) return false;
   if (doc.age_segments.includes(segment)) return true;
-  // 41-45 inheritance: until POV `_metadata.json` is bulk-updated to
-  // list '41-45' explicitly, users in the 41-45 segment fall back to
-  // docs tagged for 33-40. The aging/health content written for the
-  // late-30s case still applies cleanly to early 40s; this fallback
-  // avoids leaving 41-45 users with an empty candidate pool while the
-  // metadata catches up.
+  // Older-segment inheritance fallback: until POV `_metadata.json` is
+  // bulk-updated to list the newer top segments explicitly, users in
+  // those segments fall back to the closest older one's tags. The
+  // aging/health content written for the late-30s case still applies
+  // cleanly to early 40s and 50s; this fallback avoids leaving the
+  // top segments with empty candidate pools while metadata catches up.
   if (segment === '41-45' && doc.age_segments.includes('33-40')) return true;
+  if (
+    segment === '46-55' &&
+    (doc.age_segments.includes('41-45') ||
+      doc.age_segments.includes('33-40'))
+  ) {
+    return true;
+  }
   return false;
 }
 

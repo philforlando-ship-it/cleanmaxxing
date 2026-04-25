@@ -9,9 +9,9 @@ __The Looksmaxxing System__
 
 __What Looksmaxxing Actually Is__
 
-At its core, looksmaxxing is applied self\-improvement focused on physical appearance\. That includes body composition, grooming, style, facial aesthetics, and health habits\. None of that is new — humans have always cared about appearance\. What is new is the hyper\-analytical, systemized approach driven by online communities\. Instead of "dress better," there are now facial ratio discussions, eye canthal tilt analysis, jaw projection rankings, and tier lists of interventions\. In a way, looksmaxxing is just turning attractiveness into a strategy game\.
+At its core, looksmaxxing is applied self\-improvement focused on physical appearance\. That includes body composition, grooming, style, facial aesthetics, and health habits\. None of that is new — humans have always cared about appearance\. What is new is the hyper\-analytical, systemized approach driven by online communities\. Instead of "dress better," there are now facial ratio discussions, eye canthal tilt analysis, jaw projection rankings, and tier lists of interventions\. The category has become an ecosystem of diagnostics and protocols — useful when used well, corrosive when treated as the whole picture\.
 
-The deeper question is not whether to play — it is how to play it well\. Most people who engage with looksmaxxing either obsess over things they cannot change or ignore the highest\-leverage variables entirely\. The system below is a corrective to both mistakes\.
+The deeper question is not whether the system has merit — it does — it is how to use it without losing perspective\. Most people who engage with the looksmaxxing internet either obsess over things they cannot change or ignore the highest\-leverage variables entirely\. The system below is a corrective to both mistakes\.
 
 __The Five Layers of Looksmaxxing__
 
@@ -175,7 +175,7 @@ __The Four Biggest Traps__
 
 __Trap 1: Over\-optimization on the wrong tier__
 
-Obsessing over Tier 3 and 4 variables while Tier 1 and 2 variables remain unaddressed\. Buying peptides before fixing sleep\. Researching AI height hacks before fixing posture\. The stacking effect requires sequential execution, not parallel chaos\.
+Obsessing over Tier 3 and 4 variables while Tier 1 and 2 variables remain unaddressed\. Buying peptides before fixing sleep\. Researching obscure cosmetic procedures before fixing posture, body fat, or skincare\. The stacking effect requires sequential execution, not parallel chaos\.
 
 __Trap 2: Unrealistic standards__
 
@@ -215,7 +215,7 @@ Elite bone structure, exceptional facial proportions, or significant cosmetic en
 
 __The Social Feedback Loop__
 
-The social feedback loop is one of the most powerful and underappreciated mechanisms in looksmaxxing\. Appearance improvement → different social response → behavioral change → more attractive behavior → better social response\. Two people with identical faces: one confident and relaxed reads as an eight, one tense and anxious reads as a five\. The visual improvement is real, but the behavioral change it unlocks often produces more lasting impact than the appearance change itself\.
+The social feedback loop is one of the most powerful and underappreciated mechanisms in looksmaxxing\. Appearance improvement → different social response → behavioral change → more attractive behavior → better social response\. Two people with identical faces and identical clothes can produce dramatically different impressions on the same room — one grounded and relaxed reads as composed and attractive, the other tense and anxious reads as neither\. The visual improvement is real, but the behavioral change it unlocks often produces more lasting impact than the appearance change itself\.
 
 __Diminishing Returns__
 

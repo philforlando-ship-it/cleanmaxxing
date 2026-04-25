@@ -7,10 +7,10 @@ export const QUESTIONS: Question[] = [
   {
     key: 'age',
     prompt: 'How old are you?',
-    helper: 'Cleanmaxxing is designed for men 18\u201345.',
+    helper: 'Cleanmaxxing is designed for men 18\u201355.',
     type: 'number',
     min: 18,
-    max: 45,
+    max: 55,
     required: true,
   },
   {
@@ -56,6 +56,7 @@ export const QUESTIONS: Question[] = [
       { value: 'specific-event', label: 'I\u2019m preparing for a specific event or life change' },
       { value: 'structured-plan', label: 'I want a structured plan for self-improvement' },
       { value: 'something-specific-bothering-me', label: 'Something specific is bothering me and I want to address it' },
+      { value: 'maintenance-aging', label: 'I want to maintain how I look and defend against age-related decline' },
       { value: 'not-sure-yet', label: 'Honestly, I\u2019m not sure yet' },
     ],
     required: true,
@@ -221,5 +222,6 @@ export function ageToSegment(age: number): AgeSegment | null {
   if (age >= 25 && age <= 32) return '25-32';
   if (age >= 33 && age <= 40) return '33-40';
   if (age >= 41 && age <= 45) return '41-45';
+  if (age >= 46 && age <= 55) return '46-55';
   return null;
 }

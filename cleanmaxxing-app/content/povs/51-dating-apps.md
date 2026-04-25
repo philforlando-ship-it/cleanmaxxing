@@ -76,6 +76,10 @@ __Niche or intellectual — what works__
 
 "Spent last weekend going down a rabbit hole on Byzantine architecture\. I'm probably too interested in things most people find boring, which is either a feature or a bug depending on who you ask\." Works because it is genuinely specific, slightly self\-aware, and immediately filters for someone who finds curiosity attractive\.
 
+__Re\-entry / late 30s and beyond — what works__
+
+"Recently single after a long stretch and treating this as a new chapter rather than a project\. Run most mornings, decent at making dinner, currently learning to surf badly\. Looking for someone who's also not in a hurry\." Specific without being clinical, names the life stage without making it a confession, signals values \(patience, ongoing curiosity\) without lecturing\. The right register for a divorced or widowed user re\-entering the apps in his late 30s or 40s — neither pretending to be 28 nor leading with apology\. The matching mistake to avoid in this cohort is bios that frame the entire profile around the past relationship, the kids' schedule, or what the user is "definitely not looking for"; signal stability and current life, not the previous chapter\.
+
 __Example Hinge Prompt Answers__
 
 Hinge prompts are an underused differentiation opportunity\. Most men answer them generically\. Specific, concrete, slightly unexpected answers produce a disproportionate share of conversation starters\.

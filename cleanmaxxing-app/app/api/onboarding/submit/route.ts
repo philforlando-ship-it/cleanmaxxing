@@ -41,7 +41,7 @@ export async function POST() {
   // Reject explicitly at the API so the failure is a clear 400 instead.
   if (segment === null) {
     return NextResponse.json(
-      { error: 'Cleanmaxxing is currently designed for men 18\u201345.' },
+      { error: 'Cleanmaxxing is currently designed for men 18\u201355.' },
       { status: 400 },
     );
   }
@@ -54,6 +54,7 @@ export async function POST() {
     'specific-event',
     'structured-plan',
     'something-specific-bothering-me',
+    'maintenance-aging',
     'not-sure-yet',
   ]);
   const motivationRaw = byKey.get('motivation_segment');

@@ -42,7 +42,7 @@ type PovCategory =
 type PovMetadata = {
   priority_tier: PovTier | null;
   category: PovCategory | null;
-  age_segments: Array<'18-24' | '25-32' | '33-40' | '41-45'>;
+  age_segments: Array<'18-24' | '25-32' | '33-40' | '41-45' | '46-55'>;
 };
 
 async function loadMetadata(): Promise<Record<string, PovMetadata>> {

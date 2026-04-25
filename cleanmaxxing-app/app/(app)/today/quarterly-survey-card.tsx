@@ -38,6 +38,7 @@ const MOTIVATION_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'specific-event', label: 'I\u2019m preparing for a specific event or life change' },
   { value: 'structured-plan', label: 'I want a structured plan for self-improvement' },
   { value: 'something-specific-bothering-me', label: 'Something specific is bothering me' },
+  { value: 'maintenance-aging', label: 'I want to maintain how I look and defend against age-related decline' },
   { value: 'not-sure-yet', label: 'Honestly, I\u2019m not sure yet' },
 ];
 

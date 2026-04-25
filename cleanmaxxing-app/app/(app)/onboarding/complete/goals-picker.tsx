@@ -36,6 +36,7 @@ const AGE_SEGMENT_LABEL: Record<string, string> = {
   '25-32': '25\u201332',
   '33-40': '33\u201340',
   '41-45': '41\u201345',
+  '46-55': '46\u201355',
 };
 
 // Labels mirror the survey question options in lib/onboarding/questions.ts.

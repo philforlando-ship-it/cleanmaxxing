@@ -23,6 +23,7 @@ const VALID_MOTIVATION = new Set([
   'specific-event',
   'structured-plan',
   'something-specific-bothering-me',
+  'maintenance-aging',
   'not-sure-yet',
 ]);
 
