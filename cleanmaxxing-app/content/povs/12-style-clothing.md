@@ -77,6 +77,24 @@ __Occasion Awareness__
 
 Looking good means being calibrated to the environment\. Someone overdressed can look insecure\. Someone consistently underdressed looks careless\. The best\-dressed person in the room is often not wearing the most elaborate outfit — they are wearing the outfit best suited to the context while still presenting well\. Dressing for occasion is aesthetic empathy\. You understand what the environment calls for and meet it at a high level without dominating it\.
 
+__Style Past 45 — Different Cuts, Same Discipline__
+
+The principles in this doc apply at every age. The specific cuts that produce the right effect change once a man is past 45 in ways that the generic framework does not flag, and the failure modes are different from the under-30 failure modes. The framework still works; the specific applications shift.
+
+The silhouette has changed even if the weight hasn't. Even in lean men past 45, the chest-to-waist ratio compresses, the shoulders narrow slightly, the seat of the pants fills out less than it used to (doc 19's glute section covers the mechanism), and the face carries more weight at the same body fat percentage. Clothes that worked at 32 — slim-cut tops that emphasized the V, low-rise jeans, cropped jackets — start producing the wrong effect on the same man at 48 even when nothing about his weight has changed. The fix is not "looser everything." It is recalibrated cuts that account for the new silhouette.
+
+The two failure modes for this cohort. The first is the dad-fit trap: oversized everything, baggy pleated trousers, polo shirts a half-size too large, "comfortable" cuts that read as resignation rather than ease. This is the failure mode of the man who decided style was for younger men and gave up. The second is the slim-cut trap: skin-tight tee, painted-on chinos, cropped denim, trying to wear what worked at 32 and reading as visibly trying-too-hard. The first is more common; the second is more visible. Both are wrong for different reasons.
+
+The right register is relaxed but considered. Trousers that hit at the natural waist or just below, with enough room through the seat and thigh to drape rather than cling, taper slightly toward the ankle. Tops that follow the body without compressing it — a half-size up from "slim fit" in most brands. Sleeves that hit at the wrist bone, not above it. Jackets cut to close cleanly without straining at the chest. The whole presentation should look like clothing was made for the body inside it, not chosen to disguise it or to perform youth.
+
+Fabric quality matters more than it did at 32. A cheap tee at 28 reads as casual; the same cheap tee at 48 reads as careless. The compounding factors are real — older skin reflects light differently, posture is more variable, the proportions are less forgiving — and high-quality fabric (heavy-weight cotton tees, real leather shoes, proper wool blazers, knitwear that holds shape) does work that cheap fabric cannot do at this age. The cost calculus shifts: fewer pieces, better quality, longer life. A wardrobe of fifteen well-chosen items in this register reads materially better than a wardrobe of forty inconsistent ones.
+
+The blazer (or unstructured jacket) becomes the default layer. At 32, a casual tee and jeans is a complete outfit. At 50, the same combination usually needs a third piece — an unstructured blazer, an overshirt, a relaxed jacket — to read as deliberate rather than as having forgotten the layer. This is one of the highest-leverage age-specific moves available: not changing what's underneath, but adding a layer that brings the outfit into adult register.
+
+Glasses carry more weight as a face frame. Most men past 45 either need glasses or wear them already. Frame selection is no longer a minor decoration — at this age, the glasses become a primary face-framing element, comparable to facial hair in visual impact. A well-chosen frame in proportion to the face does substantial work; a default-prescription frame chosen at the eye doctor without consideration can drag down an otherwise-strong presentation. Doc 33 covers frame selection; the relevant point here is that for this cohort the variable matters more.
+
+What to retire. Anything bought between 25 and 35 that still has graphic content, branded logos, distressed denim, or "fashion-forward" cuts is most likely past its useful life on this body. The exceptions are narrow — band tees with genuine personal history, vintage sports jerseys worn ironically and rarely, the one designer piece that genuinely flatters the current body. The rest is the clutter that makes the wardrobe feel younger than the man wearing it. Pruning is a one-afternoon project that produces immediate calibration return.
+
 __The Biggest Mistakes__
 
 - Chasing trends — trends expire, solid style does not
