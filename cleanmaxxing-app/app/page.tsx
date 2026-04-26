@@ -97,7 +97,7 @@ export default function Home() {
           What Cleanmaxxing is
         </div>
         <h2 className="mt-4 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
-          Three things that separate this from everything else in the category.
+          What makes this different.
         </h2>
 
         <ul className="mt-12 grid gap-5 lg:grid-cols-3">
