@@ -16,18 +16,18 @@ export const metadata: Metadata = {
 const PILLARS = [
   {
     number: '01',
-    title: 'Built for adult men, not for teenagers',
-    body: 'The looksmaxxing internet is loud, young, and reckless. Cleanmaxxing is the version for men who have a job, a partner, kids, mortgages, and twenty minutes a day. Same evidence, different audience, materially different conversation.',
+    title: 'Built for adult men',
+    body: 'Most looksmaxxing content is written for 22-year-olds with all the time in the world. Cleanmaxxing is for men who have a job, a partner, kids, a mortgage, and about twenty minutes a day. The evidence is the same. The conversation is different.',
   },
   {
     number: '02',
-    title: 'Process, not performance',
-    body: 'You are not training for a photo shoot. You are playing a 20-year game. Our goals are weekly habits that compound — protein, sleep, training consistency, skincare basics, posture — not before-and-after stunts.',
+    title: 'Process beats performance',
+    body: 'You are not training for a photo shoot. You are playing a twenty-year game. Our goals are weekly habits: protein, sleep, training consistency, skincare basics, posture. Not before-and-after stunts.',
   },
   {
     number: '03',
-    title: 'Honest about what works and what doesn\u2019t',
-    body: 'We tell you when supplements are a waste, when influencers are wrong, and when the right answer is "this isn\u2019t worth fixing." Sometimes the most useful thing we say is to stop. That is the whole pitch.',
+    title: 'Honest about what works',
+    body: 'We tell you when supplements are a waste. When influencers are wrong. When the right answer is "this one isn\u2019t worth fixing." Sometimes the most useful thing we can say is to stop.',
   },
 ];
 
@@ -120,11 +120,11 @@ export default function Home() {
         </ul>
 
         <blockquote className="mt-14 border-l-2 border-zinc-300 pl-6 font-serif text-[17px] italic leading-relaxed text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
-          The four levers that actually move how a man feels about himself:
-          therapy, relationships, purpose, and physical attributes.
-          Cleanmaxxing owns the fourth &mdash; the one that produces
-          measurable progress in months, not years. The other three are real
-          and we&rsquo;re not here to compete with them.
+          There are four levers that actually move how a man feels about
+          himself: therapy, relationships, purpose, and physical attributes.
+          Cleanmaxxing owns the fourth. It&rsquo;s the one that produces
+          measurable progress in months rather than years. The other three
+          matter, often more, and we&rsquo;re not trying to compete with them.
         </blockquote>
       </section>
 
@@ -144,11 +144,11 @@ export default function Home() {
                 A guided starter plan
               </dt>
               <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-                An onboarding conversation &mdash; not a form &mdash; produces
-                three starter goals matched to your age, focus areas, and
-                where you&rsquo;re actually starting from. Ranked by what
-                actually moves the needle for a man in his 30s or 40s, not by
-                what sounds impressive.
+                An onboarding conversation, not a form, produces three
+                starter goals matched to your age, focus areas, and where
+                you&rsquo;re actually starting from. They&rsquo;re ranked by
+                what moves the needle for a man in his 30s or 40s, rather
+                than what sounds impressive.
               </dd>
             </div>
 
@@ -158,12 +158,12 @@ export default function Home() {
               </dt>
               <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
                 Direct, a little dry, willing to tell you something
-                isn&rsquo;t worth your time. Grounded in a 100&ndash;200k+
-                word corpus and aware of your goals, your check-in history,
-                and your reflection notes &mdash; so the answer you get is
-                calibrated to where you actually are, not the generic
-                version. Won&rsquo;t sell you supplements, vendor links, or
-                cycle protocols.
+                isn&rsquo;t worth your time. He&rsquo;s grounded in a
+                100&ndash;200k+ word corpus and he sees your goals, your
+                check-in history, and your reflection notes. The answer
+                you get is calibrated to where you actually are. He
+                won&rsquo;t sell you supplements, vendor links, or cycle
+                protocols.
               </dd>
             </div>
 
@@ -172,10 +172,10 @@ export default function Home() {
                 Daily check-ins, weekly reflection
               </dt>
               <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-                Ten seconds a day on your goals. Sixty seconds on Sunday on
-                how the week actually went &mdash; across four dimensions,
-                not one global self-worth score. The chart tracks the trend.
-                No streaks. No fire emojis. No global rating.
+                Ten seconds a day on your goals. About a minute on Sunday
+                on how the week went, across four dimensions rather than
+                one global self-worth score. The chart tracks the trend.
+                No streaks, no fire emojis, no global rating.
               </dd>
             </div>
 
@@ -186,8 +186,8 @@ export default function Home() {
               <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
                 One tap pauses tracking without losing your goals or
                 progress. Taking a break is a legitimate choice, sometimes
-                the correct one, and we say so. Most products in this
-                category hide this. We don&rsquo;t.
+                the right one, and we say so. Most products in this
+                category hide that option. We surface it.
               </dd>
             </div>
           </dl>
@@ -239,9 +239,9 @@ export default function Home() {
               Appearance is two things at once.
             </h3>
             <p className="mt-3 flex-1 font-serif text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-              The visual layer everyone optimizes for, and the second layer
-              almost no one names. Why most men over 30 hit a wall doing
-              pure-visual work &mdash; and what compounds with age instead.
+              The visual layer everyone optimizes for, and the second
+              layer almost no one names. Why most men over 30 hit a wall
+              doing pure-visual work, and what compounds with age instead.
             </p>
             <Link
               href="/two-layers"
@@ -256,9 +256,8 @@ export default function Home() {
             </h3>
             <p className="mt-3 flex-1 font-serif text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
               A case study in the halo effect. How appearance counteracted
-              the reasons people had to dislike Brady &mdash; and what
-              Burrow and Dart show about the same pattern in the next
-              generation.
+              the reasons people had to dislike Brady, and what Burrow and
+              Dart show about the same pattern in the next generation.
             </p>
             <Link
               href="/tom-brady-face"
