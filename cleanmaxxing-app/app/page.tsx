@@ -2,13 +2,13 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Cleanmaxxing — the no-bullshit appearance playbook for men over 30',
+  title: 'Cleanmaxxing — look and feel sharper at 35, 40, 45',
   description:
-    'Looking your best matters more after 30, not less. Cleanmaxxing is the structured, evidence-based appearance playbook for men in the years that count. Real evidence, process over hype.',
+    'A structured plan for men in their 30s and 40s. Daily check-ins, weekly reflection, and a chat assistant grounded in a 100k+ word evidence library. Twenty minutes a day.',
   openGraph: {
-    title: 'Cleanmaxxing — for men over 30',
+    title: 'Cleanmaxxing — for men in their 30s and 40s',
     description:
-      'The no-bullshit appearance playbook for men in the years that count.',
+      'A structured plan, daily check-ins, weekly reflection, a chat assistant. Twenty minutes a day.',
     type: 'website',
   },
 };
@@ -16,18 +16,18 @@ export const metadata: Metadata = {
 const PILLARS = [
   {
     number: '01',
-    title: 'Built for adult men',
-    body: 'Most looksmaxxing content is written for 22-year-olds with all the time in the world. Cleanmaxxing is for men who have a job, a partner, kids, a mortgage, and about twenty minutes a day. The evidence is the same. The conversation is different.',
+    title: 'Twenty minutes a day',
+    body: 'The plan assumes you have a job, a partner, kids, and limited evenings. Daily check-ins are ten seconds. The Sunday reflection is about a minute. Mister P is there when you have a question, not a homework assignment.',
   },
   {
     number: '02',
-    title: 'Process beats performance',
-    body: 'You are not training for a photo shoot. You are playing a twenty-year game. Our goals are weekly habits: protein, sleep, training consistency, skincare basics, posture. Not before-and-after stunts.',
+    title: 'Process over outcome',
+    body: 'Goals are weekly habits \u2014 protein, sleep, training, skincare, posture. The thing that compounds is consistency over years. That\u2019s what the app tracks.',
   },
   {
     number: '03',
     title: 'Honest about what works',
-    body: 'We tell you when supplements are a waste. When influencers are wrong. When the right answer is "this one isn\u2019t worth fixing." Sometimes the most useful thing we can say is to stop.',
+    body: 'When a supplement isn\u2019t worth the money, the app says so. When the right answer is "don\u2019t bother fixing this," it says that too. Sometimes the most useful thing it can say is stop.',
   },
 ];
 
@@ -40,11 +40,12 @@ export default function Home() {
           Cleanmaxxing
         </div>
         <h1 className="mt-6 text-4xl font-semibold tracking-tight text-zinc-900 sm:text-6xl dark:text-zinc-100">
-          Looking your best matters more after 30, not less.
+          Look and feel sharper at 35, 40, 45.
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
-          Cleanmaxxing is the no-bullshit appearance playbook for men in the
-          years that count. Real evidence. Process over hype.
+          A structured plan for men in their 30s and 40s. Daily check-ins,
+          weekly reflection, and a chat assistant grounded in a 100k+ word
+          evidence library. Twenty minutes a day.
         </p>
         <div className="mt-10 flex flex-wrap items-center gap-4">
           <Link
@@ -74,9 +75,8 @@ export default function Home() {
           <div className="mt-6 space-y-5 font-serif text-[18px] leading-relaxed text-zinc-800 dark:text-zinc-200">
             <p>
               You used to be able to skip a workout for two months and bounce
-              back. You used to be able to ignore your skin. You used to be
-              able to wear whatever your mom bought you and look fine in
-              photos.
+              back. Eat whatever was on the table. Sleep four hours and still
+              look fine in photos.
             </p>
             <p className="text-2xl font-semibold not-italic tracking-tight text-zinc-900 dark:text-zinc-100">
               That window closed.
@@ -84,8 +84,7 @@ export default function Home() {
             <p>
               The good news: most of what actually moves the needle in your
               30s and 40s is unsexy, evidence-based, and time-efficient. The
-              bad news: nobody&rsquo;s been telling you that. Cleanmaxxing
-              is the structured guide you wish you&rsquo;d had a decade ago.
+              bad news: nobody is laying it out for you. Cleanmaxxing does.
             </p>
           </div>
         </div>
@@ -94,10 +93,10 @@ export default function Home() {
       {/* Three pillars */}
       <section className="mx-auto w-full max-w-6xl px-6 py-24">
         <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-          What Cleanmaxxing is
+          The principles
         </div>
         <h2 className="mt-4 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
-          What makes this different.
+          What it&rsquo;s built around.
         </h2>
 
         <ul className="mt-12 grid gap-5 lg:grid-cols-3">
