@@ -75,3 +75,28 @@ export function deltaPhrase(from: number, to: number): string {
   if (a.score === b.score) return `still ${a.label.toLowerCase()}`;
   return `${a.label.toLowerCase()} to ${b.label.toLowerCase()}`;
 }
+
+// Age-feel dimension. Replaces "physical confidence" semantically — the
+// schema column is still physical_confidence (preserves legacy rows), but
+// new writes come from this 5-option categorical control. Values are
+// chosen at clean 2/4/6/8/10 anchors so the existing 1-10 chart, average,
+// and stuck-detection logic keep working without a numeric remap.
+export type AgeFeelOption = {
+  value: number;
+  label: string;
+};
+
+export const AGE_FEEL_OPTIONS: AgeFeelOption[] = [
+  { value: 2, label: 'Much older' },
+  { value: 4, label: 'A bit older' },
+  { value: 6, label: 'About my age' },
+  { value: 8, label: 'A bit younger' },
+  { value: 10, label: 'Much younger' },
+];
+
+export function ageFeelLabelFor(value: number): string {
+  const clamped = Math.max(1, Math.min(10, value));
+  return AGE_FEEL_OPTIONS.reduce((best, opt) =>
+    Math.abs(opt.value - clamped) < Math.abs(best.value - clamped) ? opt : best,
+  ).label;
+}

@@ -7,7 +7,7 @@ import type {
   WeeklyReflectionState,
 } from '@/lib/weekly-reflection/service';
 import { averageConfidence } from '@/lib/weekly-reflection/service';
-import { contextFor } from '@/lib/confidence/context';
+import { contextFor, ageFeelLabelFor, AGE_FEEL_OPTIONS } from '@/lib/confidence/context';
 import { ConfidenceTrendChart } from './confidence-trend-chart';
 import type { WeeklyCheckInSummary } from '@/lib/check-in/service';
 
@@ -93,37 +93,48 @@ function WeeklyRecap({
   );
 }
 
+type DimensionKind = 'slider' | 'age-feel';
+
 const DIMENSIONS: Array<{
   key: keyof ReflectionDimensions;
   label: string;
   prompt: string;
+  kind: DimensionKind;
 }> = [
   {
     key: 'social_confidence',
     label: 'Social',
     prompt: 'This week, in social situations, I felt…',
+    kind: 'slider',
   },
   {
     key: 'work_confidence',
     label: 'Work',
     prompt: 'This week, at work or in my daily life, I felt…',
+    kind: 'slider',
   },
   {
     key: 'physical_confidence',
-    label: 'Physical',
-    prompt: 'This week, in my body physically, I felt…',
+    label: 'Age',
+    prompt: 'This week, compared to my age, I looked…',
+    kind: 'age-feel',
   },
   {
     key: 'appearance_confidence',
     label: 'Appearance',
     prompt: 'This week, about how I look, I felt…',
+    kind: 'slider',
   },
 ];
 
 const DEFAULTS: ReflectionDimensions = {
   social_confidence: 5,
   work_confidence: 5,
-  physical_confidence: 5,
+  // Age-feel maps a 5-option categorical control to the existing
+  // physical_confidence column at clean anchors (2/4/6/8/10). Default
+  // pre-selects "About my age" so the user who agrees with the neutral
+  // case doesn't have to click anything.
+  physical_confidence: 6,
   appearance_confidence: 5,
 };
 
@@ -190,12 +201,24 @@ export function WeeklyReflectionCard({ initialState, weeklySummary }: Props) {
         <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
           {DIMENSIONS.map((d) => {
             const score = current[d.key];
-            const ctx = contextFor(score);
+            const label =
+              d.kind === 'age-feel'
+                ? ageFeelLabelFor(score)
+                : contextFor(score).label;
             return (
               <div key={d.key} className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800">
                 <dt className="text-xs uppercase tracking-wide text-zinc-500">{d.label}</dt>
                 <dd className="mt-1 text-base font-medium text-zinc-900 dark:text-zinc-100">
-                  {score} <span className="text-xs font-normal text-zinc-500">· {ctx.label}</span>
+                  {d.kind === 'age-feel' ? (
+                    label
+                  ) : (
+                    <>
+                      {score}{' '}
+                      <span className="text-xs font-normal text-zinc-500">
+                        · {label}
+                      </span>
+                    </>
+                  )}
                 </dd>
               </div>
             );
@@ -253,6 +276,37 @@ export function WeeklyReflectionCard({ initialState, weeklySummary }: Props) {
       <div className="mt-5 space-y-5">
         {DIMENSIONS.map((d) => {
           const score = draft[d.key];
+          if (d.kind === 'age-feel') {
+            return (
+              <div key={d.key}>
+                <label className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                  {d.prompt}
+                </label>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {AGE_FEEL_OPTIONS.map((opt) => {
+                    const selected = score === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        disabled={pending}
+                        onClick={() =>
+                          setDraft((prev) => ({ ...prev, [d.key]: opt.value }))
+                        }
+                        className={
+                          selected
+                            ? 'rounded-full bg-zinc-900 px-3.5 py-1.5 text-xs font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900'
+                            : 'rounded-full border border-zinc-300 px-3.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800'
+                        }
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          }
           const ctx = contextFor(score);
           return (
             <div key={d.key}>

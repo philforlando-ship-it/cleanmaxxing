@@ -181,6 +181,7 @@ export function buildSystemPromptFull(
 // most vulnerable to.
 import type { MisterPUserState } from './user-state';
 import type { ConversationPair } from './conversation';
+import { ageFeelLabelFor } from '@/lib/confidence/context';
 
 export function formatConversationHistoryBlock(
   pairs: ConversationPair[],
@@ -226,14 +227,22 @@ export function formatUserStateBlock(state: MisterPUserState): string | null {
   }
 
   if (state.confidence) {
-    const rows = (
-      ['social', 'work', 'physical', 'appearance'] as const
-    ).map((k) => {
-      const entry = state.confidence![k];
+    const rows: string[] = [];
+    for (const k of ['social', 'work', 'physical', 'appearance'] as const) {
+      const entry = state.confidence[k];
       const trendTag = entry.trend ? ` [${entry.trend}]` : '';
-      return `  ${k}: ${entry.value}/10${trendTag}`;
-    });
-    lines.push('latest_confidence (1-10 scale):');
+      if (k === 'physical') {
+        // The "physical" slot now stores the user's age-feel answer
+        // (categorical, mapped to 2/4/6/8/10 — see lib/confidence/context.ts).
+        // Render it as the categorical label so Mister P doesn't misread
+        // a high number as "physically confident" when it actually means
+        // "looks younger than his age."
+        rows.push(`  age_feel: ${ageFeelLabelFor(entry.value)}${trendTag}`);
+      } else {
+        rows.push(`  ${k}: ${entry.value}/10${trendTag}`);
+      }
+    }
+    lines.push('latest_confidence:');
     lines.push(...rows);
   }
 
@@ -255,6 +264,7 @@ Calibration guidance:
 - When stuck_dimensions includes appearance or social and the user asks "what more can I do," lean toward the POV material about limits of self-improvement rather than suggesting additional interventions.
 - When weekly_goal_completion_rate is under 40% and the user asks about adding something new, the better answer is often depth on what they already have, not more volume.
 - When days_since_onboarding is under 14, assume they're still in the foundations phase and pitch accordingly. When it's over 60 and confidence hasn't moved, assume they've heard the basics.
+- The age_feel field is the user's self-assessment of how their age reads in the mirror, on a five-step scale from "Much older" to "Much younger." A "Much older" or "A bit older" answer is the strongest aging-anxiety signal Mister P sees. Treat it as the user already feeling the window has closed; lean into the late-30s/40s/50s POV material rather than generic foundations. Trend on this field reflects category drift, not numeric change.
 
 ${lines.join('\n')}
 --- END USER BEHAVIORAL STATE ---`;

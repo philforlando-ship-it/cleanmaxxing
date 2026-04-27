@@ -109,12 +109,21 @@ export const QUESTIONS: Question[] = [
     required: true,
   },
   {
+    // Age-feel question. Replaces the old "physical confidence" slider for
+    // the 30+ ICP — the diagnostic that actually matters at this age is
+    // whether the mirror reads younger or older than the actual number.
+    // Value mapping mirrors lib/confidence/context.ts AGE_FEEL_OPTIONS so
+    // the onboarding write lands on the same scale as weekly reflections.
     key: 'confidence_physical',
-    prompt: 'How confident do you feel about your physical health?',
-    helper: '1 = not at all, 10 = extremely',
-    type: 'slider',
-    min: 1,
-    max: 10,
+    prompt: 'Compared to your actual age, you look\u2026',
+    type: 'choice',
+    options: [
+      { value: '2', label: 'Much older' },
+      { value: '4', label: 'A bit older' },
+      { value: '6', label: 'About my age' },
+      { value: '8', label: 'A bit younger' },
+      { value: '10', label: 'Much younger' },
+    ],
     required: true,
   },
 

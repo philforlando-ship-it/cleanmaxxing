@@ -95,7 +95,7 @@ export function WeeklyFocusCard({ goals }: Props) {
             className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
           >
             <div className="flex items-baseline justify-between gap-3">
-              <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+              <h3 className="text-base font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
                 {entry.goalTitles[0]}
                 {entry.goalTitles.length > 1 && (
                   <span className="ml-2 text-xs font-normal text-zinc-500">
@@ -118,12 +118,12 @@ export function WeeklyFocusCard({ goals }: Props) {
                 <p className="mt-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">
                   {entry.state.block.focus}
                 </p>
-                <p className="mt-1 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+                <p className="mt-1.5 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
                   {entry.state.block.detail}
                 </p>
               </>
             ) : (
-              <p className="mt-3 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+              <p className="mt-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
                 {entry.state.graduation}
               </p>
             )}
