@@ -73,12 +73,15 @@ export async function POST() {
       : null;
 
   // Persist confidence_dimensions rows from the slider answers for baseline tracking.
+  // The redundant 'overall' slider was dropped from the onboarding flow in 0.4;
+  // the four dimensions cover the same ground without asking the user to
+  // consolidate them. Existing 'overall' rows from prior users remain valid;
+  // the table's enum still permits the value.
   const confidenceMap: Array<{ key: string; dimension: 'appearance' | 'social' | 'career' | 'physical' | 'overall' }> = [
     { key: 'confidence_appearance', dimension: 'appearance' },
     { key: 'confidence_social', dimension: 'social' },
     { key: 'confidence_work', dimension: 'career' },
     { key: 'confidence_physical', dimension: 'physical' },
-    { key: 'confidence_overall', dimension: 'overall' },
   ];
 
   const confidenceRows = confidenceMap

@@ -32,18 +32,6 @@ export const QUESTIONS: Question[] = [
     required: false,
   },
   {
-    key: 'effort_level',
-    prompt: 'How would you describe your current self-improvement effort?',
-    type: 'choice',
-    options: [
-      { value: 'none', label: 'None' },
-      { value: 'occasional', label: 'Occasional' },
-      { value: 'consistent', label: 'Consistent' },
-      { value: 'obsessive', label: 'Obsessive' },
-    ],
-    required: true,
-  },
-  {
     // Motivation segment (spec §7 amendment 2026-04-15). Single-select, six
     // options. Routes experience ambiently via users.motivation_segment —
     // the segment is never surfaced back to the user as a label.
@@ -58,18 +46,6 @@ export const QUESTIONS: Question[] = [
       { value: 'something-specific-bothering-me', label: 'Something specific is bothering me and I want to address it' },
       { value: 'maintenance-aging', label: 'I want to maintain how I look and defend against age-related decline' },
       { value: 'not-sure-yet', label: 'Honestly, I\u2019m not sure yet' },
-    ],
-    required: true,
-  },
-  {
-    key: 'referral_source',
-    prompt: 'How did you hear about Cleanmaxxing?',
-    type: 'choice',
-    options: [
-      { value: 'creator', label: 'A creator I follow' },
-      { value: 'google', label: 'Google' },
-      { value: 'friend', label: 'A friend' },
-      { value: 'other', label: 'Other' },
     ],
     required: true,
   },
@@ -95,60 +71,16 @@ export const QUESTIONS: Question[] = [
     required: true,
   },
   {
-    key: 'avoid_photos',
-    prompt: 'Do you avoid photos of yourself?',
-    type: 'choice',
-    options: [
-      { value: 'never', label: 'Never' },
-      { value: 'sometimes', label: 'Sometimes' },
-      { value: 'often', label: 'Often' },
-      { value: 'always', label: 'Always' },
-    ],
-    required: true,
-  },
-  {
-    key: 'prior_routines',
-    prompt: 'Have you tried structured self-improvement routines before?',
-    type: 'choice',
-    options: [
-      { value: 'never', label: 'Never' },
-      { value: 'stuck', label: 'Yes, stuck with them' },
-      { value: 'stopped', label: 'Yes, but stopped' },
-      { value: 'active', label: 'Currently active' },
-    ],
-    required: true,
-  },
-  {
     key: 'specific_thing',
     prompt: 'Is there one specific thing you think about more than you\u2019d like to?',
     helper: 'Optional. You can skip this.',
     type: 'text',
     required: false,
   },
-  {
-    key: 'appearance_preoccupation',
-    prompt: 'How often do you think about your appearance on a typical day?',
-    helper: '1 = rarely, 10 = almost constantly',
-    type: 'slider',
-    min: 1,
-    max: 10,
-    required: true,
-  },
-  {
-    key: 'biggest_obstacle',
-    prompt: 'What\u2019s your biggest obstacle right now?',
-    type: 'choice',
-    options: [
-      { value: 'time', label: 'Time' },
-      { value: 'money', label: 'Money' },
-      { value: 'knowledge', label: 'Knowledge' },
-      { value: 'motivation', label: 'Motivation' },
-      { value: 'other', label: 'Something else' },
-    ],
-    required: true,
-  },
 
-  // Bucket C: Confidence baseline (5 sliders)
+  // Bucket C: Confidence baseline. Four dimensions, dropped the redundant
+  // "overall" slider in 0.4 — the four dimension scores cover the same
+  // ground without asking the user to consolidate them himself.
   {
     key: 'confidence_appearance',
     prompt: 'How confident do you feel about your appearance?',
@@ -179,15 +111,6 @@ export const QUESTIONS: Question[] = [
   {
     key: 'confidence_physical',
     prompt: 'How confident do you feel about your physical health?',
-    helper: '1 = not at all, 10 = extremely',
-    type: 'slider',
-    min: 1,
-    max: 10,
-    required: true,
-  },
-  {
-    key: 'confidence_overall',
-    prompt: 'Overall, how confident do you feel about yourself?',
     helper: '1 = not at all, 10 = extremely',
     type: 'slider',
     min: 1,
