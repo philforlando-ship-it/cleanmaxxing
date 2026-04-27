@@ -1,6 +1,6 @@
 ---
 slug: 24-alcohol-cannabis
-title: "Alcohol Cannabis"
+title: "Alcohol & Cannabis"
 source: "24_Alcohol_Cannabis.docx"
 ---
 __Alcohol & Cannabis__

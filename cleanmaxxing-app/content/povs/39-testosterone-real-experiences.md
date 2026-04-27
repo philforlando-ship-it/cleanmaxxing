@@ -1,6 +1,6 @@
 ---
 slug: 39-testosterone-real-experiences
-title: "Testosterone Real Experiences"
+title: "Testosterone: Real Experiences and What They Reveal"
 source: "39_Testosterone_Real_Experiences.docx"
 ---
 __Testosterone: Real Experiences and What They Reveal__

@@ -1,6 +1,6 @@
 ---
 slug: 48-skin-tone-guidance
-title: "Skin Tone Guidance"
+title: "Ethnic & Skin-Tone-Specific Guidance"
 source: "48_Skin_Tone_Guidance.docx"
 ---
 __Ethnic & Skin\-Tone\-Specific Guidance__

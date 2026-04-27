@@ -1,6 +1,6 @@
 ---
 slug: 34-recovery-tools-polish
-title: "Recovery Tools Polish"
+title: "Recovery Tools & Appearance Polish"
 source: "34_Recovery_Tools_Polish.docx"
 ---
 __Recovery Tools & Appearance Polish__

@@ -1,6 +1,6 @@
 ---
 slug: 57-skin-conditions
-title: "Skin Conditions"
+title: "Skin Conditions & Body Concerns"
 source: "57_Skin_Conditions.docx"
 ---
 __Skin Conditions & Body Concerns__

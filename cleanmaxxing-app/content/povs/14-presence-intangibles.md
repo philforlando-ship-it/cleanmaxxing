@@ -1,6 +1,6 @@
 ---
 slug: 14-presence-intangibles
-title: "Presence Intangibles"
+title: "Presence & Intangibles"
 source: "14_Presence_Intangibles.docx"
 ---
 __Presence & Intangibles__

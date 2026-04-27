@@ -1,6 +1,6 @@
 ---
 slug: 44-water-retention
-title: "Water Retention"
+title: "Water Retention & Bloating"
 source: "44_Water_Retention.docx"
 ---
 __Water Retention & Bloating__

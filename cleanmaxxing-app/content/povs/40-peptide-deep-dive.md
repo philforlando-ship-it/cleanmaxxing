@@ -1,6 +1,6 @@
 ---
 slug: 40-peptide-deep-dive
-title: "Peptide Deep Dive"
+title: "Peptide Deep Dive: Tesamorelin, CJC-1295/Ipamorelin, and AOD-9604"
 source: "40_Peptide_Deep_Dive.docx"
 ---
 __Peptide Deep Dive: Tesamorelin, CJC\-1295/Ipamorelin, and AOD\-9604__

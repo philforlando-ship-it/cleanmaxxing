@@ -1,6 +1,6 @@
 ---
 slug: 45-meal-plans
-title: "Meal Plans"
+title: "Sample Meal Plans & Food Prep"
 source: "45_Meal_Plans.docx"
 ---
 __Sample Meal Plans & Food Prep__

@@ -1,6 +1,6 @@
 ---
 slug: 16-facial-definition-jawline
-title: "Facial Definition Jawline"
+title: "Facial Definition & Jawline"
 source: "16_Facial_Definition_Jawline.docx"
 ---
 __Facial Definition & Jawline__

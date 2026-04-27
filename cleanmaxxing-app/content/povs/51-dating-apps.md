@@ -1,6 +1,6 @@
 ---
 slug: 51-dating-apps
-title: "Dating Apps"
+title: "Dating App Photography & Profile Optimization"
 source: "51_Dating_Apps.docx"
 ---
 __Dating App Photography & Profile Optimization__

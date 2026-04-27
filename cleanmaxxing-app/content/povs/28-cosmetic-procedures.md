@@ -1,6 +1,6 @@
 ---
 slug: 28-cosmetic-procedures
-title: "Cosmetic Procedures"
+title: "Cosmetic Procedures for Men"
 source: "28_Cosmetic_Procedures.docx"
 ---
 __Cosmetic Procedures for Men__

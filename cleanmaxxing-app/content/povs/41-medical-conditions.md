@@ -1,6 +1,6 @@
 ---
 slug: 41-medical-conditions
-title: "Medical Conditions"
+title: "Cleanmaxxing With Medical Conditions"
 source: "41_Medical_Conditions.docx"
 ---
 __Cleanmaxxing With Medical Conditions__

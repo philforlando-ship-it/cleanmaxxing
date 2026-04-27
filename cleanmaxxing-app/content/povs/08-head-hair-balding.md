@@ -1,6 +1,6 @@
 ---
 slug: 08-head-hair-balding
-title: "Head Hair Balding"
+title: "Head Hair & Balding"
 source: "08_Head_Hair_Balding.docx"
 ---
 __Head Hair & Balding__

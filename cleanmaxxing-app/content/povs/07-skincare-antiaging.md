@@ -1,6 +1,6 @@
 ---
 slug: 07-skincare-antiaging
-title: "Skincare AntiAging"
+title: "Skincare & Anti-Aging"
 source: "07_Skincare_AntiAging.docx"
 ---
 __Skincare & Anti\-Aging__

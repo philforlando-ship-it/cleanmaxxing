@@ -1,6 +1,6 @@
 ---
 slug: 20-diet-macros
-title: "Diet Macros"
+title: "Diet & Macros"
 source: "20_Diet_Macros.docx"
 ---
 __Diet & Macros__

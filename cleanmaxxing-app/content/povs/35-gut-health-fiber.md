@@ -1,6 +1,6 @@
 ---
 slug: 35-gut-health-fiber
-title: "Gut Health Fiber"
+title: "Gut Health, Fiber & Skin"
 source: "35_Gut_Health_Fiber.docx"
 ---
 __Gut Health, Fiber & Skin__

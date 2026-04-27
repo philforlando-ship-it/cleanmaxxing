@@ -1,6 +1,6 @@
 ---
 slug: 47-eye-health
-title: "Eye Health"
+title: "Eye Health & Appearance"
 source: "47_Eye_Health.docx"
 ---
 __Eye Health & Appearance__

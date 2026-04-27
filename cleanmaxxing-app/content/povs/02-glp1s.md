@@ -1,6 +1,6 @@
 ---
 slug: 02-glp1s
-title: "GLP1s"
+title: "GLP-1s"
 source: "02_GLP1s.docx"
 ---
 __GLP\-1s__

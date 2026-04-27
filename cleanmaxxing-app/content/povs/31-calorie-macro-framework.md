@@ -1,6 +1,6 @@
 ---
 slug: 31-calorie-macro-framework
-title: "Calorie Macro Framework"
+title: "Calorie & Macro Calculator Framework"
 source: "31_Calorie_Macro_Framework.docx"
 ---
 __Calorie & Macro Calculator Framework__

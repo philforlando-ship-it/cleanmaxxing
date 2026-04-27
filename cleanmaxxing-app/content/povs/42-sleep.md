@@ -1,6 +1,6 @@
 ---
 slug: 42-sleep
-title: "Sleep"
+title: "Sleep as an Appearance Multiplier"
 source: "42_Sleep.docx"
 ---
 __Sleep as an Appearance Multiplier__

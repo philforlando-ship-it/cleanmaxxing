@@ -1,6 +1,6 @@
 ---
 slug: 54-when-to-stop
-title: "When To Stop"
+title: "When to Stop Optimizing"
 source: "54_When_To_Stop.docx"
 ---
 __When to Stop Optimizing__

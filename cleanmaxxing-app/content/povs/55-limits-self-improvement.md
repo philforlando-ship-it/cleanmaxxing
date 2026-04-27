@@ -1,6 +1,6 @@
 ---
 slug: 55-limits-self-improvement
-title: "Limits Self Improvement"
+title: "The Limits of Self-Improvement"
 source: "55_Limits_Self_Improvement.docx"
 ---
 __The Limits of Self\-Improvement__

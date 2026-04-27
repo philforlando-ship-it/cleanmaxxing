@@ -1,6 +1,6 @@
 ---
 slug: 32-skin-texture-scarring
-title: "Skin Texture Scarring"
+title: "Skin Texture & Scarring"
 source: "32_Skin_Texture_Scarring.docx"
 ---
 __Skin Texture & Scarring__

@@ -1,6 +1,6 @@
 ---
 slug: 21-protein-creatine
-title: "Protein Creatine"
+title: "Protein & Creatine"
 source: "21_Protein_Creatine.docx"
 ---
 __Protein & Creatine__

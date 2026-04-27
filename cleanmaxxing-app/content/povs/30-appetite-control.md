@@ -1,6 +1,6 @@
 ---
 slug: 30-appetite-control
-title: "Appetite Control"
+title: "Appetite Control & Food Behavior"
 source: "30_Appetite_Control.docx"
 ---
 __Appetite Control & Food Behavior__

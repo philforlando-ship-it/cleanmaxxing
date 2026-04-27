@@ -1,6 +1,6 @@
 ---
 slug: 12-style-clothing
-title: "Style Clothing"
+title: "Style & Clothing"
 source: "12_Style_Clothing.docx"
 ---
 __Style & Clothing__

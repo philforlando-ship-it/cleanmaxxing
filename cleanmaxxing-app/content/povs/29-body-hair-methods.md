@@ -1,6 +1,6 @@
 ---
 slug: 29-body-hair-methods
-title: "Body Hair Methods"
+title: "Body Hair Removal & Grooming Methods"
 source: "29_Body_Hair_Methods.docx"
 ---
 __Body Hair Removal & Grooming Methods__

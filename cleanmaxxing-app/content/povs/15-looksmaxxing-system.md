@@ -1,6 +1,6 @@
 ---
 slug: 15-looksmaxxing-system
-title: "Looksmaxxing System"
+title: "The Looksmaxxing System"
 source: "15_Looksmaxxing_System.docx"
 ---
 __The Looksmaxxing System__

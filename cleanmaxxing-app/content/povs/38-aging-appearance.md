@@ -1,6 +1,6 @@
 ---
 slug: 38-aging-appearance
-title: "Aging Appearance"
+title: "Aging and Appearance Management"
 source: "38_Aging_Appearance.docx"
 ---
 __Aging and Appearance Management__

@@ -1,6 +1,6 @@
 ---
 slug: 43-mental-health
-title: "Mental Health"
+title: "Mental Health & Appearance"
 source: "43_Mental_Health.docx"
 ---
 __Mental Health & Appearance__

@@ -1,6 +1,6 @@
 ---
 slug: 49-nicotine-vaping
-title: "Nicotine Vaping"
+title: "Nicotine & Vaping"
 source: "49_Nicotine_Vaping.docx"
 ---
 __Nicotine & Vaping__

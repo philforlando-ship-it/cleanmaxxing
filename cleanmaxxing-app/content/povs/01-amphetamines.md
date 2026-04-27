@@ -1,6 +1,6 @@
 ---
 slug: 01-amphetamines
-title: "Amphetamines"
+title: "Amphetamines (Adderall)"
 source: "01_Amphetamines.docx"
 ---
 __Amphetamines \(Adderall\)__

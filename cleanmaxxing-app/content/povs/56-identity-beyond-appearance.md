@@ -1,6 +1,6 @@
 ---
 slug: 56-identity-beyond-appearance
-title: "Identity Beyond Appearance"
+title: "Building Identity Beyond Appearance"
 source: "56_Identity_Beyond_Appearance.docx"
 ---
 __Building Identity Beyond Appearance__

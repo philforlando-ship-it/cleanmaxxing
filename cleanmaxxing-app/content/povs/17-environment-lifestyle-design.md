@@ -1,6 +1,6 @@
 ---
 slug: 17-environment-lifestyle-design
-title: "Environment Lifestyle Design"
+title: "Environment & Lifestyle Design"
 source: "17_Environment_Lifestyle_Design.docx"
 ---
 __Environment & Lifestyle Design__

@@ -1,6 +1,6 @@
 ---
 slug: 37-cleanmaxxing-blueprint
-title: "Cleanmaxxing Blueprint"
+title: "Cleanmaxxing Execution Blueprint"
 source: "37_Cleanmaxxing_Blueprint.docx"
 ---
 __Cleanmaxxing Execution Blueprint__

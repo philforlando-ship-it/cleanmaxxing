@@ -1,6 +1,6 @@
 ---
 slug: 46-mobility
-title: "Mobility"
+title: "Stretching, Mobility & Flexibility"
 source: "46_Mobility.docx"
 ---
 __Stretching, Mobility & Flexibility__

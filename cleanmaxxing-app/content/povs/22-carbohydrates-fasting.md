@@ -1,6 +1,6 @@
 ---
 slug: 22-carbohydrates-fasting
-title: "Carbohydrates Fasting"
+title: "Carbohydrates & Fasting"
 source: "22_Carbohydrates_Fasting.docx"
 ---
 __Carbohydrates & Fasting__

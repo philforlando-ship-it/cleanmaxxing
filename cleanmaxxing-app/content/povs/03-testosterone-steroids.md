@@ -1,6 +1,6 @@
 ---
 slug: 03-testosterone-steroids
-title: "Testosterone Steroids"
+title: "Testosterone & Steroids"
 source: "03_Testosterone_Steroids.docx"
 ---
 __Testosterone & Steroids__

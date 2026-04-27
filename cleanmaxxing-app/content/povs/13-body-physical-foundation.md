@@ -1,6 +1,6 @@
 ---
 slug: 13-body-physical-foundation
-title: "Body Physical Foundation"
+title: "Body & Physical Foundation"
 source: "13_Body_Physical_Foundation.docx"
 ---
 __Body & Physical Foundation__

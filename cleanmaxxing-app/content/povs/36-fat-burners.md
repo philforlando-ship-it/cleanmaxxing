@@ -1,6 +1,6 @@
 ---
 slug: 36-fat-burners
-title: "Fat Burners"
+title: "Fat Burners & Thermogenics"
 source: "36_Fat_Burners.docx"
 ---
 __Fat Burners & Thermogenics__

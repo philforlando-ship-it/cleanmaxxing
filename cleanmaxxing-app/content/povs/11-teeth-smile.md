@@ -1,6 +1,6 @@
 ---
 slug: 11-teeth-smile
-title: "Teeth Smile"
+title: "Teeth & Smile"
 source: "11_Teeth_Smile.docx"
 ---
 __Teeth & Smile__
