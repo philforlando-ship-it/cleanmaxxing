@@ -231,12 +231,12 @@ export function formatUserStateBlock(state: MisterPUserState): string | null {
     for (const k of ['social', 'work', 'physical', 'appearance'] as const) {
       const entry = state.confidence[k];
       const trendTag = entry.trend ? ` [${entry.trend}]` : '';
-      if (k === 'physical') {
-        // The "physical" slot now stores the user's age-feel answer
+      if (k === 'appearance') {
+        // The "appearance" slot stores the user's age-feel answer
         // (categorical, mapped to 2/4/6/8/10 — see lib/confidence/context.ts).
         // Render it as the categorical label so Mister P doesn't misread
-        // a high number as "physically confident" when it actually means
-        // "looks younger than his age."
+        // a high number as "high appearance confidence" when it actually
+        // means "looks younger than his age."
         rows.push(`  age_feel: ${ageFeelLabelFor(entry.value)}${trendTag}`);
       } else {
         rows.push(`  ${k}: ${entry.value}/10${trendTag}`);

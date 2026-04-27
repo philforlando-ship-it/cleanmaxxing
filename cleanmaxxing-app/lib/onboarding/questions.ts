@@ -82,15 +82,6 @@ export const QUESTIONS: Question[] = [
   // "overall" slider in 0.4 — the four dimension scores cover the same
   // ground without asking the user to consolidate them himself.
   {
-    key: 'confidence_appearance',
-    prompt: 'How confident do you feel about your appearance?',
-    helper: '1 = not at all, 10 = extremely',
-    type: 'slider',
-    min: 1,
-    max: 10,
-    required: true,
-  },
-  {
     key: 'confidence_social',
     prompt: 'How confident do you feel in social situations?',
     helper: '1 = not at all, 10 = extremely',
@@ -109,12 +100,22 @@ export const QUESTIONS: Question[] = [
     required: true,
   },
   {
-    // Age-feel question. Replaces the old "physical confidence" slider for
-    // the 30+ ICP — the diagnostic that actually matters at this age is
-    // whether the mirror reads younger or older than the actual number.
-    // Value mapping mirrors lib/confidence/context.ts AGE_FEEL_OPTIONS so
-    // the onboarding write lands on the same scale as weekly reflections.
     key: 'confidence_physical',
+    prompt: 'How confident do you feel about your physical health?',
+    helper: '1 = not at all, 10 = extremely',
+    type: 'slider',
+    min: 1,
+    max: 10,
+    required: true,
+  },
+  {
+    // Age-feel question. The diagnostic that actually matters for the
+    // 30+ ICP is whether the mirror reads younger or older than the
+    // actual number. Lives on the confidence_appearance key (and the
+    // appearance baseline row downstream) — semantically the better
+    // home for "how my age reads" than the physical slot was.
+    // Value mapping mirrors lib/confidence/context.ts AGE_FEEL_OPTIONS.
+    key: 'confidence_appearance',
     prompt: 'Compared to your actual age, you look\u2026',
     type: 'choice',
     options: [

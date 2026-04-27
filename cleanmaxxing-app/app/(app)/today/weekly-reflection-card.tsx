@@ -115,27 +115,32 @@ const DIMENSIONS: Array<{
   },
   {
     key: 'physical_confidence',
+    label: 'Physical',
+    prompt: 'This week, physically, I felt…',
+    kind: 'slider',
+  },
+  {
+    // Age-feel lives on the appearance_confidence column. The column name
+    // is a legacy artifact from when the fourth dimension was an
+    // appearance-confidence slider; the question itself is the better fit
+    // for "appearance" semantically (how the mirror reads vs. one's age)
+    // than the original slider was.
+    key: 'appearance_confidence',
     label: 'Age',
     prompt: 'This week, compared to my age, I looked…',
     kind: 'age-feel',
-  },
-  {
-    key: 'appearance_confidence',
-    label: 'Appearance',
-    prompt: 'This week, about how I look, I felt…',
-    kind: 'slider',
   },
 ];
 
 const DEFAULTS: ReflectionDimensions = {
   social_confidence: 5,
   work_confidence: 5,
+  physical_confidence: 5,
   // Age-feel maps a 5-option categorical control to the existing
-  // physical_confidence column at clean anchors (2/4/6/8/10). Default
+  // appearance_confidence column at clean anchors (2/4/6/8/10). Default
   // pre-selects "About my age" so the user who agrees with the neutral
   // case doesn't have to click anything.
-  physical_confidence: 6,
-  appearance_confidence: 5,
+  appearance_confidence: 6,
 };
 
 export function WeeklyReflectionCard({ initialState, weeklySummary }: Props) {
