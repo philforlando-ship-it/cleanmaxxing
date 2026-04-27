@@ -13,6 +13,7 @@
  * enough to narrate it back to the user.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { getUserProfile, type UserProfile } from '@/lib/profile/service';
 
 export type ConfidenceTrend = 'rising' | 'flat' | 'declining';
 
@@ -53,6 +54,11 @@ export type MisterPUserState = {
   age: number | null;
   heightInches: number | null;
   weightLbs: number | null;
+
+  // /profile self-report. All fields nullable — the user fills in
+  // whatever they're comfortable sharing. Mister P treats absent
+  // fields as "don't know," not "default to X."
+  profile: UserProfile;
 };
 
 const MS_PER_DAY = 86_400_000;
@@ -107,21 +113,21 @@ export async function getMisterPUserState(
   const weightLbs = asPositiveInt(byKey.get('weight_lbs'));
 
   // Tenure + age.
-  const { data: profile } = await supabase
+  const { data: userRow } = await supabase
     .from('users')
     .select('created_at, age')
     .eq('id', userId)
     .maybeSingle();
-  const createdAtMs = profile?.created_at
-    ? new Date(profile.created_at as string).getTime()
+  const createdAtMs = userRow?.created_at
+    ? new Date(userRow.created_at as string).getTime()
     : now.getTime();
   const daysSinceOnboarding = Math.max(
     0,
     Math.floor((now.getTime() - createdAtMs) / MS_PER_DAY),
   );
   const age =
-    profile?.age != null && Number.isFinite(Number(profile.age))
-      ? Number(profile.age)
+    userRow?.age != null && Number.isFinite(Number(userRow.age))
+      ? Number(userRow.age)
       : null;
 
   // Weekly completion rate — share of tickable slots actually ticked
@@ -178,6 +184,8 @@ export async function getMisterPUserState(
     }
   }
 
+  const profile = await getUserProfile(supabase, userId);
+
   return {
     specificThing,
     daysSinceOnboarding,
@@ -187,6 +195,7 @@ export async function getMisterPUserState(
     age,
     heightInches,
     weightLbs,
+    profile,
   };
 }
 

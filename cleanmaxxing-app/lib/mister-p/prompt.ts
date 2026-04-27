@@ -260,6 +260,37 @@ export function formatUserStateBlock(state: MisterPUserState): string | null {
     );
   }
 
+  // Profile self-report (set on /profile). Each field is optional and
+  // null when the user hasn't volunteered it. Render only the populated
+  // fields so the block stays compact.
+  const p = state.profile;
+  const profileLines: string[] = [];
+  if (p.activity_level) profileLines.push(`  activity_level: ${p.activity_level}`);
+  if (p.training_experience)
+    profileLines.push(`  training_experience: ${p.training_experience}`);
+  if (p.daily_training_minutes !== null)
+    profileLines.push(`  daily_training_minutes: ${p.daily_training_minutes}`);
+  if (p.avg_sleep_hours !== null)
+    profileLines.push(`  avg_sleep_hours: ${p.avg_sleep_hours}`);
+  if (p.diet_restrictions)
+    profileLines.push(`  diet_restrictions: ${p.diet_restrictions}`);
+  if (p.bf_pct_self_estimate)
+    profileLines.push(`  bf_pct_self_estimate: ${p.bf_pct_self_estimate}`);
+  if (p.hair_status) profileLines.push(`  hair_status: ${p.hair_status}`);
+  if (p.skin_type !== null)
+    profileLines.push(`  skin_type_fitzpatrick: ${p.skin_type}`);
+  if (p.current_interventions.length > 0)
+    profileLines.push(
+      `  current_interventions: ${p.current_interventions.join(', ')}`,
+    );
+  if (p.budget_tier) profileLines.push(`  budget_tier: ${p.budget_tier}`);
+  if (p.relationship_status)
+    profileLines.push(`  relationship_status: ${p.relationship_status}`);
+  if (profileLines.length > 0) {
+    lines.push('profile:');
+    lines.push(...profileLines);
+  }
+
   if (lines.length === 0) return null;
 
   return `--- USER BEHAVIORAL STATE ---
@@ -274,6 +305,7 @@ Calibration guidance:
 - When days_since_onboarding is under 14, assume they're still in the foundations phase and pitch accordingly. When it's over 60 and confidence hasn't moved, assume they've heard the basics.
 - The age_feel field is the user's self-assessment of how their age reads in the mirror, on a five-step scale from "Much older" to "Much younger." A "Much older" or "A bit older" answer is the strongest aging-anxiety signal Mister P sees. Treat it as the user already feeling the window has closed; lean into the late-30s/40s/50s POV material rather than generic foundations. Trend on this field reflects category drift, not numeric change.
 - Body size grounding: when the question depends on body weight (calorie targets, daily protein in grams, "what should I eat tomorrow," dose-by-bodyweight content) and weight_lbs is "not provided," do NOT answer with a generic round number like "2,200 calories" or "180g protein." Ask the user for their current weight in one short line, explain that the answer changes meaningfully with weight, and stop. Same rule for height when the question genuinely needs it (it usually doesn't). When weight_lbs IS provided, use it explicitly: cite the number you're working from in one phrase and let the math follow. Don't lecture about why weight matters — just use it.
+- Profile fields: the profile block (when present) carries optional self-report from /profile. Use the populated fields silently — never narrate them back ("I see you said you're on TRT…"). Concretely: activity_level shifts the calorie maintenance estimate by hundreds of kcal; training_experience changes how granular the programming advice should be; current_interventions rewires what's relevant (a user on finasteride doesn't need the "should I start finasteride" 101); budget_tier shifts what to recommend (CeraVe vs in-office laser); diet_restrictions rules out food suggestions that don't fit; hair_status changes whether hair-loss material is on-topic at all; skin_type_fitzpatrick changes retinoid pacing, SPF urgency, and laser candidacy. When a field is absent and the question genuinely depends on it (e.g., a calorie question without activity_level), prefer asking once over guessing.
 
 ${lines.join('\n')}
 --- END USER BEHAVIORAL STATE ---`;
