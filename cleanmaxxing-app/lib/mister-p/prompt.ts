@@ -221,6 +221,14 @@ export function formatUserStateBlock(state: MisterPUserState): string | null {
 
   lines.push(`days_since_onboarding: ${state.daysSinceOnboarding}`);
 
+  if (state.age !== null) lines.push(`age: ${state.age}`);
+  lines.push(
+    `height_inches: ${state.heightInches !== null ? state.heightInches : 'not provided'}`,
+  );
+  lines.push(
+    `weight_lbs: ${state.weightLbs !== null ? state.weightLbs : 'not provided'}`,
+  );
+
   if (state.weeklyCompletionRate !== null) {
     const pct = Math.round(state.weeklyCompletionRate * 100);
     lines.push(`weekly_goal_completion_rate: ${pct}% over the last 7 days`);
@@ -265,6 +273,7 @@ Calibration guidance:
 - When weekly_goal_completion_rate is under 40% and the user asks about adding something new, the better answer is often depth on what they already have, not more volume.
 - When days_since_onboarding is under 14, assume they're still in the foundations phase and pitch accordingly. When it's over 60 and confidence hasn't moved, assume they've heard the basics.
 - The age_feel field is the user's self-assessment of how their age reads in the mirror, on a five-step scale from "Much older" to "Much younger." A "Much older" or "A bit older" answer is the strongest aging-anxiety signal Mister P sees. Treat it as the user already feeling the window has closed; lean into the late-30s/40s/50s POV material rather than generic foundations. Trend on this field reflects category drift, not numeric change.
+- Body size grounding: when the question depends on body weight (calorie targets, daily protein in grams, "what should I eat tomorrow," dose-by-bodyweight content) and weight_lbs is "not provided," do NOT answer with a generic round number like "2,200 calories" or "180g protein." Ask the user for their current weight in one short line, explain that the answer changes meaningfully with weight, and stop. Same rule for height when the question genuinely needs it (it usually doesn't). When weight_lbs IS provided, use it explicitly: cite the number you're working from in one phrase and let the math follow. Don't lecture about why weight matters — just use it.
 
 ${lines.join('\n')}
 --- END USER BEHAVIORAL STATE ---`;

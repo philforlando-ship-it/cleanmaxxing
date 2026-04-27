@@ -43,6 +43,16 @@ export type MisterPUserState = {
   // Matches the stuck-signal detector used on /today so surfaces stay in
   // sync. Empty when no dimension qualifies or < 3 reflections exist.
   stuckDimensions: string[];
+
+  // Onboarding self-report. Age is required at onboarding so it's
+  // always populated; height and weight are optional and frequently
+  // null. Mister P uses these to ground answers that depend on body
+  // size (calorie targets, protein grams, dose-by-bodyweight content)
+  // — and to know when to ask the user for the missing piece rather
+  // than answering with a generic placeholder.
+  age: number | null;
+  heightInches: number | null;
+  weightLbs: number | null;
 };
 
 const MS_PER_DAY = 86_400_000;
@@ -67,12 +77,19 @@ export async function getMisterPUserState(
   userId: string,
   now: Date = new Date(),
 ): Promise<MisterPUserState> {
-  // Specific-thing: quarterly answer wins over the onboarding answer.
+  // Survey responses: specific-thing (quarterly wins over onboarding),
+  // plus the optional body-size questions from onboarding. All four
+  // come from the same table; one query covers them all.
   const { data: specificRows } = await supabase
     .from('survey_responses')
     .select('question_key, response_value')
     .eq('user_id', userId)
-    .in('question_key', ['specific_thing', 'specific_thing_q1']);
+    .in('question_key', [
+      'specific_thing',
+      'specific_thing_q1',
+      'height_inches',
+      'weight_lbs',
+    ]);
   const byKey = new Map<string, string>();
   for (const row of specificRows ?? []) {
     const r = row as { question_key: string; response_value: string | null };
@@ -81,10 +98,18 @@ export async function getMisterPUserState(
   const specificThing =
     byKey.get('specific_thing_q1') ?? byKey.get('specific_thing') ?? null;
 
-  // Tenure.
+  function asPositiveInt(raw: string | undefined): number | null {
+    if (!raw) return null;
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+  const heightInches = asPositiveInt(byKey.get('height_inches'));
+  const weightLbs = asPositiveInt(byKey.get('weight_lbs'));
+
+  // Tenure + age.
   const { data: profile } = await supabase
     .from('users')
-    .select('created_at')
+    .select('created_at, age')
     .eq('id', userId)
     .maybeSingle();
   const createdAtMs = profile?.created_at
@@ -94,6 +119,10 @@ export async function getMisterPUserState(
     0,
     Math.floor((now.getTime() - createdAtMs) / MS_PER_DAY),
   );
+  const age =
+    profile?.age != null && Number.isFinite(Number(profile.age))
+      ? Number(profile.age)
+      : null;
 
   // Weekly completion rate — share of tickable slots actually ticked
   // across all active goals in the last 7 days. Mirrors
@@ -155,6 +184,9 @@ export async function getMisterPUserState(
     weeklyCompletionRate,
     confidence,
     stuckDimensions,
+    age,
+    heightInches,
+    weightLbs,
   };
 }
 
