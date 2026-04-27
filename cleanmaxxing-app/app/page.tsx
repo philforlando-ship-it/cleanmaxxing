@@ -4,11 +4,11 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Cleanmaxxing — look and feel sharper at 35, 40, 45',
   description:
-    'A structured plan for men in their 30s and 40s. Daily check-ins, weekly reflection, and a chat assistant grounded in a 100k+ word evidence library. Twenty minutes a day.',
+    'A structured plan for men in their 30s and 40s. Daily check-ins, weekly reflection, and a chat assistant grounded in a 100k+ word evidence library.',
   openGraph: {
     title: 'Cleanmaxxing — for men in their 30s and 40s',
     description:
-      'A structured plan, daily check-ins, weekly reflection, a chat assistant. Twenty minutes a day.',
+      'A structured plan, daily check-ins, weekly reflection, a chat assistant grounded in a 100k+ word evidence library.',
     type: 'website',
   },
 };
@@ -16,8 +16,8 @@ export const metadata: Metadata = {
 const PILLARS = [
   {
     number: '01',
-    title: 'Twenty minutes a day',
-    body: 'The plan assumes you have a job, a partner, kids, and limited evenings. Daily check-ins are ten seconds. The Sunday reflection is about a minute. Mister P is there when you have a question, not a homework assignment.',
+    title: 'Built for limited evenings',
+    body: 'The plan assumes you have a job, a partner, kids, and not a lot of weeknight bandwidth. Daily check-ins are ten seconds. The Sunday reflection is about a minute. Mister P is there when you have a question, not a homework assignment.',
   },
   {
     number: '02',
@@ -45,7 +45,7 @@ export default function Home() {
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
           A structured plan for men in their 30s and 40s. Daily check-ins,
           weekly reflection, and a chat assistant grounded in a 100k+ word
-          evidence library. Twenty minutes a day.
+          evidence library.
         </p>
         <div className="mt-10 flex flex-wrap items-center gap-4">
           <Link
