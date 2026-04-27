@@ -66,10 +66,7 @@ export default function Home() {
       {/* Sub-hero — "the window closed" */}
       <section className="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950/40">
         <div className="mx-auto w-full max-w-3xl px-6 py-24">
-          <p className="font-serif text-base italic text-zinc-700 dark:text-zinc-300">
-            I. What changed.
-          </p>
-          <div className="mt-6 space-y-5 font-serif text-[18px] leading-relaxed text-zinc-800 dark:text-zinc-200">
+          <div className="space-y-5 font-serif text-[18px] leading-relaxed text-zinc-800 dark:text-zinc-200">
             <p>
               You used to be able to skip a workout for two months and bounce
               back. Eat whatever was on the table. Sleep four hours and still
@@ -89,10 +86,7 @@ export default function Home() {
 
       {/* Three pillars */}
       <section className="mx-auto w-full max-w-6xl px-6 py-24">
-        <p className="font-serif text-base italic text-zinc-700 dark:text-zinc-300">
-          II.
-        </p>
-        <h2 className="mt-4 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
+        <h2 className="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
           What it&rsquo;s built around.
         </h2>
 
@@ -127,10 +121,7 @@ export default function Home() {
       {/* What we own — product features */}
       <section className="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950/40">
         <div className="mx-auto w-full max-w-3xl px-6 py-24">
-          <p className="font-serif text-base italic text-zinc-700 dark:text-zinc-300">
-            III.
-          </p>
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
+          <h2 className="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
             A structured plan, a direct assistant, a weekly rhythm.
           </h2>
 
@@ -192,10 +183,7 @@ export default function Home() {
 
       {/* Brand lines — not medical, no hierarchy */}
       <section className="mx-auto w-full max-w-3xl px-6 py-24">
-        <p className="font-serif text-base italic text-zinc-700 dark:text-zinc-300">
-          IV.
-        </p>
-        <div className="mt-10 grid gap-8 md:grid-cols-2">
+        <div className="grid gap-8 md:grid-cols-2">
           <div className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
             <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
               Not medical.
@@ -223,10 +211,7 @@ export default function Home() {
 
       {/* Read first — articles demonstrating the brand's posture */}
       <section className="border-t border-zinc-200 bg-zinc-50 mx-auto w-full max-w-6xl px-6 py-24 dark:border-zinc-800 dark:bg-zinc-950/40">
-        <p className="font-serif text-base italic text-zinc-700 dark:text-zinc-300">
-          V. Read first.
-        </p>
-        <h2 className="mt-4 text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+        <h2 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
           Three articles. The same posture.
         </h2>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
