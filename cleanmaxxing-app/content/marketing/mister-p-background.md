@@ -6,7 +6,19 @@ I'm Phil. I'm the founder of Cleanmaxxing. Mister P is the voice of the product 
 
 This is the honest version of why I built this.
 
-## The insecurities that started the whole thing
+## The peak
+
+When I was in good shape — lean, tan, training — my face changed. My jawline came out, my cheekbones emerged, the whole thing sharpened. I've got the genetics where working out makes my arms grow faster than the rest of me, and I'm tall, which is a multiplier: tall and thin reads as *tall plus thin*, and tall and fat reads as nothing at all. At peak, I went from something like a 6 to an 8. With hair, maybe 8.75. People I'd gone to high school with looked at me a few years later like they couldn't quite reconcile it with who they remembered — almost floored at how much had changed.
+
+And the attention was good. Success built on success, confidence built on confidence. People wanted to be around me more. I noticed.
+
+I also abused it.
+
+For a stretch of time, the peak made me more of a prick. The ego inflation was real. I mistook a three-year genetic window for a personality. If I'd been grounded then the way I am now — a wife I've been married to for nine years, a kid, another one about to arrive — I would have handled it better and used it for something more than a scoreboard.
+
+I didn't. And then the window closed, the way everyone's window eventually does.
+
+## How I got there
 
 I grew up with a birthmark on the right side of my forehead, about the size of a dime. Kids started pointing it out in the fourth or fifth grade. In eighth grade I arranged to have it removed — the kind of procedure that would leave a small scar, which I was fine with, and which would have healed in time for fall soccer. A week before the appointment the hospital called and cancelled because the doctor wasn't going to be in. I never rescheduled. It faded on its own over the years, but the version of me who grew up around it was already shaped.
 
@@ -26,25 +38,11 @@ From about 26 until 35, I used X Fusion hair fibers every day. Caked them on. Pi
 
 Five years after I should have stopped is when I actually stopped.
 
-## The body
+## Where I am now
 
 I've got a body that puts on muscle easily. It also puts on fat easily. For the last ten or fifteen years I've been on and off diets and on and off workout regimens, and the "off" part was almost always an injury or Halloween or a bad week of eating that rolled into Thanksgiving. Then whatever I'd built would unravel and I'd start over in January.
 
 I missed most of my thirties on the anti-aging side. For the last three or four years I've been putting on a moisturizer, probably the wrong one, inconsistently, without knowing that retinoids and SPF and cleansers were supposed to be part of it. I took a multivitamin for a long time before I learned it was basically a waste. I started fish oil again a month ago because two friends were on it. I'm taking creatine gummies for the first time in fifteen years. I'm forty-one.
-
-## The peak
-
-Here's the part of this story that matters for why this product exists.
-
-When I was in good shape — lean, tan, training — my face changed. My jawline came out, my cheekbones emerged, the whole thing sharpened. I've got the genetics where working out makes my arms grow faster than the rest of me, and I'm tall, which is a multiplier: tall and thin reads as *tall plus thin*, and tall and fat reads as nothing at all. At peak, I went from something like a 6 to an 8. With hair, maybe 8.75. People I'd gone to high school with looked at me a few years later like they couldn't quite reconcile it with who they remembered — almost floored at how much had changed.
-
-And the attention was good. Success built on success, confidence built on confidence. People wanted to be around me more. I noticed.
-
-I also abused it.
-
-For a stretch of time, the peak made me more of a prick. The ego inflation was real. I mistook a three-year genetic window for a personality. If I'd been grounded then the way I am now — a wife I've been married to for nine years, a kid, another one about to arrive — I would have handled it better and used it for something more than a scoreboard.
-
-I didn't. And then the window closed, the way everyone's window eventually does.
 
 ## The thing I figured out on the way back
 
@@ -60,7 +58,7 @@ Work on how you look — but don't tie your worth as a human being to where you 
 
 ## Who Mister P actually is
 
-Mister P is the voice I built into the product because I wanted the kind of assistant I wish I'd had at nineteen. Direct. A little dry. Grounded in a 100–200k+ word corpus of opinionated content about what actually moves the needle, and willing to cite the source on every answer.
+Mister P is the voice I built into the product because I wanted the kind of assistant I wish I'd had at thirty-five. Direct. A little dry. Grounded in a 100–200k+ word corpus of opinionated content about what actually moves the needle, and willing to cite the source on every answer.
 
 He won't sell you supplements. He won't link to vendors. He won't prescribe a cycle. He'll discuss TRT and peptides and GLP-1s as education — including the mechanisms, the risks, and the honest tradeoffs — and when a clinical question comes up he'll tell you to take it to your physician. Cleanmaxxing is not a medical service. We don't interpret lab results and we don't pretend to.
 
@@ -70,8 +68,8 @@ That isn't a content policy. That's the advice I needed and didn't get, written 
 
 ## What this is for
 
-If you're somewhere on the curve I was on — whether that's the birthmark version, or the balding version, or the on-and-off-again version, or the missed-the-anti-aging-window version, or all four — this is built for you. Not to turn you into a high-value male. Not to move you up a ranking. Not to optimize you perfectly for a season. To help you become the kind of person for whom looking and performing well is simply how you live — consistently, sustainably, and without burning yourself out in the process.
+If you're somewhere on the curve I was on — whether that's the peaked-and-watched-it-close version, or the balding version, or the on-and-off-again version, or the missed-the-anti-aging-window version, or all four — this is built for you. Not to turn you into a high-value male. Not to move you up a ranking. Not to optimize you perfectly for a season. To help you become the kind of person for whom looking and performing well is simply how you live — consistently, sustainably, and without burning yourself out in the process.
 
-That's what I'm trying to build. It's the version I would have paid for at twenty-one, at twenty-six, and at thirty-five.
+That's what I'm trying to build. It's the version I would have paid for at twenty-six, at thirty-five, and at forty-one.
 
 — Phil
