@@ -2,13 +2,13 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Cleanmaxxing — for men over 30',
+  title: 'Cleanmaxxing — look and feel sharper at 35, 40, 45',
   description:
-    'Most of what actually moves the needle in your 30s and 40s is unsexy, evidence-based, and time-efficient. Nobody is laying it out for you. Cleanmaxxing does.',
+    'A structured plan for men in their 30s and 40s. Daily check-ins, weekly reflection, and a chat assistant grounded in a 100k+ word evidence library.',
   openGraph: {
-    title: 'Cleanmaxxing — for men over 30',
+    title: 'Cleanmaxxing — for men in their 30s and 40s',
     description:
-      'A structured plan, a direct chat assistant, ten seconds a day. For the part of life where looking and feeling better starts mattering more, not less.',
+      'A structured plan, daily check-ins, weekly reflection, a chat assistant grounded in a 100k+ word evidence library.',
     type: 'website',
   },
 };
@@ -22,47 +22,34 @@ const PILLARS = [
   {
     number: '02',
     title: 'Process + outcomes',
-    body: 'Goals are weekly habits — protein, sleep, training, skincare, posture. The thing that compounds is consistency over years. That’s what the app tracks.',
+    body: 'Goals are weekly habits \u2014 protein, sleep, training, skincare, posture. The thing that compounds is consistency over years. That\u2019s what the app tracks.',
   },
   {
     number: '03',
     title: 'Honest about what works',
-    body: 'When a supplement isn’t worth the money, the app says so. When the right answer is "don’t bother fixing this," it says that too. Sometimes the most useful thing it can say is stop.',
+    body: 'When a supplement isn\u2019t worth the money, the app says so. When the right answer is "don\u2019t bother fixing this," it says that too. Sometimes the most useful thing it can say is stop.',
   },
 ];
 
 export default function Home() {
   return (
     <main className="flex flex-1 flex-col">
-      {/* Hero — "the window closed" framing leads, the description follows.
-          Earlier versions buried this hook in slot 2; promoting it puts the
-          strongest sentence on the page where it belongs and gives the
-          reader an emotional reason to care before any feature copy. */}
+      {/* Hero */}
       <section className="mx-auto w-full max-w-3xl px-6 py-24 sm:py-32">
-        <p className="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-          For men over 30.
-        </p>
-        <h1 className="mt-5 text-5xl font-semibold tracking-tight text-zinc-900 sm:text-7xl dark:text-zinc-100">
-          That window closed.
+        <h1 className="text-4xl font-semibold tracking-tight text-zinc-900 sm:text-6xl dark:text-zinc-100">
+          Look and feel sharper at 35, 40, 45.
         </h1>
-        <div className="mt-8 max-w-2xl space-y-5 font-serif text-[18px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-          <p>
-            You used to be able to skip a workout for two months and bounce
-            back. Eat whatever was on the table. Sleep four hours and still
-            look fine in photos.
-          </p>
-          <p>
-            The good news: most of what actually moves the needle in your
-            30s and 40s is unsexy, evidence-based, and time-efficient. The
-            bad news: nobody is laying it out for you. Cleanmaxxing does.
-          </p>
-        </div>
+        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
+          A structured plan for men in their 30s and 40s. Daily check-ins,
+          weekly reflection, and a chat assistant grounded in a 100k+ word
+          evidence library.
+        </p>
         <div className="mt-10 flex flex-wrap items-center gap-4">
           <Link
             href="/signup"
             className="rounded-full bg-zinc-900 px-6 py-3 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
-            Start the 14-day free trial
+            Start your 14-day trial
           </Link>
           <Link
             href="/login"
@@ -76,28 +63,22 @@ export default function Home() {
         </p>
       </section>
 
-      {/* What it is — short bridge that names the components without
-          becoming a feature dump. The earlier "A structured plan, a
-          direct assistant, a weekly rhythm" four-paragraph section was
-          cut: redundant with the pillars below and the articles further
-          down. Three sentences carry the load. */}
+      {/* Sub-hero — "the window closed" */}
       <section className="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950/40">
-        <div className="mx-auto w-full max-w-3xl px-6 py-20">
-          <div className="space-y-5 font-serif text-[17px] leading-relaxed text-zinc-800 dark:text-zinc-200">
+        <div className="mx-auto w-full max-w-3xl px-6 py-24">
+          <div className="space-y-5 font-serif text-[18px] leading-relaxed text-zinc-800 dark:text-zinc-200">
             <p>
-              Cleanmaxxing is three things working together. A guided
-              starter plan ranked for what actually moves the needle in
-              your 30s and 40s, not what sounds impressive. Mister P, a
-              direct chat assistant grounded in a 100&ndash;200k+ word
-              corpus that knows your goals and your check-in history. And
-              a weekly rhythm &mdash; ten seconds a day, sixty seconds on
-              Sunday &mdash; that quietly builds the consistency the rest
-              depends on.
+              You used to be able to skip a workout for two months and bounce
+              back. Eat whatever was on the table. Sleep four hours and still
+              look fine in photos.
+            </p>
+            <p className="text-2xl font-semibold not-italic tracking-tight text-zinc-900 dark:text-zinc-100">
+              That window closed.
             </p>
             <p>
-              No supplement upsell. No vendor links. No streaks or fire
-              emojis. When the honest answer is &ldquo;don&rsquo;t bother
-              fixing this,&rdquo; the app says that too.
+              The good news: most of what actually moves the needle in your
+              30s and 40s is unsexy, evidence-based, and time-efficient. The
+              bad news: nobody is laying it out for you. Cleanmaxxing does.
             </p>
           </div>
         </div>
@@ -137,8 +118,71 @@ export default function Home() {
         </blockquote>
       </section>
 
+      {/* What we own — product features */}
+      <section className="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950/40">
+        <div className="mx-auto w-full max-w-3xl px-6 py-24">
+          <h2 className="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
+            A structured plan, a direct assistant, a weekly rhythm.
+          </h2>
+
+          <dl className="mt-12 space-y-10">
+            <div>
+              <dt className="text-sm font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+                A guided starter plan
+              </dt>
+              <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+                An onboarding conversation, not a form, produces three
+                starter goals matched to your age, focus areas, and where
+                you&rsquo;re actually starting from. They&rsquo;re ranked by
+                what moves the needle for a man in his 30s or 40s, rather
+                than what sounds impressive.
+              </dd>
+            </div>
+
+            <div>
+              <dt className="text-sm font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+                Mister P, the assistant
+              </dt>
+              <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+                Direct, a little dry, willing to tell you something
+                isn&rsquo;t worth your time. He&rsquo;s grounded in a
+                100&ndash;200k+ word corpus and he sees your goals, your
+                check-in history, and your reflection notes. The answer
+                you get is calibrated to where you actually are. He
+                won&rsquo;t sell you supplements, vendor links, or cycle
+                protocols.
+              </dd>
+            </div>
+
+            <div>
+              <dt className="text-sm font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+                Daily check-ins, weekly reflection
+              </dt>
+              <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+                Ten seconds a day on your goals. About a minute on Sunday
+                on how the week went, across four dimensions rather than
+                one global self-worth score. The chart tracks the trend.
+                No streaks, no fire emojis, no global rating.
+              </dd>
+            </div>
+
+            <div>
+              <dt className="text-sm font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+                Step away when you need to
+              </dt>
+              <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+                One tap pauses tracking without losing your goals or
+                progress. Taking a break is a legitimate choice, sometimes
+                the right one, and we say so. Most products in this
+                category hide that option. We surface it.
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
       {/* Brand lines — not medical, no hierarchy */}
-      <section className="border-t border-zinc-200 mx-auto w-full max-w-3xl px-6 py-24 dark:border-zinc-800">
+      <section className="mx-auto w-full max-w-3xl px-6 py-24">
         <div className="grid gap-8 md:grid-cols-2">
           <div className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
             <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
@@ -208,10 +252,10 @@ export default function Home() {
               Is Clav right?
             </h3>
             <p className="mt-3 flex-1 font-serif text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-              A critical read of one of the most prominent voices in the
-              category. What holds up, what&rsquo;s partially right, and
-              what&rsquo;s wrong. The kind of second opinion this audience
-              came here for.
+              A critical read of Clavicular&rsquo;s framework. What holds
+              up, what&rsquo;s partially right, and what&rsquo;s wrong. A
+              second opinion on one of the most followed voices on men&rsquo;s
+              appearance.
             </p>
             <Link
               href="/is-clav-right"
