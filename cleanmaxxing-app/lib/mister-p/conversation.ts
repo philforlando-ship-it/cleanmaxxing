@@ -18,21 +18,40 @@ export type ConversationPair = {
   created_at: string;
 };
 
-const DEFAULT_LIMIT = 8;
+// Global (unscoped) /today chat keeps a tight 8-pair window — the global
+// thread cuts across topics, so longer history pulls in context that
+// rarely recurs. Per-goal threads run deeper because the topic stays
+// stable across turns; 15 pairs gives enough continuity for a user
+// returning to a goal-specific conversation a week later without
+// blowing the prompt's token budget.
+const DEFAULT_LIMIT_GLOBAL = 8;
+const DEFAULT_LIMIT_PER_GOAL = 15;
 const ANSWER_MAX_CHARS = 800;
 const QUESTION_MAX_CHARS = 300;
 
 export async function getRecentConversation(
   supabase: SupabaseClient,
   userId: string,
-  limit: number = DEFAULT_LIMIT,
+  options: { goalId?: string | null; limit?: number } = {},
 ): Promise<ConversationPair[]> {
-  const { data, error } = await supabase
+  const { goalId = null, limit } = options;
+  const effectiveLimit =
+    limit ?? (goalId ? DEFAULT_LIMIT_PER_GOAL : DEFAULT_LIMIT_GLOBAL);
+
+  let query = supabase
     .from('mister_p_queries')
     .select('question, answer, created_at')
-    .eq('user_id', userId)
+    .eq('user_id', userId);
+
+  // Scope to the right thread. When goalId is provided, only that
+  // goal's messages load. When null, the global thread loads — which
+  // means messages with no goal_id, so per-goal threads don't bleed
+  // into /today's general chat surface.
+  query = goalId ? query.eq('goal_id', goalId) : query.is('goal_id', null);
+
+  const { data, error } = await query
     .order('created_at', { ascending: false })
-    .limit(limit);
+    .limit(effectiveLimit);
 
   if (error) return [];
 

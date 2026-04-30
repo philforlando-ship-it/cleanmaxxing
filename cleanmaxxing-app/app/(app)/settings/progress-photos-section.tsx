@@ -10,7 +10,7 @@ import Link from 'next/link';
 
 export type ProgressPhotoEntry = {
   id: string;
-  slot: 'baseline' | 'progress_90d';
+  slot: 'baseline' | 'progress_30d' | 'progress_90d' | 'progress_180d';
   captured_at: string;
   signedUrl: string | null;
 };
@@ -21,7 +21,9 @@ type Props = {
 
 const SLOT_LABEL: Record<ProgressPhotoEntry['slot'], string> = {
   baseline: 'Baseline',
+  progress_30d: '30-day',
   progress_90d: '90-day',
+  progress_180d: '180-day',
 };
 
 function formatDate(iso: string): string {
@@ -93,7 +95,7 @@ export function ProgressPhotosSection({ photos }: Props) {
       {photos.length === 0 ? (
         <div className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
           No photos captured yet.{' '}
-          <Link href="/progress" className="underline">
+          <Link href="/profile" className="underline">
             Capture a baseline
           </Link>{' '}
           to start the comparison.

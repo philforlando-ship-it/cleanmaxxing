@@ -12,9 +12,18 @@ type Props = {
   // onboarding rather than a cold-open. Effect stops as soon as the
   // user saves a check-in (parent recomputes spotlight off).
   spotlight?: boolean;
+  // Source slugs that have a corresponding entry in WeeklyFocusCard
+  // (i.e. the slug has an authored onramp/walkthrough). Used to gate
+  // the "Jump to focus" link per goal — we don't render a deep-link
+  // when there's nothing to scroll to.
+  slugsWithFocus?: string[];
 };
 
-export function DailyCheckInCard({ initialState, spotlight = false }: Props) {
+export function DailyCheckInCard({
+  initialState,
+  spotlight = false,
+  slugsWithFocus = [],
+}: Props) {
   const router = useRouter();
   const [state, setState] = useState<TodayCheckInState>(initialState);
   const [draft, setDraft] = useState<Record<string, boolean>>(() =>
@@ -25,15 +34,30 @@ export function DailyCheckInCard({ initialState, spotlight = false }: Props) {
 
   const alreadyCheckedIn = state.check_in_id !== null;
   const hasGoals = state.goals.length > 0;
+  const focusSlugSet = new Set(slugsWithFocus);
+
+  // Smooth-scroll to the matching focus entry if it exists in the DOM.
+  // The id pattern matches WeeklyFocusCard's per-entry `<li id="focus-<slug>">`.
+  // If the anchor isn't present (e.g. edge case where the card is hidden
+  // for stepped-away users), we no-op rather than firing an unhelpful
+  // hash change.
+  function jumpToFocus(slug: string) {
+    const target = document.getElementById(`focus-${slug}`);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 
   function toggle(goalId: string) {
     setDraft((prev) => ({ ...prev, [goalId]: !prev[goalId] }));
   }
 
-  function askMisterPAbout(goalTitle: string) {
+  function askMisterPAbout(goalId: string, goalTitle: string) {
     const question = `Tell me more about the goal "${goalTitle}" — what it means and how to approach it.`;
+    // Pass goalId so the chat card routes this prefill into the
+    // matching goal's thread instead of dropping it into General.
     window.dispatchEvent(
-      new CustomEvent('mister-p:prefill', { detail: { question } })
+      new CustomEvent('mister-p:prefill', { detail: { question, goalId } }),
     );
   }
 
@@ -124,7 +148,7 @@ export function DailyCheckInCard({ initialState, spotlight = false }: Props) {
       </p>
 
       <ul className="mt-4 space-y-2">
-        {state.goals.map((g) => {
+        {state.goals.map((g, i) => {
           const checked = Boolean(draft[g.goal_id]);
           const hasDetail = Boolean(g.description || g.plain_language);
           return (
@@ -140,6 +164,9 @@ export function DailyCheckInCard({ initialState, spotlight = false }: Props) {
                   disabled={pending}
                   className="mt-0.5 h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600"
                 />
+                <span className="mt-0.5 shrink-0 font-mono text-xs text-zinc-500">
+                  {String.fromCharCode(65 + i)}.
+                </span>
                 <span
                   className={
                     checked
@@ -149,6 +176,18 @@ export function DailyCheckInCard({ initialState, spotlight = false }: Props) {
                 >
                   {g.title}
                 </span>
+                {g.source_slug && focusSlugSet.has(g.source_slug) && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      jumpToFocus(g.source_slug as string);
+                    }}
+                    className="shrink-0 text-xs text-zinc-500 underline decoration-dotted underline-offset-2 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                  >
+                    Focus →
+                  </button>
+                )}
               </label>
               {hasDetail && (
                 <details className="group border-t border-zinc-200 px-3 py-2 dark:border-zinc-800">
@@ -164,7 +203,7 @@ export function DailyCheckInCard({ initialState, spotlight = false }: Props) {
                     )}
                     <button
                       type="button"
-                      onClick={() => askMisterPAbout(g.title)}
+                      onClick={() => askMisterPAbout(g.goal_id, g.title)}
                       className="mt-1 inline-flex items-center rounded-md border border-zinc-300 px-2.5 py-1 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
                     >
                       Ask Mister P about this

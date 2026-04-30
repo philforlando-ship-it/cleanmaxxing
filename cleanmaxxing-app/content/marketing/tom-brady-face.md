@@ -1,4 +1,4 @@
-# Tom Brady's Face Did More for His Brand Than Six Rings
+# Tom Brady's face and physique did more for his brand than seven rings
 
 Tom Brady is the most decorated quarterback in NFL history. He's also, by any honest measure, one of the most likable athletes alive. And if you think those two things are unrelated to the fact that he looks like he was assembled in a lab, you're not paying attention.
 

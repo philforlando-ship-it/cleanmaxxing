@@ -14,6 +14,7 @@ import {
   buildProactiveSuggestionAdvisory,
   CIRCUIT_BREAKER_ADVISORY,
   formatGoalsBlock,
+  formatActiveGoalFocusBlock,
   formatUserStateBlock,
   formatConversationHistoryBlock,
   type GoalContext,
@@ -28,6 +29,9 @@ import { getRecentConversation } from '@/lib/mister-p/conversation';
 
 const RequestSchema = z.object({
   question: z.string().min(1).max(2000),
+  // Optional goal_id binds this turn (and the persisted row) to a
+  // specific goal's chat thread. Omit for the /today global chat.
+  goal_id: z.string().uuid().nullable().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -35,13 +39,28 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
-  const { question } = parsed.data;
+  const { question, goal_id: requestedGoalId = null } = parsed.data;
 
   // Require auth
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Validate goal_id ownership before we let it scope anything. A
+  // goal_id from another user must never write into this user's
+  // thread or read their per-goal history. Set to null on any miss
+  // rather than 400ing — the chat still works, just unscoped.
+  let goalId: string | null = null;
+  if (requestedGoalId) {
+    const { data: ownedGoal } = await supabase
+      .from('goals')
+      .select('id')
+      .eq('id', requestedGoalId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (ownedGoal) goalId = requestedGoalId;
   }
 
   // Embed the question once — used for retrieval and topic clustering.
@@ -52,7 +71,18 @@ export async function POST(req: NextRequest) {
   // pass it into retrieval as a secondary query vector. The retrieval
   // layer finds relevant chunks automatically — Mister P does not need
   // to be told "the user is struggling with evening routines."
-  const contextText = await getSemanticContextText(supabase, user.id);
+  //
+  // Skipped for goal-scoped chats. The user explicitly opened the
+  // thread from a specific goal; the focused goal's embedding (built
+  // below) is the right secondary signal there. Pulling in broad
+  // life-context retrieval too lets reflection-note language bleed
+  // across topic boundaries — e.g. a passing peptide reference in a
+  // weekly note keeps surfacing in the jawline thread, even after
+  // the chat is cleared, because the note text persists outside
+  // mister_p_queries.
+  const contextText = goalId
+    ? null
+    : await getSemanticContextText(supabase, user.id);
   const contextEmbedding = contextText
     ? await embedQuestion(contextText)
     : null;
@@ -84,30 +114,22 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Personalized retrieval: question embedding + optional context
-  // embedding merged with dedupe, then reranked by slug citation
-  // counts (unseen +0.04, 3+-cited decays down to -0.15). Returns the
-  // top 5 for the prompt's retrieved-context block.
-  const chunks = await retrievePersonalized(questionEmbedding, {
-    contextEmbedding,
-    citationCounts,
-    returnCount: 5,
-  });
-  const contextBlock = formatChunksForPrompt(chunks);
-
-  // Topic cluster analysis — feeds §13 circuit breaker.
-  const topicAnalysis = await analyzeTopicCluster(
-    service as unknown as Parameters<typeof analyzeTopicCluster>[0],
-    user.id,
-    questionEmbedding
-  );
-  const triggerCircuitBreaker = shouldTriggerCircuitBreaker(topicAnalysis);
-
   // Active goals for the user — injected into the system prompt so Mister P
-  // can anchor answers to what they're actually working on.
+  // can anchor answers to what they're actually working on. We pull `id`
+  // alongside the rest because when the chat is opened from a goal page
+  // we need to match the request's goal_id back to the right entry to
+  // build the focus block below.
+  //
+  // Loaded BEFORE retrieval so the focused goal's title + description
+  // can seed a third query vector (focus embedding) and its
+  // source_slug can drive the per-slug rerank bonus. Prior structure
+  // ran retrieval first and goals second; that order meant retrieval
+  // had no goal context, so vague questions ("tell me more about
+  // this") drifted to whatever happened to land near a generic
+  // question vector.
   const { data: activeGoalRows } = await supabase
     .from('goals')
-    .select('title, description, source_slug, goal_type, created_at')
+    .select('id, title, description, source_slug, goal_type, created_at')
     .eq('user_id', user.id)
     .eq('status', 'active')
     .order('created_at', { ascending: true });
@@ -115,7 +137,12 @@ export async function POST(req: NextRequest) {
   const nowMs = Date.now();
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
+  // Build goals + parallel id array. GoalContext deliberately omits id
+  // (the goals block is for prompt context, not for routing decisions
+  // downstream), so the id mapping lives here only.
+  const goalIds: string[] = [];
   const goals: GoalContext[] = (activeGoalRows ?? []).map((g) => {
+    goalIds.push(g.id as string);
     const createdAt = g.created_at ? new Date(g.created_at).getTime() : nowMs;
     const daysActive = Math.max(0, Math.floor((nowMs - createdAt) / MS_PER_DAY));
     const priorCitationCount = g.source_slug
@@ -130,6 +157,49 @@ export async function POST(req: NextRequest) {
       priorCitationCount,
     };
   });
+
+  // Identify the focused goal (if any) BEFORE retrieval. Used twice:
+  // once to seed retrieval (focus embedding + slug-bonus reranking),
+  // once to inject the prompt's USER'S CURRENT FOCUS block further
+  // down. Goals query above is filtered to active; a goalId pointing
+  // to a completed/abandoned goal won't match here, which is fine.
+  const focusedGoalIndex = goalId ? goalIds.indexOf(goalId) : -1;
+  const focusedGoal: GoalContext | null =
+    focusedGoalIndex >= 0 ? goals[focusedGoalIndex] : null;
+
+  // Focus embedding: vector representation of "what this goal is
+  // about" so vague questions still anchor to relevant chunks.
+  // Combined with focusedSlug bonus in retrieve, this prevents the
+  // "tell me more about this" → unrelated drift that the prompt-only
+  // focus block alone couldn't fix.
+  const focusText = focusedGoal
+    ? focusedGoal.description
+      ? `${focusedGoal.title}. ${focusedGoal.description}`
+      : focusedGoal.title
+    : null;
+  const focusEmbedding = focusText ? await embedQuestion(focusText) : null;
+
+  // Personalized retrieval: question + optional context + optional
+  // focus embeddings merged with dedupe, then reranked by slug
+  // citation counts (unseen +0.04, 3+-cited decays down to -0.15)
+  // and a focused-slug bonus (+0.10) when the chat is goal-scoped.
+  // Returns the top 5 for the prompt's retrieved-context block.
+  const chunks = await retrievePersonalized(questionEmbedding, {
+    contextEmbedding,
+    focusEmbedding,
+    focusedSlug: focusedGoal?.source_slug ?? null,
+    citationCounts,
+    returnCount: 5,
+  });
+  const contextBlock = formatChunksForPrompt(chunks);
+
+  // Topic cluster analysis — feeds §13 circuit breaker.
+  const topicAnalysis = await analyzeTopicCluster(
+    service as unknown as Parameters<typeof analyzeTopicCluster>[0],
+    user.id,
+    questionEmbedding
+  );
+  const triggerCircuitBreaker = shouldTriggerCircuitBreaker(topicAnalysis);
 
   // Set of POV slugs the user has actually accepted as goals. Mister P
   // should only point to a full POV doc when it backs one of the user's
@@ -158,6 +228,12 @@ export async function POST(req: NextRequest) {
 
   const goalsBlock = formatGoalsBlock(goals);
 
+  // The focused goal was already resolved above (before retrieval) so
+  // both the retrieval bias and this prompt block use the same source
+  // of truth. If no goal is in focus, the block returns null and is
+  // dropped from the assembled prompt.
+  const activeGoalFocusBlock = formatActiveGoalFocusBlock(focusedGoal);
+
   // Behavioral state — specific_thing, tenure, weekly completion,
   // confidence trajectory, stuck dimensions. Cheap to fetch alongside
   // everything else already on this request; the prompt-side copy
@@ -165,11 +241,17 @@ export async function POST(req: NextRequest) {
   const userState = await getMisterPUserState(supabase, user.id);
   const userStateBlock = formatUserStateBlock(userState);
 
-  // Rolling conversation history — last 8 Q&A pairs with truncated
-  // answers. Lets Mister P avoid repeating himself across turns and
-  // go deeper when topics recur. Uses the authed client so RLS on
-  // mister_p_queries applies; the service client would bypass it.
-  const recentPairs = await getRecentConversation(supabase, user.id);
+  // Rolling conversation history — scoped to the current thread.
+  // When goalId is set, we load up to 15 prior Q&A pairs from that
+  // goal's thread; otherwise we load up to 8 pairs from the global
+  // (goal_id IS NULL) /today thread. Per-goal and global histories
+  // are kept disjoint so Mister P doesn't bleed unrelated topic
+  // context into a focused goal conversation. Uses the authed client
+  // so RLS on mister_p_queries applies; the service client would
+  // bypass it.
+  const recentPairs = await getRecentConversation(supabase, user.id, {
+    goalId,
+  });
   const conversationHistoryBlock = formatConversationHistoryBlock(recentPairs);
 
   const systemPrompt = buildSystemPromptFull(
@@ -178,6 +260,7 @@ export async function POST(req: NextRequest) {
     goalsBlock,
     userStateBlock,
     conversationHistoryBlock,
+    activeGoalFocusBlock,
   );
 
   const result = streamText({
@@ -192,6 +275,7 @@ export async function POST(req: NextRequest) {
 
       await service.from('mister_p_queries').insert({
         user_id: user.id,
+        goal_id: goalId,
         question,
         answer: text,
         citations,

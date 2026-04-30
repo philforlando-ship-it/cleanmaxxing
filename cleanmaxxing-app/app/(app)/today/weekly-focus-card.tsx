@@ -13,6 +13,8 @@ import Link from 'next/link';
 import { onrampFor, currentState, isBaselineStage } from '@/lib/content/onramp';
 import type { BaselineStage, OnrampState } from '@/lib/content/onramp';
 import { povExists } from '@/lib/content/pov';
+import type { WeeklyCheckInSummary } from '@/lib/check-in/service';
+import { AdjustBaseline } from './adjust-baseline';
 
 type ActiveGoal = {
   id: string;
@@ -24,20 +26,40 @@ type ActiveGoal = {
 
 type Props = {
   goals: ActiveGoal[];
+  // Rolling 7-day check-in summary, folded into this card's header so
+  // the "what to focus on" surface and the "what got done this week"
+  // surface read as one weekly narrative instead of two separate
+  // strips. Pass null to suppress the count line entirely (e.g. when
+  // the user has zero goals or possible == 0).
+  weeklySummary: WeeklyCheckInSummary | null;
 };
 
 type Entry = {
   slug: string;
   // Earliest-accepted goal in the group drives the week computation and
   // is the link target for "Open goal →". Goals sharing a POV share the
-  // walkthrough progression by design; baseline-stage editing happens on
-  // the goal detail page, not here.
+  // walkthrough progression by design.
   anchorGoalId: string;
+  // Stage that drove the week computation. Surfaced inline so the user
+  // can see why they're at "Week N" (e.g. "Some experience" → week 5)
+  // and adjust without leaving /today via the AdjustBaseline control
+  // below.
+  anchorStage: BaselineStage;
   goalTitles: string[];
   state: OnrampState;
 };
 
-export function WeeklyFocusCard({ goals }: Props) {
+// Mirror of BASELINE_LABEL in adjust-baseline.tsx. Defined inline here
+// so the server component can render the label in the heading without
+// crossing the client/server boundary for a 4-key constant.
+const STAGE_LABEL: Record<BaselineStage, string> = {
+  new: 'Just starting',
+  light: 'Some experience',
+  partial: 'Mostly consistent',
+  established: 'Already consistent',
+};
+
+export function WeeklyFocusCard({ goals, weeklySummary }: Props) {
   // Group goals by source_slug. Earliest-accepted goal in each group
   // drives the week computation — the walkthrough started when the user
   // first engaged with this POV. Subsequent goals from the same POV
@@ -69,6 +91,7 @@ export function WeeklyFocusCard({ goals }: Props) {
     withOnramp.push({
       slug,
       anchorGoalId: earliest.id,
+      anchorStage,
       goalTitles: group.map((g) => g.title),
       state,
     });
@@ -76,26 +99,58 @@ export function WeeklyFocusCard({ goals }: Props) {
 
   if (withOnramp.length === 0) return null;
 
+  const summaryPct =
+    weeklySummary && weeklySummary.possible > 0
+      ? Math.min(
+          100,
+          Math.max(
+            0,
+            Math.round((weeklySummary.ticked / weeklySummary.possible) * 100),
+          ),
+        )
+      : null;
+
   return (
     <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-lg font-medium">This week&rsquo;s focus</h2>
-        <span className="text-xs text-zinc-500">
-          {withOnramp.length} {withOnramp.length === 1 ? 'walkthrough' : 'walkthroughs'}
-        </span>
-      </div>
+      <h2 className="text-lg font-medium">This week&rsquo;s focus</h2>
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
         Guidance per domain, based on when you first engaged with it. One concrete focus per week, not a full protocol.
       </p>
 
+      {weeklySummary && weeklySummary.goalCount > 0 && weeklySummary.possible > 0 && summaryPct !== null && (
+        <div className="mt-4">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            This week: {weeklySummary.ticked}/{weeklySummary.possible} boxes
+            ticked across your goals.
+          </p>
+          <div
+            className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={summaryPct}
+            aria-label={`${weeklySummary.ticked} of ${weeklySummary.possible} boxes ticked, ${summaryPct} percent`}
+          >
+            <div
+              className="h-full rounded-full bg-emerald-600 transition-all dark:bg-emerald-500"
+              style={{ width: `${summaryPct}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       <ul className="mt-5 space-y-4">
-        {withOnramp.map((entry) => (
+        {withOnramp.map((entry, i) => (
           <li
             key={entry.slug}
-            className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
+            id={`focus-${entry.slug}`}
+            className="scroll-mt-4 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
           >
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="text-base font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                <span className="mr-1.5 font-mono text-xs font-normal text-zinc-500">
+                  {String.fromCharCode(65 + i)}.
+                </span>
                 {entry.goalTitles[0]}
                 {entry.goalTitles.length > 1 && (
                   <span className="ml-2 text-xs font-normal text-zinc-500">
@@ -106,6 +161,14 @@ export function WeeklyFocusCard({ goals }: Props) {
               {entry.state.kind === 'active' ? (
                 <span className="shrink-0 text-xs text-zinc-500">
                   Week {entry.state.week}
+                  {entry.anchorStage !== 'new' && (
+                    <>
+                      {' · '}
+                      <span className="text-zinc-400 dark:text-zinc-500">
+                        {STAGE_LABEL[entry.anchorStage]}
+                      </span>
+                    </>
+                  )}
                 </span>
               ) : (
                 <span className="shrink-0 text-xs font-medium text-emerald-700 dark:text-emerald-400">
@@ -131,6 +194,14 @@ export function WeeklyFocusCard({ goals }: Props) {
               <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
                 Also applies to: {entry.goalTitles.slice(1).join(', ')}
               </p>
+            )}
+            {entry.state.kind === 'active' && (
+              <div className="mt-3">
+                <AdjustBaseline
+                  goalId={entry.anchorGoalId}
+                  currentStage={entry.anchorStage}
+                />
+              </div>
             )}
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
               <Link

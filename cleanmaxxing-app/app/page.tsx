@@ -233,7 +233,7 @@ export default function Home() {
           </div>
           <div className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-900">
             <h3 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-              Tom Brady&rsquo;s face did more for his brand than six rings.
+              Tom Brady&rsquo;s face and physique did more for his brand than seven rings.
             </h3>
             <p className="mt-3 flex-1 font-serif text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
               A case study in the halo effect. How appearance counteracted

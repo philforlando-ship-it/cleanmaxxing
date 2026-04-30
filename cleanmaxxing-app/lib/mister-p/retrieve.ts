@@ -77,6 +77,7 @@ export function formatChunksForPrompt(chunks: RetrievedChunk[]): string {
 // while leaving the final top-5 comfortably above the similarity floor.
 const QUESTION_OVERSAMPLE = 12;
 const CONTEXT_OVERSAMPLE = 6;
+const FOCUS_OVERSAMPLE = 8;
 
 // Citation rerank magnitudes. Cosine-similarity values in the corpus
 // cluster roughly in [0.3, 0.75], so ±0.04 is a small but real nudge
@@ -87,8 +88,29 @@ export const REPEAT_SLUG_PENALTY_STEP = 0.04;
 export const REPEAT_SLUG_PENALTY_CAP = 0.15;
 export const REPEAT_SLUG_THRESHOLD = 2; // citations above this trigger penalty
 
+// Goal-focus rerank magnitude. When the chat is opened from a specific
+// goal, chunks from that goal's source POV get a meaningful boost so
+// vague questions like "tell me more about this" anchor to the right
+// doc instead of drifting to whatever happens to land near a generic
+// question vector. Larger than the citation nudges (which are ±0.04)
+// because focus is a stronger signal — the user explicitly opened
+// chat from this goal — but still small enough not to override a
+// chunk with substantially higher direct similarity.
+export const FOCUSED_SLUG_BONUS = 0.1;
+
 export type PersonalizedRetrieveOptions = {
   contextEmbedding?: number[] | null;
+  // Embedding of the focused goal's title + description. When the
+  // chat is opened from a specific goal, this gives retrieval a
+  // semantic signal of "what this goal is about" so vague questions
+  // still pull goal-anchored chunks. Distinct from contextEmbedding
+  // (built from specific_thing + reflection notes), which is broader
+  // and applies regardless of goal context.
+  focusEmbedding?: number[] | null;
+  // Source slug of the focused goal. Chunks from this slug get a
+  // FOCUSED_SLUG_BONUS in reranking. Pure metadata bias — works
+  // alongside focusEmbedding's similarity contribution.
+  focusedSlug?: string | null;
   citationCounts?: Map<string, number> | null;
   returnCount?: number;
 };
@@ -99,21 +121,26 @@ export async function retrievePersonalized(
 ): Promise<RetrievedChunk[]> {
   const {
     contextEmbedding = null,
+    focusEmbedding = null,
+    focusedSlug = null,
     citationCounts = null,
     returnCount = 5,
   } = options;
 
-  // Retrieve in parallel. When there's no context embedding, the
-  // second retrieval is skipped entirely.
-  const [primary, contextual] = await Promise.all([
+  // Retrieve in parallel. Each branch is skipped if the corresponding
+  // embedding is absent — common path is question-only.
+  const [primary, contextual, focused] = await Promise.all([
     retrieveChunksWithEmbedding(questionEmbedding, QUESTION_OVERSAMPLE),
     contextEmbedding
       ? retrieveChunksWithEmbedding(contextEmbedding, CONTEXT_OVERSAMPLE)
       : Promise.resolve([] as RetrievedChunk[]),
+    focusEmbedding
+      ? retrieveChunksWithEmbedding(focusEmbedding, FOCUS_OVERSAMPLE)
+      : Promise.resolve([] as RetrievedChunk[]),
   ]);
 
   // Merge + dedupe. Dedupe key is slug + first 120 chars of content
-  // because the same chunk can be returned by both queries, and
+  // because the same chunk can be returned by multiple queries, and
   // pgvector occasionally returns near-duplicates across adjacent
   // chunks of the same doc section. When a duplicate appears, keep
   // the higher similarity score.
@@ -127,6 +154,7 @@ export async function retrievePersonalized(
   }
   for (const c of primary) upsert(c);
   for (const c of contextual) upsert(c);
+  for (const c of focused) upsert(c);
 
   // Rerank.
   const reranked = Array.from(merged.values()).map((chunk) => {
@@ -140,6 +168,9 @@ export async function retrievePersonalized(
         const penalty = Math.min(raw, REPEAT_SLUG_PENALTY_CAP);
         adjusted -= penalty;
       }
+    }
+    if (focusedSlug && chunk.doc_slug === focusedSlug) {
+      adjusted += FOCUSED_SLUG_BONUS;
     }
     return { chunk, adjusted };
   });

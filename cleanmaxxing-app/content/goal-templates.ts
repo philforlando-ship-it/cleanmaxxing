@@ -264,9 +264,9 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
   },
   'jawline-through-fat-loss': {
     source_slug: '16-facial-definition-jawline',
-    title: 'Reveal your jawline through fat loss',
+    title: 'Reveal your jawline',
     description:
-      'Jawline definition is a body fat problem, not a mewing problem. Lean out and the structure shows up on its own.',
+      'Posture and neck training amplify whatever fat loss is already happening. Wall resets daily, two short neck sessions a week, photo check at week 12.',
     goal_type: 'outcome',
   },
 

@@ -22,6 +22,16 @@ __High ROI Zones — Where to Start__
 
 __Methods — Honest Breakdown__
 
+| Method | Result | Cost | Lasts | Best for |
+| --- | --- | --- | --- | --- |
+| Trimming | Shorter, natural-looking density | $30–100 trimmer (one-time) | 1–2 weeks per upkeep | Chest, abdomen, arms, legs |
+| Shaving | Fully smooth | Very low | 2–5 days | Neck cleanup, occasional events |
+| Waxing | Smooth, root-level removal | $40–100 / session | 3–6 weeks | Back, shoulders without laser commitment |
+| Laser | Permanent reduction (not elimination) | $1,500–4,000 / area | Years; light annual touch-ups | Long-term back, shoulders, neck |
+| IPL (at-home) | Partial reduction; weaker than laser | $200–500 device | Weekly → monthly maintenance | Lighter hair, or upkeep after laser |
+
+The detail behind each row matters — pain, ingrown risk, and where each method goes wrong are covered below.
+
 __1\. Trimming — the baseline method__
 
 An electric trimmer with a guard reduces hair length without removing it fully\. This is the safest method — minimal irritation, no ingrown risk, and a natural result that reads as intentional rather than try\-hard\. It is also the most affordable, with a one\-time cost of approximately $30\-100 for a quality trimmer\. The tradeoff is that it does not produce a smooth skin finish and requires upkeep every one to two weeks\. If you stop, hair simply grows back to its natural length and density\. Best suited for chest, abdomen, arms, and legs — any area where a clean but masculine look is the goal rather than full removal\.

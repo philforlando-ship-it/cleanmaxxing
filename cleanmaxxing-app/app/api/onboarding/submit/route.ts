@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { ageToSegment, QUESTIONS } from '@/lib/onboarding/questions';
+import { weekStartString } from '@/lib/weekly-reflection/service';
 
 export async function POST() {
   const supabase = await createClient();
@@ -104,6 +105,41 @@ export async function POST() {
     if (confErr) {
       return NextResponse.json({ error: confErr.message }, { status: 500 });
     }
+  }
+
+  // Seed week-1 weekly_reflection from the same baseline values so the
+  // /today reflection card lands in the saved/locked state instead of
+  // re-asking the four confidence questions the user just answered.
+  // Insert-only via ignoreDuplicates: if a real reflection already
+  // exists for this week (idempotency on submit retry, or a manual seed),
+  // do not overwrite it.
+  const social = Number(byKey.get('confidence_social'));
+  const work = Number(byKey.get('confidence_work'));
+  const physical = Number(byKey.get('confidence_physical'));
+  const appearance = Number(byKey.get('confidence_appearance'));
+  if (
+    !Number.isNaN(social) &&
+    !Number.isNaN(work) &&
+    !Number.isNaN(physical) &&
+    !Number.isNaN(appearance)
+  ) {
+    await supabase
+      .from('weekly_reflections')
+      .upsert(
+        {
+          user_id: user.id,
+          week_start: weekStartString(),
+          social_confidence: social,
+          work_confidence: work,
+          physical_confidence: physical,
+          appearance_confidence: appearance,
+          notes: null,
+        },
+        { onConflict: 'user_id,week_start', ignoreDuplicates: true },
+      );
+    // Intentionally don't surface errors here — the seed is a UX nicety,
+    // not a correctness requirement. The baseline is already persisted
+    // in confidence_dimensions, so the trend chart renders either way.
   }
 
   // Note: onboarding_completed_at is NOT set here. It gets set by

@@ -9,6 +9,27 @@ import type { AgeSegment } from '@/lib/onboarding/types';
 // filtered to the user's age segment, and sorted by personalized
 // relevance score (focus-area match + tier + process bias). Flags any
 // template that matches an existing active goal as already_active.
+
+// Library-side age match. Mirrors the inheritance fallback used by the
+// goal-ranker's appliesToAge in lib/onboarding/goal-suggest.ts: 41-45
+// users see 33-40 docs, 46-55 users see 41-45 or 33-40 docs. Until the
+// POV _metadata.json audit tags those segments explicitly, the library
+// would otherwise empty out for any 41+ user. Differs from the ranker
+// version in being permissive about null/empty age_segments — the
+// library shows untagged docs to everyone, the ranker excludes them.
+function matchesAge(docSegments: string[] | null, userSegment: AgeSegment | null): boolean {
+  if (!userSegment) return true;
+  if (!docSegments || docSegments.length === 0) return true;
+  if (docSegments.includes(userSegment)) return true;
+  if (userSegment === '41-45' && docSegments.includes('33-40')) return true;
+  if (
+    userSegment === '46-55' &&
+    (docSegments.includes('41-45') || docSegments.includes('33-40'))
+  ) {
+    return true;
+  }
+  return false;
+}
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -65,7 +86,7 @@ export async function GET() {
   for (const t of Object.values(GOAL_TEMPLATES)) {
     const doc = docsBySlug.get(t.source_slug);
     if (!doc) continue;
-    if (ageSegment && doc.age_segments && !doc.age_segments.includes(ageSegment)) continue;
+    if (!matchesAge(doc.age_segments as string[] | null, ageSegment)) continue;
 
     const score = scoreDoc(doc.slug, doc.priority_tier, focusSlugs, t.goal_type);
 

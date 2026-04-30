@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-const ALLOWED_SLOTS = new Set(['baseline', 'progress_30d', 'progress_90d']);
+const ALLOWED_SLOTS = new Set([
+  'baseline',
+  'progress_30d',
+  'progress_90d',
+  'progress_180d',
+]);
 const ALLOWED_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_SIZE_BYTES = 8 * 1024 * 1024; // 8 MB — modern phone cameras produce 3-6MB JPEGs
 
@@ -16,7 +21,7 @@ function extFor(mime: string): string | null {
 
 // Upload or replace a progress photo. Multipart/form-data body with:
 //   file: image file (jpeg, png, or webp, ≤ 8 MB)
-//   slot: 'baseline' | 'progress_30d' | 'progress_90d'
+//   slot: 'baseline' | 'progress_30d' | 'progress_90d' | 'progress_180d'
 //
 // Replaces any existing photo in the same slot (removes old storage
 // object + upserts metadata row). Storage RLS on the bucket enforces
@@ -70,7 +75,9 @@ export async function POST(req: Request) {
       ? 'baseline'
       : slot === 'progress_30d'
         ? 'progress-30d'
-        : 'progress-90d';
+        : slot === 'progress_90d'
+          ? 'progress-90d'
+          : 'progress-180d';
   const path = `${user.id}/${filename}.${ext}`;
 
   // If an older photo exists in this slot (possibly with a different

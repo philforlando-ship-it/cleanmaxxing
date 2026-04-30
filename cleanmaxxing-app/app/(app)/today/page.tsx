@@ -3,24 +3,26 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { DevResetButton } from './dev-reset-button';
 import { DailyCheckInCard } from './daily-check-in-card';
-import { MisterPChatCard } from './mister-p-chat-card';
+import { MisterPChatCard, type ChatMessage } from './mister-p-chat-card';
 import { WeeklyReflectionCard } from './weekly-reflection-card';
 import { ConfidenceTrendChart } from './confidence-trend-chart';
 import { MonthlyCheckpointCard } from './monthly-checkpoint-card';
 import { WeeklyFocusCard } from './weekly-focus-card';
 import { FirstRunCard } from './first-run-card';
 import { ProgressPhotoCard } from './progress-photo-card';
-import { WeeklySummaryStrip } from './weekly-summary-strip';
 import { StaleGoalCard } from './stale-goal-card';
+import { ProfileCompletionCard } from './profile-completion-card';
 import { StuckConfidenceCard } from './stuck-confidence-card';
 import { QuarterlySurveyCard } from './quarterly-survey-card';
 import { getTodayCheckInState, getWeeklyCheckInSummary, getStalestGoal } from '@/lib/check-in/service';
+import { onrampFor } from '@/lib/content/onramp';
+import { getProfileCompletion } from '@/lib/profile/completion';
 import { getStuckConfidenceSignal } from '@/lib/confidence/stuck-signal';
 import { getQuarterlySurveyState } from '@/lib/quarterly-survey/service';
 import { getWeeklyReflectionState } from '@/lib/weekly-reflection/service';
 import { getCheckpointState } from '@/lib/checkpoint/service';
 
-// Ninety-day progress-photo window. Matches the /progress page's
+// Ninety-day progress-photo window. Matches the /profile page's
 // PROGRESS_WINDOW_DAYS and the POVs' typical visible-change timeline.
 const PROGRESS_WINDOW_DAYS = 90;
 
@@ -29,6 +31,12 @@ const PROGRESS_WINDOW_DAYS = 90;
 // reference point before the 90-day window and surfaces a visible
 // milestone during the span where first-month churn otherwise bites.
 const MID_WINDOW_DAYS = 30;
+
+// Six-month checkpoint. Slow-moving variables (hair regrowth, late
+// aesthetic compounding, sustained recomp) only show their full
+// effect at 180+ days; this is the photo that tells late-30s+ users
+// whether their patient interventions are working.
+const LATE_WINDOW_DAYS = 180;
 
 // Pulled out of the component body so the impure Date.now() call is
 // isolated to a single, explicit location. This is a server component
@@ -75,6 +83,7 @@ export default async function TodayPage({ searchParams }: Props) {
     staleGoal,
     stuckSignal,
     quarterlyState,
+    profileCompletion,
     { data: goalsRaw },
     { data: photoRowsRaw },
   ] = await Promise.all([
@@ -85,6 +94,7 @@ export default async function TodayPage({ searchParams }: Props) {
     getStalestGoal(supabase, user.id),
     getStuckConfidenceSignal(supabase, user.id),
     getQuarterlySurveyState(supabase, user.id),
+    getProfileCompletion(supabase, user.id),
     supabase
       .from('goals')
       .select('id, title, source_slug, created_at, baseline_stage')
@@ -98,6 +108,56 @@ export default async function TodayPage({ searchParams }: Props) {
   ]);
   const activeGoals = goalsRaw ?? [];
 
+  // Set of source_slugs that have an authored walkthrough. The Daily
+  // Check-In card uses this to gate per-goal "Focus →" deep links so
+  // we don't render a link to a section that doesn't exist for goals
+  // whose POV hasn't had its on-ramp structured yet.
+  const slugsWithFocus = activeGoals
+    .map((g) => g.source_slug as string | null)
+    .filter((slug): slug is string => Boolean(slug && onrampFor(slug)));
+
+  // Hydrate every thread the chat-card picker can show: General
+  // (goal_id IS NULL) + one per active goal. We load up to 50 pairs
+  // per thread without truncating message text, so the visible UI
+  // matches exactly what the user wrote and Mister P answered.
+  // Bounded per-user query (active goals are capped at 5) so the
+  // single round-trip stays cheap.
+  const activeGoalIds = activeGoals.map((g) => g.id);
+  const { data: threadRowsRaw } = await supabase
+    .from('mister_p_queries')
+    .select('question, answer, goal_id, created_at')
+    .eq('user_id', user.id)
+    .or(
+      activeGoalIds.length > 0
+        ? `goal_id.is.null,goal_id.in.(${activeGoalIds.join(',')})`
+        : 'goal_id.is.null',
+    )
+    .order('created_at', { ascending: true });
+
+  const GENERAL_KEY = '__general__';
+  const initialThreads: Record<string, ChatMessage[]> = { [GENERAL_KEY]: [] };
+  for (const g of activeGoals) initialThreads[g.id] = [];
+  for (const row of threadRowsRaw ?? []) {
+    const r = row as {
+      question: string;
+      answer: string;
+      goal_id: string | null;
+    };
+    const key = r.goal_id ?? GENERAL_KEY;
+    if (!initialThreads[key]) continue; // skip threads for inactive goals
+    initialThreads[key].push(
+      { role: 'user', content: r.question },
+      { role: 'assistant', content: r.answer },
+    );
+  }
+  // Cap each thread's hydrated history at 50 pairs (100 messages) to
+  // keep the initial payload modest. Recent messages take precedence.
+  for (const key of Object.keys(initialThreads)) {
+    const arr = initialThreads[key];
+    if (arr.length > 100) initialThreads[key] = arr.slice(-100);
+  }
+  const chatGoals = activeGoals.map((g) => ({ id: g.id, title: g.title }));
+
   // Progress photo surface decisions: which nudge (if any) fires on /today.
   // Card hides itself via localStorage dismissal — we only decide whether
   // to mount it based on server-side state.
@@ -107,6 +167,7 @@ export default async function TodayPage({ searchParams }: Props) {
   const hasBaseline = photoSlots.has('baseline');
   const hasProgress30d = photoSlots.has('progress_30d');
   const hasProgress90d = photoSlots.has('progress_90d');
+  const hasProgress180d = photoSlots.has('progress_180d');
   const onboardedAt = new Date(profile.onboarding_completed_at as string);
   const daysSinceOnboarding = Math.floor(
     (Date.now() - onboardedAt.getTime()) / 86_400_000,
@@ -120,8 +181,17 @@ export default async function TodayPage({ searchParams }: Props) {
     !hasProgress30d &&
     daysSinceOnboarding >= MID_WINDOW_DAYS &&
     daysSinceOnboarding < PROGRESS_WINDOW_DAYS;
+  // 90-day nudge window: open from day 90 until the 180-day nudge
+  // takes over so we don't double-prompt during the six-month window.
   const show90dNudge =
-    hasBaseline && !hasProgress90d && daysSinceOnboarding >= PROGRESS_WINDOW_DAYS;
+    hasBaseline &&
+    !hasProgress90d &&
+    daysSinceOnboarding >= PROGRESS_WINDOW_DAYS &&
+    daysSinceOnboarding < LATE_WINDOW_DAYS;
+  const show180dNudge =
+    hasBaseline &&
+    !hasProgress180d &&
+    daysSinceOnboarding >= LATE_WINDOW_DAYS;
 
   const isDev = process.env.NODE_ENV === 'development';
 
@@ -137,6 +207,13 @@ export default async function TodayPage({ searchParams }: Props) {
       <div className="mt-10 space-y-6">
         {isFirstRun && !steppedAway && <FirstRunCard />}
 
+        {!steppedAway && (
+          <ProfileCompletionCard completion={profileCompletion} />
+        )}
+
+        {show180dNudge && !steppedAway && (
+          <ProgressPhotoCard variant="progress_180d" />
+        )}
         {show90dNudge && !steppedAway && (
           <ProgressPhotoCard variant="progress_90d" />
         )}
@@ -198,11 +275,22 @@ export default async function TodayPage({ searchParams }: Props) {
           <DailyCheckInCard
             initialState={checkInState}
             spotlight={welcome && checkInState.check_in_id === null}
+            slugsWithFocus={slugsWithFocus}
           />
         )}
-        <MisterPChatCard />
-        {!steppedAway && <WeeklySummaryStrip summary={weeklySummary} />}
-        {!steppedAway && <WeeklyFocusCard goals={activeGoals} />}
+        {/* This Week's Focus sits directly under Daily Check-In so the
+            user's flow is "tick today → see what to focus on this week
+            for those same goals" without scrolling past unrelated
+            surfaces. Letter pills (A./B./C.) line up between the two
+            cards, and the Focus → links on each daily row scroll to
+            the matching entry below. The weekly count line + progress
+            bar (formerly its own WeeklySummaryStrip) is now folded
+            into this card's header so the weekly narrative reads as
+            one card, not two. */}
+        {!steppedAway && (
+          <WeeklyFocusCard goals={activeGoals} weeklySummary={weeklySummary} />
+        )}
+        <MisterPChatCard goals={chatGoals} initialThreads={initialThreads} />
         {!steppedAway && (
           <WeeklyReflectionCard
             initialState={reflectionState}

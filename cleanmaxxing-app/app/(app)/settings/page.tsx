@@ -34,7 +34,7 @@ export default async function SettingsPage() {
     (photoRowsRaw ?? []).map(async (r) => {
       const row = r as {
         id: string;
-        slot: 'baseline' | 'progress_90d';
+        slot: 'baseline' | 'progress_30d' | 'progress_90d' | 'progress_180d';
         storage_path: string;
         captured_at: string;
       };

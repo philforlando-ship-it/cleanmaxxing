@@ -10,7 +10,13 @@ Your job is to answer the user's question using ONLY the context provided below.
 
 "That's not something I cover yet. I've logged it and I'll add it to my list."
 
-Do not draw on general knowledge. Do not speculate. Do not improvise beyond what the context supports. Do not name the POV docs the context came from — answer as if the information is yours, in plain prose, without parenthetical source citations.
+Do not draw on general knowledge. Do not speculate. Do not improvise beyond what the context supports.
+
+Answer in plain prose, in your own voice — don't sound like a citation engine ("according to the Tanning POV…"). But when your answer leans on a specific POV doc the user could read in full, include a single inline markdown link at the natural moment of reference: [Doc title](/povs/<slug>). Use the title and slug exactly as they appear in the retrieved context above. At most one or two links per answer, only when they're genuinely useful (a user asking a quick clarifying question doesn't need a link). Never add bare URLs or parenthetical citations like "(see 18-tanning)" — markdown link or no link.
+
+When the user asks where they can read more, how to access a doc, or "send me the link," lead with the link itself: "Here it is: [Doc title](/povs/<slug>)." Then add a one-line summary if useful. If the doc isn't in your retrieved context, say so honestly rather than guessing a slug.
+
+Always render heights in feet-inches notation (e.g. 6'3", 5'10") rather than raw inches. The user's height is shown to you below in the user-state block in this format — match it in your answers.
 
 Your voice:
 - Direct and a little dry
@@ -158,17 +164,41 @@ ${lines.join('\n')}
 --- END USER'S ACTIVE GOALS ---`;
 }
 
+// Active goal focus — injected when the chat is opened from a
+// specific goal context (goal_id passed to /api/mister-p/ask).
+// Disambiguates references like "this", "this goal", "it" so Mister
+// P does not have to guess across the user's full active set. The
+// block is additive, not a replacement for the goals block: the
+// user might ask cross-goal questions ("should I drop my sleep goal
+// to focus on this?") and the broader list still needs to be in
+// context.
+export function formatActiveGoalFocusBlock(goal: GoalContext | null): string | null {
+  if (!goal) return null;
+  const desc = goal.description ? ` — ${goal.description}` : '';
+  return `--- USER'S CURRENT FOCUS ---
+The user opened this chat from a specific goal page. Treat ambiguous references like "this", "this goal", "it", or "the goal" as referring to the goal below unless the user explicitly names a different one. The full active-goals list is still in context for cross-goal questions.
+
+GOAL: ${goal.title}${desc}
+--- END USER'S CURRENT FOCUS ---`;
+}
+
 export function buildSystemPromptFull(
   retrievedChunks: string,
   advisory: string | null,
   goalsBlock: string | null,
   userStateBlock: string | null = null,
-  conversationHistoryBlock: string | null = null
+  conversationHistoryBlock: string | null = null,
+  activeGoalFocusBlock: string | null = null,
 ): string {
   let prompt = MISTER_P_SYSTEM_PROMPT.replace('{retrieved_chunks}', retrievedChunks);
   if (userStateBlock) prompt += '\n\n' + userStateBlock;
   if (conversationHistoryBlock) prompt += '\n\n' + conversationHistoryBlock;
   if (goalsBlock) prompt += '\n\n' + goalsBlock;
+  // Focus block sits AFTER the goals block so it reads as "here is the
+  // full set... and here is the one currently in focus." Order matters
+  // for the LLM's anchoring behavior — the most recent block carries
+  // the most weight when resolving ambiguous references.
+  if (activeGoalFocusBlock) prompt += '\n\n' + activeGoalFocusBlock;
   if (advisory) prompt += '\n\n' + advisory;
   return prompt;
 }
@@ -182,6 +212,16 @@ export function buildSystemPromptFull(
 import type { MisterPUserState } from './user-state';
 import type { ConversationPair } from './conversation';
 import { ageFeelLabelFor } from '@/lib/confidence/context';
+
+// Render a height-in-inches value as feet-inches notation. 75 → 6'3".
+// Used inside the user-state block so Mister P's prompt context shows
+// the natural US height vocabulary; he then reuses that form in his
+// answers without being explicitly told to format anything.
+function formatHeightFtIn(inches: number): string {
+  const ft = Math.floor(inches / 12);
+  const inch = Math.round(inches - ft * 12);
+  return `${ft}'${inch}"`;
+}
 
 export function formatConversationHistoryBlock(
   pairs: ConversationPair[],
@@ -222,8 +262,16 @@ export function formatUserStateBlock(state: MisterPUserState): string | null {
   lines.push(`days_since_onboarding: ${state.daysSinceOnboarding}`);
 
   if (state.age !== null) lines.push(`age: ${state.age}`);
+  // Surface height in feet-inches format (e.g. 6'3") rather than raw
+  // inches, so Mister P picks up the natural US height vocabulary
+  // when referring back to it. Raw inches is preserved in
+  // parentheses for any answer that needs to do arithmetic.
   lines.push(
-    `height_inches: ${state.heightInches !== null ? state.heightInches : 'not provided'}`,
+    `height: ${
+      state.heightInches !== null
+        ? `${formatHeightFtIn(state.heightInches)} (${state.heightInches} in)`
+        : 'not provided'
+    }`,
   );
   lines.push(
     `weight_lbs: ${state.weightLbs !== null ? state.weightLbs : 'not provided'}`,

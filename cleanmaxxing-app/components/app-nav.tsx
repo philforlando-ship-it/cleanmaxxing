@@ -16,8 +16,10 @@ type Props = {
 const LINKS: Array<{ href: string; label: string; matchPrefix: string }> = [
   { href: '/today', label: 'Today', matchPrefix: '/today' },
   { href: '/goals', label: 'My Goals', matchPrefix: '/goals' },
+  { href: '/profile', label: 'Profile', matchPrefix: '/profile' },
   { href: '/goals/library', label: 'Goal Library', matchPrefix: '/goals/library' },
-  { href: '/povs', label: 'POVs', matchPrefix: '/povs' },
+  { href: '/povs', label: 'Relevant POVs', matchPrefix: '/povs' },
+  { href: '/other-info', label: 'Articles', matchPrefix: '/other-info' },
   { href: '/settings', label: 'Settings', matchPrefix: '/settings' },
 ];
 

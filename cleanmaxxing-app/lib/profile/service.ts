@@ -67,6 +67,8 @@ export type UserProfile = {
   avg_sleep_hours: number | null;
   diet_restrictions: string | null;
   bf_pct_self_estimate: BodyFatEstimate | null;
+  current_weight_lbs: number | null;
+  height_inches: number | null;
   // Tier 2 — set via /profile UI
   hair_status: HairStatus | null;
   skin_type: number | null;
@@ -87,6 +89,8 @@ export const EMPTY_PROFILE: Omit<UserProfile, 'user_id' | 'updated_at'> = {
   avg_sleep_hours: null,
   diet_restrictions: null,
   bf_pct_self_estimate: null,
+  current_weight_lbs: null,
+  height_inches: null,
   hair_status: null,
   skin_type: null,
   current_interventions: [],

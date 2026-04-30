@@ -73,6 +73,15 @@ __Hair Transplants — FUT vs FUE__
 
 Hair transplants are one of the best options for men at the right stage, with the right surgeon, and the right expectations\. They are not a reset button, and understanding their limitations is as important as understanding their benefits\.
 
+|  | FUT (strip) | FUE (excision) |
+| --- | --- | --- |
+| **Harvest method** | Strip of scalp removed; follicular units dissected under magnification | Individual follicles excised directly from donor area |
+| **Scar profile** | Single linear scar in donor area | Many small scattered extraction marks |
+| **Hair-length compatibility** | Limits very short hairstyles | Better suited for short and shaved styles |
+| **Graft yield per session** | Often higher; efficient for large cases | Variable; "scarless" marketing overstates the reality |
+| **Healing time** | Longer | Faster |
+| **Best fit** | Larger cases, multi-procedure lifetime planning | Men who wear hair short or want stylistic flexibility |
+
 __What a transplant can do__
 
 A transplant moves DHT\-resistant follicles from donor zones to thinning or bald areas\. It can improve framing, restore the hairline, improve mid\-scalp density, and create a significantly more youthful appearance\. The aesthetic upside for the right candidate is real and often substantial\.

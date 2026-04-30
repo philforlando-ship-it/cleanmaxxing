@@ -5,18 +5,18 @@ import ReactMarkdown from 'react-markdown';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Tom Brady\u2019s Face Did More for His Brand Than Six Rings \u2014 Cleanmaxxing',
+  title: 'Tom Brady\u2019s face and physique did more for his brand than seven rings \u2014 Cleanmaxxing',
   description:
     'A case study in the halo effect. How appearance counteracted the reasons people had to dislike Tom Brady, and what Burrow and Dart show about the same pattern in the next generation.',
   openGraph: {
-    title: 'Tom Brady\u2019s Face Did More for His Brand Than Six Rings',
+    title: 'Tom Brady\u2019s face and physique did more for his brand than seven rings',
     description:
       'A case study in the halo effect. How appearance counteracted the reasons people had to dislike Tom Brady.',
     type: 'article',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Tom Brady\u2019s Face Did More for His Brand Than Six Rings',
+    title: 'Tom Brady\u2019s face and physique did more for his brand than seven rings',
     description:
       'A case study in the halo effect, by Cleanmaxxing.',
   },

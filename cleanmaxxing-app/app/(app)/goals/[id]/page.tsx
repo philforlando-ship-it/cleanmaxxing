@@ -17,6 +17,7 @@ import { povExists } from '@/lib/content/pov';
 import { getGoalWeeklySummary } from '@/lib/check-in/service';
 import { AdjustBaseline } from '@/app/(app)/today/adjust-baseline';
 import { StatusActions } from './status-actions';
+import { GoalMisterPChat, type ChatMessage } from './goal-mister-p-chat';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -67,6 +68,31 @@ export default async function GoalDetailPage({ params }: Props) {
   const weekly = isActive
     ? await getGoalWeeklySummary(supabase, user.id, goal.id, goal.created_at)
     : null;
+
+  // Hydrate the goal-scoped chat thread server-side so the user sees
+  // prior turns immediately on page load. Messages are loaded oldest-
+  // first and flattened into alternating user/assistant pairs. We
+  // intentionally bypass the conversation.ts loader here: that helper
+  // truncates messages for prompt-context economy, but the visible
+  // UI wants full text. The 50-pair cap is a pathological-size guard,
+  // not an expected ceiling.
+  let initialChatMessages: ChatMessage[] = [];
+  if (isActive) {
+    const { data: threadRows } = await supabase
+      .from('mister_p_queries')
+      .select('question, answer, created_at')
+      .eq('user_id', user.id)
+      .eq('goal_id', goal.id)
+      .order('created_at', { ascending: true })
+      .limit(50);
+    initialChatMessages = (threadRows ?? []).flatMap((r) => {
+      const row = r as { question: string; answer: string };
+      return [
+        { role: 'user' as const, content: row.question },
+        { role: 'assistant' as const, content: row.answer },
+      ];
+    });
+  }
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -168,6 +194,15 @@ export default async function GoalDetailPage({ params }: Props) {
           >
             Read the full POV →
           </Link>
+        </section>
+      )}
+
+      {isActive && (
+        <section className="mt-8">
+          <GoalMisterPChat
+            goalId={goal.id}
+            initialMessages={initialChatMessages}
+          />
         </section>
       )}
 

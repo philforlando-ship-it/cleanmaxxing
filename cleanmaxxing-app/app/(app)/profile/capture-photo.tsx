@@ -9,7 +9,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-type Slot = 'baseline' | 'progress_30d' | 'progress_90d';
+type Slot = 'baseline' | 'progress_30d' | 'progress_90d' | 'progress_180d';
 
 type Props = {
   slot: Slot;
@@ -19,6 +19,7 @@ const SLOT_LABEL: Record<Slot, string> = {
   baseline: 'baseline',
   progress_30d: '30-day',
   progress_90d: '90-day',
+  progress_180d: '180-day',
 };
 
 export function CapturePhoto({ slot }: Props) {

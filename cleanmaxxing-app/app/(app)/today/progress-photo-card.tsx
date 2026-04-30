@@ -13,7 +13,7 @@
 import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 
-type Variant = 'baseline' | 'progress_30d' | 'progress_90d';
+type Variant = 'baseline' | 'progress_30d' | 'progress_90d' | 'progress_180d';
 
 type Props = {
   variant: Variant;
@@ -23,6 +23,7 @@ const STORAGE_KEYS: Record<Variant, string> = {
   baseline: 'cleanmaxxing:progress-baseline-dismissed:v1',
   progress_30d: 'cleanmaxxing:progress-30d-dismissed:v1',
   progress_90d: 'cleanmaxxing:progress-90d-dismissed:v1',
+  progress_180d: 'cleanmaxxing:progress-180d-dismissed:v1',
 };
 
 function subscribe(callback: () => void): () => void {
@@ -82,7 +83,7 @@ export function ProgressPhotoCard({ variant }: Props) {
           Delete any time from Settings.
         </p>
         <Link
-          href="/progress"
+          href="/profile"
           className="mt-4 inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
         >
           Take baseline photo
@@ -110,7 +111,7 @@ export function ProgressPhotoCard({ variant }: Props) {
           Match the lighting and angle of your baseline.
         </p>
         <Link
-          href="/progress"
+          href="/profile"
           className="mt-4 inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
         >
           Take 30-day photo
@@ -119,10 +120,39 @@ export function ProgressPhotoCard({ variant }: Props) {
     );
   }
 
+  if (variant === 'progress_90d') {
+    return (
+      <section className="rounded-xl border border-emerald-300 bg-emerald-50 p-6 dark:border-emerald-900 dark:bg-emerald-950/30">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="text-lg font-medium">Ninety days in. Capture your progress photo.</h2>
+          <button
+            type="button"
+            onClick={dismiss}
+            className="shrink-0 text-xs text-zinc-500 underline hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+          >
+            Later
+          </button>
+        </div>
+        <p className="mt-2 text-sm leading-relaxed text-zinc-800 dark:text-zinc-200">
+          Match the conditions of your baseline as closely as you can — same
+          lighting, same angle, neutral expression. The comparison is for you
+          to see.
+        </p>
+        <Link
+          href="/profile"
+          className="mt-4 inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
+        >
+          Take 90-day photo
+        </Link>
+      </section>
+    );
+  }
+
+  // progress_180d
   return (
     <section className="rounded-xl border border-emerald-300 bg-emerald-50 p-6 dark:border-emerald-900 dark:bg-emerald-950/30">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-lg font-medium">Ninety days in. Capture your progress photo.</h2>
+        <h2 className="text-lg font-medium">Six months in. Capture your 180-day photo.</h2>
         <button
           type="button"
           onClick={dismiss}
@@ -132,15 +162,15 @@ export function ProgressPhotoCard({ variant }: Props) {
         </button>
       </div>
       <p className="mt-2 text-sm leading-relaxed text-zinc-800 dark:text-zinc-200">
-        Match the conditions of your baseline as closely as you can — same
-        lighting, same angle, neutral expression. The comparison is for you
-        to see.
+        The slow stuff finally reads here — hair regrowth, late aesthetic
+        compounding, sustained recomp. Match the baseline conditions as
+        closely as you can.
       </p>
       <Link
-        href="/progress"
+        href="/profile"
         className="mt-4 inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
       >
-        Take 90-day photo
+        Take 180-day photo
       </Link>
     </section>
   );

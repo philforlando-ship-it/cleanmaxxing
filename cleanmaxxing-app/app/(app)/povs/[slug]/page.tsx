@@ -5,6 +5,7 @@
 import Link from 'next/link';
 import { redirect, notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { createClient } from '@/lib/supabase/server';
 import { povFor } from '@/lib/content/pov';
 
@@ -63,6 +64,7 @@ export default async function PovPage({ params }: Props) {
 
       <article className="mt-8">
         <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
           components={{
             h1: ({ children }) => (
               <h1 className="mt-12 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
@@ -108,6 +110,36 @@ export default async function PovPage({ params }: Props) {
               <blockquote className="mt-5 border-l-2 border-zinc-300 pl-4 text-zinc-700 italic dark:border-zinc-700 dark:text-zinc-300">
                 {children}
               </blockquote>
+            ),
+            // GFM tables. Wrap in an overflow container so wide
+            // comparison tables don't blow out narrow screens.
+            table: ({ children }) => (
+              <div className="mt-6 overflow-x-auto">
+                <table className="w-full border-collapse text-sm">
+                  {children}
+                </table>
+              </div>
+            ),
+            thead: ({ children }) => (
+              <thead className="border-b-2 border-zinc-300 dark:border-zinc-700">
+                {children}
+              </thead>
+            ),
+            tbody: ({ children }) => (
+              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                {children}
+              </tbody>
+            ),
+            tr: ({ children }) => <tr>{children}</tr>,
+            th: ({ children }) => (
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                {children}
+              </th>
+            ),
+            td: ({ children }) => (
+              <td className="px-3 py-3 align-top text-[14px] leading-relaxed text-zinc-800 dark:text-zinc-200">
+                {children}
+              </td>
             ),
           }}
         >

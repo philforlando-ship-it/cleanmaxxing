@@ -91,59 +91,14 @@ Best candidates: patients with stubborn localized fat deposits that have not res
 
 __Comparison Across All Three__
 
-__Tesamorelin__
-
-__CJC\-1295 / Ipamorelin__
-
-__AOD\-9604__
-
-Mechanism
-
-GHRH analog → pulsatile GH → IGF\-1 → visceral fat lipolysis
-
-Dual GH stimulation \(GHRH \+ ghrelin receptors\) → GH pulse
-
-Beta\-3 adrenergic receptor activation → direct lipolysis
-
-Primary goal
-
-Visceral fat reduction, cognitive support
-
-Body recomposition, sleep, recovery, lean mass
-
-Targeted fat loss without IGF\-1 burden
-
-FDA status
-
-Approved \(Egrifta\) for HIV lipodystrophy; off\-label for general use
-
-Not approved; investigational
-
-Not approved; GRAS food ingredient only
-
-Evidence quality
-
-Strongest — pivotal RCTs, NEJM and JAMA data
-
-Moderate — mechanism well\-supported, limited large RCTs
-
-Moderate — 6 Phase I/II trials, pivotal trial inconclusive
-
-IGF\-1 effect
-
-Yes — elevated IGF\-1 is part of the mechanism
-
-Yes — elevated IGF\-1 is part of the mechanism
-
-No — bypasses IGF\-1 pathway entirely
-
-Supervision required
-
-Yes — prescription, baseline labs, ongoing monitoring
-
-Yes — provider\-guided dosing and monitoring
-
-Yes — investigational; provider oversight essential
+|  | Tesamorelin | CJC-1295 / Ipamorelin | AOD-9604 |
+| --- | --- | --- | --- |
+| **Mechanism** | GHRH analog → pulsatile GH → IGF-1 → visceral fat lipolysis | Dual GH stimulation (GHRH + ghrelin receptors) → GH pulse | Beta-3 adrenergic receptor activation → direct lipolysis |
+| **Primary goal** | Visceral fat reduction, cognitive support | Body recomposition, sleep, recovery, lean mass | Targeted fat loss without IGF-1 burden |
+| **FDA status** | Approved (Egrifta) for HIV lipodystrophy; off-label for general use | Not approved; investigational | Not approved; GRAS food ingredient only |
+| **Evidence quality** | Strongest — pivotal RCTs, NEJM and JAMA data | Moderate — mechanism well-supported, limited large RCTs | Moderate — 6 Phase I/II trials, pivotal trial inconclusive |
+| **IGF-1 effect** | Yes — elevated IGF-1 is part of the mechanism | Yes — elevated IGF-1 is part of the mechanism | No — bypasses IGF-1 pathway entirely |
+| **Supervision required** | Yes — prescription, baseline labs, ongoing monitoring | Yes — provider-guided dosing and monitoring | Yes — investigational; provider oversight essential |
 
 __The Cleanmaxxing Position on These Three__
 

@@ -43,25 +43,12 @@ Saliva is the primary natural defense against tooth decay — it neutralizes aci
 
 __Appearance Damage — What Causes What__
 
-__Damage Type__
-
-__Primary Causes__
-
-Yellowing / staining
-
-Smoking \(worst\), coffee and tea, red wine, poor hygiene
-
-Structural decay / cavities
-
-Frequent sugar, soda, poor brushing and flossing
-
-Enamel erosion \(thinning\)
-
-Soda, energy drinks, citrus, acidic foods
-
-Gum degradation
-
-Smoking, poor flossing, untreated tartar buildup
+| Damage type | Primary causes |
+| --- | --- |
+| Yellowing / staining | Smoking (worst), coffee and tea, red wine, poor hygiene |
+| Structural decay / cavities | Frequent sugar, soda, poor brushing and flossing |
+| Enamel erosion (thinning) | Soda, energy drinks, citrus, acidic foods |
+| Gum degradation | Smoking, poor flossing, untreated tartar buildup |
 
 __Whitening — Ranked Options__
 
