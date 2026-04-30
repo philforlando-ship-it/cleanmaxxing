@@ -1,9 +1,13 @@
 # Cleanmaxxing MVP Specification
 
-**Version:** 0.2 (updated 2026-04-19 with shipped features)
+**Version:** 0.4 (updated 2026-04-25 with audience pivot)
 **Owner:** Phil
 **Build window:** ~6 weeks, ~4 hours/day solo
 **Purpose of this doc:** Single source of truth for the MVP build. Paste into Claude Code at the start of build sessions. Update as decisions change.
+
+**What changed in 0.4:** Strategic positioning pivot from "structured self-improvement for men 18-45" to "the no-bullshit appearance playbook for men over 30," with the ICP narrowing to 32-42. The catalyst was a clarifying read on what was actually being built — every safety rail, every refusal in Mister P, every process-over-outcome decision had been moving the product away from the looksmaxxing-curious 22-year-old and toward the 38-year-old waking up to appearance decline. Rather than retrofit the product to a younger audience, 0.4 commits to the audience the product naturally serves. Concrete changes: §1 target user updated from 18-45 to 30-55 with the ICP framing; homepage rewritten to lead with "Looking your best matters more after 30, not less" and a "the window closed" sub-hero (aging is the antagonist, not another influencer); age cap extended from 45 to 55 with a new `'46-55'` AgeSegment and a chained inheritance fallback (`46-55` → `41-45` → `33-40`); a new `'maintenance-aging'` motivation_segment value with a `+3 process / -3 outcome` ranker bias; targeted POV editorial pass on the three docs most prone to younger-internet framing — POV 15 ("looksmaxxing as a strategy game" → "an ecosystem of diagnostics and protocols"; "AI height hacks" → "obscure cosmetic procedures"; explicit "reads as an eight / reads as a five" PSL scoring softened); POV 51 gains a re-entry / late-30s bio example for the divorced/widowed cohort. Pricing knob ($9.99 → $14.99 experiment), creator GTM pivot (away from looksmaxxing TikTok, toward men's lifestyle podcasts + grooming/dermatologist YouTube + finance-and-fitness Twitter), and POV `_metadata.json` audit for `'46-55'` tagging are deferred — each warrants its own decision after first-tester signal. Bug-fix follow-on (2026-04-30): migrations 0011 and 0012 backfill the `users.motivation_segment` and `users.age_segment` CHECK constraints to match the values added during 0.4 — both were stale at the DB layer and rejected end-of-onboarding for users picking `'maintenance-aging'` or aged 41+ (caught when a beta tester hit it).
+
+**What changed in 0.3:** §2.6 expanded with twenty-one surfaces shipped on top of 0.2, across four themes: (a) onboarding and suggestion intuitiveness — post-onboarding first-check-in spotlight, personalized "Why these three?" explainer, Anti-aging focus area, age-relevant POVs on `/povs`; (b) an adaptive personalization loop that closes the behavioral feedback gap — stale-goal re-entry nudge, stuck-confidence contextual POV, quarterly re-survey at day 90, Mister P user-behavioral-state threading (specific_thing text, tenure, weekly completion rate, per-dimension confidence trajectory, stuck dimensions), monthly-checkpoint surfacing of specific_thing, rolling conversation history in Mister P's prompt, citation-aware chunk reranking, and semantic-context retrieval augmentation from specific_thing + recent reflection notes; (c) /today UX calibration — Mister P moved to second slot, post-reflection recap in the saved view, inline confidence chart live-preview inside the reflection edit form, weekly reflection soft-lock after save, day-30 progress photo between baseline and 90d; (d) target-user widening from 18–40 to 18–45 with a new '41-45' segment that inherits 33-40 POV tags via a ranker fallback (§1 target-user copy updated; POV metadata audit deferred). Plus POV 11 gains a flossing section and ranked whitening options; POV 25 gains an "Integrating Acne Treatment With a Baseline Skincare Routine" section. The `sync-povs` workflow is formally retired — `content/povs/*.md` is canonical and `npm run sync-povs` no longer exists. §5 data model: `progress_photos.slot` CHECK widened to include `progress_30d` (migration 0009); quarterly re-survey answers land in `survey_responses` under versioned keys; `users.age_segment` enum gains '41-45'. §6 Mister P system prompt: a new `USER BEHAVIORAL STATE` block and a `CONVERSATION HISTORY` block are injected alongside the active-goals block, with explicit calibration-only-never-narrate instructions on both.
 
 **What changed in 0.2:** §2.6 added (a roster of surfaces shipped beyond the original six features — goal detail page, baseline stages + per-POV walkthroughs, progress photos at 90 days, weekly summary strip, per-goal weekly count, dark mode, persistent nav, scoped /povs, goal-alignment insights on monthly checkpoint, first-run card, Mister P proactive-advisory gating). §5 data model corrected (removed `check_ins.confidence_score`, added `weekly_reflections`, `progress_photos`, and the `source_slug` / `goal_type` / `baseline_stage` columns on `goals`). §6 Mister P system prompt updated to match the shipped prompt (citations removed; active-goals block and per-turn advisories documented). §2 Feature 4 updated to reflect the current Today-screen card stack.
 
@@ -36,7 +40,7 @@ Cleanmaxxing owns path four explicitly: the fastest measurable progress of the f
 This framing is not just a homepage element. Mister P's voice, the goal library's inclusion of self-acceptance content, and the "step away" mode in section 13 all follow from it.
 
 ### Target user
-Men aged 18–40 who are actively interested in self-improvement, appearance, and confidence. The ICP skews 22–32: old enough to have disposable income, young enough to still be actively shaping their appearance and identity.
+Men aged 30–55 who want a structured, evidence-based appearance playbook for the years that count. ICP narrows to 32–42: old enough to have disposable income and a clear sense of what is sliding, young enough that meaningful return on appearance investment is still on the table over a multi-decade horizon. The product still works for users 18–29 (the broader signup window covers 18–55), but the homepage, voice, and content priority are calibrated to the 30+ case. The pivot from a 18–45 framing to a 30–55 framing was made in 0.4 after recognizing that every product decision — process-over-outcome bias, anti-PSL framing, anti-radicalism rails, the Tom Brady essay's voice — had quietly built a product for adults rather than the looksmaxxing-curious 22-year-old originally imagined. Below 30 is welcome; above 30 is the audience the product speaks to natively. Until the POV `_metadata.json` is audited for explicit segment tagging, users 41–45 fall back to 33–40 docs in the goal ranker, and 46–55 falls back further (46–55 → 41–45 → 33–40).
 
 **Hard age gate: 18+.** No exceptions. This is a brand decision and a liability decision, not just a legal one.
 
@@ -257,7 +261,7 @@ Mister P: "Short answer: for your age, probably not. Long answer: I've got a det
 
 ---
 
-## 2.6 Shipped Beyond the Six Features (as of 2026-04-19)
+## 2.6 Shipped Beyond the Six Features (as of 2026-04-25)
 
 Everything below was built on top of the MVP six, usually in response to a real gap surfaced in use or audit. Listed roughly in the order it was built. Each entry is one paragraph: what it is, why it exists, where it lives.
 
@@ -314,6 +318,84 @@ Goals store `source_slug` pointing at the POV they were templated from. The libr
 
 ### Active-goals block in Mister P system prompt
 Active goals (title, duration, source-slug prior-citation count) are injected into the system prompt via `formatGoalsBlock`. Lets Mister P anchor answers to what the user is working on and calibrate depth ("user has seen this doc 4 times in prior chats → skip the foundations"). Code: `lib/mister-p/prompt.ts`.
+
+### Post-onboarding first check-in spotlight (0.3)
+When the user clicks "Start with these" at the end of goal suggestions, they're routed to `/today?welcome=1` rather than `/today`. The daily check-in card renders in a spotlighted state — emerald ring, retitled to "Your first check-in," with copy "You're in. Tap any goal below to log your first day — that's the whole loop." Spotlight auto-clears the moment a check-in is saved. Purpose: make the first check-in the finale of onboarding, not a cold-open after the goals-picker screen. Code: `app/(app)/onboarding/complete/goals-picker.tsx` (push target), `app/(app)/today/page.tsx` (welcome param), `app/(app)/today/daily-check-in-card.tsx` (`spotlight` prop).
+
+### Personalized "Why these three?" explainer (0.3)
+Bordered section at the top of the goal-suggestions screen with three bullets wired to the user's actual inputs: their age segment and focus areas ("Because you're 25–32, focused on Skin and Fitness…"), the Foundation → high-impact → refinement hierarchy framing, and a live process/outcome count that updates when the user swaps a goal. Replaces the prior generic paragraph. Code: `app/(app)/onboarding/complete/page.tsx` (fetches age_segment + focus_areas server-side, passes as props), `app/(app)/onboarding/complete/goals-picker.tsx`.
+
+### "Anti-aging" focus area (0.3)
+Ninth option in the onboarding `focus_areas` question. Maps to `[07-skincare-antiaging, 42-sleep, 47-eye-health, 38-aging-appearance]` in `FOCUS_TO_SLUGS`, so a user who picks it gets the SPF + retinoid + sleep + eye-area stack surfaced as goal suggestions without having to infer it. No DB migration — focus_areas is a JSON-array text response. Code: `lib/onboarding/questions.ts`, `lib/onboarding/goal-suggest.ts`, `app/(app)/onboarding/complete/goals-picker.tsx` (label map).
+
+### Age-relevant POVs on `/povs` (0.3)
+The POV index continues to show only goal-anchored POVs in the tiered groupings, but now appends a "Relevant for your age" section at the bottom surfacing slugs that aren't anchored to a goal but are worth reading for the user's age segment. Hard-coded per-segment map: 33–40 gets `38-aging-appearance`, `28-cosmetic-procedures`, `47-eye-health`; 25–32 gets `38-aging-appearance`, `07-skincare-antiaging`, `47-eye-health`; 18–24 gets `07-skincare-antiaging`, `38-aging-appearance`. Filters out slugs already in the user's goal set so the surface doesn't duplicate. Code: `app/(app)/povs/page.tsx`.
+
+### Day-30 progress photo (0.3)
+Optional mid-point capture between the baseline photo and the 90-day photo. Migration `0009_progress_photo_30d.sql` widens the `progress_photos.slot` CHECK constraint to include `progress_30d`. The `/today` nudge fires between day 30 and day 89 when the user has a baseline but no 30d; the `/progress` page renders a three-slot gallery (baseline / 30d / 90d) and offers capture for whichever slot is next-eligible. Most interventions don't produce large visible change at 30 days, but the milestone gives users a visible reference point during the window where first-month churn otherwise bites. Code: `supabase/migrations/0009_progress_photo_30d.sql`, `app/api/progress-photos/upload/route.ts`, `app/(app)/progress/page.tsx`, `app/(app)/progress/capture-photo.tsx`, `app/(app)/today/progress-photo-card.tsx`, `app/(app)/today/page.tsx`.
+
+### Inline confidence chart preview in reflection edit (0.3)
+Inside the Weekly Reflection card's edit form, a compact version of the confidence trend chart renders above the dimension sliders. A dashed hollow dot at the current week reflects the average of the live draft slider values, so users see where this week's reflection would land before they save. Closes the "the chart updates later, out of context" gap — the reflection becomes its own payoff. Code: `app/(app)/today/confidence-trend-chart.tsx` (new `pendingPoint` + `compact` props), `app/(app)/today/weekly-reflection-card.tsx`.
+
+### Stale-goal re-entry nudge (0.3)
+`getStalestGoal` returns the single active goal the user has drifted furthest from — oldest last-tick date (or oldest creation date if never ticked), at least 9 days stale, past the 14-day new-goal grace window. Surfaces a calm "Something changed on this one?" card on `/today` with a link to the goal detail page (where they can adjust baseline, pause, or swap). Per-goal localStorage dismissal so a future different-goal nudge still triggers. The signal naturally clears the moment the user ticks the goal again. Code: `lib/check-in/service.ts` (`getStalestGoal`), `app/(app)/today/stale-goal-card.tsx`.
+
+### Stuck-confidence contextual POV (0.3)
+`getStuckConfidenceSignal` fires when ALL of the user's last 3 weekly reflections hold a dimension strictly below 4. Picks the lowest-averaged qualifying dimension and surfaces a "Worth reading" card linking to the safety-oriented POV most relevant to that dimension (56-identity-beyond-appearance for appearance; 55-limits-self-improvement for social/work; 54-when-to-stop for physical). Intentionally surfaces acceptance-oriented content rather than more goals — the signal is a "widen the frame" prompt, not a "try harder" prompt. Per-dimension localStorage dismissal; the card disappears naturally once the dimension climbs. Code: `lib/confidence/stuck-signal.ts`, `app/(app)/today/stuck-confidence-card.tsx`.
+
+### Quarterly re-survey at day 90 (0.3)
+Three-question refocus surfaced on `/today` at day 90+ post-onboarding: focus areas (pick up to 3, prefilled with originals), motivation segment (radio, prefilled), specific_thing (optional text, prefilled). On save, the card persists answers to `survey_responses` under versioned keys (`focus_areas_q1`, `motivation_segment_q1`, `specific_thing_q1`, `quarterly_survey_q1_completed_at`) via delete-then-insert to match the onboarding pattern, then re-runs the ranker with the updated inputs and inline-displays the top-3 fresh suggestions with "Add to my goals" buttons wired to `/api/goals/add`. Dev override: `QUARTERLY_SURVEY_FORCE_ELIGIBLE=1` (gated on `NODE_ENV !== 'production'`). Code: `lib/quarterly-survey/service.ts`, `app/(app)/today/quarterly-survey-card.tsx`, `app/api/quarterly-survey/route.ts`, `app/(app)/today/page.tsx`.
+
+### Mister P behavioral-state threading (0.3)
+New `getMisterPUserState` helper returns a per-request snapshot: specific_thing free-text (quarterly answer wins over onboarding answer), days since onboarding, weekly goal-completion rate (last 7 days), latest per-dimension confidence with rising/flat/declining tag vs. prior reflection, and stuck dimensions (< 4 across the last 3 reflections — mirrors the `/today` detector). `formatUserStateBlock` renders these as a `USER BEHAVIORAL STATE` section injected into the system prompt. Prompt copy is explicit: use the block to calibrate substance, **never narrate observations back to the user** ("I see you haven't checked in much lately" would be a regression). Four concrete calibration heuristics included covering tenure, completion rate, stuck dimensions, and the specific_thing text. Code: `lib/mister-p/user-state.ts`, `lib/mister-p/prompt.ts` (`formatUserStateBlock`, updated `buildSystemPromptFull`), `app/api/mister-p/ask/route.ts`.
+
+### `specific_thing` surfaced in monthly checkpoint (0.3)
+The §2.5 monthly checkpoint card at day 30+ now pulls the `specific_thing` text (quarterly value wins over onboarding value) into `CheckpointSummary` and renders a "What you said preoccupied you" block quoting the user's own words back with a "Is this still the thing? If it's shifted, that's useful data. Mister P can help you think through it." reflection prompt. Scoped intentionally to monthly cadence only — daily-cadence surfacing of this text was considered and rejected as reinforcement risk for the OCD/BDD-adjacent users the safety rails protect. Code: `lib/checkpoint/service.ts`, `app/(app)/today/monthly-checkpoint-card.tsx`.
+
+### Mister P moved to second slot on `/today` (0.3)
+With behavioral state threaded into the prompt, Mister P became the most context-aware surface in the product. Keeping him at the bottom meant the most personalized answer was also the hardest to reach. New non-stepped-away order: Daily check-in → Mister P chat → Weekly summary strip → Weekly focus card → Weekly reflection → Confidence chart. Daily check-in stays at the top as the primary commitment device. Weekly cards become reference material the user scrolls to. Chat and chart still render when stepped-away. Code: `app/(app)/today/page.tsx` (reorder + updated placement-rationale comment).
+
+### Post-reflection recap in saved view (0.3)
+When the user saves their weekly reflection, the saved view now renders a compact "This week in one glance" section: ticked/possible goal-slot completion over the last 7 days, plus per-dimension deltas vs. the prior reflection (only moves of 1+ points surface — sub-point noise isn't signal). First reflection gets a "Next week's will show deltas" placeholder. All data is already on hand — `weeklySummary` threaded through as a new prop, prior reflection pulled from `state.history[-2]`. Scoped to the saved view; doesn't compete with the live-preview chart in edit mode. Code: `app/(app)/today/weekly-reflection-card.tsx`, `app/(app)/today/page.tsx` (props plumbing).
+
+### Weekly reflection soft-lock after save (0.3)
+Once saved, the reflection card's saved view is read-only for the rest of the week — the Update button is gone, replaced with a one-line note "Locked for this week. Next reflection unlocks Monday — weekly is a fixed snapshot, not a running dial." Rationale: the prior UX let a user repeatedly revise Monday's scores from Tuesday onward, which is the same self-monitoring loop the Mister P circuit breaker is designed to interrupt — particularly risky for OCD/BDD-adjacent users. Belt-and-suspenders is at the UI layer only; the upsert API still accepts writes so a support-driven correction is possible without a deploy. The lock unlocks itself when `weekStartString()` rolls forward to the next Monday — no cron, no state-tracking, no explicit flip. Code: `app/(app)/today/weekly-reflection-card.tsx`.
+
+### POV 11 — flossing + ranked whitening (0.3)
+`11-teeth-smile.md` gains a dedicated "Flossing — The Underrated Appearance Variable" section (aesthetic mechanism — inflamed gums, trapped debris, breath — with ADA + Mayo citations, interdental alternatives, gum-disease warning signs) and replaces the one-paragraph "Whitening — The Easy Win" section with "Whitening — Ranked Options" (in-office → dentist trays → ADA-Seal peroxide strips → whitening toothpaste as maintenance, plus budget/sensitivity decision guide, 5% potassium nitrate sensitivity management, and the natural-enamel-only caveat for crowns/veneers/fillings). Code: `content/povs/11-teeth-smile.md`.
+
+### POV 25 — acne + skincare integration (0.3)
+`25-acne.md` gains an "Integrating Acne Treatment With a Baseline Skincare Routine" section covering the gap between the baseline cleanser/moisturizer/SPF/retinoid stack and users on topical or prescription acne medications: layering order, don't-double-up-retinoids, the current BP-and-tretinoin-layering guidance (the old inactivation myth), barrier repair when actives overshoot, SPF choice on inflamed skin, the 4–8-week purging timeline, isotretinoin's stripped-down routine, and a "defer to your dermatologist" closing rail. Code: `content/povs/25-acne.md`.
+
+### Target-user widening: 18–45 (0.3)
+§1 target user expanded from 18–40 to 18–45 after feedback that the early-40s case (still actively shaping appearance/confidence, hormonal shifts becoming material, aging-skin window newly relevant) was the cohort the original cap excluded most awkwardly. `AgeSegment` gains `'41-45'`; `ageToSegment(age)` returns that value for 41–45 and `null` for 46+; the onboarding `age` question's `max` is reduced from 99 to 45 so users outside the range can't start the flow in the first place; the submit route adds a belt-and-suspenders 400 ("Cleanmaxxing is currently designed for men 18–45") for any direct POST that slips past the client cap. POV corpus is not yet tagged for `41-45`, so `appliesToAge` in the goal-ranker treats `41-45` as inheriting `33-40` — no re-embed needed, no metadata bulk update in this change. `AGE_RELEVANT_SLUGS` on `/povs` gains a `41-45` entry mirroring `33-40` (aging-appearance, cosmetic-procedures, eye-health). `AGE_SEGMENT_LABEL` in the goal-suggestions "Why these three?" explainer adds a `41-45` label. Code: `lib/onboarding/types.ts`, `lib/onboarding/questions.ts`, `lib/onboarding/goal-suggest.ts`, `app/api/onboarding/submit/route.ts`, `app/(app)/onboarding/complete/goals-picker.tsx`, `app/(app)/povs/page.tsx`, `scripts/embed-povs.ts` (type), `scripts/motivation-differentiation.ts` (AGES array).
+
+### Mister P rolling conversation history (0.3)
+New `lib/mister-p/conversation.ts` loads the last 8 Q/A pairs from `mister_p_queries` (authed client, so RLS applies). Answers truncate at 800 chars and questions at 300 — the block is memory of what's already been covered, not a transcript archive. `formatConversationHistoryBlock` renders pairs chronologically under a `CONVERSATION HISTORY` section with explicit rules: never say the same thing twice, go deeper when a topic recurs, never narrate that you remember ("As we discussed before…" would be a regression). Injected alongside the user-state block via the expanded `buildSystemPromptFull` signature. Token cost is ~1.5k with defaults. Code: `lib/mister-p/conversation.ts`, `lib/mister-p/prompt.ts` (`formatConversationHistoryBlock`), `app/api/mister-p/ask/route.ts`.
+
+### Citation-aware retrieval reranking (0.3)
+`retrievePersonalized` (in `lib/mister-p/retrieve.ts`) over-fetches candidate chunks (12 from question + 6 from context when present), merges + dedupes by slug and content prefix, then reranks using the user's prior citation history from `mister_p_queries.citations`. Unseen source slugs get a +0.04 bonus; slugs cited more than twice in prior answers lose 0.04 per citation above the threshold (capped at −0.15). Prevents the "same answer every time" feeling without changing the corpus. Magnitudes are exported constants (`UNSEEN_SLUG_BONUS`, `REPEAT_SLUG_PENALTY_STEP`, `REPEAT_SLUG_PENALTY_CAP`, `REPEAT_SLUG_THRESHOLD`) so tuning doesn't require a code change. Code: `lib/mister-p/retrieve.ts`, `app/api/mister-p/ask/route.ts` (reorganized to hoist citation-count computation before retrieval).
+
+### Semantic-context retrieval augmentation (0.3)
+New `lib/mister-p/semantic-context.ts` builds a per-user context blob from the `specific_thing` free-text (quarterly answer wins over onboarding answer) plus the last 3 weeks of `weekly_reflections.notes` (400-char cap per note). When the blob is non-empty, the ask route embeds it as a secondary query vector and passes it into `retrievePersonalized`, which retrieves from both vectors and merges. Net effect: a user whose reflection notes mention "skipping skincare at night — too tired" starts surfacing evening-routine chunks on adjacent questions even when the question itself doesn't name the struggle. Subtle-by-design — Mister P does not see the context text, only the retrieval output changes. Code: `lib/mister-p/semantic-context.ts`, `lib/mister-p/retrieve.ts` (`retrievePersonalized` context-embedding branch), `app/api/mister-p/ask/route.ts`.
+
+### Tom Brady essay + homepage essay grid (0.3)
+Second long-form marketing essay added at `/tom-brady-face` ("Tom Brady's Face Did More for His Brand Than Six Rings"). Verbatim author copy in `content/marketing/tom-brady-face.md`, rendered via the same react-markdown + typography pattern as `/is-clav-right`. The homepage's prior single "Read first" Clav card was restructured into a two-up grid covering both essays under "Two essays. The same posture." Footer gains a third long-read link. The Brady piece was the explicit catalyst for the 0.4 audience pivot — its voice and target reader are unmistakably 30+, not 22. Code: `content/marketing/tom-brady-face.md`, `app/tom-brady-face/page.tsx`, `app/page.tsx`.
+
+### Homepage pivot to "Looksmaxxing for Adults" (0.4)
+The homepage's prior framing ("Look and feel better. Without the radioactive parts of the category.") was a positioning statement, not a hook. Rewritten to lead with the audience the product naturally serves: hero ("Looking your best matters more after 30, not less"), sub-hero with the "that window closed" pivot moment as the visual anchor (aging is the antagonist, not another influencer), three pillars replacing the four-paths grid ("Built for adult men, not for teenagers" / "Process, not performance" / "Honest about what works and what doesn't"), with the four-levers framing preserved as a pull-quote rather than the primary structure. Brady essay promoted to first card in the "Read first" grid; Clav second. Footer adds the Brady link. Metadata title and description updated. Pricing line unchanged ($9.99/$79); pricing experimentation is a separate decision. Code: `app/page.tsx`.
+
+### Age cap extended from 45 to 55 (0.4)
+`AgeSegment` gains `'46-55'`. `ageToSegment` returns it for ages 46-55, `null` for 56+. Onboarding age question's `max` raised from 45 to 55; helper text updated to "men 18-55". Submit route's belt-and-suspenders 400 message updated. Ranker `appliesToAge` uses chained inheritance — `'46-55'` users see docs tagged `'46-55'`, `'41-45'`, or `'33-40'`. `AGE_RELEVANT_SLUGS` on `/povs` mirrors 33-40 for 46-55 (aging-appearance, cosmetic-procedures, eye-health). `AGE_SEGMENT_LABEL` in the goal-suggestions explainer adds the new label. Scripts updated for type consistency. POV `_metadata.json` audit deferred — the inheritance fallback is sufficient until 41-45 and 46-55 cohort signal warrants segment-specific tagging. Code: `lib/onboarding/types.ts`, `lib/onboarding/questions.ts`, `lib/onboarding/goal-suggest.ts`, `app/api/onboarding/submit/route.ts`, `app/(app)/onboarding/complete/goals-picker.tsx`, `app/(app)/povs/page.tsx`, `scripts/embed-povs.ts`, `scripts/motivation-differentiation.ts`.
+
+### `'maintenance-aging'` motivation segment (0.4)
+New value in the `motivation_segment` enum capturing the typical 35+ entry-story ("things are sliding, want a structured way to defend"). Added to the onboarding survey choice list, the quarterly re-survey card, the submit-route validation set, and the quarterly-route validation set. `MotivationSegment` type extended in `lib/onboarding/goal-suggest.ts`. Ranker adjustment: `+3 process / -3 outcome`, tighter than `feel-better-in-own-skin`'s `±4` because there's no self-acceptance vulnerability to protect against here, just a structural bias toward sustainable habits over before-and-after stunts. Code: `lib/onboarding/questions.ts`, `lib/onboarding/goal-suggest.ts`, `app/api/onboarding/submit/route.ts`, `app/api/quarterly-survey/route.ts`, `app/(app)/today/quarterly-survey-card.tsx`.
+
+### POV editorial pass for adult tone (0.4)
+Targeted rewrites of the three POVs most prone to younger-internet framing, identified during the 0.4 audience pivot. POV 14 reviewed and left as-is — already mature in voice. POV 15 (looksmaxxing-system) gets three line-level edits: the "looksmaxxing is just turning attractiveness into a strategy game" framing softened to "an ecosystem of diagnostics and protocols" (game/gamer language reads juvenile to the 30+ audience); "Researching AI height hacks before fixing posture" replaced with "obscure cosmetic procedures" (the original is a young-internet artifact); the explicit PSL scoring line "one confident and relaxed reads as an eight, one tense and anxious reads as a five" rephrased to talk about "composed and attractive" vs "tense and anxious" without numeric ranking. POV 51 (dating-apps) gains a fifth bio-example category — "Re-entry / late 30s and beyond" — with the right register for divorced/widowed users re-entering the apps and a paragraph naming the matching mistake to avoid (over-indexing on the past relationship in the bio). Re-embedded after both edits. Code: `content/povs/15-looksmaxxing-system.md`, `content/povs/51-dating-apps.md`.
+
+### `sync-povs` retired; `.md` canonical (0.3)
+`scripts/sync-povs.ts` (mammoth-based regeneration of `.md` from `../Cleanmaxxing POV/*.docx`) is deleted, the `sync-povs` npm script is removed, and the `mammoth` devDependency is dropped. Reason: over multiple commits, substantial POV sections (e.g. Living the Bald Look in 08, starter-diagnostic-path in 41, two-week-launch-sequence in 51) had been added directly to `.md` without being mirrored into the `.docx`. A routine sync wiped ~540 lines across 19 files before being caught and recovered via `git checkout HEAD -- content/povs/`. Rather than reconcile every drifted `.docx`, `.md` was promoted to canonical. Edit POVs directly in `content/povs/*.md`; run `npm run embed-povs` after any change so Mister P's pgvector index picks up the new chunks. The `.docx` files remain tracked as historical snapshots; the frontmatter `source: "XX_Title.docx"` field in each `.md` is now legacy metadata, not a live pointer.
 
 ---
 
@@ -382,7 +464,7 @@ users
   id (uuid, from Supabase Auth)
   created_at
   age
-  age_segment (enum: '18-24', '25-32', '33-40')
+  age_segment (enum: '18-24', '25-32', '33-40', '41-45', '46-55' — 0.3 added '41-45'; 0.4 added '46-55' as part of the 30-55 audience pivot)
   motivation_segment (enum: 'feel-better-in-own-skin', 'social-professional-confidence', 'specific-event', 'structured-plan', 'something-specific-bothering-me', 'not-sure-yet', nullable until onboarding complete)
   motivation_specific_detail (text, nullable — only populated when motivation_segment = 'something-specific-bothering-me')
   onboarding_completed_at
@@ -433,16 +515,19 @@ weekly_reflections
 progress_photos (§2.6)
   id
   user_id
-  slot (enum: 'baseline' | 'progress_90d')
+  slot (enum: 'baseline' | 'progress_30d' | 'progress_90d' — migration 0009 widens 0008's original two-slot CHECK)
   storage_path (text — folder-based RLS: (storage.foldername(name))[1] = auth.uid()::text)
   captured_at
   -- bytes live in Supabase Storage bucket; metadata is here
-  -- migration 0008
+  -- migrations 0008 (initial) + 0009 (30d slot)
 
 survey_responses
   id
   user_id
-  question_key
+  question_key  -- onboarding answer keys plus KV markers: monthly_checkpoint_dismissed_at,
+                -- and versioned quarterly re-survey keys (focus_areas_q1, motivation_segment_q1,
+                -- specific_thing_q1, quarterly_survey_q1_completed_at). No unique constraint on
+                -- (user_id, question_key) in the 0001 schema, so writes are delete-then-insert.
   response_value
   created_at
 
@@ -516,6 +601,17 @@ that produced pedagogical-sounding answers and made ordinary questions feel
 like footnoted essays. The only pathway that now surfaces a POV doc by name
 is the proactive-suggestion advisory, and that is gated on the user's own
 active goals — see §2.6.)
+
+(Updated 0.3: a `USER BEHAVIORAL STATE` block is now injected alongside the
+active-goals block on every turn, containing the user's specific_thing
+free-text, tenure, weekly goal-completion rate, latest per-dimension
+confidence with rising/flat/declining tags, and stuck dimensions. The
+block's prompt copy is explicit that Mister P must use the state to
+calibrate depth and substance but must NOT narrate observations back to
+the user. "I see you haven't checked in much" reads as surveillance;
+letting the state quietly change what gets emphasized does not. See
+`formatUserStateBlock` in `lib/mister-p/prompt.ts` for the four concrete
+calibration heuristics.)
 
 Your voice:
 - Direct and a little dry
