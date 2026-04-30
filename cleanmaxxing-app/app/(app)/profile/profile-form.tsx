@@ -38,6 +38,9 @@ const INTERVENTION_LABELS: Record<Intervention, string> = {
   minoxidil: 'Minoxidil',
   retinoid: 'Topical retinoid (tretinoin, adapalene)',
   accutane: 'Isotretinoin (Accutane)',
+  creatine: 'Creatine',
+  ssri: 'SSRI / SNRI antidepressant',
+  adhd_stimulant: 'ADHD stimulant (Adderall, Vyvanse)',
 };
 
 const BUDGET_OPTIONS: Array<{ value: BudgetTier; label: string }> = [

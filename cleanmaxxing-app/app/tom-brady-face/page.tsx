@@ -91,9 +91,9 @@ export default async function TomBradyFacePage() {
           Brady didn&rsquo;t happen by accident. He treated his appearance as a
           variable he could move, with discipline and patience, over years.
           Cleanmaxxing is the structured, honest version of that for the rest
-          of us &mdash; without the radioactive parts of the looksmaxxing
-          category. A guided plan built from a 100&ndash;200k+ word corpus,
-          with a direct chat assistant that won&rsquo;t sell you anything.
+          of us &mdash; without the worst parts of looksmaxxing culture. A
+          guided plan built from a 100&ndash;200k+ word corpus, with a direct
+          chat assistant that won&rsquo;t sell you anything.
         </p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <Link

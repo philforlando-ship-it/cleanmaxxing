@@ -21,7 +21,7 @@ const PILLARS = [
   },
   {
     number: '02',
-    title: 'Process over outcome',
+    title: 'Process + outcomes',
     body: 'Goals are weekly habits \u2014 protein, sleep, training, skincare, posture. The thing that compounds is consistency over years. That\u2019s what the app tracks.',
   },
   {

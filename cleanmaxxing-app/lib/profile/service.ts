@@ -41,7 +41,10 @@ export type Intervention =
   | 'finasteride'
   | 'minoxidil'
   | 'retinoid'
-  | 'accutane';
+  | 'accutane'
+  | 'creatine'
+  | 'ssri'
+  | 'adhd_stimulant';
 
 export const INTERVENTIONS: ReadonlyArray<Intervention> = [
   'trt',
@@ -50,6 +53,9 @@ export const INTERVENTIONS: ReadonlyArray<Intervention> = [
   'minoxidil',
   'retinoid',
   'accutane',
+  'creatine',
+  'ssri',
+  'adhd_stimulant',
 ] as const;
 
 export type UserProfile = {
