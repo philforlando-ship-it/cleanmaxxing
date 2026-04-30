@@ -1,9 +1,25 @@
 # Cleanmaxxing MVP Specification
 
-**Version:** 0.4 (updated 2026-04-25 with audience pivot)
+**Version:** 0.5 (updated 2026-04-30 with goal-scoped chat + /profile consolidation + 180d photo)
 **Owner:** Phil
 **Build window:** ~6 weeks, ~4 hours/day solo
 **Purpose of this doc:** Single source of truth for the MVP build. Paste into Claude Code at the start of build sessions. Update as decisions change.
+
+**What changed in 0.5:** Two big surfaces. (a) Goal-scoped Mister P chat threads — each goal gets its own persistent thread, with a thread picker on `/today`, a goal-attached chat panel on `/goals/[id]`, a hard-clear endpoint, retrieval seeded from the focused goal's title + description + source-slug bonus, semantic-context augmentation skipped inside goal threads to prevent reflection-note language from bleeding across topics, prefill events from in-card "Ask Mister P about this" buttons routing into the matching goal's thread, and a `USER'S CURRENT FOCUS` prompt block that disambiguates references like "this" / "this goal" / "it". Migration 0013 adds `mister_p_queries.goal_id uuid references goals(id) on delete set null`; the conversation loader scopes by goal_id (15-pair window per-goal vs 8-pair General); the clear endpoint hard-deletes on confirmation. (b) `/profile` consolidation — the `/progress` folder is gone, merged into a single `/profile` page covering photos, Tier 1 stats (training, sleep, body comp, diet, height, weight), and Tier 2 personal info (hair, skin, current interventions, budget, relationship). Photos now have a fourth slot (180-day) for the slow-moving variables — hair regrowth, late aesthetic compounding, sustained recomp — with bounded `/today` nudge windows so 30d/90d/180d don't double-prompt (`[30,90)`, `[90,180)`, `[180,∞)`). Migration 0014 adds `user_profile.current_weight_lbs`; migration 0015 adds `user_profile.height_inches`; migration 0016 widens `progress_photos.slot` CHECK to include `'progress_180d'`. Weight and height fall back to the onboarding survey answers at read time, so users who answered onboarding don't see those fields as null on first `/profile` visit.
+
+`/today` restructure: This Week's Focus moves to slot 2 (right under Daily Check-In) so daily action and weekly context pair up, Mister P drops to slot 3, the standalone WeeklySummaryStrip is deleted and its count line + emerald progress bar fold into the focus card's header, A/B/C lettering replaces numeric prefixes on goal associations across both cards, `Week N · stage label` annotation surfaces next to walkthrough weeks (so "Week 5" reads as "Week 5 · Some experience" rather than appearing arbitrary), the `AdjustBaseline` control is now inline on each focus card so users can correct the stage-derived week without leaving `/today`, and per-Daily-Check-In-row "Focus →" deep links smooth-scroll to the matching focus entry via `#focus-<slug>` anchors. A new profile completion nudge sits between `FirstRunCard` and the photo nudges — computed from 11 structured fields (multi-select `current_interventions` and free-text `diet_restrictions` are excluded so 100% is reachable for users not on anything; photos are excluded entirely — taking a baseline photo isn't profile completion). Weight and height fall back to onboarding answers in the percentage calc too, so users start at ~18% post-onboarding rather than 0%; the card disappears at 100% with no dismissal.
+
+Mister P calibration: height now renders in feet-inches form (`6'3"`) in both the user-state block and his answers via a system-prompt rule. Markdown links to POVs are first-class output — answers write `[Doc title](/povs/<slug>)` and a `lib/mister-p/render-answer.tsx` helper turns them into clickable anchors in both chat surfaces. The prompt's prior "do not name the POV docs" rule was inverted to instruct linking at the natural moment of reference (max 1–2 per answer) plus a special case for "where can I read X" questions to lead with the link.
+
+`/povs` reader gains GFM tables (`remark-gfm`) and matching component styling, with comparison tables added to four POVs — `40-peptide-deep-dive` (Tesamorelin / CJC-1295-Ipamorelin / AOD-9604 across mechanism / primary goal / FDA status / evidence quality / IGF-1 effect / supervision), `11-teeth-smile` (appearance damage by cause), `27-hair-loss-treatments` (FUT vs FUE), `29-body-hair-methods` (5-method summary across result / cost / lasts / best for). `18-tanning` gains a "Bronzer — The Cosmetic Layer" section for the cosmetic-vs-tanning distinction.
+
+Nav cleanup: "Other Info" label changed to "Articles" (URL stays `/other-info`); in-app variants of the four marketing articles render at `/other-info/<slug>` inside the app layout with the AppNav visible and the marketing signup CTA stripped — logged-in users don't need a "Start free trial" pitch on internal article reads, and the back link points at `/other-info` rather than `/`. The public marketing routes (`/two-layers`, `/tom-brady-face`, `/is-clav-right`, `/mister-p`) are unchanged for SEO/share-link continuity. `Progress` in the nav becomes `Profile` at the renamed `/profile` URL; the old standalone `/profile` page is merged into the new combined surface as a "Personal info" section.
+
+Goal-template + content polish: "Reveal your jawline through fat loss" retitled to "Reveal your jawline" with description rewritten to match the onramp's actual posture + neck training focus (the prior copy implied fat loss was the implementation when it's actually the parallel track); three interventions added to the chip set (`creatine`, `ssri`, `adhd_stimulant`) where there's a real interaction worth flagging; homepage pillar 02 retitled "Process + outcomes"; "radioactive parts of the category" replaced with "worst parts of looksmaxxing culture" on `/is-clav-right` and `/tom-brady-face`; Tom Brady article retitled "Tom Brady's face and physique did more for his brand than seven rings".
+
+Bug fixes shipped alongside: library route's age-segment filter (`/api/goals/templates`) inherits 33-40 docs for 41-45/46-55 users — was previously wiping the library to empty for 41+ users because the filter didn't have the same fallback the goal-ranker's `appliesToAge` does; week-1 `weekly_reflections` row auto-seeded from baseline `confidence_dimensions` values on `/api/onboarding/submit` so the `/today` reflection card lands in the saved/locked state immediately instead of re-asking the four confidence questions the user just answered.
+
+§5 data model: `mister_p_queries.goal_id` (nullable, FK to goals.id, on delete set null) — migration 0013 with composite index on `(user_id, goal_id, created_at desc)`. `user_profile.current_weight_lbs numeric(5,1)` (80–500) — migration 0014. `user_profile.height_inches int` (48–96) — migration 0015. `progress_photos.slot` CHECK constraint extended to `('baseline', 'progress_30d', 'progress_90d', 'progress_180d')` — migration 0016. §6 Mister P prompt: `USER'S CURRENT FOCUS` block (`formatActiveGoalFocusBlock`) injected when the ask request carries a validated `goal_id`; height-formatting rule; markdown-link rule replacing the prior "do not name POV docs" prohibition.
 
 **What changed in 0.4:** Strategic positioning pivot from "structured self-improvement for men 18-45" to "the no-bullshit appearance playbook for men over 30," with the ICP narrowing to 32-42. The catalyst was a clarifying read on what was actually being built — every safety rail, every refusal in Mister P, every process-over-outcome decision had been moving the product away from the looksmaxxing-curious 22-year-old and toward the 38-year-old waking up to appearance decline. Rather than retrofit the product to a younger audience, 0.4 commits to the audience the product naturally serves. Concrete changes: §1 target user updated from 18-45 to 30-55 with the ICP framing; homepage rewritten to lead with "Looking your best matters more after 30, not less" and a "the window closed" sub-hero (aging is the antagonist, not another influencer); age cap extended from 45 to 55 with a new `'46-55'` AgeSegment and a chained inheritance fallback (`46-55` → `41-45` → `33-40`); a new `'maintenance-aging'` motivation_segment value with a `+3 process / -3 outcome` ranker bias; targeted POV editorial pass on the three docs most prone to younger-internet framing — POV 15 ("looksmaxxing as a strategy game" → "an ecosystem of diagnostics and protocols"; "AI height hacks" → "obscure cosmetic procedures"; explicit "reads as an eight / reads as a five" PSL scoring softened); POV 51 gains a re-entry / late-30s bio example for the divorced/widowed cohort. Pricing knob ($9.99 → $14.99 experiment), creator GTM pivot (away from looksmaxxing TikTok, toward men's lifestyle podcasts + grooming/dermatologist YouTube + finance-and-fitness Twitter), and POV `_metadata.json` audit for `'46-55'` tagging are deferred — each warrants its own decision after first-tester signal. Bug-fix follow-on (2026-04-30): migrations 0011 and 0012 backfill the `users.motivation_segment` and `users.age_segment` CHECK constraints to match the values added during 0.4 — both were stale at the DB layer and rejected end-of-onboarding for users picking `'maintenance-aging'` or aged 41+ (caught when a beta tester hit it).
 
@@ -515,11 +531,15 @@ weekly_reflections
 progress_photos (§2.6)
   id
   user_id
-  slot (enum: 'baseline' | 'progress_30d' | 'progress_90d' — migration 0009 widens 0008's original two-slot CHECK)
+  slot (enum: 'baseline' | 'progress_30d' | 'progress_90d' | 'progress_180d'
+        — migration 0009 widened 0008's original two-slot CHECK to add 'progress_30d';
+        migration 0016 widened it again in 0.5 to add 'progress_180d' for the
+        six-month checkpoint covering hair regrowth, late aesthetic compounding,
+        and sustained recomp)
   storage_path (text — folder-based RLS: (storage.foldername(name))[1] = auth.uid()::text)
   captured_at
   -- bytes live in Supabase Storage bucket; metadata is here
-  -- migrations 0008 (initial) + 0009 (30d slot)
+  -- migrations 0008 (initial) + 0009 (30d slot) + 0016 (180d slot)
 
 survey_responses
   id
@@ -552,6 +572,12 @@ pov_chunks
 mister_p_queries
   id
   user_id
+  goal_id (nullable uuid, FK goals.id ON DELETE SET NULL — added in 0.5
+           via migration 0013 to support per-goal Mister P chat threads.
+           NULL rows belong to the global /today thread; non-null rows
+           belong to the goal-scoped thread visible on /goals/[id] and
+           selectable in the /today thread picker. Composite index on
+           (user_id, goal_id, created_at desc) for per-thread loads.)
   question
   answer
   citations (jsonb — list of pov_doc slugs)
@@ -565,6 +591,32 @@ confidence_dimensions (for baseline survey)
   dimension (enum: appearance, social, career, physical, overall)
   baseline_score (int 1–10)
   captured_at
+
+user_profile (added 0.3 via migration 0010; expanded 0.5)
+  user_id (PK, FK auth.users ON DELETE CASCADE)
+  -- Tier 1: body-comp / training / lifestyle grounding. Read by
+  -- Mister P every turn; written via /profile (Current stats form).
+  activity_level (enum: sedentary, lightly_active, moderately_active, very_active)
+  training_experience (enum: none, under_1y, 1_to_3y, 3_to_10y, over_10y)
+  daily_training_minutes (int 0–240)
+  avg_sleep_hours (numeric(3,1) 0–14)
+  diet_restrictions (text)
+  bf_pct_self_estimate (enum: under_12, 12_to_15, 15_to_20, 20_to_25, over_25)
+  current_weight_lbs (numeric(5,1) 80–500 — added 0.5 via migration 0014;
+                      auto-populated at read time from survey_responses
+                      'weight_lbs' when null so users with an onboarding
+                      answer don't see this as blank on first /profile load)
+  height_inches (int 48–96 — added 0.5 via migration 0015; same
+                 read-time fallback to survey_responses 'height_inches')
+  -- Tier 2: surfaced via /profile (Personal info form).
+  hair_status (enum: full, thinning, receding, treating, shaved)
+  skin_type (smallint 1–6, Fitzpatrick)
+  current_interventions (text[] — controlled set: trt, glp1, finasteride,
+                         minoxidil, retinoid, accutane, plus 0.5 additions
+                         creatine, ssri, adhd_stimulant)
+  budget_tier (enum: under_50, 50_to_150, 150_to_500, no_limit)
+  relationship_status (enum: single, dating, partnered, married)
+  updated_at
 ```
 
 Keep it this simple. Resist the urge to add tables for features that aren't in MVP scope.
