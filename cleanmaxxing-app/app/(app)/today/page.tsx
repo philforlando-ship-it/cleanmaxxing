@@ -16,6 +16,8 @@ import { SleepLogCard } from './sleep-log-card';
 import { getSleepState } from '@/lib/sleep/service';
 import { WorkoutLogCard } from './workout-log-card';
 import { getWorkoutState } from '@/lib/workout/service';
+import { WeeklyLetterCard } from './weekly-letter-card';
+import { getCurrentWeeklyLetter } from '@/lib/weekly-letter/service';
 import { FirstConversationCard } from './first-conversation-card';
 import { getFirstConvoState } from '@/lib/first-convo/service';
 import { DailyNoteCard } from './daily-note-card';
@@ -94,6 +96,7 @@ export default async function TodayPage({ searchParams }: Props) {
     profileCompletion,
     sleepState,
     workoutState,
+    weeklyLetter,
     firstConvoState,
     { data: goalsRaw },
     { data: photoRowsRaw },
@@ -108,6 +111,7 @@ export default async function TodayPage({ searchParams }: Props) {
     getProfileCompletion(supabase, user.id),
     getSleepState(supabase, user.id),
     getWorkoutState(supabase, user.id),
+    getCurrentWeeklyLetter(supabase, user.id),
     getFirstConvoState(supabase, user.id),
     supabase
       .from('goals')
@@ -274,6 +278,13 @@ export default async function TodayPage({ searchParams }: Props) {
 
         {!steppedAway && !firstConvoState.completed && (
           <FirstConversationCard initial={firstConvoState} />
+        )}
+
+        {weeklyLetter && (
+          <WeeklyLetterCard
+            weekStart={weeklyLetter.week_start}
+            body={weeklyLetter.body}
+          />
         )}
 
         {!steppedAway && todayNote && <DailyNoteCard note={todayNote} />}
