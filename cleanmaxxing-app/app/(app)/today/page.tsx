@@ -107,7 +107,7 @@ export default async function TodayPage({ searchParams }: Props) {
     getFirstConvoState(supabase, user.id),
     supabase
       .from('goals')
-      .select('id, title, source_slug, created_at, baseline_stage')
+      .select('id, title, source_slug, created_at, baseline_stage, target_date, last_phase_seen')
       .eq('user_id', user.id)
       .eq('status', 'active')
       .order('created_at', { ascending: true }),
@@ -128,6 +128,7 @@ export default async function TodayPage({ searchParams }: Props) {
     created_at: string;
     baseline_stage: string | null;
     target_date: string | null;
+    last_phase_seen: string | null;
   }>;
 
   // Set of source_slugs that have an authored walkthrough. The Daily

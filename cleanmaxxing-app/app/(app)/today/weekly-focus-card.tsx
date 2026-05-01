@@ -16,6 +16,7 @@ import { povExists } from '@/lib/content/pov';
 import type { WeeklyCheckInSummary } from '@/lib/check-in/service';
 import { AdjustBaseline } from './adjust-baseline';
 import { AdjustTarget } from './adjust-target';
+import { DismissPhaseButton } from './dismiss-phase-button';
 
 type ActiveGoal = {
   id: string;
@@ -24,7 +25,18 @@ type ActiveGoal = {
   created_at: string;
   baseline_stage: string | null;
   target_date: string | null;
+  last_phase_seen: string | null;
 };
+
+// Phase identifier for the user's current onramp position.
+// Active phases use the block's range string ("1-4", "5-8");
+// graduated walkthroughs use a sentinel. Stored verbatim in
+// goals.last_phase_seen when the user dismisses an entry; the
+// next time the goal crosses into a new range or graduates, the
+// surface re-fires.
+function phaseIdentifier(state: OnrampState): string {
+  return state.kind === 'graduated' ? 'graduated' : state.block.range;
+}
 
 type Props = {
   goals: ActiveGoal[];
@@ -52,8 +64,12 @@ type Entry = {
   // (target - created) so a 56-day window reads as 8 weeks.
   anchorTargetDate: string | null;
   anchorCreatedAt: string;
+  // Last phase the user dismissed via "Got it." Drives the
+  // current-vs-seen check that gates entry visibility.
+  anchorLastPhaseSeen: string | null;
   goalTitles: string[];
   state: OnrampState;
+  currentPhase: string;
 };
 
 // Mirror of BASELINE_LABEL in adjust-baseline.tsx. Defined inline here
@@ -101,10 +117,22 @@ export function WeeklyFocusCard({ goals, weeklySummary }: Props) {
       anchorStage,
       anchorTargetDate: earliest.target_date,
       anchorCreatedAt: earliest.created_at,
+      anchorLastPhaseSeen: earliest.last_phase_seen,
       goalTitles: group.map((g) => g.title),
       state,
+      currentPhase: phaseIdentifier(state),
     });
   }
+
+  // Filter to entries whose current phase the user hasn't yet
+  // dismissed. The whole card disappears when nobody has a new
+  // phase to read — phase content cycles every 3-4 weeks on most
+  // onramps, and the duplication problem (same content on /today
+  // for weeks straight) is solved by hiding it once it's been
+  // seen, not by squeezing it into another surface.
+  const newPhaseEntries = withOnramp.filter(
+    (e) => e.anchorLastPhaseSeen !== e.currentPhase,
+  );
 
   // Helper: total weeks from goal accepted_at to target_date,
   // rounded. Returns null when there's no target.
@@ -116,7 +144,7 @@ export function WeeklyFocusCard({ goals, weeklySummary }: Props) {
     return Math.max(1, Math.round(ms / (7 * 86_400_000)));
   }
 
-  if (withOnramp.length === 0) return null;
+  if (newPhaseEntries.length === 0) return null;
 
   const summaryPct =
     weeklySummary && weeklySummary.possible > 0
@@ -133,7 +161,9 @@ export function WeeklyFocusCard({ goals, weeklySummary }: Props) {
     <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
       <h2 className="text-lg font-medium">Current focus</h2>
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-        Guidance per domain, based on when you first engaged with it. One concrete focus per week, not a full protocol.
+        New for this phase &mdash; tap &ldquo;Got it&rdquo; once you&rsquo;ve
+        read it and the entry stays out of the way until you cross into the
+        next phase.
       </p>
 
       {weeklySummary && weeklySummary.goalCount > 0 && weeklySummary.possible > 0 && summaryPct !== null && (
@@ -159,7 +189,7 @@ export function WeeklyFocusCard({ goals, weeklySummary }: Props) {
       )}
 
       <ul className="mt-5 space-y-4">
-        {withOnramp.map((entry, i) => (
+        {newPhaseEntries.map((entry, i) => (
           <li
             key={entry.slug}
             id={`focus-${entry.slug}`}
@@ -222,18 +252,24 @@ export function WeeklyFocusCard({ goals, weeklySummary }: Props) {
                 Also applies to: {entry.goalTitles.slice(1).join(', ')}
               </p>
             )}
-            {entry.state.kind === 'active' && (
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-                <AdjustBaseline
-                  goalId={entry.anchorGoalId}
-                  currentStage={entry.anchorStage}
-                />
-                <AdjustTarget
-                  goalId={entry.anchorGoalId}
-                  currentTarget={entry.anchorTargetDate}
-                />
-              </div>
-            )}
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <DismissPhaseButton
+                goalId={entry.anchorGoalId}
+                phase={entry.currentPhase}
+              />
+              {entry.state.kind === 'active' && (
+                <>
+                  <AdjustBaseline
+                    goalId={entry.anchorGoalId}
+                    currentStage={entry.anchorStage}
+                  />
+                  <AdjustTarget
+                    goalId={entry.anchorGoalId}
+                    currentTarget={entry.anchorTargetDate}
+                  />
+                </>
+              )}
+            </div>
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
               <Link
                 href={`/goals/${entry.anchorGoalId}`}
