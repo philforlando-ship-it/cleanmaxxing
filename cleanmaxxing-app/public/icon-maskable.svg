@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Cleanmaxxing">
+  <!-- Maskable variant: smaller letter so the design survives the
+       Android adaptive-icon mask (which can crop up to 20% off each
+       edge). Safe area is the inner ~80% circle/square. -->
+  <rect width="512" height="512" fill="#18181b"/>
+  <text
+    x="50%"
+    y="50%"
+    font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+    font-size="240"
+    font-weight="700"
+    fill="#ffffff"
+    text-anchor="middle"
+    dominant-baseline="central"
+  >C</text>
+</svg>

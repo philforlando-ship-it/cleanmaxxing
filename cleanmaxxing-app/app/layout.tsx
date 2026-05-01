@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { RewardfulLoader } from "@/components/rewardful-loader";
 import { ThemeApplier } from "@/components/theme-applier";
+import { ServiceWorkerRegistrar } from "@/components/service-worker-registrar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,6 +18,26 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Cleanmaxxing",
   description: "Structured, honest self-improvement for men who want to look and feel better — without the radioactive parts of looksmaxxing culture.",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Cleanmaxxing",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  // Theme color matches the dark zinc palette used throughout the
+  // app's chrome. Light/dark variants so the browser status bar
+  // reads correctly under each system preference.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
+    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
+  ],
 };
 
 // Inline script that runs before React hydrates so we set the correct
@@ -57,6 +78,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
         <ThemeApplier />
         <RewardfulLoader />
+        <ServiceWorkerRegistrar />
         {children}
       </body>
     </html>
