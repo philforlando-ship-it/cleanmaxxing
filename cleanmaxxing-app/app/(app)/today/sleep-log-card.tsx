@@ -100,6 +100,45 @@ export function SleepLogCard({ recent, rollingAvgHours, rollingCount }: Props) {
     });
   })();
 
+  // Compact one-line render when last night is already logged and
+  // the user isn't actively editing. The full card collapses
+  // because a logged sleep value isn't asking for action — it's
+  // reference. Click Edit to expand back to the form.
+  if (!editing && existing) {
+    return (
+      <section className="rounded-xl border border-zinc-200 bg-white px-5 py-3 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
+            <span className="font-medium text-zinc-700 dark:text-zinc-300">
+              Sleep
+            </span>
+            <span className="text-zinc-900 dark:text-zinc-100">
+              <span className="font-semibold">{existing.hours}h</span>
+              {existing.quality_1_5 !== null && (
+                <span className="text-zinc-500">
+                  {' · '}
+                  {QUALITY_LABELS[existing.quality_1_5]}
+                </span>
+              )}
+            </span>
+            {rollingCount > 1 && rollingAvgHours !== null && (
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                {rollingAvgHours}h avg / {rollingCount} nights
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="text-xs text-zinc-500 underline decoration-dotted underline-offset-2 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+          >
+            Edit
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="flex items-baseline justify-between gap-3">
@@ -107,34 +146,7 @@ export function SleepLogCard({ recent, rollingAvgHours, rollingCount }: Props) {
         <span className="text-xs text-zinc-500">{headerLabel}</span>
       </div>
 
-      {!editing && existing ? (
-        <div className="mt-3">
-          <p className="text-sm text-zinc-800 dark:text-zinc-200">
-            <span className="font-semibold">{existing.hours}</span> hours
-            {existing.quality_1_5 !== null && (
-              <>
-                {' · '}
-                <span className="text-zinc-600 dark:text-zinc-400">
-                  {QUALITY_LABELS[existing.quality_1_5]}
-                </span>
-              </>
-            )}
-          </p>
-          {existing.notes && (
-            <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
-              {existing.notes}
-            </p>
-          )}
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="mt-3 text-xs text-zinc-500 underline decoration-dotted underline-offset-2 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-          >
-            Edit
-          </button>
-        </div>
-      ) : (
-        <div className="mt-4 space-y-4">
+      <div className="mt-4 space-y-4">
           <div>
             <label
               htmlFor="sleep-hours"
@@ -232,7 +244,6 @@ export function SleepLogCard({ recent, rollingAvgHours, rollingCount }: Props) {
             )}
           </div>
         </div>
-      )}
 
       {rollingCount > 0 && rollingAvgHours !== null && (
         <p className="mt-4 border-t border-zinc-200 pt-3 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">

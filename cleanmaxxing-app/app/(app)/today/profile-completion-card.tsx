@@ -1,19 +1,21 @@
-// Profile completion nudge on /today. Renders only when the user
-// has fewer than 11/11 of the counted profile fields filled in. Goes
-// silent at 100% — once the user is fully set up, this surface
-// doesn't earn its space anymore. No dismissal, on purpose: the
-// user can hit 100% and make it disappear, or live with the bar
-// until they do.
+// Profile completion nudge on /today. Renders while the user is
+// below 80% — once they cross that threshold the surface stops
+// earning its space, since the remaining fields are the
+// less-essential ones (relationship, budget tier, etc.) and the
+// daily note has more leverage on what calibrates Mister P.
+// No dismissal, on purpose: cross 80% to make it disappear.
 
 import Link from 'next/link';
 import type { ProfileCompletion } from '@/lib/profile/completion';
+
+const HIDE_THRESHOLD = 80;
 
 type Props = {
   completion: ProfileCompletion;
 };
 
 export function ProfileCompletionCard({ completion }: Props) {
-  if (completion.percentage >= 100) return null;
+  if (completion.percentage >= HIDE_THRESHOLD) return null;
   const remaining = completion.total - completion.filled;
 
   return (
