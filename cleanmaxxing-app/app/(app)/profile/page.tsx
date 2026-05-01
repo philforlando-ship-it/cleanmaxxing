@@ -301,7 +301,7 @@ export default async function ProfilePage() {
             neutral expression.
           </p>
           <div className="mt-5">
-            <CapturePhoto slot="progress_30d" />
+            <CapturePhoto slot="progress_30d" baselineUrl={baseline?.signedUrl ?? null} />
           </div>
         </section>
       )}
@@ -318,7 +318,7 @@ export default async function ProfilePage() {
               honest.
             </p>
             <div className="mt-5">
-              <CapturePhoto slot="progress_90d" />
+              <CapturePhoto slot="progress_90d" baselineUrl={baseline?.signedUrl ?? null} />
             </div>
           </div>
           {!progress30d && progress30dEligible && (
@@ -330,7 +330,7 @@ export default async function ProfilePage() {
                 You can still add one retroactively as a mid-point reference.
               </p>
               <div className="mt-5">
-                <CapturePhoto slot="progress_30d" />
+                <CapturePhoto slot="progress_30d" baselineUrl={baseline?.signedUrl ?? null} />
               </div>
             </div>
           )}
@@ -351,7 +351,7 @@ export default async function ProfilePage() {
               Match the baseline conditions.
             </p>
             <div className="mt-5">
-              <CapturePhoto slot="progress_180d" />
+              <CapturePhoto slot="progress_180d" baselineUrl={baseline?.signedUrl ?? null} />
             </div>
           </div>
           {!progress90d && progress90dEligible && (
@@ -363,7 +363,7 @@ export default async function ProfilePage() {
                 You can still add one retroactively as a checkpoint.
               </p>
               <div className="mt-5">
-                <CapturePhoto slot="progress_90d" />
+                <CapturePhoto slot="progress_90d" baselineUrl={baseline?.signedUrl ?? null} />
               </div>
             </div>
           )}
@@ -376,7 +376,7 @@ export default async function ProfilePage() {
                 You can still add one retroactively as a mid-point reference.
               </p>
               <div className="mt-5">
-                <CapturePhoto slot="progress_30d" />
+                <CapturePhoto slot="progress_30d" baselineUrl={baseline?.signedUrl ?? null} />
               </div>
             </div>
           )}
