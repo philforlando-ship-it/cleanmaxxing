@@ -26,6 +26,10 @@ type AddPayload = {
   source_slug?: string;
   baseline_stage?: string;
   force?: boolean;
+  // 'user_created' for custom-goal flow, 'system_suggested' for
+  // templated library accepts. Defaults to system_suggested so
+  // the templated path doesn't need to thread an extra field.
+  source?: 'user_created' | 'system_suggested';
 };
 
 // Adds a single goal to an already-onboarded user. Post-onboarding only —
@@ -45,13 +49,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { title, description, category, priority_tier, goal_type, source_slug, baseline_stage, force } = body;
+  const {
+    title,
+    description,
+    category,
+    priority_tier,
+    goal_type,
+    source_slug,
+    baseline_stage,
+    force,
+    source,
+  } = body;
+  const goalSource: 'user_created' | 'system_suggested' =
+    source === 'user_created' ? 'user_created' : 'system_suggested';
 
   if (!title || typeof title !== 'string') {
     return NextResponse.json({ error: 'Missing title' }, { status: 400 });
-  }
-  if (!priority_tier || !ALLOWED_TIERS.has(priority_tier)) {
-    return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
   }
   if (goal_type !== 'process' && goal_type !== 'outcome') {
     return NextResponse.json({ error: 'Invalid goal_type' }, { status: 400 });
@@ -59,6 +72,35 @@ export async function POST(req: Request) {
   const stage = baseline_stage ?? 'new';
   if (!ALLOWED_BASELINE_STAGES.has(stage)) {
     return NextResponse.json({ error: 'Invalid baseline_stage' }, { status: 400 });
+  }
+
+  // Resolve priority_tier + category from pov_docs when source_slug
+  // is supplied. This is the canonical path — every goal in the
+  // library is anchored to a POV, and custom goals are required to
+  // pick a closest-POV anchor (so Mister P retrieval has somewhere
+  // to bias). Server-side lookup means the client can't fabricate a
+  // tier or category. Falls back to client-supplied values only
+  // when source_slug is missing (legacy path; no current client
+  // hits it).
+  let resolvedTier = priority_tier;
+  let resolvedCategory = category ?? null;
+  if (source_slug) {
+    const { data: doc } = await supabase
+      .from('pov_docs')
+      .select('priority_tier, category')
+      .eq('slug', source_slug)
+      .maybeSingle();
+    if (!doc) {
+      return NextResponse.json(
+        { error: 'Unknown POV slug for source_slug.' },
+        { status: 400 },
+      );
+    }
+    resolvedTier = (doc.priority_tier as string | null) ?? undefined;
+    resolvedCategory = (doc.category as string | null) ?? null;
+  }
+  if (!resolvedTier || !ALLOWED_TIERS.has(resolvedTier)) {
+    return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
   }
 
   const { data: profile } = await supabase
@@ -117,13 +159,13 @@ export async function POST(req: Request) {
     user_id: user.id,
     title,
     description: description ?? null,
-    category: category ?? null,
-    priority_tier,
+    category: resolvedCategory,
+    priority_tier: resolvedTier,
     goal_type,
     source_slug: source_slug ?? null,
     baseline_stage: stage,
     status: 'active',
-    source: 'system_suggested',
+    source: goalSource,
   });
   if (insErr) {
     return NextResponse.json({ error: insErr.message }, { status: 500 });
