@@ -54,6 +54,11 @@ export function CustomGoalForm({ povs }: Props) {
   const [sourceSlug, setSourceSlug] = useState('');
   const [goalType, setGoalType] = useState<'process' | 'outcome'>('process');
   const [baseline, setBaseline] = useState<BaselineStage>('new');
+  const [targetMode, setTargetMode] = useState<'none' | 'date' | 'weeks'>(
+    'none',
+  );
+  const [targetDate, setTargetDate] = useState('');
+  const [targetWeeks, setTargetWeeks] = useState('');
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -83,7 +88,34 @@ export function CustomGoalForm({ povs }: Props) {
     setSourceSlug('');
     setGoalType('process');
     setBaseline('new');
+    setTargetMode('none');
+    setTargetDate('');
+    setTargetWeeks('');
     setError(null);
+  }
+
+  // Compute the YYYY-MM-DD payload value from whichever input
+  // mode the user picked. Returns '' for "none" and an error
+  // string when the input is bad — caller surfaces it to the user.
+  function resolveTarget(): { value: string | null; error: string | null } {
+    if (targetMode === 'none') return { value: null, error: null };
+    if (targetMode === 'date') {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
+        return { value: null, error: 'Pick a valid date.' };
+      }
+      return { value: targetDate, error: null };
+    }
+    // 'weeks' mode — convert N weeks from today to a date.
+    const n = Number(targetWeeks);
+    if (!Number.isFinite(n) || n < 1 || n > 104) {
+      return { value: null, error: 'Weeks must be between 1 and 104.' };
+    }
+    const d = new Date();
+    d.setDate(d.getDate() + Math.round(n) * 7);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return { value: `${y}-${m}-${dd}`, error: null };
   }
 
   function submit() {
@@ -94,6 +126,12 @@ export function CustomGoalForm({ povs }: Props) {
     }
     if (!sourceSlug) {
       setError('Pick a closest POV — Mister P uses it to calibrate answers.');
+      return;
+    }
+
+    const target = resolveTarget();
+    if (target.error) {
+      setError(target.error);
       return;
     }
 
@@ -109,6 +147,7 @@ export function CustomGoalForm({ povs }: Props) {
             goal_type: goalType,
             baseline_stage: baseline,
             source: 'user_created',
+            target_date: target.value,
           }),
         });
         if (!res.ok) {
@@ -290,6 +329,68 @@ export function CustomGoalForm({ povs }: Props) {
               </option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <span className="block text-sm font-medium text-zinc-900 dark:text-zinc-100">
+            Finishline{' '}
+            <span className="text-xs font-normal text-zinc-500">(optional)</span>
+          </span>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            Sets a "Week N of M" surface on /today. Leave open-ended if
+            you don&rsquo;t want one.
+          </p>
+          <div className="mt-2 flex gap-2">
+            {(['none', 'date', 'weeks'] as const).map((mode) => {
+              const selected = targetMode === mode;
+              const label =
+                mode === 'none'
+                  ? 'Open-ended'
+                  : mode === 'date'
+                    ? 'By date'
+                    : 'For N weeks';
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setTargetMode(mode)}
+                  disabled={pending}
+                  className={
+                    selected
+                      ? 'rounded-full bg-zinc-900 px-3.5 py-1.5 text-xs font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900'
+                      : 'rounded-full border border-zinc-300 px-3.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800'
+                  }
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          {targetMode === 'date' && (
+            <input
+              type="date"
+              value={targetDate}
+              onChange={(e) => setTargetDate(e.target.value)}
+              disabled={pending}
+              className="mt-3 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            />
+          )}
+          {targetMode === 'weeks' && (
+            <div className="mt-3 flex items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                max={104}
+                step={1}
+                value={targetWeeks}
+                onChange={(e) => setTargetWeeks(e.target.value)}
+                disabled={pending}
+                placeholder="e.g. 8"
+                className="w-24 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              />
+              <span className="text-xs text-zinc-500">weeks from today</span>
+            </div>
+          )}
         </div>
 
         {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}

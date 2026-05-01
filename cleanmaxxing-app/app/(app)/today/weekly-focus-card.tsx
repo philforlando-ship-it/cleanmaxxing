@@ -15,6 +15,7 @@ import type { BaselineStage, OnrampState } from '@/lib/content/onramp';
 import { povExists } from '@/lib/content/pov';
 import type { WeeklyCheckInSummary } from '@/lib/check-in/service';
 import { AdjustBaseline } from './adjust-baseline';
+import { AdjustTarget } from './adjust-target';
 
 type ActiveGoal = {
   id: string;
@@ -22,6 +23,7 @@ type ActiveGoal = {
   source_slug: string | null;
   created_at: string;
   baseline_stage: string | null;
+  target_date: string | null;
 };
 
 type Props = {
@@ -45,6 +47,11 @@ type Entry = {
   // and adjust without leaving /today via the AdjustBaseline control
   // below.
   anchorStage: BaselineStage;
+  // Anchor goal's target_date (if set) plus accepted_at, used to
+  // compute "Week N of M" framing. Total weeks M is rounded from
+  // (target - created) so a 56-day window reads as 8 weeks.
+  anchorTargetDate: string | null;
+  anchorCreatedAt: string;
   goalTitles: string[];
   state: OnrampState;
 };
@@ -92,9 +99,21 @@ export function WeeklyFocusCard({ goals, weeklySummary }: Props) {
       slug,
       anchorGoalId: earliest.id,
       anchorStage,
+      anchorTargetDate: earliest.target_date,
+      anchorCreatedAt: earliest.created_at,
       goalTitles: group.map((g) => g.title),
       state,
     });
+  }
+
+  // Helper: total weeks from goal accepted_at to target_date,
+  // rounded. Returns null when there's no target.
+  function totalWeeks(createdAt: string, target: string | null): number | null {
+    if (!target) return null;
+    const ms =
+      new Date(`${target}T12:00:00`).getTime() - new Date(createdAt).getTime();
+    if (!Number.isFinite(ms) || ms <= 0) return null;
+    return Math.max(1, Math.round(ms / (7 * 86_400_000)));
   }
 
   if (withOnramp.length === 0) return null;
@@ -160,7 +179,15 @@ export function WeeklyFocusCard({ goals, weeklySummary }: Props) {
               </h3>
               {entry.state.kind === 'active' ? (
                 <span className="shrink-0 text-xs text-zinc-500">
-                  Week {entry.state.week}
+                  {(() => {
+                    const M = totalWeeks(
+                      entry.anchorCreatedAt,
+                      entry.anchorTargetDate,
+                    );
+                    return M !== null
+                      ? `Week ${entry.state.week} of ${M}`
+                      : `Week ${entry.state.week}`;
+                  })()}
                   {entry.anchorStage !== 'new' && (
                     <>
                       {' · '}
@@ -196,10 +223,14 @@ export function WeeklyFocusCard({ goals, weeklySummary }: Props) {
               </p>
             )}
             {entry.state.kind === 'active' && (
-              <div className="mt-3">
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
                 <AdjustBaseline
                   goalId={entry.anchorGoalId}
                   currentStage={entry.anchorStage}
+                />
+                <AdjustTarget
+                  goalId={entry.anchorGoalId}
+                  currentTarget={entry.anchorTargetDate}
                 />
               </div>
             )}

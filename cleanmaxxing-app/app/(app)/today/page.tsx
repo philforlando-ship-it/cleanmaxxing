@@ -116,7 +116,19 @@ export default async function TodayPage({ searchParams }: Props) {
       .select('slot')
       .eq('user_id', user.id),
   ]);
-  const activeGoals = goalsRaw ?? [];
+  // Cast to the WeeklyFocusCard's ActiveGoal shape. The supabase
+  // client's inferred response type drops columns it doesn't have
+  // in its generated schema (target_date was added in migration
+  // 0020 and the schema types haven't been regenerated yet); the
+  // select string is the source of truth here.
+  const activeGoals = (goalsRaw ?? []) as Array<{
+    id: string;
+    title: string;
+    source_slug: string | null;
+    created_at: string;
+    baseline_stage: string | null;
+    target_date: string | null;
+  }>;
 
   // Set of source_slugs that have an authored walkthrough. The Daily
   // Check-In card uses this to gate per-goal "Focus →" deep links so

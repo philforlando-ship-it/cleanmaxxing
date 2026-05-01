@@ -16,6 +16,7 @@ import {
 import { povExists } from '@/lib/content/pov';
 import { getGoalWeeklySummary } from '@/lib/check-in/service';
 import { AdjustBaseline } from '@/app/(app)/today/adjust-baseline';
+import { AdjustTarget } from '@/app/(app)/today/adjust-target';
 import { StatusActions } from './status-actions';
 import { GoalMisterPChat, type ChatMessage } from './goal-mister-p-chat';
 
@@ -47,7 +48,7 @@ export default async function GoalDetailPage({ params }: Props) {
   const { data: goal } = await supabase
     .from('goals')
     .select(
-      'id, title, description, category, priority_tier, goal_type, status, source_slug, baseline_stage, created_at',
+      'id, title, description, category, priority_tier, goal_type, status, source_slug, baseline_stage, created_at, target_date',
     )
     .eq('id', id)
     .eq('user_id', user.id)
@@ -137,7 +138,24 @@ export default async function GoalDetailPage({ params }: Props) {
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="text-lg font-medium">This week&rsquo;s focus</h2>
             {state.kind === 'active' ? (
-              <span className="text-xs text-zinc-500">Week {state.week}</span>
+              <span className="text-xs text-zinc-500">
+                {(() => {
+                  const target = (goal.target_date as string | null) ?? null;
+                  if (target) {
+                    const ms =
+                      new Date(`${target}T12:00:00`).getTime() -
+                      new Date(goal.created_at).getTime();
+                    if (Number.isFinite(ms) && ms > 0) {
+                      const M = Math.max(
+                        1,
+                        Math.round(ms / (7 * 86_400_000)),
+                      );
+                      return `Week ${state.week} of ${M}`;
+                    }
+                  }
+                  return `Week ${state.week}`;
+                })()}
+              </span>
             ) : (
               <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
                 Walkthrough complete
@@ -164,8 +182,12 @@ export default async function GoalDetailPage({ params }: Props) {
               {weekly.daysPossible === 1 ? '' : 's'}.
             </p>
           )}
-          <div className="mt-4 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
             <AdjustBaseline goalId={goal.id} currentStage={stage} />
+            <AdjustTarget
+              goalId={goal.id}
+              currentTarget={(goal.target_date as string | null) ?? null}
+            />
           </div>
         </section>
       )}

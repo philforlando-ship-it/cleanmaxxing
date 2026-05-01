@@ -30,6 +30,10 @@ type AddPayload = {
   // templated library accepts. Defaults to system_suggested so
   // the templated path doesn't need to thread an extra field.
   source?: 'user_created' | 'system_suggested';
+  // Optional finishline (YYYY-MM-DD). Null preserves the
+  // existing open-ended behavior. UI duration inputs ("for 8
+  // weeks") resolve to a concrete date client-side before posting.
+  target_date?: string | null;
 };
 
 // Adds a single goal to an already-onboarded user. Post-onboarding only —
@@ -59,9 +63,24 @@ export async function POST(req: Request) {
     baseline_stage,
     force,
     source,
+    target_date,
   } = body;
   const goalSource: 'user_created' | 'system_suggested' =
     source === 'user_created' ? 'user_created' : 'system_suggested';
+
+  // Validate target_date shape if supplied. Strict YYYY-MM-DD so
+  // a malformed client can't write garbage. Null/undefined are
+  // both fine — the column stays empty.
+  let resolvedTargetDate: string | null = null;
+  if (target_date !== null && target_date !== undefined && target_date !== '') {
+    if (typeof target_date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(target_date)) {
+      return NextResponse.json(
+        { error: 'Invalid target_date — use YYYY-MM-DD.' },
+        { status: 400 },
+      );
+    }
+    resolvedTargetDate = target_date;
+  }
 
   if (!title || typeof title !== 'string') {
     return NextResponse.json({ error: 'Missing title' }, { status: 400 });
@@ -166,6 +185,7 @@ export async function POST(req: Request) {
     baseline_stage: stage,
     status: 'active',
     source: goalSource,
+    target_date: resolvedTargetDate,
   });
   if (insErr) {
     return NextResponse.json({ error: insErr.message }, { status: 500 });
