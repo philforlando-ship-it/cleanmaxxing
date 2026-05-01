@@ -310,6 +310,21 @@ export function formatUserStateBlock(state: MisterPUserState): string | null {
     );
   }
 
+  // Workouts: only render when there's actual signal in the
+  // window. Absence is "no logged data," not "didn't train" —
+  // Mister P should lean on profile.activity_level and
+  // profile.training_experience for the "haven't logged" case
+  // rather than narrating zero workouts back to the user.
+  if (state.workoutCountLast7 > 0) {
+    const types = Object.entries(state.workoutTypesLast7)
+      .sort(([, a], [, b]) => (b as number) - (a as number))
+      .map(([t, n]) => `${n} ${t}`)
+      .join(', ');
+    lines.push(
+      `workouts_last_7d: ${state.workoutCountLast7} session${state.workoutCountLast7 === 1 ? '' : 's'} (${types})`,
+    );
+  }
+
   if (state.weeklyCompletionRate !== null) {
     const pct = Math.round(state.weeklyCompletionRate * 100);
     lines.push(`weekly_goal_completion_rate: ${pct}% over the last 7 days`);

@@ -15,6 +15,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getUserProfile, type UserProfile } from '@/lib/profile/service';
 import { getSleepState } from '@/lib/sleep/service';
+import { getWorkoutState } from '@/lib/workout/service';
 import { FIRST_CONVO_KEYS } from '@/lib/first-convo/service';
 
 export type ConfidenceTrend = 'rising' | 'flat' | 'declining';
@@ -71,6 +72,17 @@ export type MisterPUserState = {
   sleepRecentAvgHours: number | null;
   sleepRecentAvgQuality: number | null;
   sleepRecentCount: number;
+
+  // Workout-tracker rollups for the last 7 days. Nullable shape
+  // when the user hasn't logged any sessions yet — Mister P
+  // treats absence as "no signal" rather than "trained zero
+  // times" (avoids the prompt narrating "you haven't worked out"
+  // when the user just hasn't been logging).
+  workoutCountLast7: number;
+  workoutTypesLast7: Partial<
+    Record<'strength' | 'cardio' | 'mobility' | 'other', number>
+  >;
+  workoutMostRecentDate: string | null;
 
   // First-conversation captures, written by the scripted /today
   // exchange that fires once after onboarding. These are deeper
@@ -211,6 +223,7 @@ export async function getMisterPUserState(
 
   const profile = await getUserProfile(supabase, userId);
   const sleepState = await getSleepState(supabase, userId);
+  const workoutState = await getWorkoutState(supabase, userId, now);
 
   return {
     specificThing,
@@ -225,6 +238,9 @@ export async function getMisterPUserState(
     sleepRecentAvgHours: sleepState.rollingAvgHours,
     sleepRecentAvgQuality: sleepState.rollingAvgQuality,
     sleepRecentCount: sleepState.rollingCount,
+    workoutCountLast7: workoutState.countLast7,
+    workoutTypesLast7: workoutState.countLast7ByType,
+    workoutMostRecentDate: workoutState.mostRecentDate,
     firstConvoBlockers,
     firstConvoTriedBefore,
   };
