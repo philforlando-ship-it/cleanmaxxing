@@ -11,6 +11,7 @@ import { CapturePhoto } from './capture-photo';
 import { DeletePhotoButton } from './delete-photo-button';
 import { CurrentStatsForm } from './current-stats-form';
 import { ProfileForm } from './profile-form';
+import { PhotoCompare } from './photo-compare';
 import { getUserProfile } from '@/lib/profile/service';
 
 const BUCKET = 'progress-photos';
@@ -264,6 +265,29 @@ export default async function ProfilePage() {
           </div>
         </section>
       )}
+
+      {/* Comparison surface — renders when 2+ photos with signed
+          URLs are available. Sits between the photo grid and the
+          capture-flow sections so users see "your photos → compare
+          them → fill in the missing slots" as a natural reading
+          order. Photos that failed to sign (rare, transient
+          storage issue) are filtered out so the compare picker
+          can't reach a broken image. */}
+      {(() => {
+        const usable = rows.filter(
+          (r): r is typeof r & { signedUrl: string } => Boolean(r.signedUrl),
+        );
+        if (usable.length < 2) return null;
+        return (
+          <PhotoCompare
+            photos={usable.map((r) => ({
+              slot: r.slot,
+              captured_at: r.captured_at,
+              signedUrl: r.signedUrl,
+            }))}
+          />
+        );
+      })()}
 
       {baseline && !progress30d && progress30dEligible && !progress90dEligible && (
         <section className="mt-10">
