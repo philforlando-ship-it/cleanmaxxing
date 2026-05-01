@@ -88,10 +88,12 @@ export function FirstRunCard() {
         </li>
         <li>
           <strong className="font-medium text-zinc-900 dark:text-zinc-100">
-            This week&rsquo;s focus
+            Current focus
           </strong>{' '}
-          shows a single concrete step for each goal, calibrated to where
-          you said you&rsquo;re starting from. Adjust if the placement feels off.
+          shows the concrete step for each goal&rsquo;s current phase,
+          calibrated to where you said you&rsquo;re starting from. The text
+          changes when you cross into a new phase, not every week. Adjust if
+          the placement feels off.
         </li>
         <li>
           <strong className="font-medium text-zinc-900 dark:text-zinc-100">

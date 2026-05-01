@@ -1,4 +1,4 @@
-// Per-POV "this week's focus" card. Server component.
+// Per-POV "current focus" card. Server component.
 //
 // Reads the walkthrough JSON for each active goal whose source_slug has
 // one authored (see content/povs/*.onramp.json and lib/content/onramp.ts).
@@ -131,7 +131,7 @@ export function WeeklyFocusCard({ goals, weeklySummary }: Props) {
 
   return (
     <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-      <h2 className="text-lg font-medium">This week&rsquo;s focus</h2>
+      <h2 className="text-lg font-medium">Current focus</h2>
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
         Guidance per domain, based on when you first engaged with it. One concrete focus per week, not a full protocol.
       </p>
