@@ -277,6 +277,25 @@ export function formatUserStateBlock(state: MisterPUserState): string | null {
     `weight_lbs: ${state.weightLbs !== null ? state.weightLbs : 'not provided'}`,
   );
 
+  // Sleep: prefer recent tracker data when present (it reflects
+  // what the user is actually sleeping), fall back to the
+  // profile self-report otherwise. The count gives Mister P a way
+  // to weigh the signal — "5/7 nights logged" is solid; "1 logged
+  // night" is a single data point.
+  if (state.sleepRecentCount > 0 && state.sleepRecentAvgHours !== null) {
+    const qualityPart =
+      state.sleepRecentAvgQuality !== null
+        ? `, quality avg ${state.sleepRecentAvgQuality.toFixed(1)}/5`
+        : '';
+    lines.push(
+      `sleep_recent: ${state.sleepRecentAvgHours}h avg over last ${state.sleepRecentCount} logged ${state.sleepRecentCount === 1 ? 'night' : 'nights'}${qualityPart}`,
+    );
+  } else if (state.profile.avg_sleep_hours !== null) {
+    lines.push(
+      `sleep_self_report: ${state.profile.avg_sleep_hours}h avg (no nightly logs yet)`,
+    );
+  }
+
   if (state.weeklyCompletionRate !== null) {
     const pct = Math.round(state.weeklyCompletionRate * 100);
     lines.push(`weekly_goal_completion_rate: ${pct}% over the last 7 days`);

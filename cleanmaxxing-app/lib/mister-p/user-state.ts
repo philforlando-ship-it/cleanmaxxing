@@ -14,6 +14,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getUserProfile, type UserProfile } from '@/lib/profile/service';
+import { getSleepState } from '@/lib/sleep/service';
 
 export type ConfidenceTrend = 'rising' | 'flat' | 'declining';
 
@@ -59,6 +60,16 @@ export type MisterPUserState = {
   // whatever they're comfortable sharing. Mister P treats absent
   // fields as "don't know," not "default to X."
   profile: UserProfile;
+
+  // Recent sleep, rolled up over the last N logged nights (max 7).
+  // Distinct from profile.avg_sleep_hours, which is a one-time
+  // self-report. When sleepRecentCount is 0, the prompt-side
+  // renderer falls back to the profile field; when ≥ 1, the
+  // tracker data takes precedence because it reflects what the
+  // user is actually sleeping right now.
+  sleepRecentAvgHours: number | null;
+  sleepRecentAvgQuality: number | null;
+  sleepRecentCount: number;
 };
 
 const MS_PER_DAY = 86_400_000;
@@ -185,6 +196,7 @@ export async function getMisterPUserState(
   }
 
   const profile = await getUserProfile(supabase, userId);
+  const sleepState = await getSleepState(supabase, userId);
 
   return {
     specificThing,
@@ -196,6 +208,9 @@ export async function getMisterPUserState(
     heightInches,
     weightLbs,
     profile,
+    sleepRecentAvgHours: sleepState.rollingAvgHours,
+    sleepRecentAvgQuality: sleepState.rollingAvgQuality,
+    sleepRecentCount: sleepState.rollingCount,
   };
 }
 

@@ -12,6 +12,8 @@ import { FirstRunCard } from './first-run-card';
 import { ProgressPhotoCard } from './progress-photo-card';
 import { StaleGoalCard } from './stale-goal-card';
 import { ProfileCompletionCard } from './profile-completion-card';
+import { SleepLogCard } from './sleep-log-card';
+import { getSleepState } from '@/lib/sleep/service';
 import { StuckConfidenceCard } from './stuck-confidence-card';
 import { QuarterlySurveyCard } from './quarterly-survey-card';
 import { getTodayCheckInState, getWeeklyCheckInSummary, getStalestGoal } from '@/lib/check-in/service';
@@ -84,6 +86,7 @@ export default async function TodayPage({ searchParams }: Props) {
     stuckSignal,
     quarterlyState,
     profileCompletion,
+    sleepState,
     { data: goalsRaw },
     { data: photoRowsRaw },
   ] = await Promise.all([
@@ -95,6 +98,7 @@ export default async function TodayPage({ searchParams }: Props) {
     getStuckConfidenceSignal(supabase, user.id),
     getQuarterlySurveyState(supabase, user.id),
     getProfileCompletion(supabase, user.id),
+    getSleepState(supabase, user.id),
     supabase
       .from('goals')
       .select('id, title, source_slug, created_at, baseline_stage')
@@ -271,6 +275,13 @@ export default async function TodayPage({ searchParams }: Props) {
             for reflection) and the chat has no tracking side effects
             (asking Mister P something isn't the same as
             self-surveillance). */}
+        {!steppedAway && (
+          <SleepLogCard
+            recent={sleepState.recent}
+            rollingAvgHours={sleepState.rollingAvgHours}
+            rollingCount={sleepState.rollingCount}
+          />
+        )}
         {!steppedAway && (
           <DailyCheckInCard
             initialState={checkInState}
