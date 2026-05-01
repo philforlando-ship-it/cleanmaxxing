@@ -16,6 +16,8 @@ import { SleepLogCard } from './sleep-log-card';
 import { getSleepState } from '@/lib/sleep/service';
 import { FirstConversationCard } from './first-conversation-card';
 import { getFirstConvoState } from '@/lib/first-convo/service';
+import { DailyNoteCard } from './daily-note-card';
+import { getOrCreateTodayNote } from '@/lib/daily-note/service';
 import { StuckConfidenceCard } from './stuck-confidence-card';
 import { QuarterlySurveyCard } from './quarterly-survey-card';
 import { getTodayCheckInState, getWeeklyCheckInSummary, getStalestGoal } from '@/lib/check-in/service';
@@ -201,6 +203,44 @@ export default async function TodayPage({ searchParams }: Props) {
     !hasProgress180d &&
     daysSinceOnboarding >= LATE_WINDOW_DAYS;
 
+  // Mister P daily note — rules-based selection of one observation +
+  // one question, cached per user per day. Only fires when the user
+  // is past the first conversation (so the two surfaces don't compete
+  // for slot 1) and not stepped away. Uses server-local date as
+  // "today"; users far from the server timezone will see the rollover
+  // happen at a slightly off time, which is acceptable for v1 — the
+  // alternative is storing user timezone, deferred until LLM-generated
+  // notes land in v2.
+  let todayNote = null;
+  if (!steppedAway && firstConvoState.completed) {
+    const { count: priorNotesCount } = await supabase
+      .from('daily_notes')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+    const todayDate = (() => {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${dd}`;
+    })();
+    const completionRate =
+      weeklySummary.possible > 0
+        ? weeklySummary.ticked / weeklySummary.possible
+        : null;
+    todayNote = await getOrCreateTodayNote(supabase, user.id, todayDate, {
+      daysSinceOnboarding: Math.max(0, daysSinceOnboarding),
+      weekday: new Date().getDay(),
+      sleepRecentAvgHours: sleepState.rollingAvgHours,
+      sleepRecentCount: sleepState.rollingCount,
+      weeklyCompletionRate: completionRate,
+      staleGoalTitle: staleGoal?.title ?? null,
+      staleGoalDaysIdle: staleGoal?.daysSinceLastTick ?? null,
+      stuckDimensions: stuckSignal ? [stuckSignal.dimensionLabel] : [],
+      isFirstDailyNote: (priorNotesCount ?? 0) === 0,
+    });
+  }
+
   const isDev = process.env.NODE_ENV === 'development';
 
   return (
@@ -218,6 +258,8 @@ export default async function TodayPage({ searchParams }: Props) {
         {!steppedAway && !firstConvoState.completed && (
           <FirstConversationCard initial={firstConvoState} />
         )}
+
+        {!steppedAway && todayNote && <DailyNoteCard note={todayNote} />}
 
         {!steppedAway && (
           <ProfileCompletionCard completion={profileCompletion} />
