@@ -259,6 +259,20 @@ export function formatUserStateBlock(state: MisterPUserState): string | null {
     lines.push(`specific_thing: ${state.specificThing}`);
   }
 
+  // First-conversation captures (scripted /today exchange after
+  // onboarding). Same passthrough principle as specific_thing —
+  // these are the user's own words about what's blocking them and
+  // what hasn't worked. Mister P should let them shape calibration
+  // (skip recommending things the user said didn't stick) but must
+  // not narrate them back ("I see you said X" reads as
+  // surveillance, not memory).
+  if (state.firstConvoBlockers) {
+    lines.push(`prior_blockers: ${state.firstConvoBlockers}`);
+  }
+  if (state.firstConvoTriedBefore) {
+    lines.push(`prior_tried_unsuccessfully: ${state.firstConvoTriedBefore}`);
+  }
+
   lines.push(`days_since_onboarding: ${state.daysSinceOnboarding}`);
 
   if (state.age !== null) lines.push(`age: ${state.age}`);

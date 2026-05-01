@@ -15,6 +15,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getUserProfile, type UserProfile } from '@/lib/profile/service';
 import { getSleepState } from '@/lib/sleep/service';
+import { FIRST_CONVO_KEYS } from '@/lib/first-convo/service';
 
 export type ConfidenceTrend = 'rising' | 'flat' | 'declining';
 
@@ -70,6 +71,15 @@ export type MisterPUserState = {
   sleepRecentAvgHours: number | null;
   sleepRecentAvgQuality: number | null;
   sleepRecentCount: number;
+
+  // First-conversation captures, written by the scripted /today
+  // exchange that fires once after onboarding. These are deeper
+  // free-text signal than the structured survey can reach: what
+  // the user identifies as their actual blocker (time, money,
+  // energy) and what they've tried before that didn't stick. Both
+  // null when the user hasn't completed the exchange yet.
+  firstConvoBlockers: string | null;
+  firstConvoTriedBefore: string | null;
 };
 
 const MS_PER_DAY = 86_400_000;
@@ -106,6 +116,8 @@ export async function getMisterPUserState(
       'specific_thing_q1',
       'height_inches',
       'weight_lbs',
+      FIRST_CONVO_KEYS.blockers,
+      FIRST_CONVO_KEYS.triedBefore,
     ]);
   const byKey = new Map<string, string>();
   for (const row of specificRows ?? []) {
@@ -122,6 +134,8 @@ export async function getMisterPUserState(
   }
   const heightInches = asPositiveInt(byKey.get('height_inches'));
   const weightLbs = asPositiveInt(byKey.get('weight_lbs'));
+  const firstConvoBlockers = byKey.get(FIRST_CONVO_KEYS.blockers) ?? null;
+  const firstConvoTriedBefore = byKey.get(FIRST_CONVO_KEYS.triedBefore) ?? null;
 
   // Tenure + age.
   const { data: userRow } = await supabase
@@ -211,6 +225,8 @@ export async function getMisterPUserState(
     sleepRecentAvgHours: sleepState.rollingAvgHours,
     sleepRecentAvgQuality: sleepState.rollingAvgQuality,
     sleepRecentCount: sleepState.rollingCount,
+    firstConvoBlockers,
+    firstConvoTriedBefore,
   };
 }
 

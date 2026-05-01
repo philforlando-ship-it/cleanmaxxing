@@ -14,6 +14,8 @@ import { StaleGoalCard } from './stale-goal-card';
 import { ProfileCompletionCard } from './profile-completion-card';
 import { SleepLogCard } from './sleep-log-card';
 import { getSleepState } from '@/lib/sleep/service';
+import { FirstConversationCard } from './first-conversation-card';
+import { getFirstConvoState } from '@/lib/first-convo/service';
 import { StuckConfidenceCard } from './stuck-confidence-card';
 import { QuarterlySurveyCard } from './quarterly-survey-card';
 import { getTodayCheckInState, getWeeklyCheckInSummary, getStalestGoal } from '@/lib/check-in/service';
@@ -87,6 +89,7 @@ export default async function TodayPage({ searchParams }: Props) {
     quarterlyState,
     profileCompletion,
     sleepState,
+    firstConvoState,
     { data: goalsRaw },
     { data: photoRowsRaw },
   ] = await Promise.all([
@@ -99,6 +102,7 @@ export default async function TodayPage({ searchParams }: Props) {
     getQuarterlySurveyState(supabase, user.id),
     getProfileCompletion(supabase, user.id),
     getSleepState(supabase, user.id),
+    getFirstConvoState(supabase, user.id),
     supabase
       .from('goals')
       .select('id, title, source_slug, created_at, baseline_stage')
@@ -210,6 +214,10 @@ export default async function TodayPage({ searchParams }: Props) {
 
       <div className="mt-10 space-y-6">
         {isFirstRun && !steppedAway && <FirstRunCard />}
+
+        {!steppedAway && !firstConvoState.completed && (
+          <FirstConversationCard initial={firstConvoState} />
+        )}
 
         {!steppedAway && (
           <ProfileCompletionCard completion={profileCompletion} />
