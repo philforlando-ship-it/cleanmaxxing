@@ -1,6 +1,6 @@
 // Weekly focus walkthroughs per POV doc.
 // Source: content/povs/[slug].onramp.json (authored manually).
-// Surfaced on the Today screen as per-goal "this week's focus" cards.
+// Surfaced on the Today screen as per-goal "current focus" cards.
 //
 // Each file follows the schema in types below. The week-range language
 // ("1-4", "5", "11+") mirrors the prose in the POV on-ramp sections, so
