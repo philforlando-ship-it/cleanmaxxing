@@ -6,6 +6,7 @@ import {
   ProgressPhotosSection,
   type ProgressPhotoEntry,
 } from './progress-photos-section';
+import { PushNotificationsSection } from './push-notifications-section';
 
 const PHOTO_BUCKET = 'progress-photos';
 const PHOTO_SIGNED_URL_TTL_SECONDS = 60 * 60;
@@ -71,6 +72,10 @@ export default async function SettingsPage() {
         </Link>
 
         <StepAwayCard initialPaused={paused} />
+
+        <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+          <PushNotificationsSection />
+        </div>
 
         <ProgressPhotosSection photos={photos} />
 

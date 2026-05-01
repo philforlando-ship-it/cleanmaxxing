@@ -62,3 +62,55 @@ self.addEventListener('fetch', (event) => {
       ),
   );
 });
+
+// Web-push handler. The cron sends JSON with { title, body, url,
+// tag }; we render a notification and stash the url so click
+// routes the user to the right surface. Falls back to a generic
+// nudge if the payload can't be parsed (the push spec allows
+// empty payloads from some servers, which we still want to act on
+// rather than drop).
+self.addEventListener('push', (event) => {
+  let data = {};
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch {
+      data = { title: 'Cleanmaxxing', body: event.data.text() };
+    }
+  }
+  const title = data.title || 'Cleanmaxxing';
+  const options = {
+    body: data.body || '',
+    icon: '/icon.svg',
+    badge: '/icon.svg',
+    tag: data.tag || 'cleanmaxxing',
+    data: { url: data.url || '/today' },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Notification click — focus an existing window if one's open at
+// the target URL, otherwise open a new one. The `tag`-based
+// dedup means clicking a stale notification still drives the
+// user to a useful place.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/today';
+  event.waitUntil(
+    (async () => {
+      const clientList = await self.clients.matchAll({
+        type: 'window',
+        includeUncontrolled: true,
+      });
+      for (const client of clientList) {
+        const url = new URL(client.url);
+        if (url.pathname === targetUrl && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
+    })(),
+  );
+});
