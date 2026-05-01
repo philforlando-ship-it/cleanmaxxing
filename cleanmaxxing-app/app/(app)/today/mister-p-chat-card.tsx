@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { renderAnswerText } from '@/lib/mister-p/render-answer';
+import { VoiceInputButton } from '@/components/voice-input-button';
 
 export type ChatMessage = {
   role: 'user' | 'assistant';
@@ -356,6 +357,12 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
           }
           disabled={streaming}
           className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+        />
+        <VoiceInputButton
+          disabled={streaming}
+          onTranscribed={(text) =>
+            setInput((prev) => (prev ? `${prev} ${text}` : text))
+          }
         />
         {streaming ? (
           <button
