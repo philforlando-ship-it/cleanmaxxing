@@ -10,6 +10,29 @@ import { CustomGoalForm, type PovChoice } from './custom-goal-form';
 // so they're filtered out of the picker.
 const ANCHOR_BLACKLIST = new Set(['meta', 'monitor', 'avoid']);
 
+// Defensive cleanup for picker labels. Some pov_docs rows still
+// hold the slug-fallback title from before frontmatter
+// normalization (e.g. "01-amphetamines") — running embed-povs
+// rewrites them, but until then the dropdown also strips slug-
+// style prefixes here so the user sees consistent labels. Safe
+// for properly-titled rows; the regex only matches a numeric
+// prefix followed by a separator.
+function cleanPovTitle(raw: string): string {
+  // Drop leading numeric + separator: "01-", "13. ", "5 - "
+  let s = raw.replace(/^\d+\s*[-.]\s*/, '');
+  // If what's left looks like a lowercase slug fragment, title-
+  // case it ("facial-definition-jawline" → "Facial Definition
+  // Jawline"). Mixed-case titles like "Peptides" or "GLP-1s"
+  // don't match this guard and pass through untouched.
+  if (/^[a-z][a-z0-9-]*$/.test(s)) {
+    s = s
+      .split('-')
+      .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : ''))
+      .join(' ');
+  }
+  return s;
+}
+
 export default async function LibraryPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -30,7 +53,7 @@ export default async function LibraryPage() {
     )
     .map((d) => ({
       slug: d.slug,
-      title: d.title,
+      title: cleanPovTitle(d.title),
       category: d.category as string,
     }));
 
