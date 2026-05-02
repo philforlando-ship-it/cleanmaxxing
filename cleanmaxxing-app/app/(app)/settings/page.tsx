@@ -2,14 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { StepAwayCard } from './step-away-card';
-import {
-  ProgressPhotosSection,
-  type ProgressPhotoEntry,
-} from './progress-photos-section';
 import { PushNotificationsSection } from './push-notifications-section';
-
-const PHOTO_BUCKET = 'progress-photos';
-const PHOTO_SIGNED_URL_TTL_SECONDS = 60 * 60;
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -24,32 +17,6 @@ export default async function SettingsPage() {
 
   const status = (profile?.subscription_status as string | null) ?? 'trial';
   const paused = Boolean(profile?.tracking_paused_at);
-
-  const { data: photoRowsRaw } = await supabase
-    .from('progress_photos')
-    .select('id, slot, storage_path, captured_at')
-    .eq('user_id', user.id)
-    .order('captured_at', { ascending: true });
-
-  const photos: ProgressPhotoEntry[] = await Promise.all(
-    (photoRowsRaw ?? []).map(async (r) => {
-      const row = r as {
-        id: string;
-        slot: 'baseline' | 'progress_30d' | 'progress_90d' | 'progress_180d';
-        storage_path: string;
-        captured_at: string;
-      };
-      const { data: signed } = await supabase.storage
-        .from(PHOTO_BUCKET)
-        .createSignedUrl(row.storage_path, PHOTO_SIGNED_URL_TTL_SECONDS);
-      return {
-        id: row.id,
-        slot: row.slot,
-        captured_at: row.captured_at,
-        signedUrl: signed?.signedUrl ?? null,
-      };
-    }),
-  );
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -76,8 +43,6 @@ export default async function SettingsPage() {
         <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
           <PushNotificationsSection />
         </div>
-
-        <ProgressPhotosSection photos={photos} />
 
         <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
           <h2 className="text-lg font-medium">Account</h2>

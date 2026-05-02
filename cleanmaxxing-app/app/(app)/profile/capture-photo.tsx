@@ -113,8 +113,8 @@ export function CapturePhoto({ slot, baselineUrl = null }: Props) {
             <p className="text-zinc-600 dark:text-zinc-400">
               Stored privately in your account, visible only to you, accessed
               via short-lived signed URLs. <strong>No AI analysis.</strong>{' '}
-              You can delete the photo any time from Settings → Progress
-              photos.
+              You can delete the photo any time from the corresponding card
+              on this page.
             </p>
           </div>
           {hasGhost && baselineUrl && (
