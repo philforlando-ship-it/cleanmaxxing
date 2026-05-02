@@ -17,7 +17,7 @@ export function FinalizeClient() {
         setError(body.error ?? 'Something went wrong finishing onboarding.');
         return;
       }
-      router.push('/onboarding/complete');
+      router.push('/onboarding/review');
       router.refresh();
     })();
     return () => {

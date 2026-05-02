@@ -75,6 +75,32 @@ A rep range of approximately 5 to 12 repetitions per set is one of the most effe
 
 However, the effectiveness of a set is not determined by the exact number of reps, but by how close it is taken to failure\. A set of 6 reps far from failure produces less stimulus than a set of 12 reps with proper effort and control\. This is why RIR matters more than the specific rep number\. Individual variation also plays a role — some respond better to heavier, lower\-rep work, others to higher\-rep, more controlled training\. The optimal number of reps per set varies by person, exercise, and muscle group\. The 5\-12 range provides a strong foundation, but it should not be treated as a rigid rule\.
 
+__Training Density — Supersets, Drop Sets, and Rest-Pause__
+
+Density techniques compress more work into less time. They are accessory tools, not the foundation — the 5 to 12 rep range, one to two RIR, and progressive overload across straight sets is the system. Density used correctly buys training volume on a tight schedule. Used incorrectly, it stacks fatigue and degrades the recovery side of the stimulate-recover-adapt loop. On the wrong exercises it puts joints under load they cannot safely handle.
+
+__Supersets — pairing exercises back-to-back__
+
+A superset runs two exercises with no rest between them. Antagonist pairings (biceps and triceps; chest and back) preserve performance on each exercise because the resting muscle is not loaded. Agonist pairings (incline press into machine fly) compromise load on the second exercise — rarely worth it for primary lifts.
+
+When supersets help: time-constrained sessions, isolation accessory work, end-of-session pump finishers, and smaller-muscle pairings like lateral raises into rear delt flyes, or biceps into triceps. When they hurt: heavy compounds where breath, brace, and setup matter (squats, deadlifts, barbell bench), early sets of any primary movement, and sessions where supersets are layered on top of normal volume rather than substituting for it. The right framing is "fit existing volume into less time," not "add bonus volume."
+
+__Drop sets — extending past failure with reduced load__
+
+A drop set runs a working set to failure, reduces the load by twenty to thirty percent, and continues immediately. Useful primarily on isolations where the stimulus-to-fatigue ratio is high and load reduction is fast and safe — lateral raises, leg curls, cable curls, leg extensions, tricep pushdowns. Machines and cables are the natural home for the technique; pin or stack adjustments take seconds and the body position does not change.
+
+When drop sets hurt: applied to compound lifts (you cannot safely drop a barbell mid-set), used early in the workout (residual fatigue degrades what follows), or used on every exercise (volume creep masquerading as intensity). Practical rule: one drop set per session, on the last set of the last exercise for that muscle group. More than that is not intensity — it is unmanaged fatigue.
+
+__Rest-pause — fragmenting one heavy set__
+
+Rest-pause takes a working set to near-failure, pauses ten to twenty seconds, and continues for additional reps with the same load. Repeated two or three times, it produces close to a single set's worth of stimulus in a fraction of three full sets' rest time. The mechanic: fatigue clears partially in fifteen seconds — enough to let the highest-threshold motor units fire again — without losing the metabolic state built during the first effort.
+
+When rest-pause helps: machine and cable work where loading and unloading is trivial, a final dense-stimulus exercise at the end of a session, and time-constrained workouts where running normal sets with full rest will not fit. When it hurts: free-weight compounds where unrack and rerack is the real bottleneck (the brief pause is mostly logistics, not recovery), movements where joint stress is already the limiter, and trainees who have not built the work tolerance to absorb the fatigue cost.
+
+__The honest framing__
+
+None of these techniques are required for an excellent physique. Used well, density tools shave thirty to forty percent off session time without losing meaningful stimulus on the right exercises, and they extract one extra unit of work out of the last set of an isolation. Beyond that, the cost-benefit shifts unfavorably: more fatigue, slower recovery, blurrier signal on what is actually driving or limiting progress. The lifter who makes the most progress over five years uses density tools sparingly and on the right surface area, not as the engine of the program. For 40+ or joint-stressed lifters: density on isolations is fine; density on compounds is not. The rest period between heavy compound sets is partly there to let connective tissue, not just muscle, settle.
+
 __Before the 5\-Day Split — Your First 8 to 12 Weeks__
 
 The system described above assumes some existing training experience\. For someone who has never lifted, or who last trained years ago, jumping directly into a five\-day split with MEV/MAV volume targets and one to two reps in reserve is the wrong entry point\. The stimulus is too high, the exercise list is too long, and the skill demands of a dozen different movements are too much to learn simultaneously\. Most beginners who try to start here either burn out within three weeks or get hurt chasing intensities their nervous system and tendons have not earned\.
@@ -125,6 +151,26 @@ __Weekly Progression Model__
 
 Training volume and intensity should increase progressively within a training block, typically over four weeks, before resetting with a deload\. A practical weekly structure follows this pattern: Week 1 uses lower volume at around three reps in reserve, establishing a baseline\. Week 2 adds sets and moves to roughly two reps in reserve\. Week 3 adds more volume at one to two RIR\. Week 4 reaches peak volume at zero to one RIR\. Week 5 is a deload — volume is reduced by approximately 50% while movement patterns are maintained\. Then the cycle repeats at a slightly higher baseline\.
 
+__Frequency Choices — Is Once Per Week Per Muscle Enough?__
+
+The five-day split above hits each muscle twice per week because that distribution produces a slightly better outcome at equal weekly volume. The frequency literature is consistent on this point: at matched volume, training a muscle two or three times per week beats training it once, but the effect size is modest. Twice per week is the practical optimum for most lifters — it spreads the work into shorter, higher-quality sessions and keeps muscle-protein-synthesis elevated more of the time. It is not a requirement.
+
+Once per week per muscle is fine in a meaningful set of cases.
+
+__When once per week works__
+
+The classic "bro split" — chest day, back day, leg day, shoulder day, arms day — is once per week per muscle, and it has produced excellent physiques for decades. It works when you can absorb fifteen to twenty-plus working sets for a muscle in a single session without the last sets becoming low-quality fatigue, when your weekly schedule rules out higher frequency (a three-day-a-week lifter splitting upper/lower won't get true twice-a-week frequency on every muscle without compromising volume), or when you simply prefer training one muscle group hard per session and find it more sustainable. Sustainability beats theoretical optimality in this category.
+
+A four-day upper/lower split is once per muscle if you only run it three days a week (for example, upper Monday, lower Tuesday, off Wednesday, upper Thursday, off Friday-Sunday) and twice per muscle if you run all four days. Both structures produce solid results. The four-day version edges out the three-day version on hypertrophy at matched volume, but the gap is smaller than people imagine.
+
+__When once per week is meaningfully worse__
+
+Two cases. First, when the per-session volume needed exceeds what a single session can deliver in good quality. Twenty working sets for chest in one session means the last several sets are far less productive than fresh sets would be — the stimulus-to-fatigue ratio collapses past a certain point in any single session. If your target is fifteen-plus sets per muscle per week and you can't fit it in one quality session, splitting it across two is genuinely better. Second, when the gap between sessions is so long that strength expression on the next session is degraded — relevant for advanced natural lifters running close to MRV who benefit from more frequent re-stimulation.
+
+__The practical rule__
+
+Hit each muscle eight to fifteen working sets per week, regardless of how you distribute it. If your schedule and recovery support twice per week per muscle, do that — it is the marginally better default. If your schedule is once per week per muscle and you can land that volume in one good session, that works too. The frequency question matters far less than the volume, intensity, progression, and consistency questions. Most men who plateau attribute it to frequency when the actual cause is one of the other four.
+
 __Exercise Selection — Machines, Free Weights, and Bands__
 
 The most important framing shift for looksmaxxing training is this: for strength, free weights lead\. For looks, machines and cables often lead\. These are different goals with different optimal tools, and conflating them leads to programs that are well\-designed for powerlifters and mediocre for aesthetics\.
@@ -170,6 +216,36 @@ __Highest ROI exercises by muscle group__
 - Shoulders — lateral raises \(high volume\), cable lateral raises, rear delt flyes
 - Arms — cable curls, incline dumbbell curls, tricep pushdowns, overhead cable extension
 - Legs — leg press, hack squat, leg curl, RDL
+
+__Choose Exercises Your Body Responds To — The Israetel Selection Test__
+
+The list above is the starting menu, not a prescription. The framework tells you which categories of exercises tend to work; it cannot tell you which specific movements within those categories will work for *your* body. That is a personal calibration no general framework can answer ahead of time, and it is one of the most overlooked variables in why two men running the same program get different results.
+
+Dr. Mike Israetel's selection logic centers on the stimulus-to-fatigue ratio (SFR) — how much hypertrophy stimulus an exercise produces per unit of fatigue cost. Two exercises that train the same muscle can have very different SFRs depending on individual anatomy, leverages, and movement preferences. The lifter whose shoulder geometry fits a flat barbell bench gets excellent chest stimulus from it; the lifter whose shoulders don't fit the fixed bar path gets less chest stimulus and more shoulder stress from the same movement. Same exercise, different SFR. The fix is not to push harder on a movement that doesn't fit — it is to find the equivalent movement that does.
+
+The practical test runs four signals on every candidate exercise. An exercise that hits all four is a keeper. An exercise that misses two or more should be replaced for a different movement that trains the same muscle.
+
+__1. Did the target muscle pump?__
+
+A working set should produce a noticeable pump in the muscle you intended to train, not in surrounding stabilizers or random adjacent areas. Pump indicates blood flow and metabolic stimulus reaching the right muscle. If you finish a "chest" exercise and feel the pump primarily in your front delts and triceps with very little in your chest, the exercise is loading the wrong muscle for your structure. Some men get a great chest pump from incline barbell press; others only get it from cable flyes and incline dumbbell press. Both are correct answers — the answer is whatever produces the pump in the target muscle for *you*.
+
+__2. Did the target muscle get sore the next day or two — without joint pain?__
+
+Soreness is a useful (though imperfect) signal that the muscle was stimulated. Clean muscle soreness in the target without joint complaint is the exercise delivering the stimulus where you want it. If a movement consistently produces sharp joint pain or tendon irritation but minimal muscle soreness, the load is going through the wrong tissue — connective tissue is bearing what muscle should bear, which is the opposite of what hypertrophy training requires. A movement that produces joint pain instead of muscle soreness is a structural mismatch (or a loading error) and should be modified or replaced — see the "Specific Overuse Patterns" section above for the playbook.
+
+__3. Do you actually enjoy doing it?__
+
+This is the criterion most lifters dismiss as soft, and it is one of the most predictive of long-term progress. Israetel makes the point directly: an exercise you avoid because you hate it is producing zero stimulus regardless of how optimal it looks on paper. An exercise you genuinely look forward to is one you'll execute with intent, push closer to failure on, and perform consistently for years. Two exercises equivalent on every other criterion — pump, soreness, fatigue, range of motion — should be tie-broken on which one you'd rather do. The lifter doing his second-favorite exercise consistently for ten years out-grows the lifter doing his theoretically optimal exercise inconsistently for eighteen months.
+
+__4. Did it leave you fresh enough for the rest of the session and week?__
+
+A high-SFR exercise produces meaningful muscle stimulus without proportionally large systemic fatigue. A low-SFR exercise produces meaningful fatigue without proportionally large stimulus — heavy back squats, for example, can crush the entire week's recovery while contributing modestly to quad hypertrophy compared to a hack squat or leg press at equivalent muscle stimulus. If a single exercise leaves you systemically wrecked for two days and tanks your other sessions, its SFR is too low for your current state regardless of how impressive the load is. The correct response is to swap it for a movement that delivers similar stimulus at lower fatigue cost, not to gut through it because it "should" work.
+
+__How to actually run the test__
+
+Take a two- to three-week trial on any candidate exercise. After each session, log the four signals: did the target muscle pump? Did soreness land in the right place without joint complaint? Do you actually want to do this exercise next time? Did it leave you fresh for the rest of the week? If the answers tilt yes across three sessions, the exercise stays on the list. If two or more lean no, replace it with a different exercise for the same muscle and re-run the test.
+
+The "Highest ROI exercises by muscle group" list above is the menu to start from. Your menu is the subset of those exercises that pass the four-signal test for your specific body. Over years this is what produces what looks like an idiosyncratic program from the outside — twenty years of running this test produces a list of movements personalized to that lifter's anatomy, leverages, and joint health. The optimal program is not the one that looks most "correct" on paper. It is the one where every exercise on the list is a high-SFR movement *for you*, repeated with intent and progressed over years.
 
 __The Muscles That Matter Most for Aesthetics__
 
@@ -306,6 +382,38 @@ Warning signs: sharp or stabbing pain during a specific exercise or range of mot
 The second-order variable worth watching: trend over weeks, not days. A single bad session is noise. The same discomfort in the same pattern across three consecutive sessions is signal. Once a pattern is visible, the right move is almost always to reduce load by twenty to thirty percent, substitute the offending exercise for a joint-friendlier alternative (see the swaps in #2 above), and hold for two to three weeks rather than push through. At forty-five the cost of ignoring signal is weeks of forced layoff and a strength drop that takes months to rebuild. The cost of a three-week reduction is nearly zero in a long training life.
 
 What this is not: an invitation to catastrophize normal training discomfort. Most signals resolve on their own with competent warm-up and modest load adjustment. The skill is not avoiding all discomfort — that produces untrained, overcautious men who never got stronger because they were afraid to work. The skill is catching the signals that differ from normal wear before they become structural damage. A forty-two-year-old who ignores these signals tends to lose a rotator cuff, a lumbar disc, or a patellar tendon at some point in the next decade. A forty-two-year-old who reads them tends to be lifting at sixty the way most sixty-year-olds never will.
+
+__Specific Overuse Patterns — Modify, Don't Train Through__
+
+The "Reading the Body" framework above is the general decision rubric. Four specific patterns are common enough across lifters to name directly. None are catastrophic on their own; all become catastrophic when trained through. The fix is the same in every case: identify the pattern, reduce load by twenty to thirty percent on the offending exercise, modify the grip or implement to redistribute stress, add light prehab work, hold for two to three weeks, then resume normal progression once the signal has cleared.
+
+__Lateral epicondylitis — "tennis elbow"__
+
+Pain on the outside of the elbow during gripping, supinated curls, pull-ups, and heavy rows. The mechanism is overuse of the wrist extensor tendons at the lateral epicondyle — repetitive heavy gripping with the wrist in extension irritates the tendon attachment. Common triggers in the gym: heavy barbell curls, narrow-grip pull-ups, heavy rows performed with a clenched grip, and hammer curls performed with too much load.
+
+Modify: switch barbell curls to an EZ-bar variant — the angled grip reduces forearm supination demand and lowers tendon stress meaningfully. Use straps on heavy pulls so grip is not the failing variable. Add light reverse curls or wrist extensions for two to three sets of fifteen to twenty reps after upper-body sessions, which is one of the few reliable inputs that builds extensor-tendon resilience over weeks. Replace any exercise that produces sharp pain at the lateral epicondyle during the working set, not just after. Pain that is present at rest or wakes you up at night is past the modification stage and needs a real reduction in gripping load for two to three weeks.
+
+__Medial epicondylitis — "golfer's elbow"__
+
+Pain on the inside of the elbow, mirrored from tennis elbow but loaded by wrist flexors rather than extensors. Common triggers: heavy hammer curls, heavy pulls taken to grip failure (deadlifts, rows, pull-ups), and high-rep biceps work with poor wrist alignment.
+
+Same playbook: reduce load by twenty to thirty percent, switch to grips that redistribute load away from the wrist flexors, use straps on heavy pulls, add light wrist-flexor prehab. Both elbow patterns respond to the same intervention because they are connective-tissue overuse, not muscle problems.
+
+__Biceps tendon at the shoulder__
+
+Deep ache or pinch in the front of the shoulder during pressing — flat bench, overhead, and high-volume pressing patterns. The long head of the biceps runs through a groove in the humerus and is loaded under any pressing pattern. The pain feels different from a torn pec or strained delt; it is a deep, specific point at the front of the shoulder, not in the upper arm.
+
+Common triggers: flat barbell bench with elbows flared, heavy overhead press with insufficient warm-up, and a sudden volume spike. Modify: switch flat barbell bench to incline dumbbell or machine press — the dumbbell path lets the shoulder find its safe groove rather than forcing a fixed barbell path that may not match individual anatomy. Reduce overhead pressing volume or replace with seated machine variants for two to three weeks. Increase rotator cuff and rear delt work — face pulls, band pull-aparts, external rotations — to two or three times per week. Replace any pressing exercise that produces sharp pain in the front of the shoulder during the working set. The front-shoulder biceps tendon is slow-healing; pushing through here converts weeks of modification into months of full layoff.
+
+__Distal triceps tendon — at the elbow__
+
+Pain on the back of the elbow during heavy pressing and tricep extensions. The distal triceps attaches at the olecranon and is loaded under any tricep-dominant work. Common triggers: heavy close-grip bench, heavy overhead tricep extensions, weighted dips at high relative load, and a recent volume spike on tricep work.
+
+Modify: reduce load on overhead extensions by twenty to thirty percent — overhead is the most loaded position for this tendon and the most common irritation point. Switch heavy weighted dips to a machine tricep press or rope pushdowns. Maintain working volume but distribute it across more positions rather than stacking it on the same overhead pattern. Replace any exercise that produces sharp pain at the back of the elbow. Most cases clear in two to three weeks at reduced load if the underlying movement quality is intact.
+
+__The thread connecting all four patterns__
+
+Each pattern is connective-tissue overuse, not a muscle problem. The fix is never to train the muscle harder — it is to reduce load on the offending pattern, redistribute stress through grip and implement choices, and add light prehab so tendons can absorb what hard training is asking of them. The two-to-three-week modification window is the price of staying in the game year after year. Training through is the price of leaving it for months at a time. A lifter who learns to read these signals at thirty-five trains continuously through fifty-five. A lifter who trains through them spends a meaningful fraction of those twenty years not training at all.
 
 __Sample 40\+ Training Template__
 

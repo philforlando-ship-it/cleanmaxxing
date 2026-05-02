@@ -36,6 +36,12 @@ import { getStuckConfidenceSignal } from '@/lib/confidence/stuck-signal';
 import { getQuarterlySurveyState } from '@/lib/quarterly-survey/service';
 import { getWeeklyReflectionState } from '@/lib/weekly-reflection/service';
 import { getCheckpointState } from '@/lib/checkpoint/service';
+import { getNutritionState } from '@/lib/nutrition/service';
+import { NutritionLogCard } from './nutrition-log-card';
+import { TodayHeroCard } from './today-hero-card';
+import { pickHero } from '@/lib/today/hero';
+import { pickMilestone } from '@/lib/today/milestones';
+import { getShowUpStat } from '@/lib/continuity/show-up-stat';
 
 // Ninety-day progress-photo window. Matches the /profile page's
 // PROGRESS_WINDOW_DAYS and the POVs' typical visible-change timeline.
@@ -110,6 +116,7 @@ export default async function TodayPage({ searchParams }: Props) {
     profileCompletion,
     sleepState,
     workoutState,
+    nutritionState,
     weeklyLetter,
     selfAcceptanceNudge,
     misterPUserState,
@@ -127,6 +134,7 @@ export default async function TodayPage({ searchParams }: Props) {
     getProfileCompletion(supabase, user.id),
     getSleepState(supabase, user.id),
     getWorkoutState(supabase, user.id),
+    getNutritionState(supabase, user.id, timezone),
     getCurrentWeeklyLetter(supabase, user.id),
     pickSelfAcceptanceNudge(supabase, user.id),
     getMisterPUserState(supabase, user.id),
@@ -274,8 +282,15 @@ export default async function TodayPage({ searchParams }: Props) {
   // for slot 1) and not stepped away. The day key uses the user's
   // app-day in their stored timezone (3am-local cutoff) so the same
   // boundary applies as the rest of /today.
+  //
+  // Sunday density fix: when a fresh weekly letter exists, suppress
+  // the daily note for Sundays so the user gets one reflective
+  // surface instead of two stacked back-to-back. The letter is the
+  // bigger reflective surface; the note can wait until Monday.
+  const isSunday = new Date().getDay() === 0;
+  const suppressNoteForLetter = isSunday && Boolean(weeklyLetter);
   let todayNote = null;
-  if (!steppedAway && firstConvoState.completed) {
+  if (!steppedAway && firstConvoState.completed && !suppressNoteForLetter) {
     const { count: priorNotesCount } = await supabase
       .from('daily_notes')
       .select('id', { count: 'exact', head: true })
@@ -298,6 +313,46 @@ export default async function TodayPage({ searchParams }: Props) {
     });
   }
 
+  // Hero priority resolver. Picks one surface to pin at the top so
+  // a returning user has a primary action above the waterfall. The
+  // CTA scrolls to the underlying card via anchorId — the hero is a
+  // pointer, not a duplicate logger. We pass the same data the
+  // underlying cards consume so the hero never disagrees with what
+  // the card itself shows.
+  const todayDayForHero = appDayFor(timezone);
+  const nutritionLoggedToday = Boolean(
+    nutritionState.today && nutritionState.today.date === todayDayForHero,
+  );
+  const activeGoalSlugs = activeGoals
+    .map((g) => g.source_slug)
+    .filter((s): s is string => Boolean(s));
+  const hero = pickHero({
+    weekday: new Date().getDay(),
+    steppedAway,
+    hasActiveGoals: activeGoals.length > 0,
+    checkIn: checkInState,
+    reflection: reflectionState,
+    recentSleep: sleepState.recent,
+    recentWorkouts: workoutState.recent,
+    nutritionLoggedToday,
+    timezone,
+    activeGoalSlugs,
+  });
+
+  // Milestone ribbon (day 7/30/90/180, first check-in, first goal
+  // graduated). Fires only on the day the moment is reached so a
+  // missed day doesn't carry the ribbon forward indefinitely.
+  const milestone = steppedAway
+    ? null
+    : await pickMilestone(supabase, user.id, timezone, daysSinceOnboarding);
+
+  // Soft continuity stat: "X of the last 30 days" with anything
+  // logged. Suppressed inside the first 7 days so the line isn't
+  // noise like "1 of 1." See lib/continuity/show-up-stat.ts.
+  const showUpStat = steppedAway
+    ? null
+    : await getShowUpStat(supabase, user.id, timezone, daysSinceOnboarding);
+
   const isDev = process.env.NODE_ENV === 'development';
 
   return (
@@ -310,6 +365,18 @@ export default async function TodayPage({ searchParams }: Props) {
       </div>
 
       <div className="mt-10 space-y-6">
+        {hero && (
+          <TodayHeroCard
+            hero={hero}
+            milestoneText={milestone?.ribbonText ?? null}
+            continuity={
+              showUpStat && showUpStat.eligible
+                ? { showedUp: showUpStat.showedUp, total: showUpStat.total }
+                : null
+            }
+          />
+        )}
+
         {isFirstRun && !steppedAway && <FirstRunCard />}
 
         {!steppedAway && !firstConvoState.completed && (
@@ -335,7 +402,15 @@ export default async function TodayPage({ searchParams }: Props) {
           );
         })()}
 
-        {!steppedAway && todayNote && <DailyNoteCard note={todayNote} />}
+        {!steppedAway && todayNote && (
+          <div id="daily-note" className="scroll-mt-16">
+            {/* Key on note.id so the card unmounts/remounts when the
+                day rolls over. Without this, a tab left open across
+                the 3am app-day boundary keeps stale client state from
+                yesterday's response and hides today's fresh input. */}
+            <DailyNoteCard key={todayNote.id} note={todayNote} />
+          </div>
+        )}
 
         {!steppedAway && (
           <ProfileCompletionCard completion={profileCompletion} />
@@ -417,11 +492,18 @@ export default async function TodayPage({ searchParams }: Props) {
           </div>
         )}
         {!steppedAway && (
-          <DailyCheckInCard
-            initialState={checkInState}
-            spotlight={welcome && checkInState.check_in_id === null}
-            slugsWithFocus={slugsWithFocus}
-          />
+          <div id="nutrition-log" className="scroll-mt-16">
+            <NutritionLogCard state={nutritionState} timezone={timezone} />
+          </div>
+        )}
+        {!steppedAway && (
+          <div id="daily-check-in" className="scroll-mt-16">
+            <DailyCheckInCard
+              initialState={checkInState}
+              spotlight={welcome && checkInState.check_in_id === null}
+              slugsWithFocus={slugsWithFocus}
+            />
+          </div>
         )}
         {/* This Week's Focus sits directly under Daily Check-In so the
             user's flow is "tick today → see what to focus on this week

@@ -128,6 +128,23 @@ export const QUESTIONS: Question[] = [
     required: true,
   },
 
+  // Ninety-day intent. Optional free-text "what does success look
+  // like in 90 days?" Different shape from specific_thing (which
+  // taps insecurity); this is commitment language. Sits before the
+  // clinical screen so the survey still closes on the same heavy
+  // yes/no — moving it after would force a clinical-flagged user
+  // to answer one more question before their clinical-resources
+  // routing fires at finalize. Surfaced again at the monthly
+  // checkpoint so the user can compare day-30 self-read against
+  // day-0 declaration.
+  {
+    key: 'ninety_day_intent',
+    prompt: 'What does success look like in 90 days?',
+    helper: 'Optional. A sentence or two — what would you notice, do, or feel that you don’t now?',
+    type: 'text',
+    required: false,
+  },
+
   // Clinical screening (per spec §13). Last question.
   // A "yes" routes to /onboarding/clinical-resources before submit.
   {

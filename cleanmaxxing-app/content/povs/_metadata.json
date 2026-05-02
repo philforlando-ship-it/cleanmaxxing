@@ -64,5 +64,6 @@
   "55-limits-self-improvement":   { "priority_tier": "meta",               "category": "safety",                 "age_segments": ["18-24", "25-32", "33-40"] },
   "56-identity-beyond-appearance": { "priority_tier": "tier-4",            "category": "perception-identity",    "age_segments": ["18-24", "25-32", "33-40"] },
   "57-skin-conditions":           { "priority_tier": "conditional-tier-1", "category": "biological-foundation",  "age_segments": ["18-24", "25-32", "33-40"] },
+  "58-hair-systems-prosthetics":  { "priority_tier": "conditional-tier-1", "category": "grooming-refinement",    "age_segments": ["18-24", "25-32", "33-40"] },
   "clavicular-framework-evaluation": { "priority_tier": "meta",            "category": "context",                "age_segments": ["18-24", "25-32", "33-40"] }
 }

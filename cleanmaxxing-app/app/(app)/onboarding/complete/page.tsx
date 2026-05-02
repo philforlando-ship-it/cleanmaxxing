@@ -19,6 +19,36 @@ export default async function OnboardingCompletePage() {
     redirect('/onboarding');
   }
 
+  // Make sure the user has been through the post-survey staging
+  // steps (review + baseline-photo). Bouncing back to the entry
+  // redirector keeps the routing logic in one place — it knows
+  // exactly where to send them next based on which marker / photo
+  // is missing. Hitting /onboarding/complete directly can't skip
+  // those steps as a result.
+  const { data: stagingRows } = await supabase
+    .from('survey_responses')
+    .select('question_key')
+    .eq('user_id', user.id)
+    .in('question_key', [
+      'onboarding_review_acked',
+      'onboarding_baseline_acked',
+    ]);
+  const stagingMarkers = new Set(
+    (stagingRows ?? []).map((r) => r.question_key as string),
+  );
+  if (!stagingMarkers.has('onboarding_review_acked')) {
+    redirect('/onboarding');
+  }
+  if (!stagingMarkers.has('onboarding_baseline_acked')) {
+    const { data: baselineRow } = await supabase
+      .from('progress_photos')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('slot', 'baseline')
+      .maybeSingle();
+    if (!baselineRow) redirect('/onboarding');
+  }
+
   // Personalisation inputs for the "why these three?" explainer. Pulled
   // server-side so the first render already has the user's segment +
   // focus areas embedded — no loading flicker on the header copy.
