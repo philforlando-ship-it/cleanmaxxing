@@ -14,8 +14,6 @@ import { onrampFor, currentState, isBaselineStage } from '@/lib/content/onramp';
 import type { BaselineStage, OnrampState } from '@/lib/content/onramp';
 import { povExists } from '@/lib/content/pov';
 import type { WeeklyCheckInSummary } from '@/lib/check-in/service';
-import { AdjustBaseline } from './adjust-baseline';
-import { AdjustTarget } from './adjust-target';
 import { DismissPhaseButton } from './dismiss-phase-button';
 import { AskAboutPhaseButton } from './ask-about-phase-button';
 import type { MisterPUserState } from '@/lib/mister-p/user-state';
@@ -275,18 +273,6 @@ export function WeeklyFocusCard({ goals, weeklySummary, userState = null }: Prop
                 goalId={entry.anchorGoalId}
                 phase={entry.currentPhase}
               />
-              {entry.state.kind === 'active' && (
-                <>
-                  <AdjustBaseline
-                    goalId={entry.anchorGoalId}
-                    currentStage={entry.anchorStage}
-                  />
-                  <AdjustTarget
-                    goalId={entry.anchorGoalId}
-                    currentTarget={entry.anchorTargetDate}
-                  />
-                </>
-              )}
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
               <AskAboutPhaseButton
