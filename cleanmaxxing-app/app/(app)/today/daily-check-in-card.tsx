@@ -13,11 +13,18 @@ type Props = {
   // onboarding rather than a cold-open. Effect stops as soon as the
   // user saves a check-in (parent recomputes spotlight off).
   spotlight?: boolean;
+  // Source slugs that have a corresponding entry currently rendered
+  // inside WeeklyFocusCard (i.e. the slug has an authored onramp AND
+  // the entry isn't suppressed by phase-already-seen). Used to gate
+  // the per-goal "Focus →" button — we only render it when there's
+  // a live focus entry to scroll to.
+  slugsWithFocus?: string[];
 };
 
 export function DailyCheckInCard({
   initialState,
   spotlight = false,
+  slugsWithFocus = [],
 }: Props) {
   const router = useRouter();
   const [state, setState] = useState<TodayCheckInState>(initialState);
@@ -29,6 +36,7 @@ export function DailyCheckInCard({
 
   const alreadyCheckedIn = state.check_in_id !== null;
   const hasGoals = state.goals.length > 0;
+  const focusSlugSet = new Set(slugsWithFocus);
 
   function toggle(goalId: string) {
     setDraft((prev) => ({ ...prev, [goalId]: !prev[goalId] }));
@@ -160,6 +168,14 @@ export function DailyCheckInCard({
                     {g.title}
                   </span>
                 </label>
+                {g.source_slug && focusSlugSet.has(g.source_slug) && (
+                  <a
+                    href={`#focus-${g.source_slug}`}
+                    className="mt-0.5 shrink-0 text-xs text-zinc-600 underline decoration-dotted underline-offset-2 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+                  >
+                    Focus →
+                  </a>
+                )}
                 {(() => {
                   const action = actionForMeasurement(g.measurement_type);
                   if (!action) return null;

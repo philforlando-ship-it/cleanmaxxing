@@ -193,7 +193,7 @@ export function WeeklyFocusCard({ goals, weeklySummary }: Props) {
           <li
             key={entry.slug}
             id={`focus-${entry.slug}`}
-            className="scroll-mt-4 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
+            className="scroll-mt-16 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
           >
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="text-base font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">

@@ -21,6 +21,7 @@ import { getCurrentWeeklyLetter } from '@/lib/weekly-letter/service';
 import { SelfAcceptanceNudgeCard } from './self-acceptance-nudge-card';
 import { pickSelfAcceptanceNudge } from '@/lib/self-acceptance/risk-signals';
 import { templateBySlug } from '@/content/goal-templates';
+import { onrampFor, currentState, isBaselineStage } from '@/lib/content/onramp';
 import { FirstConversationCard } from './first-conversation-card';
 import { getFirstConvoState } from '@/lib/first-convo/service';
 import { DailyNoteCard } from './daily-note-card';
@@ -152,6 +153,39 @@ export default async function TodayPage({ searchParams }: Props) {
     target_date: string | null;
     last_phase_seen: string | null;
   }>;
+
+  // Compute the slug set that the WeeklyFocusCard will render today.
+  // Mirrors that card's "newPhaseEntries" filter: an onramp is
+  // authored AND the user's current phase differs from the last
+  // phase they dismissed. Used to gate the per-row "Focus →" button
+  // in the daily check-in so it only appears when there's a live
+  // entry to scroll to.
+  const slugsWithFocus: string[] = [];
+  {
+    const grouped = new Map<string, typeof activeGoals[number]>();
+    for (const g of activeGoals) {
+      if (!g.source_slug) continue;
+      const existing = grouped.get(g.source_slug);
+      if (
+        !existing ||
+        new Date(g.created_at).getTime() <
+          new Date(existing.created_at).getTime()
+      ) {
+        grouped.set(g.source_slug, g);
+      }
+    }
+    for (const [slug, anchor] of grouped) {
+      const onramp = onrampFor(slug);
+      if (!onramp) continue;
+      const stage = isBaselineStage(anchor.baseline_stage)
+        ? anchor.baseline_stage
+        : 'new';
+      const state = currentState(onramp, new Date(anchor.created_at), stage);
+      const currentPhase =
+        state.kind === 'graduated' ? 'graduated' : state.block.range;
+      if (anchor.last_phase_seen !== currentPhase) slugsWithFocus.push(slug);
+    }
+  }
 
   // Hydrate every thread the chat-card picker can show: General
   // (goal_id IS NULL) + one per active goal. We load up to 50 pairs
@@ -383,6 +417,7 @@ export default async function TodayPage({ searchParams }: Props) {
           <DailyCheckInCard
             initialState={checkInState}
             spotlight={welcome && checkInState.check_in_id === null}
+            slugsWithFocus={slugsWithFocus}
           />
         )}
         {/* This Week's Focus sits directly under Daily Check-In so the
