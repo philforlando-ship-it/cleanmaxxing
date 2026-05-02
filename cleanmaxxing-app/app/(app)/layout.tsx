@@ -5,6 +5,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AppNav } from '@/components/app-nav';
+import { TimezoneSync } from '@/components/timezone-sync';
 
 export default async function AppLayout({
   children,
@@ -21,9 +22,22 @@ export default async function AppLayout({
   // short-circuits the nav render so we never leak a signed-out chrome.
   if (!user) redirect('/login');
 
+  // Read the persisted timezone so TimezoneSync can short-circuit
+  // when the browser-detected zone matches. One small select; the
+  // result is also implicitly the source of truth callers compare
+  // against on first authenticated render after a tz change.
+  const { data: userRow } = await supabase
+    .from('users')
+    .select('timezone')
+    .eq('id', user.id)
+    .maybeSingle();
+  const currentTimezone =
+    (userRow?.timezone as string | null) ?? 'America/New_York';
+
   return (
     <>
       <AppNav userEmail={user.email ?? ''} />
+      <TimezoneSync current={currentTimezone} />
       {children}
     </>
   );

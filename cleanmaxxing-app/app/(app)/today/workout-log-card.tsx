@@ -1,19 +1,25 @@
 'use client';
 
-// Quick workout log on /today. Compact when nothing's logged
-// today (CTA only); expands to a form on click; collapses to a
-// summary line once the user has logged at least one session
-// for today (multiple are allowed). Multiple sessions in a day
-// stack as comma-separated summaries — most users won't log
-// twice but lifting + cardio in the same day is the obvious
-// case.
+// Quick workout log on /today. "Today" = the user's app-day in
+// their stored IANA timezone (3am-local cutoff via
+// lib/date/app-day.ts) so a late-night log routes to the right day
+// no matter where they're physically located.
+//
+// Compact when nothing's logged today (CTA only); expands to a
+// form on click; collapses to a summary line once the user has
+// logged at least one session for today (multiple are allowed).
+// Multiple sessions in a day stack as comma-separated summaries —
+// most users won't log twice but lifting + cardio in the same day
+// is the obvious case.
 
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { WorkoutLog, WorkoutType } from '@/lib/workout/service';
+import { appDayFor } from '@/lib/date/app-day';
 
 type Props = {
   recent: WorkoutLog[];
+  timezone: string;
 };
 
 const TYPE_LABEL: Record<WorkoutType, string> = {
@@ -25,11 +31,6 @@ const TYPE_LABEL: Record<WorkoutType, string> = {
 
 const TYPES: WorkoutType[] = ['strength', 'cardio', 'mobility', 'other'];
 
-function todayLocal(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 type LiftDraft = {
   name: string;
   sets: string;
@@ -39,9 +40,9 @@ type LiftDraft = {
 
 const EMPTY_LIFT: LiftDraft = { name: '', sets: '', reps: '', weight: '' };
 
-export function WorkoutLogCard({ recent }: Props) {
+export function WorkoutLogCard({ recent, timezone }: Props) {
   const router = useRouter();
-  const today = todayLocal();
+  const today = appDayFor(timezone);
   const todaysLogs = useMemo(
     () => recent.filter((r) => r.performed_on === today),
     [recent, today],

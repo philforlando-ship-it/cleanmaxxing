@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import {
   getTodayCheckInState,
@@ -16,12 +17,29 @@ const PostSchema = z.object({
   ),
 });
 
+// Read the user's stored IANA tz so the day-key for the check-in
+// row aligns with whichever timezone they're in. Falls back to
+// 'America/New_York' (the migration default) if the row is missing
+// for any reason.
+async function getUserTimezone(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<string> {
+  const { data } = await supabase
+    .from('users')
+    .select('timezone')
+    .eq('id', userId)
+    .maybeSingle();
+  return (data?.timezone as string | null) ?? 'America/New_York';
+}
+
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const state = await getTodayCheckInState(supabase, user.id);
+  const timezone = await getUserTimezone(supabase, user.id);
+  const state = await getTodayCheckInState(supabase, user.id, timezone);
   return NextResponse.json(state);
 }
 
@@ -35,7 +53,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 
-  const state = await saveTodayCheckIn(supabase, user.id, parsed.data.goals);
+  const timezone = await getUserTimezone(supabase, user.id);
+  const state = await saveTodayCheckIn(
+    supabase,
+    user.id,
+    parsed.data.goals,
+    timezone,
+  );
   return NextResponse.json(state);
 }
 
@@ -44,7 +68,8 @@ export async function DELETE() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  await undoTodayCheckIn(supabase, user.id);
-  const state = await getTodayCheckInState(supabase, user.id);
+  const timezone = await getUserTimezone(supabase, user.id);
+  await undoTodayCheckIn(supabase, user.id, timezone);
+  const state = await getTodayCheckInState(supabase, user.id, timezone);
   return NextResponse.json(state);
 }

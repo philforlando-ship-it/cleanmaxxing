@@ -56,6 +56,16 @@ export default async function GoalDetailPage({ params }: Props) {
 
   if (!goal) notFound();
 
+  // Read the user's tz so the per-goal weekly summary's day-window
+  // aligns with /today's app-day boundary.
+  const { data: userRow } = await supabase
+    .from('users')
+    .select('timezone')
+    .eq('id', user.id)
+    .maybeSingle();
+  const timezone =
+    (userRow?.timezone as string | null) ?? 'America/New_York';
+
   const onramp = onrampFor(goal.source_slug);
   const stage: BaselineStage = isBaselineStage(goal.baseline_stage)
     ? goal.baseline_stage
@@ -67,7 +77,13 @@ export default async function GoalDetailPage({ params }: Props) {
   const isActive = goal.status === 'active';
 
   const weekly = isActive
-    ? await getGoalWeeklySummary(supabase, user.id, goal.id, goal.created_at)
+    ? await getGoalWeeklySummary(
+        supabase,
+        user.id,
+        goal.id,
+        goal.created_at,
+        timezone,
+      )
     : null;
 
   // Hydrate the goal-scoped chat thread server-side so the user sees

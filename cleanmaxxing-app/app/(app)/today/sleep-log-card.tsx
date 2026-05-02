@@ -1,21 +1,25 @@
 'use client';
 
-// Daily sleep log on /today. Computes "last night" client-side as
-// (today − 1) in browser-local time so the server doesn't need
-// the user's timezone to route the log to the right night_of.
-// When last night isn't logged, shows the form. Once logged,
-// shows the captured values with an Edit option. The 7-day
-// rolling average sits below as quiet context; no streaks, no
-// scoring.
+// Daily sleep log on /today. "Last night" = the app-day immediately
+// before today's app-day, computed in the user's stored IANA
+// timezone with a 3am-local cutoff (see lib/date/app-day.ts). So a
+// 1am check-in still routes the log to yesterday's night_of, not
+// tomorrow's blank slate.
+//
+// When last night isn't logged, shows the form. Once logged, shows
+// the captured values with an Edit option. The 7-day rolling
+// average sits below as quiet context; no streaks, no scoring.
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { SleepLog } from '@/lib/sleep/service';
+import { appDayFor, previousAppDayFor } from '@/lib/date/app-day';
 
 type Props = {
   recent: SleepLog[];
   rollingAvgHours: number | null;
   rollingCount: number;
+  timezone: string;
 };
 
 const QUALITY_LABELS: Record<number, string> = {
@@ -26,21 +30,15 @@ const QUALITY_LABELS: Record<number, string> = {
   5: 'Great',
 };
 
-function todayLocalDateString(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-function lastNightDateString(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-export function SleepLogCard({ recent, rollingAvgHours, rollingCount }: Props) {
+export function SleepLogCard({
+  recent,
+  rollingAvgHours,
+  rollingCount,
+  timezone,
+}: Props) {
   const router = useRouter();
-  const lastNight = lastNightDateString();
-  const today = todayLocalDateString();
+  const lastNight = previousAppDayFor(timezone);
+  const today = appDayFor(timezone);
   const existing = recent.find((r) => r.night_of === lastNight) ?? null;
 
   const [editing, setEditing] = useState(existing === null);

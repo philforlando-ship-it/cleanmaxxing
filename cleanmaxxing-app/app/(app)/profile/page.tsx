@@ -12,6 +12,7 @@ import { DeletePhotoButton } from './delete-photo-button';
 import { CurrentStatsForm } from './current-stats-form';
 import { ProfileForm } from './profile-form';
 import { PhotoCompare } from './photo-compare';
+import { TimezoneForm } from './timezone-form';
 import { getUserProfile } from '@/lib/profile/service';
 
 const BUCKET = 'progress-photos';
@@ -32,12 +33,18 @@ type PhotoRow = {
   signedUrl: string | null;
 };
 
-function formatDate(iso: string): string {
+// Render an ISO timestamp as a short date in the user's IANA tz.
+// Server components render in the host's timezone (UTC on Vercel) by
+// default, which can show "tomorrow's" date for late-evening uploads.
+// Threading the user's tz through here keeps the date label aligned
+// with how they think about it.
+function formatDate(iso: string, timezone: string): string {
   const d = new Date(iso);
-  return d.toLocaleDateString(undefined, {
+  return d.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
+    timeZone: timezone,
   });
 }
 
@@ -50,9 +57,11 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('onboarding_completed_at')
+    .select('onboarding_completed_at, timezone')
     .eq('id', user.id)
     .maybeSingle();
+  const timezone =
+    (profile?.timezone as string | null) ?? 'America/New_York';
 
   const onboardedAt = profile?.onboarding_completed_at
     ? new Date(profile.onboarding_completed_at as string)
@@ -170,7 +179,7 @@ export default async function ProfilePage() {
           <div className="mt-4 grid gap-6 grid-cols-2 sm:grid-cols-4">
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                Baseline &middot; {formatDate(baseline.captured_at)}
+                Baseline &middot; {formatDate(baseline.captured_at, timezone)}
               </div>
               {baseline.signedUrl && (
                 /* eslint-disable-next-line @next/next/no-img-element */
@@ -187,7 +196,7 @@ export default async function ProfilePage() {
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
                 {progress30d
-                  ? `30-day · ${formatDate(progress30d.captured_at)}`
+                  ? `30-day · ${formatDate(progress30d.captured_at, timezone)}`
                   : '30-day (optional)'}
               </div>
               {progress30d?.signedUrl ? (
@@ -213,7 +222,7 @@ export default async function ProfilePage() {
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
                 {progress90d
-                  ? `90-day · ${formatDate(progress90d.captured_at)}`
+                  ? `90-day · ${formatDate(progress90d.captured_at, timezone)}`
                   : '90-day'}
               </div>
               {progress90d?.signedUrl ? (
@@ -239,7 +248,7 @@ export default async function ProfilePage() {
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
                 {progress180d
-                  ? `180-day · ${formatDate(progress180d.captured_at)}`
+                  ? `180-day · ${formatDate(progress180d.captured_at, timezone)}`
                   : '180-day'}
               </div>
               {progress180d?.signedUrl ? (
@@ -405,6 +414,18 @@ export default async function ProfilePage() {
         </p>
         <div className="mt-8">
           <CurrentStatsForm initial={userProfile} />
+        </div>
+      </section>
+
+      <section className="mt-16 border-t border-zinc-200 pt-10 dark:border-zinc-800">
+        <h2 className="text-xl font-semibold tracking-tight">Time zone</h2>
+        <p className="mt-2 max-w-xl text-sm text-zinc-700 dark:text-zinc-300">
+          Sets when each new day starts for your check-in, sleep, and
+          workout logs. The day rolls over at 3 a.m. local — a 1 a.m.
+          log still belongs to yesterday.
+        </p>
+        <div className="mt-6">
+          <TimezoneForm initial={timezone} />
         </div>
       </section>
 
