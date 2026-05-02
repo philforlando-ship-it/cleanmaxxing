@@ -48,7 +48,7 @@ export default async function GoalDetailPage({ params }: Props) {
   const { data: goal } = await supabase
     .from('goals')
     .select(
-      'id, title, description, category, priority_tier, goal_type, status, source_slug, baseline_stage, created_at, target_date, chat_execution_mode',
+      'id, title, description, category, priority_tier, goal_type, status, source_slug, baseline_stage, created_at, target_date, chat_execution_mode, chat_execution_prompt_acked',
     )
     .eq('id', id)
     .eq('user_id', user.id)
@@ -241,6 +241,7 @@ export default async function GoalDetailPage({ params }: Props) {
             goalId={goal.id}
             initialMessages={initialChatMessages}
             executionMode={Boolean(goal.chat_execution_mode)}
+            promptAcked={Boolean(goal.chat_execution_prompt_acked)}
           />
         </section>
       )}

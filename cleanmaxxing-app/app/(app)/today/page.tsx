@@ -141,7 +141,7 @@ export default async function TodayPage({ searchParams }: Props) {
     getFirstConvoState(supabase, user.id),
     supabase
       .from('goals')
-      .select('id, title, source_slug, created_at, baseline_stage, target_date, last_phase_seen, chat_execution_mode')
+      .select('id, title, source_slug, created_at, baseline_stage, target_date, last_phase_seen, chat_execution_mode, chat_execution_prompt_acked')
       .eq('user_id', user.id)
       .eq('status', 'active')
       .order('created_at', { ascending: true }),
@@ -164,6 +164,7 @@ export default async function TodayPage({ searchParams }: Props) {
     target_date: string | null;
     last_phase_seen: string | null;
     chat_execution_mode: boolean | null;
+    chat_execution_prompt_acked: boolean | null;
   }>;
 
   // Compute the slug set that the WeeklyFocusCard will render today.
@@ -243,6 +244,7 @@ export default async function TodayPage({ searchParams }: Props) {
     id: g.id,
     title: g.title,
     executionMode: Boolean(g.chat_execution_mode),
+    promptAcked: Boolean(g.chat_execution_prompt_acked),
   }));
 
   // Progress photo surface decisions: which nudge (if any) fires on /today.

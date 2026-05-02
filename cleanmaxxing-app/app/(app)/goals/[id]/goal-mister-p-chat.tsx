@@ -26,16 +26,20 @@ type Props = {
   goalId: string;
   initialMessages: ChatMessage[];
   // Per-goal Mister P execution mode. When true, the system prompt
-  // skips foundation-first redirects on this goal's thread. Toggle
-  // appears below the header, hidden until the user has heard at
-  // least one assistant response.
+  // skips foundation-first redirects on this goal's thread.
   executionMode: boolean;
+  // Whether the user has explicitly acknowledged the execution-mode
+  // prompt for this goal. Until acked, the enforcing banner blocks
+  // the chat input after Mister P's first response. See state machine
+  // notes in supabase/migrations/0027_goals_chat_execution_prompt_acked.sql.
+  promptAcked: boolean;
 };
 
 export function GoalMisterPChat({
   goalId,
   initialMessages,
   executionMode,
+  promptAcked,
 }: Props) {
   const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
@@ -154,6 +158,31 @@ export function GoalMisterPChat({
     }
   }
 
+  // "Stay with foundations first" path — acks the prompt without
+  // flipping execution mode. Banner disappears, chat input becomes
+  // live, Mister P keeps the default foundation-aware behavior.
+  async function dismissExecutionPrompt() {
+    if (togglingMode || streaming) return;
+    setTogglingMode(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/mister-p/dismiss-execution-prompt', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ goal_id: goalId }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `Dismiss failed (${res.status})`);
+      }
+      router.refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setTogglingMode(false);
+    }
+  }
+
   async function clearThread() {
     if (clearing || streaming) return;
     setClearing(true);
@@ -199,17 +228,52 @@ export function GoalMisterPChat({
 
       {(() => {
         const hasFirstResponse = messages.some((m) => m.role === 'assistant');
-        // Hide until first assistant message — honest read first,
-        // override second. Once execution mode is on, the off-switch
-        // is always visible so the user can revert at will.
-        if (!executionMode && !hasFirstResponse) return null;
+        const enforcingPrompt = !promptAcked && hasFirstResponse;
+
+        if (enforcingPrompt) {
+          return (
+            <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-900 dark:bg-amber-950/40">
+              <p className="font-medium text-amber-900 dark:text-amber-200">
+                Pick how Mister P should engage with this goal.
+              </p>
+              <p className="mt-1.5 text-xs leading-relaxed text-amber-900/80 dark:text-amber-200/80">
+                By default Mister P will push back when your foundations
+                (sleep, training, body comp) don&rsquo;t support a goal.
+                If you&rsquo;ve thought it through and want execution help
+                anyway, switch into execution mode — foundation redirects
+                stop, hard refusals stay.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={toggleExecutionMode}
+                  disabled={togglingMode || streaming}
+                  className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                >
+                  {togglingMode ? 'Saving…' : 'Help me anyway'}
+                </button>
+                <button
+                  type="button"
+                  onClick={dismissExecutionPrompt}
+                  disabled={togglingMode || streaming}
+                  className="rounded-md border border-amber-400 px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50 dark:border-amber-700 dark:text-amber-200 dark:hover:bg-amber-950"
+                >
+                  Stay with foundations first
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        if (!hasFirstResponse && !executionMode) return null;
+
         return (
           <div className="mt-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs dark:border-zinc-800 dark:bg-zinc-900/50">
             {executionMode ? (
               <div className="flex items-center justify-between gap-3">
                 <span className="text-zinc-700 dark:text-zinc-300">
-                  Execution mode is on for this goal — Mister P is engaging
-                  with the goal directly without foundation-first redirects.
+                  Execution mode is on for this goal — foundation-first
+                  redirects are off.
                 </span>
                 <button
                   type="button"
@@ -223,16 +287,16 @@ export function GoalMisterPChat({
             ) : (
               <div className="flex items-center justify-between gap-3">
                 <span className="text-zinc-700 dark:text-zinc-300">
-                  Want Mister P to help with this goal anyway, even if
-                  foundations aren&rsquo;t fully dialed?
+                  Foundations-first mode. Switch to execution mode if
+                  you&rsquo;d rather Mister P engage with the goal directly.
                 </span>
                 <button
                   type="button"
                   onClick={toggleExecutionMode}
                   disabled={togglingMode || streaming}
-                  className="shrink-0 rounded-md bg-zinc-900 px-2.5 py-1 font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                  className="shrink-0 rounded-md border border-zinc-300 px-2.5 py-1 font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
                 >
-                  {togglingMode ? 'Saving…' : 'Help me anyway'}
+                  {togglingMode ? 'Saving…' : 'Switch to execution'}
                 </button>
               </div>
             )}
@@ -310,45 +374,55 @@ export function GoalMisterPChat({
         <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>
       )}
 
-      <form
-        className="mt-4 flex items-center gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          send();
-        }}
-      >
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask Mister P about this goal..."
-          disabled={streaming}
-          className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-        />
-        <VoiceInputButton
-          disabled={streaming}
-          onTranscribed={(text) =>
-            setInput((prev) => (prev ? `${prev} ${text}` : text))
-          }
-        />
-        {streaming ? (
-          <button
-            type="button"
-            onClick={stop}
-            className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+      {(() => {
+        const hasFirstResponse = messages.some((m) => m.role === 'assistant');
+        const inputBlockedByPrompt = !promptAcked && hasFirstResponse;
+        return (
+          <form
+            className="mt-4 flex items-center gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              send();
+            }}
           >
-            Stop
-          </button>
-        ) : (
-          <button
-            type="submit"
-            disabled={!input.trim()}
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-          >
-            Send
-          </button>
-        )}
-      </form>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={
+                inputBlockedByPrompt
+                  ? 'Pick how to engage with this goal first ↑'
+                  : 'Ask Mister P about this goal...'
+              }
+              disabled={streaming || inputBlockedByPrompt}
+              className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            />
+            <VoiceInputButton
+              disabled={streaming || inputBlockedByPrompt}
+              onTranscribed={(text) =>
+                setInput((prev) => (prev ? `${prev} ${text}` : text))
+              }
+            />
+            {streaming ? (
+              <button
+                type="button"
+                onClick={stop}
+                className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                Stop
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={!input.trim() || inputBlockedByPrompt}
+                className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              >
+                Send
+              </button>
+            )}
+          </form>
+        );
+      })()}
     </section>
   );
 }

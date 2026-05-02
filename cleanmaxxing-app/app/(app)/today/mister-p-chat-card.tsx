@@ -22,12 +22,15 @@ export type GoalOption = {
   id: string;
   title: string;
   // Per-goal Mister P execution mode. When true, the system prompt
-  // skips foundation-first redirects on this goal's thread. The
-  // toggle button below only renders for goal-scoped threads (not
-  // the General thread) and only after at least one assistant
-  // message exists — the user should hear the honest read once
-  // before the override is offered.
+  // skips foundation-first redirects on this goal's thread.
   executionMode: boolean;
+  // Whether the user has explicitly acknowledged the execution-mode
+  // prompt for this goal. Until acked, the enforcing banner blocks
+  // the chat input on goal-scoped threads after Mister P's first
+  // response — the user must pick "Help me anyway" or "Stay with
+  // foundations first" before continuing. Once acked, the enforcing
+  // banner is replaced with the lighter-weight on/off control.
+  promptAcked: boolean;
 };
 
 // Sentinel key used in the threads map and as the picker's "no goal"
@@ -103,6 +106,30 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
       const targetKey = threadKey ?? selectedKey;
       const goalId = targetKey === GENERAL_KEY ? null : targetKey;
 
+      // Respect the execution-mode prompt gate even on cross-card
+      // prefill. If the user has already heard Mister P's first read
+      // on this goal but hasn't picked a path yet, drop the question
+      // rather than bypass the banner. Threads with no prior
+      // assistant response (a brand-new goal-scoped thread) skip this
+      // gate — the first response is the read the prompt is about.
+      if (goalId) {
+        const targetGoal = goals.find((g) => g.id === goalId);
+        const targetMessages = threads[goalId] ?? [];
+        const targetHasFirstResponse = targetMessages.some(
+          (m) => m.role === 'assistant',
+        );
+        if (
+          targetGoal &&
+          !targetGoal.promptAcked &&
+          targetHasFirstResponse
+        ) {
+          setError(
+            'Pick how Mister P should engage with this goal before continuing.',
+          );
+          return;
+        }
+      }
+
       setError(null);
       setInput('');
       setStreaming(true);
@@ -166,7 +193,7 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
         abortRef.current = null;
       }
     },
-    [selectedKey, setMessagesForThread],
+    [selectedKey, setMessagesForThread, goals, threads],
   );
 
   // Listen for "ask mister p about X" events from sibling cards. When
@@ -201,10 +228,10 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
     abortRef.current?.abort();
   }
 
-  // Flip the focused goal's execution mode flag. Only meaningful in
-  // a goal-scoped thread; the toggle button below is hidden in the
-  // General thread anyway. After flipping, refresh the route so the
-  // server-loaded goals carry the new value on next chat send.
+  // Flip the focused goal's execution mode flag (and ack the prompt).
+  // Used by the enforcing banner's "Help me anyway" CTA and by the
+  // post-ack on/off control. After flipping, refresh the route so the
+  // server-loaded goals carry the new value on next render.
   async function toggleExecutionMode() {
     if (togglingMode || streaming) return;
     if (selectedKey === GENERAL_KEY) return;
@@ -222,6 +249,35 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error ?? `Toggle failed (${res.status})`);
+      }
+      router.refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setTogglingMode(false);
+    }
+  }
+
+  // "Stay with foundations first" — acks the prompt without flipping
+  // execution mode. After this, the enforcing banner disappears and
+  // the chat input becomes live; Mister P continues to give the
+  // foundation-aware default response on subsequent messages.
+  async function dismissExecutionPrompt() {
+    if (togglingMode || streaming) return;
+    if (selectedKey === GENERAL_KEY) return;
+    const goal = goals.find((g) => g.id === selectedKey);
+    if (!goal) return;
+    setTogglingMode(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/mister-p/dismiss-execution-prompt', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ goal_id: goal.id }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `Dismiss failed (${res.status})`);
       }
       router.refresh();
     } catch (err) {
@@ -263,6 +319,17 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
     selectedKey === GENERAL_KEY
       ? 'General'
       : goals.find((g) => g.id === selectedKey)?.title ?? 'Goal';
+
+  // The chat input is gated when the enforcing execution-prompt banner
+  // is showing — the user must pick a path before continuing. Same
+  // condition as the banner-render check above so the two stay in sync.
+  const inputBlockedByPrompt = (() => {
+    if (selectedKey === GENERAL_KEY) return false;
+    const goal = goals.find((g) => g.id === selectedKey);
+    if (!goal) return false;
+    if (goal.promptAcked) return false;
+    return messages.some((m) => m.role === 'assistant');
+  })();
 
   return (
     <section
@@ -310,19 +377,63 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
         const goal = goals.find((g) => g.id === selectedKey);
         if (!goal) return null;
         const hasFirstResponse = messages.some((m) => m.role === 'assistant');
-        // Hide the toggle until the user has heard Mister P's first
-        // response on this goal — the brand intent is "honest read
-        // first, then offer the override." Once execution mode is on,
-        // surface the off-switch even before any new messages so the
-        // user can revert without typing.
-        if (!goal.executionMode && !hasFirstResponse) return null;
+
+        // Enforcing state: user has heard Mister P's first response on
+        // this goal but hasn't yet acked the choice. Banner blocks the
+        // chat input (rendered below) until one of the two paths is
+        // chosen. Skipped in the General thread and before any
+        // assistant response (the user gets one honest read first).
+        const enforcingPrompt =
+          !goal.promptAcked && hasFirstResponse;
+
+        if (enforcingPrompt) {
+          return (
+            <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-900 dark:bg-amber-950/40">
+              <p className="font-medium text-amber-900 dark:text-amber-200">
+                Pick how Mister P should engage with this goal.
+              </p>
+              <p className="mt-1.5 text-xs leading-relaxed text-amber-900/80 dark:text-amber-200/80">
+                By default Mister P will push back when your foundations
+                (sleep, training, body comp) don&rsquo;t support a goal.
+                If you&rsquo;ve thought it through and want execution help
+                anyway, switch into execution mode — foundation redirects
+                stop, hard refusals stay.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={toggleExecutionMode}
+                  disabled={togglingMode || streaming}
+                  className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                >
+                  {togglingMode ? 'Saving…' : 'Help me anyway'}
+                </button>
+                <button
+                  type="button"
+                  onClick={dismissExecutionPrompt}
+                  disabled={togglingMode || streaming}
+                  className="rounded-md border border-amber-400 px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50 dark:border-amber-700 dark:text-amber-200 dark:hover:bg-amber-950"
+                >
+                  Stay with foundations first
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        // Acked state. Show the lighter-weight on/off control so the
+        // user can switch modes later without re-encountering the
+        // enforcing banner. Hidden when nothing's happened yet
+        // (acked=true with no messages = clean slate).
+        if (!hasFirstResponse && !goal.executionMode) return null;
+
         return (
           <div className="mt-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs dark:border-zinc-800 dark:bg-zinc-900/50">
             {goal.executionMode ? (
               <div className="flex items-center justify-between gap-3">
                 <span className="text-zinc-700 dark:text-zinc-300">
-                  Execution mode is on for this goal — Mister P is engaging
-                  with the goal directly without foundation-first redirects.
+                  Execution mode is on for this goal — foundation-first
+                  redirects are off.
                 </span>
                 <button
                   type="button"
@@ -336,16 +447,16 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
             ) : (
               <div className="flex items-center justify-between gap-3">
                 <span className="text-zinc-700 dark:text-zinc-300">
-                  Want Mister P to help with this goal anyway, even if
-                  foundations aren&rsquo;t fully dialed?
+                  Foundations-first mode. Switch to execution mode if
+                  you&rsquo;d rather Mister P engage with the goal directly.
                 </span>
                 <button
                   type="button"
                   onClick={toggleExecutionMode}
                   disabled={togglingMode || streaming}
-                  className="shrink-0 rounded-md bg-zinc-900 px-2.5 py-1 font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                  className="shrink-0 rounded-md border border-zinc-300 px-2.5 py-1 font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
                 >
-                  {togglingMode ? 'Saving…' : 'Help me anyway'}
+                  {togglingMode ? 'Saving…' : 'Switch to execution'}
                 </button>
               </div>
             )}
@@ -436,15 +547,17 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={
-            selectedKey === GENERAL_KEY
-              ? 'Ask Mister P a question...'
-              : `Ask about "${selectedLabel}"...`
+            inputBlockedByPrompt
+              ? 'Pick how to engage with this goal first ↑'
+              : selectedKey === GENERAL_KEY
+                ? 'Ask Mister P a question...'
+                : `Ask about "${selectedLabel}"...`
           }
-          disabled={streaming}
+          disabled={streaming || inputBlockedByPrompt}
           className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
         />
         <VoiceInputButton
-          disabled={streaming}
+          disabled={streaming || inputBlockedByPrompt}
           onTranscribed={(text) =>
             setInput((prev) => (prev ? `${prev} ${text}` : text))
           }
@@ -460,7 +573,7 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
         ) : (
           <button
             type="submit"
-            disabled={!input.trim()}
+            disabled={!input.trim() || inputBlockedByPrompt}
             className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             Send

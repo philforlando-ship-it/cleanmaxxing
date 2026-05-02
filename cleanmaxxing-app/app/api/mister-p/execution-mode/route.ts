@@ -46,9 +46,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
+  // Flipping mode also implicitly acks the prompt — you cannot
+  // interact with the toggle without having seen it. Setting both
+  // here prevents a UI race where the user clicks "Help me anyway"
+  // but the enforcing banner re-shows on next render because
+  // chat_execution_prompt_acked is still false.
   const { error } = await supabase
     .from('goals')
-    .update({ chat_execution_mode: enabled })
+    .update({
+      chat_execution_mode: enabled,
+      chat_execution_prompt_acked: true,
+    })
     .eq('id', goal_id)
     .eq('user_id', user.id);
 
