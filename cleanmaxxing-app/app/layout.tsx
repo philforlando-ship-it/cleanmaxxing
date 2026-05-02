@@ -42,14 +42,14 @@ export const viewport: Viewport = {
 
 // Inline script that runs before React hydrates so we set the correct
 // theme class on <html> without flashing. Reads localStorage; falls
-// back to OS preference when no explicit choice is stored. Kept small
-// and dependency-free because this blocks first paint. The
-// ThemeApplier component handles mid-session changes.
+// back to dark when no explicit choice is stored. Kept small and
+// dependency-free because this blocks first paint. The ThemeApplier
+// component handles mid-session changes.
 const THEME_INIT_SCRIPT = `
 (function() {
   try {
     var stored = localStorage.getItem('cleanmaxxing:theme');
-    var theme = (stored === 'light' || stored === 'dark' || stored === 'system') ? stored : 'system';
+    var theme = (stored === 'light' || stored === 'dark' || stored === 'system') ? stored : 'dark';
     var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     var effective = theme === 'system' ? (prefersDark ? 'dark' : 'light') : theme;
     if (effective === 'dark') document.documentElement.classList.add('dark');

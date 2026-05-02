@@ -1,7 +1,7 @@
 // Theme hook. Three modes:
-//   'system' — follow the OS's prefers-color-scheme (default)
+//   'system' — follow the OS's prefers-color-scheme
 //   'light'  — force light
-//   'dark'   — force dark
+//   'dark'   — force dark (default for new users)
 //
 // Persistence via localStorage. A no-FOUC inline script in
 // app/layout.tsx applies the initial class before React hydrates; this
@@ -31,11 +31,11 @@ function getStoredTheme(): Theme {
   } catch {
     // localStorage unavailable (private browsing, quota) — fall through.
   }
-  return 'system';
+  return 'dark';
 }
 
 function getServerTheme(): Theme {
-  return 'system';
+  return 'dark';
 }
 
 // -- OS-preference subscription ----------------------------------------
