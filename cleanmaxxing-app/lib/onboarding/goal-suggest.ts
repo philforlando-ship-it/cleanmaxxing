@@ -91,6 +91,19 @@ export function focusSlugsFor(focusAreas: string[]): Set<string> {
 
 // Scoring used by both the onboarding suggestion ranker and the library
 // browser. No exclusion logic here — callers decide what to filter.
+//
+// No global process-vs-outcome tiebreaker here. An earlier version added
+// a fixed +1 for process goals, which suppressed outcomes that were more
+// relevant on tier + focus alone. The rule we want is "1 outcome is fine
+// if it's more relevant than the process alternative" — that emerges
+// naturally when scoring is purely tier + focus + motivation. The 2-of-3
+// process floor is still enforced separately by the post-pick nudge in
+// goals-picker.tsx, which gives the user an explicit one-tap swap when
+// the natural ranking surfaces 2+ outcomes in the top-3.
+//
+// Motivation-segment adjustments below DO swing process/outcome — those
+// are calibrated for psychological-safety reasons (a user who picked
+// "feel better in my own skin" gets soft framing on purpose) and stay.
 export function scoreDoc(
   slug: string,
   priorityTier: string | null,
@@ -101,7 +114,6 @@ export function scoreDoc(
 ): number {
   let score = baseTierScore(priorityTier);
   if (focusSlugs.has(slug)) score += 6;
-  if (goalType === 'process') score += 1;
   score += motivationAdjustment(goalType, category, motivationSegment);
   return score;
 }
