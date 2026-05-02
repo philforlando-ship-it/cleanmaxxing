@@ -1,4 +1,5 @@
 import type { Question, AgeSegment } from './types';
+import { HEIGHT_OPTIONS } from '@/lib/height-options';
 
 // Order matters — this defines the screen sequence.
 // Keys must be stable (they become rows in survey_responses.question_key).
@@ -15,11 +16,10 @@ export const QUESTIONS: Question[] = [
   },
   {
     key: 'height_inches',
-    prompt: 'Your height, in inches?',
+    prompt: 'Your height?',
     helper: 'Optional. Skip if you\u2019d rather not share.',
-    type: 'number',
-    min: 48,
-    max: 96,
+    type: 'select',
+    options: HEIGHT_OPTIONS,
     required: false,
   },
   {

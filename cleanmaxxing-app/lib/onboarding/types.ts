@@ -2,6 +2,7 @@ export type QuestionType =
   | 'number'
   | 'choice'
   | 'multi-choice'
+  | 'select'
   | 'slider'
   | 'text'
   | 'yes-no';

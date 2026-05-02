@@ -154,6 +154,22 @@ export function QuestionForm({
           />
         )}
 
+        {question.type === 'select' && question.options && (
+          <select
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-lg outline-none focus:border-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:border-zinc-100"
+            autoFocus
+          >
+            <option value="">Choose…</option>
+            {question.options.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        )}
+
         {question.type === 'choice' && question.options && (
           <div className="flex flex-col gap-2">
             {question.options.map((opt) => (

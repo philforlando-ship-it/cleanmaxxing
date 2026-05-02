@@ -14,6 +14,7 @@ import type {
   TrainingExperience,
   BodyFatEstimate,
 } from '@/lib/profile/service';
+import { HEIGHT_OPTIONS } from '@/lib/height-options';
 
 type Props = {
   initial: UserProfile;
@@ -203,22 +204,21 @@ export function CurrentStatsForm({ initial }: Props) {
 
       <Field
         label="Height"
-        help="In inches. Prefilled from your onboarding answer if you provided one."
+        help="Prefilled from your onboarding answer if you provided one."
       >
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            min={48}
-            max={96}
-            step={1}
-            value={heightInches}
-            onChange={(e) => setHeightInches(e.target.value)}
-            disabled={pending}
-            placeholder="e.g. 71"
-            className="w-32 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-          />
-          <span className="text-xs text-zinc-500">inches</span>
-        </div>
+        <select
+          value={heightInches}
+          onChange={(e) => setHeightInches(e.target.value)}
+          disabled={pending}
+          className="w-32 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        >
+          <option value="">Choose…</option>
+          {HEIGHT_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
       </Field>
 
       <Field
