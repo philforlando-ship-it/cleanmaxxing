@@ -5,36 +5,42 @@
  * only — no confidence score, no self-worth slider. Confidence lives in the
  * weekly reflection. One check_in row per user per day, one goal_check_in
  * row per active goal tied to that check_in.
+ *
+ * "Today" = the user's app-day in their stored IANA timezone (3am-local
+ * cutoff). All public functions accept `timezone` so callers can route the
+ * day-key without re-querying users.timezone themselves. See
+ * lib/date/app-day.ts for the algorithm.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { plainLanguageFor } from '@/lib/content/plain-language';
+import { templateBySlug } from '@/content/goal-templates';
+import type { MeasurementType } from '@/content/goal-templates';
+import {
+  appDayFor,
+  addDaysToAppDay,
+  daysBetweenAppDays,
+} from '@/lib/date/app-day';
 
 export type CheckInGoal = {
   goal_id: string;
   title: string;
-  description: string | null;
   source_slug: string | null;
   plain_language: string | null;
+  // How this goal's progress is actually proven (session log, photo
+  // comparison, macro tracking, etc.). Pulled from the anchored
+  // template at render time. Drives the contextual action affordance
+  // surfaced next to the daily tick in the UI. Null when the user's
+  // goal anchors to a slug we don't have a template for (custom
+  // goals or stale-anchor goals).
+  measurement_type: MeasurementType | null;
   completed: boolean;
 };
 
 export type TodayCheckInState = {
-  date: string; // YYYY-MM-DD, server-local
+  date: string; // YYYY-MM-DD, the user's app-day key
   check_in_id: string | null; // null if user hasn't checked in today yet
   goals: CheckInGoal[];
 };
-
-/**
- * Return today's date in YYYY-MM-DD in the server's local timezone.
- * The `date` column in check_ins is a Postgres `date` so we pass a bare
- * date string, not a timestamp.
- */
-export function todayDateString(now: Date = new Date()): string {
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
 
 /**
  * Load today's check-in state for the given user: active goals + whether
@@ -44,11 +50,12 @@ export function todayDateString(now: Date = new Date()): string {
 export async function getTodayCheckInState(
   supabase: SupabaseClient,
   userId: string,
-  date: string = todayDateString()
+  timezone: string,
+  date: string = appDayFor(timezone),
 ): Promise<TodayCheckInState> {
   const { data: goals, error: goalsError } = await supabase
     .from('goals')
-    .select('id, title, description, source_slug')
+    .select('id, title, source_slug')
     .eq('user_id', userId)
     .eq('status', 'active')
     .order('created_at', { ascending: true });
@@ -78,12 +85,13 @@ export async function getTodayCheckInState(
     check_in_id: checkIn?.id ?? null,
     goals: (goals ?? []).map((g) => {
       const slug = (g.source_slug as string | null) ?? null;
+      const tmpl = slug ? templateBySlug(slug) : null;
       return {
         goal_id: g.id as string,
         title: g.title as string,
-        description: (g.description as string | null) ?? null,
         source_slug: slug,
         plain_language: slug ? plainLanguageFor(slug) : null,
+        measurement_type: tmpl?.measurement_type ?? null,
         completed: completedByGoal.get(g.id as string) ?? false,
       };
     }),
@@ -102,7 +110,8 @@ export async function saveTodayCheckIn(
   supabase: SupabaseClient,
   userId: string,
   completions: Array<{ goal_id: string; completed: boolean }>,
-  date: string = todayDateString()
+  timezone: string,
+  date: string = appDayFor(timezone),
 ): Promise<TodayCheckInState> {
   // Validate that every goal_id actually belongs to this user and is
   // currently active. Prevents a client from writing goal_check_ins against
@@ -154,7 +163,7 @@ export async function saveTodayCheckIn(
     if (insertError) throw insertError;
   }
 
-  return getTodayCheckInState(supabase, userId, date);
+  return getTodayCheckInState(supabase, userId, timezone, date);
 }
 
 export type WeeklyCheckInSummary = {
@@ -175,12 +184,11 @@ export type WeeklyCheckInSummary = {
 export async function getWeeklyCheckInSummary(
   supabase: SupabaseClient,
   userId: string,
-  now: Date = new Date()
+  timezone: string,
+  now: Date = new Date(),
 ): Promise<WeeklyCheckInSummary> {
-  const endDate = todayDateString(now);
-  const startObj = new Date(now);
-  startObj.setDate(startObj.getDate() - 6);
-  const startDate = todayDateString(startObj);
+  const endDate = appDayFor(timezone, now);
+  const startDate = addDaysToAppDay(endDate, -6);
 
   const { data: goalRows } = await supabase
     .from('goals')
@@ -192,11 +200,10 @@ export async function getWeeklyCheckInSummary(
   const goalIds = activeGoals.map((g) => g.id);
   const goalCount = goalIds.length;
 
-  const MS_PER_DAY = 86_400_000;
-  const nowMs = now.getTime();
   let possible = 0;
   for (const g of activeGoals) {
-    const daysSince = Math.floor((nowMs - new Date(g.created_at).getTime()) / MS_PER_DAY) + 1;
+    const goalDay = appDayFor(timezone, new Date(g.created_at));
+    const daysSince = daysBetweenAppDays(goalDay, endDate) + 1;
     possible += Math.max(0, Math.min(7, daysSince));
   }
 
@@ -241,15 +248,14 @@ export async function getGoalWeeklySummary(
   userId: string,
   goalId: string,
   createdAt: string,
-  now: Date = new Date()
+  timezone: string,
+  now: Date = new Date(),
 ): Promise<GoalWeeklySummary> {
-  const endDate = todayDateString(now);
-  const startObj = new Date(now);
-  startObj.setDate(startObj.getDate() - 6);
-  const startDate = todayDateString(startObj);
+  const endDate = appDayFor(timezone, now);
+  const startDate = addDaysToAppDay(endDate, -6);
 
-  const MS_PER_DAY = 86_400_000;
-  const daysSince = Math.floor((now.getTime() - new Date(createdAt).getTime()) / MS_PER_DAY) + 1;
+  const goalDay = appDayFor(timezone, new Date(createdAt));
+  const daysSince = daysBetweenAppDays(goalDay, endDate) + 1;
   const daysPossible = Math.max(0, Math.min(7, daysSince));
 
   if (daysPossible === 0) return { daysCompleted: 0, daysPossible: 0 };
@@ -302,6 +308,7 @@ export type StaleGoal = {
 export async function getStalestGoal(
   supabase: SupabaseClient,
   userId: string,
+  timezone: string,
   now: Date = new Date(),
   staleDays = 9,
   graceDays = 14,
@@ -318,12 +325,12 @@ export async function getStalestGoal(
   }>;
   if (goals.length === 0) return null;
 
-  const MS_PER_DAY = 86_400_000;
-  const nowMs = now.getTime();
+  const todayDay = appDayFor(timezone, now);
 
   // Filter to goals past the grace window. Younger goals never trigger.
   const eligible = goals.filter((g) => {
-    const age = Math.floor((nowMs - new Date(g.created_at).getTime()) / MS_PER_DAY);
+    const goalDay = appDayFor(timezone, new Date(g.created_at));
+    const age = daysBetweenAppDays(goalDay, todayDay);
     return age >= graceDays;
   });
   if (eligible.length === 0) return null;
@@ -375,15 +382,12 @@ export async function getStalestGoal(
       // Never ticked: treat as "days since creation" for staleness ranking
       // but cap so a very old never-ticked goal doesn't dominate every
       // tie-break. Age already cleared graceDays.
-      const ageDays = Math.floor(
-        (nowMs - new Date(g.created_at).getTime()) / MS_PER_DAY,
-      );
-      sortKey = ageDays;
+      const goalDay = appDayFor(timezone, new Date(g.created_at));
+      sortKey = daysBetweenAppDays(goalDay, todayDay);
     } else {
-      // `lastTick` is YYYY-MM-DD; midnight-local comparison is fine since
-      // we're in whole-day granularity.
-      const lastMs = new Date(lastTick + 'T00:00:00').getTime();
-      daysSinceLastTick = Math.floor((nowMs - lastMs) / MS_PER_DAY);
+      // `lastTick` is YYYY-MM-DD; compute distance in app-days against
+      // today's app-day directly (no midnight-local fudge needed).
+      daysSinceLastTick = daysBetweenAppDays(lastTick, todayDay);
       if (daysSinceLastTick < staleDays) continue; // still fresh
       sortKey = daysSinceLastTick;
     }
@@ -413,7 +417,8 @@ export async function getStalestGoal(
 export async function undoTodayCheckIn(
   supabase: SupabaseClient,
   userId: string,
-  date: string = todayDateString()
+  timezone: string,
+  date: string = appDayFor(timezone),
 ): Promise<void> {
   await supabase
     .from('check_ins')

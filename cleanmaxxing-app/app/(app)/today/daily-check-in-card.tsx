@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { TodayCheckInState } from '@/lib/check-in/service';
+import { actionForMeasurement } from '@/lib/goals/measurement-action';
 
 type Props = {
   initialState: TodayCheckInState;
@@ -12,17 +13,11 @@ type Props = {
   // onboarding rather than a cold-open. Effect stops as soon as the
   // user saves a check-in (parent recomputes spotlight off).
   spotlight?: boolean;
-  // Source slugs that have a corresponding entry in WeeklyFocusCard
-  // (i.e. the slug has an authored onramp/walkthrough). Used to gate
-  // the "Jump to focus" link per goal — we don't render a deep-link
-  // when there's nothing to scroll to.
-  slugsWithFocus?: string[];
 };
 
 export function DailyCheckInCard({
   initialState,
   spotlight = false,
-  slugsWithFocus = [],
 }: Props) {
   const router = useRouter();
   const [state, setState] = useState<TodayCheckInState>(initialState);
@@ -34,19 +29,6 @@ export function DailyCheckInCard({
 
   const alreadyCheckedIn = state.check_in_id !== null;
   const hasGoals = state.goals.length > 0;
-  const focusSlugSet = new Set(slugsWithFocus);
-
-  // Smooth-scroll to the matching focus entry if it exists in the DOM.
-  // The id pattern matches WeeklyFocusCard's per-entry `<li id="focus-<slug>">`.
-  // If the anchor isn't present (e.g. edge case where the card is hidden
-  // for stepped-away users), we no-op rather than firing an unhelpful
-  // hash change.
-  function jumpToFocus(slug: string) {
-    const target = document.getElementById(`focus-${slug}`);
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }
 
   function toggle(goalId: string) {
     setDraft((prev) => ({ ...prev, [goalId]: !prev[goalId] }));
@@ -150,45 +132,59 @@ export function DailyCheckInCard({
       <ul className="mt-4 space-y-2">
         {state.goals.map((g, i) => {
           const checked = Boolean(draft[g.goal_id]);
-          const hasDetail = Boolean(g.description || g.plain_language);
+          const hasDetail = Boolean(g.plain_language);
           return (
             <li
               key={g.goal_id}
               className="rounded-lg border border-zinc-200 dark:border-zinc-800"
             >
-              <label className="flex cursor-pointer items-start gap-3 p-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => toggle(g.goal_id)}
-                  disabled={pending}
-                  className="mt-0.5 h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600"
-                />
-                <span className="mt-0.5 shrink-0 font-mono text-xs text-zinc-500">
-                  {String.fromCharCode(65 + i)}.
-                </span>
-                <span
-                  className={
-                    checked
-                      ? 'flex-1 text-sm text-zinc-500 line-through'
-                      : 'flex-1 text-sm text-zinc-900 dark:text-zinc-100'
-                  }
-                >
-                  {g.title}
-                </span>
-                {g.source_slug && focusSlugSet.has(g.source_slug) && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      jumpToFocus(g.source_slug as string);
-                    }}
-                    className="shrink-0 text-xs text-zinc-500 underline decoration-dotted underline-offset-2 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+              <div className="flex items-start gap-3 p-3">
+                <label className="flex flex-1 cursor-pointer items-start gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggle(g.goal_id)}
+                    disabled={pending}
+                    className="mt-0.5 h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600"
+                  />
+                  <span className="mt-0.5 shrink-0 font-mono text-xs text-zinc-500">
+                    {String.fromCharCode(65 + i)}.
+                  </span>
+                  <span
+                    className={
+                      checked
+                        ? 'flex-1 text-sm text-zinc-500 line-through'
+                        : 'flex-1 text-sm text-zinc-900 dark:text-zinc-100'
+                    }
                   >
-                    Focus →
-                  </button>
-                )}
-              </label>
+                    {g.title}
+                  </span>
+                </label>
+                {(() => {
+                  const action = actionForMeasurement(g.measurement_type);
+                  if (!action) return null;
+                  const linkClass =
+                    'mt-0.5 shrink-0 text-xs text-zinc-600 underline decoration-dotted underline-offset-2 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100';
+                  if (action.href) {
+                    return (
+                      <Link href={action.href} className={linkClass}>
+                        {action.label} →
+                      </Link>
+                    );
+                  }
+                  return (
+                    <a href={`#${action.anchor}`} className={linkClass}>
+                      {action.label} →
+                    </a>
+                  );
+                })()}
+                <Link
+                  href={`/goals/${g.goal_id}`}
+                  className="mt-0.5 shrink-0 text-xs text-zinc-500 underline decoration-dotted underline-offset-2 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                >
+                  Open goal →
+                </Link>
+              </div>
               {hasDetail && (
                 <details className="group border-t border-zinc-200 px-3 py-2 dark:border-zinc-800">
                   <summary className="cursor-pointer text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
@@ -196,11 +192,6 @@ export function DailyCheckInCard({
                   </summary>
                   <div className="mt-2 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
                     {g.plain_language && <p>{g.plain_language}</p>}
-                    {g.description && g.description !== g.plain_language && (
-                      <p className="text-zinc-600 dark:text-zinc-400">
-                        {g.description}
-                      </p>
-                    )}
                     <button
                       type="button"
                       onClick={() => askMisterPAbout(g.goal_id, g.title)}

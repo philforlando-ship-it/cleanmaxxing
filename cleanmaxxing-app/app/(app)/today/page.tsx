@@ -365,15 +365,19 @@ export default async function TodayPage({ searchParams }: Props) {
             (asking Mister P something isn't the same as
             self-surveillance). */}
         {!steppedAway && (
-          <SleepLogCard
-            recent={sleepState.recent}
-            rollingAvgHours={sleepState.rollingAvgHours}
-            rollingCount={sleepState.rollingCount}
-            timezone={timezone}
-          />
+          <div id="sleep-log" className="scroll-mt-16">
+            <SleepLogCard
+              recent={sleepState.recent}
+              rollingAvgHours={sleepState.rollingAvgHours}
+              rollingCount={sleepState.rollingCount}
+              timezone={timezone}
+            />
+          </div>
         )}
         {!steppedAway && (
-          <WorkoutLogCard recent={workoutState.recent} timezone={timezone} />
+          <div id="workout-log" className="scroll-mt-16">
+            <WorkoutLogCard recent={workoutState.recent} timezone={timezone} />
+          </div>
         )}
         {!steppedAway && (
           <DailyCheckInCard
@@ -395,10 +399,12 @@ export default async function TodayPage({ searchParams }: Props) {
         )}
         <MisterPChatCard goals={chatGoals} initialThreads={initialThreads} />
         {!steppedAway && (
-          <WeeklyReflectionCard
-            initialState={reflectionState}
-            weeklySummary={weeklySummary}
-          />
+          <div id="weekly-reflection" className="scroll-mt-16">
+            <WeeklyReflectionCard
+              initialState={reflectionState}
+              weeklySummary={weeklySummary}
+            />
+          </div>
         )}
         <ConfidenceTrendChart history={reflectionState.history} />
       </div>
