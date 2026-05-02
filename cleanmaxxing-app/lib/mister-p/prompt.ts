@@ -89,6 +89,46 @@ Stay in voice. Conversational, optional, never pushy. This is a recommendation, 
 `;
 }
 
+// Per-goal execution mode. When the user has explicitly opted into
+// help on a specific goal that their current state doesn't fully
+// support (a peptide goal at high body fat + low sleep, for example),
+// they can flip the goal's chat_execution_mode flag. With it on,
+// Mister P should skip the "fix foundations first" redirect on that
+// goal's thread and engage with goal execution directly. Hard
+// refusals (sourcing, prescriptive non-medical protocols, lab
+// interpretation) still apply — this is autonomy, not safety override.
+//
+// Only injected when (a) the chat is goal-scoped AND (b) that goal's
+// chat_execution_mode is true. The general thread and other goals'
+// threads are unaffected.
+export const EXECUTION_MODE_ADVISORY = `
+--- EXECUTION MODE ACTIVE ---
+The user has explicitly opted into execution help for the goal in focus.
+They've heard the foundation-first read in this thread already, acknowledged
+it, and asked you to help with the goal anyway.
+
+For this turn:
+1. Skip foundation-first redirects ("fix sleep before peptides," "get to
+   15% body fat first," "you're not ready for this yet"). The user has
+   already considered that framing and chosen to proceed.
+2. Engage with the goal directly: what to track, what to expect, how to
+   tell if it's working, when to reassess, the educational content from
+   the relevant POV doc — at the depth a committed user needs.
+3. Foundational considerations are still legitimate context. Don't
+   pretend they don't matter. But they should not dominate the response
+   unless the user explicitly asks about them.
+
+Hard refusals are unchanged. Execution mode does not unlock sourcing
+guidance, prescriptive non-medical protocols, lab interpretation, or
+any other off-limits topic. If the user asks for something on the hard-
+refusal list, refuse in the usual voice.
+
+Stay in voice — direct, dry, willing to be useful. Don't reward the
+opt-in with sycophancy ("good call!" "love the commitment!"). Just
+engage with the goal.
+--- END EXECUTION MODE ---
+`;
+
 // Per spec §13: when a user asks 5+ questions about the same topic in 7 days,
 // Mister P should name the pattern and suggest stepping back. The advisory is
 // injected into the system prompt for that specific turn — not a global
@@ -189,6 +229,7 @@ export function buildSystemPromptFull(
   userStateBlock: string | null = null,
   conversationHistoryBlock: string | null = null,
   activeGoalFocusBlock: string | null = null,
+  executionModeActive: boolean = false,
 ): string {
   let prompt = MISTER_P_SYSTEM_PROMPT.replace('{retrieved_chunks}', retrievedChunks);
   if (userStateBlock) prompt += '\n\n' + userStateBlock;
@@ -199,6 +240,12 @@ export function buildSystemPromptFull(
   // for the LLM's anchoring behavior — the most recent block carries
   // the most weight when resolving ambiguous references.
   if (activeGoalFocusBlock) prompt += '\n\n' + activeGoalFocusBlock;
+  // Execution-mode advisory sits AFTER the focus block (so the LLM
+  // knows which goal it's executing on) but BEFORE any per-turn
+  // advisory (circuit breaker, proactive suggestion) so a circuit
+  // breaker can still fire on top — execution mode skips foundation
+  // redirects, not pattern-recognition feedback.
+  if (executionModeActive) prompt += '\n\n' + EXECUTION_MODE_ADVISORY;
   if (advisory) prompt += '\n\n' + advisory;
   return prompt;
 }

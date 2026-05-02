@@ -21,6 +21,13 @@ export type ChatMessage = {
 export type GoalOption = {
   id: string;
   title: string;
+  // Per-goal Mister P execution mode. When true, the system prompt
+  // skips foundation-first redirects on this goal's thread. The
+  // toggle button below only renders for goal-scoped threads (not
+  // the General thread) and only after at least one assistant
+  // message exists — the user should hear the honest read once
+  // before the override is offered.
+  executionMode: boolean;
 };
 
 // Sentinel key used in the threads map and as the picker's "no goal"
@@ -46,6 +53,7 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [confirmingClear, setConfirmingClear] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [togglingMode, setTogglingMode] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLElement>(null);
@@ -193,6 +201,36 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
     abortRef.current?.abort();
   }
 
+  // Flip the focused goal's execution mode flag. Only meaningful in
+  // a goal-scoped thread; the toggle button below is hidden in the
+  // General thread anyway. After flipping, refresh the route so the
+  // server-loaded goals carry the new value on next chat send.
+  async function toggleExecutionMode() {
+    if (togglingMode || streaming) return;
+    if (selectedKey === GENERAL_KEY) return;
+    const goal = goals.find((g) => g.id === selectedKey);
+    if (!goal) return;
+    const next = !goal.executionMode;
+    setTogglingMode(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/mister-p/execution-mode', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ goal_id: goal.id, enabled: next }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `Toggle failed (${res.status})`);
+      }
+      router.refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setTogglingMode(false);
+    }
+  }
+
   async function clearThread() {
     if (clearing || streaming) return;
     setClearing(true);
@@ -267,6 +305,53 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
           ))}
         </select>
       </div>
+
+      {selectedKey !== GENERAL_KEY && (() => {
+        const goal = goals.find((g) => g.id === selectedKey);
+        if (!goal) return null;
+        const hasFirstResponse = messages.some((m) => m.role === 'assistant');
+        // Hide the toggle until the user has heard Mister P's first
+        // response on this goal — the brand intent is "honest read
+        // first, then offer the override." Once execution mode is on,
+        // surface the off-switch even before any new messages so the
+        // user can revert without typing.
+        if (!goal.executionMode && !hasFirstResponse) return null;
+        return (
+          <div className="mt-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+            {goal.executionMode ? (
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-zinc-700 dark:text-zinc-300">
+                  Execution mode is on for this goal — Mister P is engaging
+                  with the goal directly without foundation-first redirects.
+                </span>
+                <button
+                  type="button"
+                  onClick={toggleExecutionMode}
+                  disabled={togglingMode || streaming}
+                  className="shrink-0 rounded-md border border-zinc-300 px-2.5 py-1 font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                >
+                  {togglingMode ? 'Saving…' : 'Turn off'}
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-zinc-700 dark:text-zinc-300">
+                  Want Mister P to help with this goal anyway, even if
+                  foundations aren&rsquo;t fully dialed?
+                </span>
+                <button
+                  type="button"
+                  onClick={toggleExecutionMode}
+                  disabled={togglingMode || streaming}
+                  className="shrink-0 rounded-md bg-zinc-900 px-2.5 py-1 font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                >
+                  {togglingMode ? 'Saving…' : 'Help me anyway'}
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {confirmingClear && (
         <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm dark:border-amber-900 dark:bg-amber-950/30">

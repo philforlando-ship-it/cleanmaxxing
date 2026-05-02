@@ -129,7 +129,9 @@ export async function POST(req: NextRequest) {
   // question vector.
   const { data: activeGoalRows } = await supabase
     .from('goals')
-    .select('id, title, description, source_slug, goal_type, created_at')
+    .select(
+      'id, title, description, source_slug, goal_type, created_at, chat_execution_mode',
+    )
     .eq('user_id', user.id)
     .eq('status', 'active')
     .order('created_at', { ascending: true });
@@ -166,6 +168,19 @@ export async function POST(req: NextRequest) {
   const focusedGoalIndex = goalId ? goalIds.indexOf(goalId) : -1;
   const focusedGoal: GoalContext | null =
     focusedGoalIndex >= 0 ? goals[focusedGoalIndex] : null;
+
+  // Execution mode lookup. Pull the flag straight from the queried
+  // row (avoids a second query) and only honor it when the chat is
+  // goal-scoped. The general thread cannot be in execution mode —
+  // it's not anchored to a single goal in the first place.
+  const focusedGoalRaw = focusedGoalIndex >= 0
+    ? (activeGoalRows ?? [])[focusedGoalIndex]
+    : null;
+  const executionModeActive = Boolean(
+    focusedGoal &&
+      focusedGoalRaw &&
+      (focusedGoalRaw as { chat_execution_mode?: boolean }).chat_execution_mode,
+  );
 
   // Focus embedding: vector representation of "what this goal is
   // about" so vague questions still anchor to relevant chunks.
@@ -261,6 +276,7 @@ export async function POST(req: NextRequest) {
     userStateBlock,
     conversationHistoryBlock,
     activeGoalFocusBlock,
+    executionModeActive,
   );
 
   const result = streamText({
