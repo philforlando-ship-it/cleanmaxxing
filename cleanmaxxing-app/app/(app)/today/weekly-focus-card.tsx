@@ -18,6 +18,8 @@ import { AdjustBaseline } from './adjust-baseline';
 import { AdjustTarget } from './adjust-target';
 import { DismissPhaseButton } from './dismiss-phase-button';
 import { AskAboutPhaseButton } from './ask-about-phase-button';
+import type { MisterPUserState } from '@/lib/mister-p/user-state';
+import { personalizationFor } from '@/lib/content/onramp-personalization';
 
 type ActiveGoal = {
   id: string;
@@ -47,6 +49,11 @@ type Props = {
   // strips. Pass null to suppress the count line entirely (e.g. when
   // the user has zero goals or possible == 0).
   weeklySummary: WeeklyCheckInSummary | null;
+  // Mister P's per-user state block — same source the chat uses.
+  // Drives the per-entry "for you" personalization line above each
+  // phase's focus/detail. Optional: when null, every entry renders
+  // the static prose only.
+  userState?: MisterPUserState | null;
 };
 
 type Entry = {
@@ -83,7 +90,7 @@ const STAGE_LABEL: Record<BaselineStage, string> = {
   established: 'Already consistent',
 };
 
-export function WeeklyFocusCard({ goals, weeklySummary }: Props) {
+export function WeeklyFocusCard({ goals, weeklySummary, userState = null }: Props) {
   // Group goals by source_slug. Earliest-accepted goal in each group
   // drives the week computation — the walkthrough started when the user
   // first engaged with this POV. Subsequent goals from the same POV
@@ -234,6 +241,16 @@ export function WeeklyFocusCard({ goals, weeklySummary }: Props) {
                 </span>
               )}
             </div>
+            {(() => {
+              const personalLine = userState
+                ? personalizationFor(entry.slug, userState)
+                : null;
+              return personalLine ? (
+                <p className="mt-3 rounded-md bg-zinc-100 px-3 py-2 text-xs italic text-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-300">
+                  {personalLine}
+                </p>
+              ) : null;
+            })()}
             {entry.state.kind === 'active' ? (
               <>
                 <p className="mt-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">

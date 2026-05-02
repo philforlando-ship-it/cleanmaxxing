@@ -22,6 +22,7 @@ import { SelfAcceptanceNudgeCard } from './self-acceptance-nudge-card';
 import { pickSelfAcceptanceNudge } from '@/lib/self-acceptance/risk-signals';
 import { templateBySlug } from '@/content/goal-templates';
 import { onrampFor, currentState, isBaselineStage } from '@/lib/content/onramp';
+import { getMisterPUserState } from '@/lib/mister-p/user-state';
 import { FirstConversationCard } from './first-conversation-card';
 import { getFirstConvoState } from '@/lib/first-convo/service';
 import { DailyNoteCard } from './daily-note-card';
@@ -111,6 +112,7 @@ export default async function TodayPage({ searchParams }: Props) {
     workoutState,
     weeklyLetter,
     selfAcceptanceNudge,
+    misterPUserState,
     firstConvoState,
     { data: goalsRaw },
     { data: photoRowsRaw },
@@ -127,6 +129,7 @@ export default async function TodayPage({ searchParams }: Props) {
     getWorkoutState(supabase, user.id),
     getCurrentWeeklyLetter(supabase, user.id),
     pickSelfAcceptanceNudge(supabase, user.id),
+    getMisterPUserState(supabase, user.id),
     getFirstConvoState(supabase, user.id),
     supabase
       .from('goals')
@@ -430,7 +433,11 @@ export default async function TodayPage({ searchParams }: Props) {
             into this card's header so the weekly narrative reads as
             one card, not two. */}
         {!steppedAway && (
-          <WeeklyFocusCard goals={activeGoals} weeklySummary={weeklySummary} />
+          <WeeklyFocusCard
+            goals={activeGoals}
+            weeklySummary={weeklySummary}
+            userState={misterPUserState}
+          />
         )}
         <MisterPChatCard goals={chatGoals} initialThreads={initialThreads} />
         {!steppedAway && (
