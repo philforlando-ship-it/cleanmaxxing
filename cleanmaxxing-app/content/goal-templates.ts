@@ -20,12 +20,53 @@
 //   when possible — "Lose 10% of body weight," "Reach 15% body fat," "Add
 //   10 pounds of muscle in 6 months." The time window matters because it
 //   prevents outcome goals from becoming open-ended body-dysmorphia loops.
+//
+// Two structural fields beyond the basics:
+//
+//   `domain` is the life-area tag used for overlap detection. Multiple
+//   active goals in the same domain (e.g. macros + protein + meal-plan
+//   + appetite are all `nutrition`) is the failure mode where users
+//   feel like they have four goals when they really have one big food
+//   system. The library warns at add-time when the user already has a
+//   goal active in the same domain.
+//
+//   `measurement_type` describes how progress for this goal actually
+//   gets measured. Used downstream to drive smarter check-in surfaces
+//   and to keep outcome goals honest about what their proof of progress
+//   is (a photo, a session log, a body metric, a calendar milestone).
+
+export type GoalDomain =
+  | 'nutrition'
+  | 'training'
+  | 'sleep'
+  | 'skincare'
+  | 'hair'
+  | 'grooming'
+  | 'style'
+  | 'posture'
+  | 'supplements'
+  | 'environment'
+  | 'self-acceptance';
+
+export type MeasurementType =
+  | 'habit_adherence'        // daily routine the user runs and ticks
+  | 'session_log'            // training sessions logged with detail
+  | 'progression'            // strength/lift progression over time
+  | 'macro_tracking'         // calories/protein/fiber numerical target
+  | 'body_metric'            // scale weight, body fat, circumferences
+  | 'photo_comparison'       // before/after photo at fixed cadence
+  | 'wake_time_consistency'  // sleep schedule held within tolerance
+  | 'closet_audit'           // wardrobe items audited / replaced
+  | 'appointment_milestone'  // discrete medical/dental milestones
+  | 'self_check';            // weekly journaling / honest self-rating
 
 export type GoalTemplate = {
   source_slug: string;
   title: string;
   description: string;
   goal_type: 'process' | 'outcome';
+  domain: GoalDomain;
+  measurement_type: MeasurementType;
 };
 
 export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
@@ -38,6 +79,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Cleanser morning and evening, moisturizer twice, SPF every morning. Add a retinoid at night once your skin has adjusted.',
     goal_type: 'process',
+    domain: 'skincare',
+    measurement_type: 'habit_adherence',
   },
   'hair-protect-daily': {
     source_slug: '08-head-hair-balding',
@@ -45,13 +88,17 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Right cut for your face shape, consistent product, wash schedule that suits your hair type. Early boring action is what protects you.',
     goal_type: 'process',
+    domain: 'hair',
+    measurement_type: 'habit_adherence',
   },
   'environment-design': {
     source_slug: '17-environment-lifestyle-design',
     title: 'Engineer your environment for consistency',
     description:
-      'Pick one habit to build and one to cut. Lay out gear, pre-pack food, leave the phone in another room \u2014 one friction change per habit until it sticks.',
+      'Pick one habit to build and one to cut. Lay out gear, pre-pack food, leave the phone in another room — one friction change per habit until it sticks.',
     goal_type: 'process',
+    domain: 'environment',
+    measurement_type: 'habit_adherence',
   },
   'strength-train-3x-week': {
     source_slug: '19-strength-training',
@@ -59,6 +106,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Log every session — exercise, weight, reps. Push one variable up each week, deload when sleep or soreness tanks. Same handful of lifts for months before you change anything.',
     goal_type: 'process',
+    domain: 'training',
+    measurement_type: 'session_log',
   },
   'macros-daily': {
     source_slug: '20-diet-macros',
@@ -66,6 +115,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Set a TDEE-based calorie target, protein first, fats and carbs around it. Track until it becomes intuitive.',
     goal_type: 'process',
+    domain: 'nutrition',
+    measurement_type: 'macro_tracking',
   },
   'protein-daily-target': {
     source_slug: '21-protein-creatine',
@@ -73,6 +124,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Pick three or four high-protein staples and rotate them. Front-load breakfast so dinner doesn\'t have to carry the day. Five grams of creatine, anytime.',
     goal_type: 'process',
+    domain: 'nutrition',
+    measurement_type: 'macro_tracking',
   },
   'appetite-structure': {
     source_slug: '30-appetite-control',
@@ -80,6 +133,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Two to three meals a day at consistent times, protein in each, fiber and water around them. Keep defaults boring — variety drives overeating.',
     goal_type: 'process',
+    domain: 'nutrition',
+    measurement_type: 'habit_adherence',
   },
   'sleep-schedule': {
     source_slug: '42-sleep',
@@ -87,6 +142,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Pick a wake time and hold it within thirty minutes on weekends. Wind-down alarm an hour before bed. Defend it against late dinners, late workouts, and late texts.',
     goal_type: 'process',
+    domain: 'sleep',
+    measurement_type: 'wake_time_consistency',
   },
   'meal-plan-build': {
     source_slug: '45-meal-plans',
@@ -94,6 +151,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'A rotation of three breakfasts, three lunches, three dinners — shop once, prep in batches. Lock the rotation for two weeks before swapping anything in or out.',
     goal_type: 'process',
+    domain: 'nutrition',
+    measurement_type: 'habit_adherence',
   },
 
   // ==========================================
@@ -103,8 +162,10 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     source_slug: '09-facial-hair',
     title: 'Match your facial hair to your face',
     description:
-      'Shape what grows well, accept what doesn\u2019t. The right stubble length or beard style lifts every face type.',
+      'Shape what grows well, accept what doesn’t. The right stubble length or beard style lifts every face type.',
     goal_type: 'process',
+    domain: 'grooming',
+    measurement_type: 'photo_comparison',
   },
   'grooming-daily': {
     source_slug: '10-grooming',
@@ -112,6 +173,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Nose and ear trimmer, nail clippers, brow scissors and tweezers in one drawer. A ten-minute weekly pass; quick checks the other days.',
     goal_type: 'process',
+    domain: 'grooming',
+    measurement_type: 'habit_adherence',
   },
   'teeth-start-work': {
     source_slug: '11-teeth-smile',
@@ -119,6 +182,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Begin with a dental cleaning and an honest assessment. Whitening, orthodontics, or restoration — whichever applies to you.',
     goal_type: 'process',
+    domain: 'grooming',
+    measurement_type: 'appointment_milestone',
   },
   'wardrobe-rebuild-fit': {
     source_slug: '12-style-clothing',
@@ -126,6 +191,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Fit first, fabric second, fashion last. Pick one archetype and rebuild the wardrobe around clothes that actually fit.',
     goal_type: 'process',
+    domain: 'style',
+    measurement_type: 'closet_audit',
   },
   'tanning-controlled': {
     source_slug: '18-tanning',
@@ -133,6 +200,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'A slight base tan lifts physique and skin tone. Short, regular exposure with SPF on the face. No tanning beds.',
     goal_type: 'process',
+    domain: 'skincare',
+    measurement_type: 'habit_adherence',
   },
   'skin-tone-dress-for': {
     source_slug: '48-skin-tone-guidance',
@@ -140,6 +209,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Figure out your undertone and Fitzpatrick type, then make two passes: the top half of your wardrobe (shirts, jackets, knitwear) for colors that wash you out, and your grooming for tone-specific concerns (PIH, ingrown hairs, hyperpigmentation triggers). Replace as you cycle through normal upgrades.',
     goal_type: 'process',
+    domain: 'style',
+    measurement_type: 'closet_audit',
   },
   'posture-train-daily': {
     source_slug: '50-posture',
@@ -147,6 +218,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Daily mobility for the thoracic spine, hips, and neck. Work on stance until upright becomes the default.',
     goal_type: 'process',
+    domain: 'posture',
+    measurement_type: 'habit_adherence',
   },
 
   // ==========================================
@@ -158,6 +231,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Creatine first. Vitamin D if sun exposure is low or bloodwork says you need it. Omega-3 if your diet is light on fatty fish. Magnesium glycinate only if sleep or stress makes it useful. Nothing flashy, nothing without evidence behind it.',
     goal_type: 'process',
+    domain: 'supplements',
+    measurement_type: 'habit_adherence',
   },
   'cardio-base': {
     source_slug: '23-cardio',
@@ -165,6 +240,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Zone 2 work most of the week, one harder session. Cardio supports the lifting, not the other way around.',
     goal_type: 'process',
+    domain: 'training',
+    measurement_type: 'session_log',
   },
   'body-hair-cleanup': {
     source_slug: '29-body-hair-methods',
@@ -172,6 +249,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Trimmer for chest and abdomen on a two-week cadence; back handled by a partner, salon wax, or laser. Set the calendar reminder so it doesn\'t drift.',
     goal_type: 'process',
+    domain: 'grooming',
+    measurement_type: 'habit_adherence',
   },
   'skin-texture-routine': {
     source_slug: '32-skin-texture-scarring',
@@ -179,6 +258,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Retinoid two to three nights a week, building up tolerance; chemical exfoliant on alternate nights. Twelve weeks before judging — book the derm if scarring isn\'t moving.',
     goal_type: 'process',
+    domain: 'skincare',
+    measurement_type: 'photo_comparison',
   },
   'fiber-30g-daily': {
     source_slug: '35-gut-health-fiber',
@@ -186,6 +267,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Whole foods plus fermented foods a few times a week. Skin and digestion both follow. Cheaper than any gut supplement.',
     goal_type: 'process',
+    domain: 'nutrition',
+    measurement_type: 'macro_tracking',
   },
   'eye-area-routine': {
     source_slug: '47-eye-health',
@@ -193,10 +276,12 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Fix the causes first: sleep debt, dryness, allergies, screen strain, irritation. Then add an eye-specific moisturizer and SPF. Most eye-area issues are function problems, not grooming problems.',
     goal_type: 'process',
+    domain: 'skincare',
+    measurement_type: 'habit_adherence',
   },
 
   // ==========================================
-  // Tier 4 — Top performers (process, rarely auto-suggested)
+  // Tier 4 — Advanced layer (process, rarely auto-suggested)
   // ==========================================
   'mobility-daily': {
     source_slug: '46-mobility',
@@ -204,6 +289,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Ten minutes a day on hips, thoracic spine, and ankles. Keeps training sustainable and posture honest.',
     goal_type: 'process',
+    domain: 'training',
+    measurement_type: 'habit_adherence',
   },
 
   // ==========================================
@@ -215,6 +302,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Salicylic acid, benzoyl peroxide, retinoid if needed. Diet and sleep as upstream inputs, derm escalation if it persists.',
     goal_type: 'process',
+    domain: 'skincare',
+    measurement_type: 'photo_comparison',
   },
   'hair-loss-start-plan': {
     source_slug: '27-hair-loss-treatments',
@@ -222,6 +311,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Minoxidil and finasteride are the evidence-backed stack. Earlier is better. Talk to a doctor about the finasteride side.',
     goal_type: 'process',
+    domain: 'hair',
+    measurement_type: 'photo_comparison',
   },
 
   // ==========================================
@@ -233,6 +324,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Sustainable rate is one to two pounds per week. Calorie deficit around 300-500 per day, protein target held, strength training preserved.',
     goal_type: 'outcome',
+    domain: 'nutrition',
+    measurement_type: 'body_metric',
   },
   'body-fat-15-percent': {
     source_slug: '31-calorie-macro-framework',
@@ -240,6 +333,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'For most men, somewhere in the 12–15% body fat range is where a trained physique starts to read lean without water or lighting tricks. Pick the end of that range that fits your frame and how visible you want abs to be year-round. Calorie deficit, protein at target, consistent lifting — the unsexy stack that actually works.',
     goal_type: 'outcome',
+    domain: 'nutrition',
+    measurement_type: 'body_metric',
   },
   'muscle-gain-10lb-6mo': {
     source_slug: '19-strength-training',
@@ -247,6 +342,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Novice or returning lifter: 5–10 lb of lean mass in a small calorie surplus is realistic. Trained lifter: target measurable strength progression and shoulder/chest/arm circumference change rather than scale weight — gain past the first year is slower and shows up in proportions before pounds. Four sessions a week biased toward the muscles that move the needle — lateral delts, upper chest, lats, arms — with protein at target and sleep as the recovery anchor.',
     goal_type: 'outcome',
+    domain: 'training',
+    measurement_type: 'progression',
   },
   'hair-retention-one-year': {
     source_slug: '27-hair-loss-treatments',
@@ -254,6 +351,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Measurable by photos, same lighting, same angle, every 90 days. Treatment plan in place if loss is active. Early action is the lever.',
     goal_type: 'outcome',
+    domain: 'hair',
+    measurement_type: 'photo_comparison',
   },
   'clear-skin-30-days': {
     source_slug: '25-acne',
@@ -261,6 +360,8 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'No new active breakouts for a full month. A simple routine, diet cleanup, and derm visit if the basics are not enough. Photo every week to track.',
     goal_type: 'outcome',
+    domain: 'skincare',
+    measurement_type: 'photo_comparison',
   },
   'jawline-through-fat-loss': {
     source_slug: '16-facial-definition-jawline',
@@ -268,11 +369,16 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Posture and neck training amplify whatever fat loss is already happening. Wall resets daily, two short neck sessions a week, photo check at week 12.',
     goal_type: 'outcome',
+    domain: 'nutrition',
+    measurement_type: 'photo_comparison',
   },
 
   // ==========================================
   // Self-acceptance (spec §13 — "second leg of the stool")
-  // Never auto-suggested; library-only. Process-framed.
+  // Library-only by default, but auto-suggested on /today when the
+  // self-acceptance risk detector fires (5+ goals, mostly polish stack
+  // without foundation, repeated circuit-breaker chats, etc.).
+  // Process-framed.
   // ==========================================
   'when-to-stop': {
     source_slug: '54-when-to-stop',
@@ -280,20 +386,26 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     description:
       'Self-improvement works best when you can tell the difference between productive effort and self-surveillance. Check in weekly: is this still serving me, or am I just chasing a number?',
     goal_type: 'process',
+    domain: 'self-acceptance',
+    measurement_type: 'self_check',
   },
   'limits-accept': {
     source_slug: '55-limits-self-improvement',
     title: 'Accept the limits of self-improvement',
     description:
-      'Every variable has a ceiling. Part of the work is recognizing when you\u2019ve hit yours on something and moving your attention somewhere else.',
+      'Every variable has a ceiling. Part of the work is recognizing when you’ve hit yours on something and moving your attention somewhere else.',
     goal_type: 'process',
+    domain: 'self-acceptance',
+    measurement_type: 'self_check',
   },
   'identity-beyond-appearance': {
     source_slug: '56-identity-beyond-appearance',
     title: 'Build an identity beyond your appearance',
     description:
-      'Skills, relationships, work, hobbies. The stuff that holds up on the days your face, hair, or body isn\u2019t cooperating. That foundation makes the appearance work sustainable.',
+      'Skills, relationships, work, hobbies. The stuff that holds up on the days your face, hair, or body isn’t cooperating. That foundation makes the appearance work sustainable.',
     goal_type: 'process',
+    domain: 'self-acceptance',
+    measurement_type: 'self_check',
   },
 };
 
@@ -306,4 +418,11 @@ export function hasTemplateForSlug(slug: string): boolean {
 
 export function templatesForSlug(slug: string): GoalTemplate[] {
   return Object.values(GOAL_TEMPLATES).filter((t) => t.source_slug === slug);
+}
+
+export function templateBySlug(slug: string): GoalTemplate | null {
+  for (const t of Object.values(GOAL_TEMPLATES)) {
+    if (t.source_slug === slug) return t;
+  }
+  return null;
 }

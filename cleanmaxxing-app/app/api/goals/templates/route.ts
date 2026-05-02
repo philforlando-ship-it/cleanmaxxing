@@ -98,6 +98,8 @@ export async function GET() {
       category: doc.category,
       priority_tier: doc.priority_tier,
       goal_type: t.goal_type,
+      domain: t.domain,
+      measurement_type: t.measurement_type,
       already_active: activeTitles.has(t.title),
       score,
     });
