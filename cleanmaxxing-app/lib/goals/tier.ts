@@ -17,7 +17,7 @@ const LABELS: Record<TierKey, string> = {
   'tier-1': 'Foundation',
   'tier-2': 'High impact',
   'tier-3': 'Refinement',
-  'tier-4': 'Top performers',
+  'tier-4': 'Advanced layer',
   'tier-5': 'Polish',
   'conditional-tier-1': 'Situational',
 };
@@ -30,7 +30,7 @@ const EXPLAINERS: Record<TierKey, string> = {
   'tier-3':
     'Worth doing once the foundation is solid. Noticeable, not dominant.',
   'tier-4':
-    'What the people who look the best end up adding. Only worth it after the first three tiers are handled.',
+    'After the basics. What people who look their best add once foundation, high-impact, and refinement are running on rails.',
   'tier-5':
     'Polish. Marginal gains. Last in the priority order — easy to over-invest in.',
   'conditional-tier-1':

@@ -287,7 +287,7 @@ export function LibraryBrowser({ availableSlugs }: Props) {
             {capNudge?.template.source_slug === t.source_slug && (
               <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30">
                 <p className="text-sm text-amber-900 dark:text-amber-200">
-                  {`You already have ${capNudge.activeCount} active goals. The sustainable ceiling is usually ${capNudge.cap} — past that, most people start missing more days than they hit. Want to add this anyway?`}
+                  {`You already have ${capNudge.activeCount} active goals. Most people make faster progress by keeping the active stack to ${capNudge.cap}. Add this only if it replaces something or directly supports your current focus.`}
                 </p>
                 <div className="mt-3 flex items-center gap-3">
                   <button

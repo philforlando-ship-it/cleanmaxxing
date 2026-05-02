@@ -50,14 +50,14 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     source_slug: '17-environment-lifestyle-design',
     title: 'Engineer your environment for consistency',
     description:
-      'Remove friction from the habits you want and add friction to the ones you don\u2019t. Willpower is not the variable.',
+      'Pick one habit to build and one to cut. Lay out gear, pre-pack food, leave the phone in another room \u2014 one friction change per habit until it sticks.',
     goal_type: 'process',
   },
   'strength-train-3x-week': {
     source_slug: '19-strength-training',
     title: 'Strength train 3-5 times per week',
     description:
-      'Upper body biased toward the muscles that drive how a physique reads — shoulders, chest, back, arms — with a squat or leg-press variant and a hinge as posterior-chain foundation. Three sessions is the beginner floor or the right starting point if you haven\'t trained in 1-2 years; four to five is the working range once a base is built. Progressive overload tracked. Consistency beats intensity for the first year.',
+      'Log every session — exercise, weight, reps. Push one variable up each week, deload when sleep or soreness tanks. Same handful of lifts for months before you change anything.',
     goal_type: 'process',
   },
   'macros-daily': {
@@ -71,28 +71,28 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     source_slug: '21-protein-creatine',
     title: 'Hit your protein target every day',
     description:
-      'Roughly your bodyweight in grams, spread across three to five meals. Creatine monohydrate once the protein is handled.',
+      'Pick three or four high-protein staples and rotate them. Front-load breakfast so dinner doesn\'t have to carry the day. Five grams of creatine, anytime.',
     goal_type: 'process',
   },
   'appetite-structure': {
     source_slug: '30-appetite-control',
     title: 'Eat on a structure that kills cravings',
     description:
-      'Protein-forward meals, fiber, water, and a consistent eating window. Hunger is a design problem, not a willpower test.',
+      'Two to three meals a day at consistent times, protein in each, fiber and water around them. Keep defaults boring — variety drives overeating.',
     goal_type: 'process',
   },
   'sleep-schedule': {
     source_slug: '42-sleep',
     title: 'Protect your sleep schedule',
     description:
-      'Same sleep and wake times most days, dark cool room, no screens in the last hour. Seven to nine hours, tracked loosely.',
+      'Pick a wake time and hold it within thirty minutes on weekends. Wind-down alarm an hour before bed. Defend it against late dinners, late workouts, and late texts.',
     goal_type: 'process',
   },
   'meal-plan-build': {
     source_slug: '45-meal-plans',
     title: 'Build a repeatable meal plan',
     description:
-      'Three to five meals you actually enjoy, hitting protein and calorie targets. Repetition beats variety for consistency.',
+      'A rotation of three breakfasts, three lunches, three dinners — shop once, prep in batches. Lock the rotation for two weeks before swapping anything in or out.',
     goal_type: 'process',
   },
 
@@ -110,7 +110,7 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     source_slug: '10-grooming',
     title: 'Build a daily grooming routine',
     description:
-      'Eyebrows, nails, ears, nose, skin. Five minutes a day of boring maintenance that most men skip.',
+      'Nose and ear trimmer, nail clippers, brow scissors and tweezers in one drawer. A ten-minute weekly pass; quick checks the other days.',
     goal_type: 'process',
   },
   'teeth-start-work': {
@@ -136,9 +136,9 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
   },
   'skin-tone-dress-for': {
     source_slug: '48-skin-tone-guidance',
-    title: 'Dress for your skin tone',
+    title: 'Personalize grooming and color for your skin tone',
     description:
-      'Certain colors flatter your undertone and others wash you out. Wearing the right ones next to your face quietly upgrades every look.',
+      'Figure out your undertone and Fitzpatrick type, then make two passes: the top half of your wardrobe (shirts, jackets, knitwear) for colors that wash you out, and your grooming for tone-specific concerns (PIH, ingrown hairs, hyperpigmentation triggers). Replace as you cycle through normal upgrades.',
     goal_type: 'process',
   },
   'posture-train-daily': {
@@ -156,7 +156,7 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     source_slug: '05-supplements',
     title: 'Build a supplement foundation',
     description:
-      'Creatine, vitamin D, omega-3, magnesium glycinate. Nothing flashy, nothing without evidence behind it.',
+      'Creatine first. Vitamin D if sun exposure is low or bloodwork says you need it. Omega-3 if your diet is light on fatty fish. Magnesium glycinate only if sleep or stress makes it useful. Nothing flashy, nothing without evidence behind it.',
     goal_type: 'process',
   },
   'cardio-base': {
@@ -170,14 +170,14 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     source_slug: '29-body-hair-methods',
     title: 'Clean up body hair',
     description:
-      'Trim or remove where it makes the physique read cleaner. Chest, back, abdomen based on what you actually have.',
+      'Trimmer for chest and abdomen on a two-week cadence; back handled by a partner, salon wax, or laser. Set the calendar reminder so it doesn\'t drift.',
     goal_type: 'process',
   },
   'skin-texture-routine': {
     source_slug: '32-skin-texture-scarring',
     title: 'Run a texture-focused skincare routine',
     description:
-      'Retinoid and consistent exfoliation. Professional treatment if scarring is significant. Patience more than product.',
+      'Retinoid two to three nights a week, building up tolerance; chemical exfoliant on alternate nights. Twelve weeks before judging — book the derm if scarring isn\'t moving.',
     goal_type: 'process',
   },
   'fiber-30g-daily': {
@@ -191,7 +191,7 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
     source_slug: '47-eye-health',
     title: 'Run an eye-area skincare routine',
     description:
-      'Sleep, hydration, eye-specific moisturizer, and knock out the inflammation drivers. The eye area is a lifestyle mirror.',
+      'Fix the causes first: sleep debt, dryness, allergies, screen strain, irritation. Then add an eye-specific moisturizer and SPF. Most eye-area issues are function problems, not grooming problems.',
     goal_type: 'process',
   },
 
@@ -236,16 +236,16 @@ export const GOAL_TEMPLATES: Record<string, GoalTemplate> = {
   },
   'body-fat-15-percent': {
     source_slug: '31-calorie-macro-framework',
-    title: 'Reach 15 percent body fat',
+    title: 'Reach your lean target range',
     description:
-      'The level where a trained physique starts to read lean without any water or lighting tricks. Calorie deficit, protein, and consistent lifting get you there.',
+      'For most men, somewhere in the 12–15% body fat range is where a trained physique starts to read lean without water or lighting tricks. Pick the end of that range that fits your frame and how visible you want abs to be year-round. Calorie deficit, protein at target, consistent lifting — the unsexy stack that actually works.',
     goal_type: 'outcome',
   },
   'muscle-gain-10lb-6mo': {
     source_slug: '19-strength-training',
-    title: 'Add 10 pounds of muscle in 6 months',
+    title: 'Add visible muscle over 6 months',
     description:
-      'Realistic for most trained lifters in a small calorie surplus. Four sessions a week biased toward the muscles that visibly move the needle — lateral delts, upper chest, lats, arms — with protein at target and sleep as the recovery anchor.',
+      'Novice or returning lifter: 5–10 lb of lean mass in a small calorie surplus is realistic. Trained lifter: target measurable strength progression and shoulder/chest/arm circumference change rather than scale weight — gain past the first year is slower and shows up in proportions before pounds. Four sessions a week biased toward the muscles that move the needle — lateral delts, upper chest, lats, arms — with protein at target and sleep as the recovery anchor.',
     goal_type: 'outcome',
   },
   'hair-retention-one-year': {
