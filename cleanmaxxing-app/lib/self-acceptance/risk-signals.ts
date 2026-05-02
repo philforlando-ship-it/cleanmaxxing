@@ -151,3 +151,77 @@ export const PATTERN_TEMPLATE_RECOMMENDATION: Record<RiskPattern, string> = {
   circuit_breaker: '55-limits-self-improvement',
   abandon_restart: '56-identity-beyond-appearance',
 };
+
+// Voice-matched intro line per pattern. Kept short — the card
+// closes with a generic "this might be a good time to add a goal
+// that keeps the work from taking over," so the per-pattern line
+// only needs to name what was noticed.
+export const PATTERN_INTRO: Record<RiskPattern, string> = {
+  over_capacity:
+    "You're carrying a lot of goals right now — more than most people sustain at once.",
+  polish_without_base:
+    "You're working on the polish before the foundation is in.",
+  circuit_breaker:
+    "I've noticed the same topic keep cycling through your chats this week.",
+  abandon_restart:
+    "I see the loop — abandon a goal, restart it, abandon it again.",
+};
+
+// Priority order when multiple patterns fire. Most acute first so the
+// nudge addresses the strongest signal rather than a coincidental one.
+const PATTERN_PRIORITY: RiskPattern[] = [
+  'circuit_breaker',
+  'polish_without_base',
+  'over_capacity',
+  'abandon_restart',
+];
+
+// Whether the user already has an active self-acceptance goal. If
+// so, the nudge is suppressed — they don't need a redundant pointer
+// at the same library entry. Self-acceptance template slugs are
+// stable: 54 (when-to-stop), 55 (limits), 56 (identity).
+const SELF_ACCEPTANCE_SLUGS = new Set([
+  '54-when-to-stop',
+  '55-limits-self-improvement',
+  '56-identity-beyond-appearance',
+]);
+
+export type SelfAcceptanceNudge = {
+  pattern: RiskPattern;
+  intro: string;
+  recommendedSlug: string;
+};
+
+export async function pickSelfAcceptanceNudge(
+  supabase: SupabaseClient,
+  userId: string,
+  now: Date = new Date(),
+): Promise<SelfAcceptanceNudge | null> {
+  const signals = await detectRiskSignals(supabase, userId, now);
+  if (!signals.triggered) return null;
+
+  // Suppress when the user already has any self-acceptance goal active.
+  const { data: activeRows } = await supabase
+    .from('goals')
+    .select('source_slug')
+    .eq('user_id', userId)
+    .eq('status', 'active');
+  const activeSlugs = new Set(
+    ((activeRows ?? []) as Array<{ source_slug: string | null }>)
+      .map((r) => r.source_slug)
+      .filter((s): s is string => Boolean(s)),
+  );
+  for (const slug of activeSlugs) {
+    if (SELF_ACCEPTANCE_SLUGS.has(slug)) return null;
+  }
+
+  const fired = new Set(signals.patterns);
+  const winner = PATTERN_PRIORITY.find((p) => fired.has(p));
+  if (!winner) return null;
+
+  return {
+    pattern: winner,
+    intro: PATTERN_INTRO[winner],
+    recommendedSlug: PATTERN_TEMPLATE_RECOMMENDATION[winner],
+  };
+}

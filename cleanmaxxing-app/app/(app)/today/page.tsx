@@ -18,6 +18,9 @@ import { WorkoutLogCard } from './workout-log-card';
 import { getWorkoutState } from '@/lib/workout/service';
 import { WeeklyLetterCard } from './weekly-letter-card';
 import { getCurrentWeeklyLetter } from '@/lib/weekly-letter/service';
+import { SelfAcceptanceNudgeCard } from './self-acceptance-nudge-card';
+import { pickSelfAcceptanceNudge } from '@/lib/self-acceptance/risk-signals';
+import { templateBySlug } from '@/content/goal-templates';
 import { FirstConversationCard } from './first-conversation-card';
 import { getFirstConvoState } from '@/lib/first-convo/service';
 import { DailyNoteCard } from './daily-note-card';
@@ -25,7 +28,7 @@ import { getOrCreateTodayNote } from '@/lib/daily-note/service';
 import { StuckConfidenceCard } from './stuck-confidence-card';
 import { QuarterlySurveyCard } from './quarterly-survey-card';
 import { getTodayCheckInState, getWeeklyCheckInSummary, getStalestGoal } from '@/lib/check-in/service';
-import { onrampFor } from '@/lib/content/onramp';
+import { appDayFor, daysBetweenAppDays } from '@/lib/date/app-day';
 import { getProfileCompletion } from '@/lib/profile/completion';
 import { getStuckConfidenceSignal } from '@/lib/confidence/stuck-signal';
 import { getQuarterlySurveyState } from '@/lib/quarterly-survey/service';
@@ -51,12 +54,16 @@ const LATE_WINDOW_DAYS = 180;
 // Pulled out of the component body so the impure Date.now() call is
 // isolated to a single, explicit location. This is a server component
 // running once per request, so the value is stable per-render — the
-// purity lint warning doesn't reflect real instability here.
-function computeIsFirstRun(onboardingCompletedAt: string): boolean {
-  const onboardedAt = new Date(onboardingCompletedAt);
-  const daysSince = Math.floor(
-    (Date.now() - onboardedAt.getTime()) / 86_400_000,
-  );
+// purity lint warning doesn't reflect real instability here. Uses the
+// user's app-day (3am-local cutoff) so first-run windows respect the
+// same boundary as everything else on /today.
+function computeIsFirstRun(
+  onboardingCompletedAt: string,
+  timezone: string,
+): boolean {
+  const onboardedDay = appDayFor(timezone, new Date(onboardingCompletedAt));
+  const todayDay = appDayFor(timezone);
+  const daysSince = daysBetweenAppDays(onboardedDay, todayDay);
   return daysSince >= 0 && daysSince < 7;
 }
 
@@ -73,17 +80,22 @@ export default async function TodayPage({ searchParams }: Props) {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('onboarding_completed_at, tracking_paused_at')
+    .select('onboarding_completed_at, tracking_paused_at, timezone')
     .eq('id', user.id)
     .maybeSingle();
   if (!profile?.onboarding_completed_at) redirect('/onboarding');
 
   const steppedAway = Boolean(profile.tracking_paused_at);
+  const timezone =
+    (profile.timezone as string | null) ?? 'America/New_York';
 
   // First-run window: seven days from onboarding completion. The card is
   // only mounted while the window is open; the client component then
   // decides whether to render based on localStorage dismissal.
-  const isFirstRun = computeIsFirstRun(profile.onboarding_completed_at as string);
+  const isFirstRun = computeIsFirstRun(
+    profile.onboarding_completed_at as string,
+    timezone,
+  );
 
   const [
     checkInState,
@@ -97,21 +109,23 @@ export default async function TodayPage({ searchParams }: Props) {
     sleepState,
     workoutState,
     weeklyLetter,
+    selfAcceptanceNudge,
     firstConvoState,
     { data: goalsRaw },
     { data: photoRowsRaw },
   ] = await Promise.all([
-    getTodayCheckInState(supabase, user.id),
+    getTodayCheckInState(supabase, user.id, timezone),
     getWeeklyReflectionState(supabase, user.id),
     getCheckpointState(supabase, user.id),
-    getWeeklyCheckInSummary(supabase, user.id),
-    getStalestGoal(supabase, user.id),
+    getWeeklyCheckInSummary(supabase, user.id, timezone),
+    getStalestGoal(supabase, user.id, timezone),
     getStuckConfidenceSignal(supabase, user.id),
     getQuarterlySurveyState(supabase, user.id),
     getProfileCompletion(supabase, user.id),
     getSleepState(supabase, user.id),
     getWorkoutState(supabase, user.id),
     getCurrentWeeklyLetter(supabase, user.id),
+    pickSelfAcceptanceNudge(supabase, user.id),
     getFirstConvoState(supabase, user.id),
     supabase
       .from('goals')
@@ -138,14 +152,6 @@ export default async function TodayPage({ searchParams }: Props) {
     target_date: string | null;
     last_phase_seen: string | null;
   }>;
-
-  // Set of source_slugs that have an authored walkthrough. The Daily
-  // Check-In card uses this to gate per-goal "Focus →" deep links so
-  // we don't render a link to a section that doesn't exist for goals
-  // whose POV hasn't had its on-ramp structured yet.
-  const slugsWithFocus = activeGoals
-    .map((g) => g.source_slug as string | null)
-    .filter((slug): slug is string => Boolean(slug && onrampFor(slug)));
 
   // Hydrate every thread the chat-card picker can show: General
   // (goal_id IS NULL) + one per active goal. We load up to 50 pairs
@@ -200,8 +206,9 @@ export default async function TodayPage({ searchParams }: Props) {
   const hasProgress90d = photoSlots.has('progress_90d');
   const hasProgress180d = photoSlots.has('progress_180d');
   const onboardedAt = new Date(profile.onboarding_completed_at as string);
-  const daysSinceOnboarding = Math.floor(
-    (Date.now() - onboardedAt.getTime()) / 86_400_000,
+  const daysSinceOnboarding = daysBetweenAppDays(
+    appDayFor(timezone, onboardedAt),
+    appDayFor(timezone),
   );
   const showBaselineNudge = !hasBaseline && isFirstRun;
   // 30-day nudge window: open from day 30 until the 90-day nudge
@@ -227,24 +234,16 @@ export default async function TodayPage({ searchParams }: Props) {
   // Mister P daily note — rules-based selection of one observation +
   // one question, cached per user per day. Only fires when the user
   // is past the first conversation (so the two surfaces don't compete
-  // for slot 1) and not stepped away. Uses server-local date as
-  // "today"; users far from the server timezone will see the rollover
-  // happen at a slightly off time, which is acceptable for v1 — the
-  // alternative is storing user timezone, deferred until LLM-generated
-  // notes land in v2.
+  // for slot 1) and not stepped away. The day key uses the user's
+  // app-day in their stored timezone (3am-local cutoff) so the same
+  // boundary applies as the rest of /today.
   let todayNote = null;
   if (!steppedAway && firstConvoState.completed) {
     const { count: priorNotesCount } = await supabase
       .from('daily_notes')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id);
-    const todayDate = (() => {
-      const d = new Date();
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${dd}`;
-    })();
+    const todayDate = appDayFor(timezone);
     const completionRate =
       weeklySummary.possible > 0
         ? weeklySummary.ticked / weeklySummary.possible
@@ -286,6 +285,18 @@ export default async function TodayPage({ searchParams }: Props) {
             body={weeklyLetter.body}
           />
         )}
+
+        {!steppedAway && selfAcceptanceNudge && (() => {
+          const tmpl = templateBySlug(selfAcceptanceNudge.recommendedSlug);
+          const title = tmpl?.title ?? 'this short read';
+          return (
+            <SelfAcceptanceNudgeCard
+              patternLabel={selfAcceptanceNudge.intro}
+              recommendedSlug={selfAcceptanceNudge.recommendedSlug}
+              recommendedTitle={title}
+            />
+          );
+        })()}
 
         {!steppedAway && todayNote && <DailyNoteCard note={todayNote} />}
 
@@ -358,14 +369,16 @@ export default async function TodayPage({ searchParams }: Props) {
             recent={sleepState.recent}
             rollingAvgHours={sleepState.rollingAvgHours}
             rollingCount={sleepState.rollingCount}
+            timezone={timezone}
           />
         )}
-        {!steppedAway && <WorkoutLogCard recent={workoutState.recent} />}
+        {!steppedAway && (
+          <WorkoutLogCard recent={workoutState.recent} timezone={timezone} />
+        )}
         {!steppedAway && (
           <DailyCheckInCard
             initialState={checkInState}
             spotlight={welcome && checkInState.check_in_id === null}
-            slugsWithFocus={slugsWithFocus}
           />
         )}
         {/* This Week's Focus sits directly under Daily Check-In so the
