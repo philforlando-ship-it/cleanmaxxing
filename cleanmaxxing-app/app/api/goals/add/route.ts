@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { templateBySlug } from '@/content/goal-templates';
 
 const ALLOWED_TIERS = new Set([
   'tier-1',
@@ -34,6 +35,11 @@ type AddPayload = {
   // existing open-ended behavior. UI duration inputs ("for 8
   // weeks") resolve to a concrete date client-side before posting.
   target_date?: string | null;
+  // Set by the client when the user has acknowledged a same-domain
+  // overlap warning and still wants to proceed. The server returns
+  // a `domain_overlap` flag instead of inserting; the retry sets
+  // this flag to bypass the check.
+  force_domain_override?: boolean;
 };
 
 // Adds a single goal to an already-onboarded user. Post-onboarding only —
@@ -64,6 +70,7 @@ export async function POST(req: Request) {
     force,
     source,
     target_date,
+    force_domain_override,
   } = body;
   const goalSource: 'user_created' | 'system_suggested' =
     source === 'user_created' ? 'user_created' : 'system_suggested';
@@ -149,6 +156,41 @@ export async function POST(req: Request) {
     : await dupQuery.eq('title', title).maybeSingle();
   if (existing) {
     return NextResponse.json({ error: 'Already active.' }, { status: 409 });
+  }
+
+  // Domain-overlap warning. Catches the failure mode where users
+  // stack four nutrition goals (macros + protein + meal-plan +
+  // appetite) and feel like they have four goals when they really
+  // have one big food system. Only fires for slugs that resolve to
+  // a known template; custom goals (no matching template entry) do
+  // not gate on this — they have their own free-form intent and
+  // weren't part of the curated overlap analysis.
+  const newDomain = source_slug ? templateBySlug(source_slug)?.domain ?? null : null;
+  if (newDomain && !force_domain_override) {
+    const { data: activeRows } = await supabase
+      .from('goals')
+      .select('title, source_slug')
+      .eq('user_id', user.id)
+      .eq('status', 'active');
+    const activeList = (activeRows ?? []) as Array<{
+      title: string;
+      source_slug: string | null;
+    }>;
+    const overlap = activeList.find((g) => {
+      if (!g.source_slug) return false;
+      const tmpl = templateBySlug(g.source_slug);
+      return tmpl?.domain === newDomain;
+    });
+    if (overlap) {
+      return NextResponse.json(
+        {
+          error: 'domain_overlap',
+          domain: newDomain,
+          conflicting_title: overlap.title,
+        },
+        { status: 409 },
+      );
+    }
   }
 
   // Soft goal cap check (spec §13). Count current active goals; if the user

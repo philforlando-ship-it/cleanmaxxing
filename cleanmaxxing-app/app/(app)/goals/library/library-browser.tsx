@@ -58,6 +58,16 @@ export function LibraryBrowser({ availableSlugs }: Props) {
   // render inline below that card. Confirming "Add anyway" re-posts with
   // force: true and clears this.
   const [capNudge, setCapNudge] = useState<{ template: Template; activeCount: number; cap: number } | null>(null);
+  // Domain-overlap nudge state. When the server detects that the user
+  // already has an active goal in the same life-area domain
+  // (nutrition, training, etc.), it returns `domain_overlap` and the
+  // conflicting goal title. Confirming "Add anyway" re-posts with
+  // force_domain_override: true.
+  const [overlapNudge, setOverlapNudge] = useState<{
+    template: Template;
+    domain: string;
+    conflictingTitle: string;
+  } | null>(null);
 
   async function load() {
     const res = await fetch('/api/goals/templates');
@@ -75,10 +85,15 @@ export function LibraryBrowser({ availableSlugs }: Props) {
     load();
   }, []);
 
-  async function addGoal(t: Template, force = false) {
+  async function addGoal(
+    t: Template,
+    opts: { force?: boolean; forceDomainOverride?: boolean } = {},
+  ) {
+    const { force = false, forceDomainOverride = false } = opts;
     setBusySlug(t.source_slug);
     setError(null);
     if (!force) setCapNudge(null);
+    if (!forceDomainOverride) setOverlapNudge(null);
 
     const res = await fetch('/api/goals/add', {
       method: 'POST',
@@ -92,12 +107,21 @@ export function LibraryBrowser({ availableSlugs }: Props) {
         goal_type: t.goal_type,
         baseline_stage: baselines[t.source_slug] ?? 'new',
         force: force || undefined,
+        force_domain_override: forceDomainOverride || undefined,
       }),
     });
     setBusySlug(null);
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
+      if (body.error === 'domain_overlap' && !forceDomainOverride) {
+        setOverlapNudge({
+          template: t,
+          domain: body.domain ?? 'this area',
+          conflictingTitle: body.conflicting_title ?? 'an active goal',
+        });
+        return;
+      }
       if (body.error === 'goal_limit_reached' && !force) {
         setCapNudge({
           template: t,
@@ -115,6 +139,7 @@ export function LibraryBrowser({ availableSlugs }: Props) {
       prev.map((x) => (x.source_slug === t.source_slug ? { ...x, already_active: true } : x))
     );
     setCapNudge(null);
+    setOverlapNudge(null);
     router.refresh();
   }
 
@@ -292,7 +317,7 @@ export function LibraryBrowser({ availableSlugs }: Props) {
                 <div className="mt-3 flex items-center gap-3">
                   <button
                     type="button"
-                    onClick={() => addGoal(t, true)}
+                    onClick={() => addGoal(t, { force: true })}
                     disabled={busySlug === t.source_slug}
                     className="rounded-lg bg-zinc-900 px-4 py-2 text-xs font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
                   >
@@ -301,6 +326,30 @@ export function LibraryBrowser({ availableSlugs }: Props) {
                   <button
                     type="button"
                     onClick={() => setCapNudge(null)}
+                    className="text-xs text-zinc-600 underline dark:text-zinc-400"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+            {overlapNudge?.template.source_slug === t.source_slug && (
+              <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30">
+                <p className="text-sm text-amber-900 dark:text-amber-200">
+                  {`You already have an active ${overlapNudge.domain.replace('-', ' ')} goal — “${overlapNudge.conflictingTitle}”. Stacking goals in the same area usually means you have one big system, not two goals. Pick the one to lead with this month and merge the rest as supporting habits.`}
+                </p>
+                <div className="mt-3 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => addGoal(t, { forceDomainOverride: true })}
+                    disabled={busySlug === t.source_slug}
+                    className="rounded-lg bg-zinc-900 px-4 py-2 text-xs font-medium text-white disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
+                  >
+                    Add anyway
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOverlapNudge(null)}
                     className="text-xs text-zinc-600 underline dark:text-zinc-400"
                   >
                     Cancel
