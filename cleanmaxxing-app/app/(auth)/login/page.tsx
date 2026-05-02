@@ -1,16 +1,41 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
+// Match the search-params Suspense pattern used on /signup. /auth/callback
+// can redirect here with ?error=missing_code or ?error=confirmation_failed
+// when the email link is malformed or expired; we surface a clean message
+// so the user knows to request a fresh link rather than retry the broken one.
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const callbackError = searchParams?.get('error') ?? null;
+  const callbackErrorMessage = (() => {
+    if (!callbackError) return null;
+    if (callbackError === 'missing_code') {
+      return 'Your confirmation link was incomplete. Sign up again or request a new email.';
+    }
+    if (callbackError === 'confirmation_failed') {
+      return 'That confirmation link has already been used or has expired. Request a new one from the signup page.';
+    }
+    return null;
+  })();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,6 +59,11 @@ export default function LoginPage() {
     <main className="flex flex-1 items-center justify-center px-6 py-24">
       <div className="w-full max-w-sm">
         <h1 className="text-3xl font-semibold tracking-tight">Log in</h1>
+        {callbackErrorMessage && (
+          <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+            {callbackErrorMessage}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium">Email</label>
