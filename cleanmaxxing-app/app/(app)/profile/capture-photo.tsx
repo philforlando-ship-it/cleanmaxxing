@@ -96,6 +96,12 @@ export function CapturePhoto({ slot, baselineUrl = null }: Props) {
               filter. You&rsquo;re capturing a reference point to compare
               against later — the photo itself is the evidence.
             </p>
+            <p className="text-zinc-600 dark:text-zinc-400">
+              JPEG, PNG, or WebP, up to 25 MB — higher resolution helps
+              future analysis, so don&rsquo;t pre-compress. iPhone users:
+              if upload fails, switch <em>Settings → Camera → Formats</em>{' '}
+              to <strong>Most Compatible</strong> so photos save as JPEG.
+            </p>
             {hasGhost && (
               <p className="text-zinc-600 dark:text-zinc-400">
                 <strong>Match the baseline:</strong> after you pick the photo

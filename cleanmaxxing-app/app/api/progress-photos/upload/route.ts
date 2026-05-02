@@ -8,7 +8,13 @@ const ALLOWED_SLOTS = new Set([
   'progress_180d',
 ]);
 const ALLOWED_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp']);
-const MAX_SIZE_BYTES = 8 * 1024 * 1024; // 8 MB — modern phone cameras produce 3-6MB JPEGs
+// 25 MB. Generous on purpose — modern phone cameras produce 3-6 MB
+// JPEGs but ProRAW / large WebP / multi-shot stacks can run higher,
+// and downstream AI analysis (planned) benefits from preserving the
+// original resolution rather than compressing aggressively at upload.
+// Matches the Whisper transcribe endpoint's cap so the per-route
+// payload ceiling is consistent across the app.
+const MAX_SIZE_BYTES = 25 * 1024 * 1024;
 
 const BUCKET = 'progress-photos';
 
@@ -20,7 +26,7 @@ function extFor(mime: string): string | null {
 }
 
 // Upload or replace a progress photo. Multipart/form-data body with:
-//   file: image file (jpeg, png, or webp, ≤ 8 MB)
+//   file: image file (jpeg, png, or webp, ≤ 25 MB)
 //   slot: 'baseline' | 'progress_30d' | 'progress_90d' | 'progress_180d'
 //
 // Replaces any existing photo in the same slot (removes old storage
@@ -59,7 +65,7 @@ export async function POST(req: Request) {
   }
   if (file.size > MAX_SIZE_BYTES) {
     return NextResponse.json(
-      { error: 'File too large (max 8 MB)' },
+      { error: 'File too large (max 25 MB)' },
       { status: 400 },
     );
   }
