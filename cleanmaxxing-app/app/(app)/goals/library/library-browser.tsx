@@ -5,6 +5,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { TierBadge } from '@/components/tier-badge';
 import { TIER_ORDER, tierLabel } from '@/lib/goals/tier';
+import {
+  FIT_BUCKET_EXPLAINER,
+  FIT_BUCKET_LABEL,
+  type FitBucket,
+} from '@/lib/goals/fit-score';
 
 type Template = {
   source_slug: string;
@@ -14,7 +19,21 @@ type Template = {
   category: string | null;
   priority_tier: string | null;
   goal_type: 'process' | 'outcome';
+  domain: string;
+  measurement_type: string;
   already_active: boolean;
+  fit_bucket: FitBucket;
+};
+
+const FIT_BUCKET_STYLE: Record<FitBucket, string> = {
+  'recommended-now':
+    'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300',
+  'useful-later':
+    'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300',
+  'situational':
+    'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300',
+  'not-recommended':
+    'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300',
 };
 
 type BaselineStage = 'new' | 'light' | 'partial' | 'established';
@@ -235,7 +254,7 @@ export function LibraryBrowser({ availableSlugs }: Props) {
                 : 'border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900'
             }`}
           >
-            <div className="mb-2 flex items-center gap-2 text-xs">
+            <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
               <TierBadge tier={t.priority_tier} />
               <span
                 className={`rounded-full px-2 py-0.5 ${
@@ -246,6 +265,14 @@ export function LibraryBrowser({ availableSlugs }: Props) {
               >
                 {t.goal_type}
               </span>
+              {!t.already_active && (
+                <span
+                  className={`rounded-full px-2 py-0.5 font-medium ${FIT_BUCKET_STYLE[t.fit_bucket]}`}
+                  title={FIT_BUCKET_EXPLAINER[t.fit_bucket]}
+                >
+                  {FIT_BUCKET_LABEL[t.fit_bucket]}
+                </span>
+              )}
             </div>
             <h2 className="text-lg font-semibold leading-tight">{t.title}</h2>
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">

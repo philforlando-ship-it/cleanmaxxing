@@ -4,6 +4,8 @@ import { GOAL_TEMPLATES } from '@/content/goal-templates';
 import { focusSlugsFor, scoreDoc } from '@/lib/onboarding/goal-suggest';
 import { plainLanguageFor } from '@/lib/content/plain-language';
 import type { AgeSegment } from '@/lib/onboarding/types';
+import { computeFitBucket } from '@/lib/goals/fit-score';
+import { detectRiskSignals } from '@/lib/self-acceptance/risk-signals';
 
 // Returns every goal template joined with its POV doc metadata,
 // filtered to the user's age segment, and sorted by personalized
@@ -73,10 +75,23 @@ export async function GET() {
 
   const { data: activeGoals } = await supabase
     .from('goals')
-    .select('title')
+    .select('title, priority_tier')
     .eq('user_id', user.id)
     .eq('status', 'active');
-  const activeTitles = new Set((activeGoals ?? []).map((g) => g.title));
+  const activeRows = (activeGoals ?? []) as Array<{
+    title: string;
+    priority_tier: string | null;
+  }>;
+  const activeTitles = new Set(activeRows.map((g) => g.title));
+  const activeTiers = activeRows.map((g) => g.priority_tier).filter((t): t is string => Boolean(t));
+
+  // Self-acceptance gating: when any risk pattern fires (over-capacity,
+  // polish-without-base, circuit breaker, abandon-restart), the fit
+  // score promotes self-acceptance templates from situational →
+  // recommended-now. The detector lives in lib/self-acceptance so
+  // /today's nudge card reads from the same source.
+  const riskSignals = await detectRiskSignals(supabase, user.id);
+  const focusSlugSet = new Set(focusSlugs);
 
   const docsBySlug = new Map((povDocs ?? []).map((d) => [d.slug, d]));
 
@@ -89,6 +104,18 @@ export async function GET() {
     if (!matchesAge(doc.age_segments as string[] | null, ageSegment)) continue;
 
     const score = scoreDoc(doc.slug, doc.priority_tier, focusSlugs, t.goal_type);
+    const fit_bucket = computeFitBucket(
+      {
+        tier: doc.priority_tier as string | null,
+        domain: t.domain,
+        source_slug: doc.slug,
+      },
+      {
+        activeTiers,
+        focusSlugs: focusSlugSet,
+        selfAcceptanceTriggered: riskSignals.triggered,
+      },
+    );
 
     templates.push({
       source_slug: doc.slug,
@@ -102,6 +129,7 @@ export async function GET() {
       measurement_type: t.measurement_type,
       already_active: activeTitles.has(t.title),
       score,
+      fit_bucket,
     });
   }
 
