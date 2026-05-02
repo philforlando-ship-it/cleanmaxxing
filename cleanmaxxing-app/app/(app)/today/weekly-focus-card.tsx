@@ -17,6 +17,7 @@ import type { WeeklyCheckInSummary } from '@/lib/check-in/service';
 import { AdjustBaseline } from './adjust-baseline';
 import { AdjustTarget } from './adjust-target';
 import { DismissPhaseButton } from './dismiss-phase-button';
+import { AskAboutPhaseButton } from './ask-about-phase-button';
 
 type ActiveGoal = {
   id: string;
@@ -271,6 +272,15 @@ export function WeeklyFocusCard({ goals, weeklySummary }: Props) {
               )}
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <AskAboutPhaseButton
+                goalId={entry.anchorGoalId}
+                goalTitle={entry.goalTitles[0]}
+                phaseLabel={entry.currentPhase}
+                phaseFocus={
+                  entry.state.kind === 'active' ? entry.state.block.focus : null
+                }
+                graduated={entry.state.kind === 'graduated'}
+              />
               <Link
                 href={`/goals/${entry.anchorGoalId}`}
                 className="text-xs font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
