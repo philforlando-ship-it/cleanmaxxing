@@ -64,6 +64,16 @@ function roundTo(n: number, step: number): number {
   return Math.round(n / step) * step;
 }
 
+// Protein target band: 0.8–0.9 g per pound of bodyweight per day.
+// 1 g/lb is unnecessary for almost everyone in this audience and
+// just displaces calories that would do more in carbs or fats.
+function proteinBand(weightLbs: number): { low: number; high: number } {
+  return {
+    low: roundTo(weightLbs * 0.8, 5),
+    high: roundTo(weightLbs * 0.9, 5),
+  };
+}
+
 export function personalizationFor(
   slug: string,
   state: MisterPUserState,
@@ -72,9 +82,8 @@ export function personalizationFor(
     case '21-protein-creatine': {
       const weight = effectiveWeight(state);
       if (weight === null) return null;
-      const target = Math.round(weight);
-      const perMeal = Math.round(target / 4);
-      return `For you at ${weight} lb: ~${target} g protein/day, roughly ${perMeal} g per meal across four meals.`;
+      const { low, high } = proteinBand(weight);
+      return `For you at ${weight} lb: ~${low}–${high} g protein/day, spread across four to five meals.`;
     }
 
     case '20-diet-macros':
@@ -88,8 +97,8 @@ export function personalizationFor(
       );
       const cut = roundTo(tdee - 400, 50);
       const bulk = roundTo(tdee + 250, 50);
-      const proteinG = Math.round(weight);
-      return `For you: TDEE ≈ ${tdee} kcal. Cut: ~${cut} kcal. Lean gain: ~${bulk} kcal. Protein: ~${proteinG} g/day.`;
+      const { low: proteinLow, high: proteinHigh } = proteinBand(weight);
+      return `For you: TDEE ≈ ${tdee} kcal. Cut: ~${cut} kcal. Lean gain: ~${bulk} kcal. Protein: ~${proteinLow}–${proteinHigh} g/day.`;
     }
 
     case '42-sleep': {

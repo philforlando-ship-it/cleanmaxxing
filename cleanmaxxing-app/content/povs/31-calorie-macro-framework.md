@@ -117,7 +117,7 @@ For anyone who wants to skip the full calculation and start immediately:
 - Estimate BMR as approximately 10\-11 calories per pound of bodyweight
 - Multiply by 1\.4 to 1\.6 depending on activity level
 - Subtract 300 to 500 calories for fat loss
-- Eat 0\.7 to 1 gram of protein per pound of bodyweight
+- Eat 0\.8 to 0\.9 grams of protein per pound of bodyweight
 - Adjust based on two to three weeks of results
 
 This produces a reasonable starting point for most people without requiring exact calculation\. It is slightly less precise but significantly more likely to be acted on immediately\.
