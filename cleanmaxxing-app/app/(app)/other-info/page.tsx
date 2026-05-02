@@ -4,6 +4,12 @@ import { createClient } from '@/lib/supabase/server';
 
 const ARTICLES: Array<{ href: string; title: string; description: string }> = [
   {
+    href: '/other-info/pyramid',
+    title: 'The Cleanmaxxing pyramid',
+    description:
+      'Where every intervention sits in the framework — foundation at the base, cosmetic procedures at the apex, hard refusals off the pyramid altogether. The order of operations most men skip.',
+  },
+  {
     href: '/other-info/two-layers',
     title: 'Appearance is two things at once',
     description:
