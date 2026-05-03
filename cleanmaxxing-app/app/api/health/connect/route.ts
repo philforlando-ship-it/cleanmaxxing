@@ -63,29 +63,62 @@ export async function POST(req: NextRequest) {
   if (existing?.vital_user_id) {
     vitalUserId = existing.vital_user_id as string;
   } else {
+    // Try to create. If a previous connect attempt already registered
+    // this user on Vital's side but the user never finished the link
+    // flow (so no provider.connected webhook fired and no
+    // health_integrations row exists yet), Vital returns 400 with
+    // INVALID_REQUEST: "Client user id already exists." In that case
+    // we recover by looking up the existing Vital user via
+    // getByClientUserId rather than failing the second attempt.
     try {
       const created = await vital.user.create({ clientUserId: user.id });
       vitalUserId = created.userId;
-    } catch (e) {
-      return NextResponse.json(
-        {
-          error: 'vital_user_create_failed',
-          message: e instanceof Error ? e.message : 'unknown',
-        },
-        { status: 502 },
-      );
+    } catch (createErr) {
+      const msg = createErr instanceof Error ? createErr.message : '';
+      const isAlreadyExists =
+        /already\s*exists/i.test(msg) || /INVALID_REQUEST/.test(msg);
+      if (!isAlreadyExists) {
+        return NextResponse.json(
+          {
+            error: 'vital_user_create_failed',
+            message: msg || 'unknown',
+          },
+          { status: 502 },
+        );
+      }
+      try {
+        const looked = await vital.user.getByClientUserId(user.id);
+        vitalUserId = looked.userId;
+      } catch (lookupErr) {
+        return NextResponse.json(
+          {
+            error: 'vital_user_lookup_failed',
+            message:
+              lookupErr instanceof Error ? lookupErr.message : 'unknown',
+          },
+          { status: 502 },
+        );
+      }
     }
   }
 
   const redirectBase =
     process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
+  // Don't pre-select a provider in the link token. When `provider`
+  // is set to apple_health_kit on a desktop browser, Vital's widget
+  // sometimes renders blank because it tries to launch an iOS-only
+  // flow with nowhere to go. Letting Vital render its provider picker
+  // gives desktop users a QR-code-to-iPhone path and mobile users a
+  // direct one — both working. We restrict the visible providers to
+  // Apple Health (and the Android equivalents we'll wire later) so
+  // the picker isn't a dump of every wearable Vital supports.
   let token;
   try {
     token = await vital.link.token({
       userId: vitalUserId,
-      provider: VITAL_PROVIDER_APPLE_HEALTH,
       redirectUrl: `${redirectBase}/settings?vital=connected`,
+      filterOnProviders: [VITAL_PROVIDER_APPLE_HEALTH],
     });
   } catch (e) {
     return NextResponse.json(
