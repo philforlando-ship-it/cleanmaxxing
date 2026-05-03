@@ -78,12 +78,12 @@ export function ProgressPhotoCard({ variant }: Props) {
           </button>
         </div>
         <p className="mt-2 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          One front-facing photo now becomes your reference point in ninety
-          days. Stored privately, visible only to you, no AI analysis.
+          One front-facing photo of your face now becomes your reference
+          point in ninety days. Stored privately, visible only to you.
           Delete any time from Settings.
         </p>
         <Link
-          href="/profile"
+          href="/photos"
           className="mt-4 inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
         >
           Take baseline photo
@@ -111,7 +111,7 @@ export function ProgressPhotoCard({ variant }: Props) {
           Match the lighting and angle of your baseline.
         </p>
         <Link
-          href="/profile"
+          href="/photos"
           className="mt-4 inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
         >
           Take 30-day photo
@@ -139,7 +139,7 @@ export function ProgressPhotoCard({ variant }: Props) {
           to see.
         </p>
         <Link
-          href="/profile"
+          href="/photos"
           className="mt-4 inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
         >
           Take 90-day photo
@@ -167,7 +167,7 @@ export function ProgressPhotoCard({ variant }: Props) {
         closely as you can.
       </p>
       <Link
-        href="/profile"
+        href="/photos"
         className="mt-4 inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
       >
         Take 180-day photo

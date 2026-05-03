@@ -7,6 +7,8 @@ const ALLOWED_SLOTS = new Set([
   'progress_90d',
   'progress_180d',
 ]);
+const ALLOWED_ANGLES = new Set(['front', 'close', 'side', 'back']);
+const ALLOWED_CATEGORIES = new Set(['face', 'body']);
 const ALLOWED_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 // 25 MB. Generous on purpose — modern phone cameras produce 3-6 MB
 // JPEGs but ProRAW / large WebP / multi-shot stacks can run higher,
@@ -28,9 +30,15 @@ function extFor(mime: string): string | null {
 // Upload or replace a progress photo. Multipart/form-data body with:
 //   file: image file (jpeg, png, or webp, ≤ 25 MB)
 //   slot: 'baseline' | 'progress_30d' | 'progress_90d' | 'progress_180d'
+//   angle: 'front' | 'close' | 'side' | 'back' (optional; defaults to 'front')
+//   category: 'face' | 'body' (optional; defaults to 'face')
 //
-// Replaces any existing photo in the same slot (removes old storage
-// object + upserts metadata row). Storage RLS on the bucket enforces
+// Each (slot, angle, category) is a distinct photo: each milestone
+// can hold a face front + face extras and/or a body front + body
+// extras. Face photos feed the premium AI facial-analysis route;
+// body photos never do — the analyze route filters strictly to
+// category='face'. Re-uploading the same (slot, angle, category)
+// replaces the existing one. Storage RLS on the bucket enforces
 // that users can only read/write their own folder.
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -50,6 +58,8 @@ export async function POST(req: Request) {
 
   const file = formData.get('file');
   const slotRaw = formData.get('slot');
+  const angleRaw = formData.get('angle');
+  const categoryRaw = formData.get('category');
 
   if (!(file instanceof File)) {
     return NextResponse.json({ error: 'Missing file' }, { status: 400 });
@@ -57,6 +67,21 @@ export async function POST(req: Request) {
   if (typeof slotRaw !== 'string' || !ALLOWED_SLOTS.has(slotRaw)) {
     return NextResponse.json({ error: 'Invalid slot' }, { status: 400 });
   }
+  // angle is optional; absent or empty defaults to 'front' so existing
+  // single-angle clients keep working without modification.
+  const angleStr = typeof angleRaw === 'string' && angleRaw ? angleRaw : 'front';
+  if (!ALLOWED_ANGLES.has(angleStr)) {
+    return NextResponse.json({ error: 'Invalid angle' }, { status: 400 });
+  }
+  const angle = angleStr;
+  // category is optional; absent or empty defaults to 'face' so the
+  // existing photo flow keeps working without modification.
+  const categoryStr =
+    typeof categoryRaw === 'string' && categoryRaw ? categoryRaw : 'face';
+  if (!ALLOWED_CATEGORIES.has(categoryStr)) {
+    return NextResponse.json({ error: 'Invalid category' }, { status: 400 });
+  }
+  const category = categoryStr;
   if (!ALLOWED_MIMES.has(file.type)) {
     return NextResponse.json(
       { error: 'Only JPEG, PNG, or WebP images accepted' },
@@ -84,16 +109,24 @@ export async function POST(req: Request) {
         : slot === 'progress_90d'
           ? 'progress-90d'
           : 'progress-180d';
-  const path = `${user.id}/${filename}.${ext}`;
+  // Path scheme: face photos keep the prior {slot}-{angle}.{ext}
+  // path so existing rows continue to read fine via storage_path.
+  // Body photos prefix with body- so the two categories never
+  // collide. The storage_path column on the row remains
+  // authoritative for reads.
+  const categoryPrefix = category === 'body' ? 'body-' : '';
+  const path = `${user.id}/${categoryPrefix}${filename}-${angle}.${ext}`;
 
-  // If an older photo exists in this slot (possibly with a different
-  // extension), remove it from storage first. The row upsert below
-  // handles the DB side.
+  // If an older photo exists for this exact (slot, angle, category),
+  // remove it from storage first. The row upsert below handles the
+  // DB side. Other (slot, angle, category) rows are not touched.
   const { data: existing } = await supabase
     .from('progress_photos')
     .select('storage_path')
     .eq('user_id', user.id)
     .eq('slot', slot)
+    .eq('angle', angle)
+    .eq('category', category)
     .maybeSingle();
 
   if (existing && existing.storage_path && existing.storage_path !== path) {
@@ -121,10 +154,12 @@ export async function POST(req: Request) {
     {
       user_id: user.id,
       slot,
+      angle,
+      category,
       storage_path: path,
       captured_at: new Date().toISOString(),
     },
-    { onConflict: 'user_id,slot' },
+    { onConflict: 'user_id,slot,angle,category' },
   );
 
   if (dbErr) {
@@ -137,5 +172,5 @@ export async function POST(req: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true, slot, path });
+  return NextResponse.json({ ok: true, slot, angle, category, path });
 }

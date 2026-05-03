@@ -43,11 +43,18 @@ export default async function OnboardingBaselinePhotoPage() {
         'onboarding_review_acked',
         'onboarding_baseline_acked',
       ]),
+    // Explicit (slot, angle, category) match: a user can now have
+    // multiple baseline rows (close-up, side-profile, body) so
+    // .maybeSingle() against just the slot would error on >1 row.
+    // The face-front baseline is the canonical "baseline exists"
+    // signal for onboarding completion.
     supabase
       .from('progress_photos')
       .select('id')
       .eq('user_id', user.id)
       .eq('slot', 'baseline')
+      .eq('angle', 'front')
+      .eq('category', 'face')
       .maybeSingle(),
   ]);
   const markers = new Map<string, string>(
@@ -73,10 +80,10 @@ export default async function OnboardingBaselinePhotoPage() {
           Want to capture a baseline photo now?
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-          One front-facing photo becomes your reference point in 30, 90, and
-          180 days. The comparison is for you to see — no AI analysis,
-          stored privately, deletable any time. You can skip and add one
-          later, but compliance later is much lower than now.
+          One front-facing photo of your face becomes your reference point
+          in 30, 90, and 180 days. The comparison is for you to see. Stored
+          privately, deletable any time. You can skip and add one later,
+          but compliance later is much lower than now.
         </p>
 
         <div className="mt-8">

@@ -10,6 +10,7 @@
 // sticky here.
 
 import { useMemo, useRef, useState } from 'react';
+import { FacialAnalysisPanel } from './facial-analysis-panel';
 
 type Slot = 'baseline' | 'progress_30d' | 'progress_90d' | 'progress_180d';
 
@@ -21,6 +22,13 @@ type Photo = {
 
 type Props = {
   photos: Photo[];
+  isPremium: boolean;
+  // When true, render the FacialAnalysisPanel below the visual
+  // compare. Used for face photos. Body photos pass false — the
+  // analysis is face-only (the API enforces it, but we hide the
+  // trigger on body so users don't see a non-functional button).
+  // Defaults to true to keep existing call sites unchanged.
+  showAnalysis?: boolean;
 };
 
 const SLOT_LABEL: Record<Slot, string> = {
@@ -45,7 +53,11 @@ function formatDate(iso: string): string {
   });
 }
 
-export function PhotoCompare({ photos }: Props) {
+export function PhotoCompare({
+  photos,
+  isPremium,
+  showAnalysis = true,
+}: Props) {
   // Photos come in unspecified order from the server query; sort
   // by canonical slot order so the picker dropdowns read
   // chronologically and the default left/right pick reflects
@@ -114,6 +126,14 @@ export function PhotoCompare({ photos }: Props) {
         <SideBySide left={left} right={right} />
       ) : (
         <SliderCompare left={left} right={right} />
+      )}
+
+      {showAnalysis && (
+        <FacialAnalysisPanel
+          beforeSlot={left.slot}
+          afterSlot={right.slot}
+          isPremium={isPremium}
+        />
       )}
     </section>
   );

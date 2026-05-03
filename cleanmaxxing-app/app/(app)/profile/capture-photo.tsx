@@ -10,16 +10,21 @@ import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 type Slot = 'baseline' | 'progress_30d' | 'progress_90d' | 'progress_180d';
+type Category = 'face' | 'body';
 
 type Props = {
   slot: Slot;
-  // Signed URL of the user's baseline photo. When passed (i.e.,
-  // for any non-baseline slot), the capture surface renders a
-  // ghost overlay of the baseline at low opacity over the file
-  // picker / preview so the user can match angle, distance, and
-  // framing. Optional — baseline-slot captures pass null since
-  // there's nothing to align against.
+  // Signed URL of the user's baseline photo for the same category.
+  // When passed (i.e., for any non-baseline slot), the capture
+  // surface renders a ghost overlay of the baseline at low opacity
+  // over the file picker / preview so the user can match angle,
+  // distance, and framing. Optional — baseline-slot captures pass
+  // null since there's nothing to align against.
   baselineUrl?: string | null;
+  // Photo category. Defaults to 'face' so existing callers (e.g. the
+  // onboarding baseline-photo page) keep working without changes.
+  // The /photos page passes 'body' for the full-body section.
+  category?: Category;
 };
 
 const SLOT_LABEL: Record<Slot, string> = {
@@ -29,7 +34,11 @@ const SLOT_LABEL: Record<Slot, string> = {
   progress_180d: '180-day',
 };
 
-export function CapturePhoto({ slot, baselineUrl = null }: Props) {
+export function CapturePhoto({
+  slot,
+  baselineUrl = null,
+  category = 'face',
+}: Props) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -64,6 +73,7 @@ export function CapturePhoto({ slot, baselineUrl = null }: Props) {
       const form = new FormData();
       form.append('file', file);
       form.append('slot', slot);
+      form.append('category', category);
       const res = await fetch('/api/progress-photos/upload', {
         method: 'POST',
         body: form,
@@ -88,13 +98,15 @@ export function CapturePhoto({ slot, baselineUrl = null }: Props) {
       {!previewUrl && (
         <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
           <h3 className="text-lg font-medium">
-            Capture your {SLOT_LABEL[slot]} photo
+            Capture your {SLOT_LABEL[slot]}{category === 'body' ? ' body' : ''} photo
           </h3>
           <div className="mt-3 space-y-2 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
             <p>
-              One front-facing photo. Good lighting, neutral expression, no
-              filter. You&rsquo;re capturing a reference point to compare
-              against later — the photo itself is the evidence.
+              {category === 'body'
+                ? 'One front-facing full-body photo. Good lighting, neutral expression, no filter, fitted or minimal clothing so changes are visible.'
+                : 'One front-facing photo of your face. Good lighting, neutral expression, no filter.'}{' '}
+              You&rsquo;re capturing a reference point to compare against
+              later — the photo itself is the evidence.
             </p>
             <p className="text-zinc-600 dark:text-zinc-400">
               JPEG, PNG, or WebP, up to 25 MB — higher resolution helps
@@ -112,9 +124,8 @@ export function CapturePhoto({ slot, baselineUrl = null }: Props) {
             )}
             <p className="text-zinc-600 dark:text-zinc-400">
               Stored privately in your account, visible only to you, accessed
-              via short-lived signed URLs. <strong>No AI analysis.</strong>{' '}
-              You can delete the photo any time from the corresponding card
-              on this page.
+              via short-lived signed URLs. You can delete the photo any time
+              from the corresponding card on this page.
             </p>
           </div>
           {hasGhost && baselineUrl && (
