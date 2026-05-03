@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { StepAwayCard } from './step-away-card';
 import { PushNotificationsSection } from './push-notifications-section';
+import { HealthIntegrationCard } from './health-integration-card';
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -17,6 +18,25 @@ export default async function SettingsPage() {
 
   const status = (profile?.subscription_status as string | null) ?? 'trial';
   const paused = Boolean(profile?.tracking_paused_at);
+
+  // Apple Health integration state. We surface the most-recent
+  // connection of any provider — for v1 only Apple Health is wired
+  // so there's at most one row.
+  const { data: healthRow } = await supabase
+    .from('health_integrations')
+    .select('provider, connected_at, last_synced_at')
+    .eq('user_id', user.id)
+    .order('connected_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const healthConnected = Boolean(healthRow);
+  const healthProvider = (healthRow?.provider as string | null) ?? null;
+  const healthConnectedAt = (healthRow?.connected_at as string | null) ?? null;
+  const healthLastSyncedAt =
+    (healthRow?.last_synced_at as string | null) ?? null;
+  const vitalConfigured = Boolean(
+    process.env.VITAL_API_KEY && process.env.VITAL_ENVIRONMENT,
+  );
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -39,6 +59,14 @@ export default async function SettingsPage() {
         </Link>
 
         <StepAwayCard initialPaused={paused} />
+
+        <HealthIntegrationCard
+          connected={healthConnected}
+          provider={healthProvider}
+          connectedAt={healthConnectedAt}
+          lastSyncedAt={healthLastSyncedAt}
+          vitalConfigured={vitalConfigured}
+        />
 
         <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
           <PushNotificationsSection />

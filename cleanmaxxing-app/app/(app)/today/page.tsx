@@ -123,6 +123,8 @@ export default async function TodayPage({ searchParams }: Props) {
     firstConvoState,
     { data: goalsRaw },
     { data: photoRowsRaw },
+    { data: healthIntegrationRow },
+    { data: latestActivityRow },
   ] = await Promise.all([
     getTodayCheckInState(supabase, user.id, timezone),
     getWeeklyReflectionState(supabase, user.id),
@@ -149,6 +151,23 @@ export default async function TodayPage({ searchParams }: Props) {
       .from('progress_photos')
       .select('slot')
       .eq('user_id', user.id),
+    // Most-recent health integration row + most-recent activity row.
+    // Drives the steps line on /today and the "hide manual sleep
+    // prompt when Vital is fresh" logic below.
+    supabase
+      .from('health_integrations')
+      .select('provider, last_synced_at')
+      .eq('user_id', user.id)
+      .order('connected_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('daily_activity')
+      .select('date, steps, source')
+      .eq('user_id', user.id)
+      .order('date', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
   // Cast to the WeeklyFocusCard's ActiveGoal shape. The supabase
   // client's inferred response type drops columns it doesn't have
@@ -166,6 +185,40 @@ export default async function TodayPage({ searchParams }: Props) {
     chat_execution_mode: boolean | null;
     chat_execution_prompt_acked: boolean | null;
   }>;
+
+  // Health integration state. "Fresh" means the last webhook event
+  // arrived within the last 24 hours — used to suppress the manual
+  // sleep prompt because Vital is presumed to be feeding sleep_logs.
+  // A stale integration falls back to the manual prompt automatically.
+  const healthIntegration = healthIntegrationRow as
+    | { provider: string | null; last_synced_at: string | null }
+    | null;
+  const vitalSleepFresh = healthIntegration?.last_synced_at
+    ? Date.now() - new Date(healthIntegration.last_synced_at).getTime() <
+      24 * 60 * 60 * 1000
+    : false;
+
+  const latestActivity = latestActivityRow as
+    | { date: string; steps: number | null; source: string }
+    | null;
+
+  // Date label for the activity line — "Yesterday" when the row is
+  // yesterday in the user's timezone, otherwise the short date.
+  // Computed once here so the JSX stays readable.
+  const activityDateLabel = (() => {
+    if (!latestActivity) return '';
+    const yesterday = new Date(
+      new Date().toLocaleString('en-US', { timeZone: timezone }),
+    );
+    yesterday.setDate(yesterday.getDate() - 1);
+    const ymd = yesterday.toISOString().slice(0, 10);
+    if (latestActivity.date === ymd) return 'Yesterday';
+    return new Date(latestActivity.date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      timeZone: timezone,
+    });
+  })();
 
   // Compute the slug set that the WeeklyFocusCard will render today.
   // Mirrors that card's "newPhaseEntries" filter: an onramp is
@@ -483,7 +536,12 @@ export default async function TodayPage({ searchParams }: Props) {
             for reflection) and the chat has no tracking side effects
             (asking Mister P something isn't the same as
             self-surveillance). */}
-        {!steppedAway && (
+        {/* Vital-sourced sleep auto-fills the sleep_logs row, so the
+            manual SleepLogCard becomes redundant when an Apple Health
+            integration has synced inside the last 24 hours. We hide
+            the whole card in that case; if the sync is stale (or no
+            integration is connected) the manual card returns. */}
+        {!steppedAway && !vitalSleepFresh && (
           <div id="sleep-log" className="scroll-mt-16">
             <SleepLogCard
               recent={sleepState.recent}
@@ -491,6 +549,20 @@ export default async function TodayPage({ searchParams }: Props) {
               rollingCount={sleepState.rollingCount}
               timezone={timezone}
             />
+          </div>
+        )}
+        {/* Quiet passive-activity readout. Renders only when daily_activity
+            has a row — i.e. an Apple Health connection is feeding steps. */}
+        {!steppedAway && latestActivity && latestActivity.steps != null && (
+          <div className="rounded-xl border border-zinc-200 bg-white px-5 py-3 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
+            <span className="text-zinc-500">{activityDateLabel}:</span>{' '}
+            <strong className="font-medium text-zinc-900 dark:text-zinc-100">
+              {latestActivity.steps.toLocaleString()}
+            </strong>{' '}
+            steps
+            <span className="ml-2 text-[10px] uppercase tracking-wider text-zinc-500">
+              Apple Health
+            </span>
           </div>
         )}
         {!steppedAway && (
