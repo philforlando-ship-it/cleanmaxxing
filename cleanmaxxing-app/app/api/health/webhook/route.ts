@@ -158,15 +158,29 @@ export async function POST(req: NextRequest) {
   const eventType = event.event_type ?? event.eventType ?? '';
   const vitalUserId = event.user_id ?? null;
 
-  // Temporary debug log — surfaces in Vercel Runtime Logs so we can
-  // see what event types Junction is firing and which branch each
-  // hit takes. Remove once ingestion is verified working.
+  const bodyKeys = Object.keys(event);
+  const dataKeys = event.data ? Object.keys(event.data as object) : [];
+
+  // Temporary diagnostic — log to stdout AND persist to webhook_debug
+  // so we can read recent events via Supabase if Vercel's runtime
+  // stdout view is hard to access. Remove this whole block once
+  // ingestion is verified working.
   console.log('[health/webhook] received', {
     eventType,
     hasVitalUserId: Boolean(vitalUserId),
-    bodyKeys: Object.keys(event),
-    dataKeys: event.data ? Object.keys(event.data as object) : [],
+    bodyKeys,
+    dataKeys,
   });
+
+  async function logBranch(branchTaken: string) {
+    const debugClient = createServiceClient();
+    await debugClient.from('webhook_debug').insert({
+      event_type: eventType,
+      body_keys: bodyKeys,
+      data_keys: dataKeys,
+      branch_taken: branchTaken,
+    });
+  }
 
   const service = createServiceClient();
 
@@ -199,10 +213,12 @@ export async function POST(req: NextRequest) {
         hasVitalUserId: Boolean(vitalUserId),
         hasProviderSlug: Boolean(providerSlug),
       });
+      await logBranch('connection_incomplete');
       return NextResponse.json({ ok: true, ignored: 'incomplete_payload' });
     }
     const mapped = vitalProviderToInternal(providerSlug);
     if (!mapped) {
+      await logBranch('unsupported_provider');
       return NextResponse.json({ ok: true, ignored: 'unsupported_provider' });
     }
     const { error } = await service.from('health_integrations').upsert(
@@ -217,11 +233,13 @@ export async function POST(req: NextRequest) {
     );
     if (error) {
       console.error('[health/webhook] failed to upsert health_integrations', error);
+      await logBranch('connection_persist_failed');
       return NextResponse.json(
         { error: 'persist_failed', message: error.message },
         { status: 500 },
       );
     }
+    await logBranch('provider_connected');
     return NextResponse.json({ ok: true, type: 'provider_connected' });
   }
 
@@ -234,11 +252,13 @@ export async function POST(req: NextRequest) {
         .eq('user_id', cleanmaxxingUserId)
         .eq('vital_user_id', vitalUserId);
     }
+    await logBranch('provider_disconnected');
     return NextResponse.json({ ok: true, type: 'provider_disconnected' });
   }
 
   // ---- Data ingestion events ----
   if (!cleanmaxxingUserId) {
+    await logBranch('no_user_match');
     return NextResponse.json({ ok: true, ignored: 'no_user_match' });
   }
 
@@ -261,6 +281,7 @@ export async function POST(req: NextRequest) {
           )
         : null);
     if (!nightOf || durationSec == null) {
+      await logBranch('incomplete_sleep');
       return NextResponse.json({ ok: true, ignored: 'incomplete_sleep' });
     }
     const hours = Math.round((durationSec / 3600) * 10) / 10;
@@ -280,6 +301,7 @@ export async function POST(req: NextRequest) {
     );
     if (error) {
       console.error('[health/webhook] failed to upsert sleep_logs', error);
+      await logBranch('sleep_persist_failed');
       return NextResponse.json(
         { error: 'persist_failed', message: error.message },
         { status: 500 },
@@ -292,6 +314,7 @@ export async function POST(req: NextRequest) {
       .eq('user_id', cleanmaxxingUserId)
       .eq('vital_user_id', vitalUserId);
 
+    await logBranch('sleep_upserted');
     return NextResponse.json({ ok: true, type: 'sleep_upserted' });
   }
 
@@ -305,6 +328,7 @@ export async function POST(req: NextRequest) {
       (data.date ? new Date(data.date).toISOString().slice(0, 10) : null);
     const steps = data.steps ?? null;
     if (!date || steps == null) {
+      await logBranch('incomplete_activity');
       return NextResponse.json({ ok: true, ignored: 'incomplete_activity' });
     }
 
@@ -344,6 +368,7 @@ export async function POST(req: NextRequest) {
     );
     if (error) {
       console.error('[health/webhook] failed to upsert daily_activity', error);
+      await logBranch('activity_persist_failed');
       return NextResponse.json(
         { error: 'persist_failed', message: error.message },
         { status: 500 },
@@ -356,9 +381,11 @@ export async function POST(req: NextRequest) {
       .eq('user_id', cleanmaxxingUserId)
       .eq('vital_user_id', vitalUserId);
 
+    await logBranch('activity_upserted');
     return NextResponse.json({ ok: true, type: 'activity_upserted' });
   }
 
   console.log('[health/webhook] no branch matched', { eventType });
+  await logBranch('no_branch_matched');
   return NextResponse.json({ ok: true, ignored: eventType || 'unknown' });
 }
