@@ -1,17 +1,23 @@
 'use client';
 
-// Connect / disconnect card for the Vital-aggregated Apple Health
-// integration. Server passes in the current connection state and
-// whether Vital env vars are wired on the server; the card decides
-// what to render and handles the click flows.
+// Connect / disconnect card for the Junction-aggregated wearable
+// integration (Whoop, Oura, Fitbit, Garmin, Strava, Withings, etc.).
+// Server passes in the current connection state and whether Junction
+// env vars are wired on the server; the card decides what to render
+// and handles the click flows.
 //
-// Connect flow: POST /api/health/connect → server returns a Vital
-// link URL → we redirect the user there (new tab). Vital handles
-// Apple Health authorization and lands the user back on /settings.
-// Webhooks then fill in sleep + activity over time.
+// Connect flow: POST /api/health/connect → server returns a Junction
+// link URL → we redirect the user there. Junction's widget shows the
+// provider picker; user picks their wearable; Junction handles auth
+// and lands the user back on /settings. Webhooks then fill in sleep
+// + activity over time.
 //
 // Disconnect flow: two-step confirm → POST /api/health/disconnect
 // → router.refresh() so the card re-renders disconnected.
+//
+// Note: Apple Health intentionally isn't on this list. Junction's
+// Apple Health flow needs a native iOS bridge that this web app
+// doesn't ship today.
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
@@ -23,6 +29,45 @@ type Props = {
   lastSyncedAt: string | null;
   vitalConfigured: boolean;
 };
+
+// Local copy of the friendly-name lookup. Lifting it here avoids
+// importing a server-only module (lib/vital/client) into a client
+// component — the friendly-name function itself touches no env vars
+// but the import path is gated by 'server-only'. Worth duplicating a
+// small map to keep the boundary clean.
+const PROVIDER_LABELS: Record<string, string> = {
+  apple_health_kit: 'Apple Health',
+  apple_health: 'Apple Health',
+  google_fit: 'Google Fit',
+  health_connect: 'Health Connect',
+  fitbit: 'Fitbit',
+  oura: 'Oura',
+  whoop: 'Whoop',
+  whoop_v2: 'Whoop',
+  garmin: 'Garmin',
+  strava: 'Strava',
+  withings: 'Withings',
+  polar: 'Polar',
+  dexcom: 'Dexcom',
+  freestyle_libre: 'Freestyle Libre',
+  wahoo: 'Wahoo',
+  ultrahuman: 'Ultrahuman',
+  omron: 'Omron',
+  cronometer: 'Cronometer',
+  mapmyfitness: 'MapMyFitness',
+  myfitnesspal: 'MyFitnessPal',
+  runkeeper: 'Runkeeper',
+};
+
+function providerLabel(provider: string | null): string {
+  if (!provider) return 'Your wearable';
+  const key = provider.trim().toLowerCase();
+  if (PROVIDER_LABELS[key]) return PROVIDER_LABELS[key];
+  return key
+    .split(/[_\s]+/)
+    .map((w) => (w.length > 0 ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(' ');
+}
 
 function timeAgo(iso: string | null): string {
   if (!iso) return 'never';
@@ -55,8 +100,6 @@ export function HealthIntegrationCard({
       try {
         const res = await fetch('/api/health/connect', {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ provider: 'apple_health' }),
         });
         const body = (await res.json()) as
           | { linkWebUrl?: string; error?: string; message?: string };
@@ -96,7 +139,7 @@ export function HealthIntegrationCard({
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-lg font-medium">Apple Health</h2>
+        <h2 className="text-lg font-medium">Wearable sync</h2>
         <span className="text-xs uppercase tracking-wider text-zinc-500">
           {connected ? 'Connected' : 'Not connected'}
         </span>
@@ -105,13 +148,15 @@ export function HealthIntegrationCard({
       {!connected && (
         <>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            Auto-fills your nightly sleep log and adds passive daily-step
-            tracking. Goes through Apple Health on your iPhone — no extra
-            app to install on Cleanmaxxing&rsquo;s side.
+            Connect Whoop, Oura, Fitbit, Garmin, Strava, Withings, or any
+            other wearable you use. Sleep data fills your nightly log
+            automatically; daily steps surface as a passive line on your
+            home screen. Apple Health needs a native iOS app, which
+            isn&rsquo;t available yet — manual entry stays as a fallback.
           </p>
           {!vitalConfigured ? (
             <p className="mt-3 text-xs text-zinc-500">
-              Apple Health sync is not yet enabled on this server. Once
+              Wearable sync is not yet enabled on this server. Once
               configured, the Connect button will appear here.
             </p>
           ) : (
@@ -121,7 +166,7 @@ export function HealthIntegrationCard({
               disabled={connecting}
               className="mt-4 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
-              {connecting ? 'Starting…' : 'Connect Apple Health'}
+              {connecting ? 'Starting…' : 'Connect a wearable'}
             </button>
           )}
         </>
@@ -130,7 +175,7 @@ export function HealthIntegrationCard({
       {connected && (
         <>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            {provider === 'apple_health' ? 'Apple Health' : provider}
+            {providerLabel(provider)}
             {connectedAt && (
               <> connected {timeAgo(connectedAt)}.</>
             )}{' '}

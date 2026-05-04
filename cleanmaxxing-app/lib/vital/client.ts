@@ -21,26 +21,56 @@ export function getVitalClient(): VitalClient | null {
   });
 }
 
-// Provider value Vital expects for Apple HealthKit. Stored separately
-// from our internal `health_integrations.provider` column ('apple_health')
-// because the two namespaces drift independently.
-export const VITAL_PROVIDER_APPLE_HEALTH = 'apple_health_kit';
-
-// Map Vital provider keys (received in webhooks) back to our
-// internal provider/source column values.
+// We accept any wearable Junction supports. health_integrations.provider
+// and *_source columns store the raw Junction provider key directly
+// after migration 0032 drops the enum check constraints. The helper
+// below just normalizes whitespace / case; it deliberately does not
+// allow-list providers because Junction adds them regularly.
 export function vitalProviderToInternal(
-  vitalProvider: string,
+  vitalProvider: string | null | undefined,
 ): { provider: string; source: string } | null {
-  if (vitalProvider === 'apple_health_kit') {
-    return { provider: 'apple_health', source: 'vital_apple_health' };
-  }
-  if (vitalProvider === 'google_fit') {
-    return { provider: 'google_fit', source: 'vital_google_fit' };
-  }
-  if (vitalProvider === 'health_connect') {
-    return { provider: 'health_connect', source: 'vital_health_connect' };
-  }
-  return null;
+  if (!vitalProvider) return null;
+  const key = vitalProvider.trim().toLowerCase();
+  if (!key) return null;
+  return { provider: key, source: key };
+}
+
+// Friendly display labels for the most common Junction provider keys.
+// Anything not in the map falls back to a title-cased version of the
+// raw key so unknown providers still render reasonably.
+const PROVIDER_LABELS: Record<string, string> = {
+  apple_health_kit: 'Apple Health',
+  apple_health: 'Apple Health',
+  google_fit: 'Google Fit',
+  health_connect: 'Health Connect',
+  fitbit: 'Fitbit',
+  oura: 'Oura',
+  whoop: 'Whoop',
+  whoop_v2: 'Whoop',
+  garmin: 'Garmin',
+  strava: 'Strava',
+  withings: 'Withings',
+  polar: 'Polar',
+  dexcom: 'Dexcom',
+  freestyle_libre: 'Freestyle Libre',
+  wahoo: 'Wahoo',
+  ultrahuman: 'Ultrahuman',
+  omron: 'Omron',
+  cronometer: 'Cronometer',
+  mapmyfitness: 'MapMyFitness',
+  myfitnesspal: 'MyFitnessPal',
+  runkeeper: 'Runkeeper',
+};
+
+export function friendlyProviderName(provider: string | null | undefined): string {
+  if (!provider) return 'your wearable';
+  const key = provider.trim().toLowerCase();
+  if (PROVIDER_LABELS[key]) return PROVIDER_LABELS[key];
+  // Title-case fallback: 'some_new_provider' → 'Some New Provider'
+  return key
+    .split(/[_\s]+/)
+    .map((w) => (w.length > 0 ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(' ');
 }
 
 // Verify a Vital webhook signature. Vital signs the raw request body

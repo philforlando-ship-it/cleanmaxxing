@@ -220,6 +220,35 @@ export default async function TodayPage({ searchParams }: Props) {
     });
   })();
 
+  // Friendly provider label derived from the row's source. Manual
+  // entries omit the source tag entirely.
+  const ACTIVITY_PROVIDER_LABELS: Record<string, string> = {
+    apple_health_kit: 'Apple Health',
+    apple_health: 'Apple Health',
+    google_fit: 'Google Fit',
+    health_connect: 'Health Connect',
+    fitbit: 'Fitbit',
+    oura: 'Oura',
+    whoop: 'Whoop',
+    whoop_v2: 'Whoop',
+    garmin: 'Garmin',
+    strava: 'Strava',
+    withings: 'Withings',
+    polar: 'Polar',
+    wahoo: 'Wahoo',
+    ultrahuman: 'Ultrahuman',
+  };
+  const activitySourceLabel: string | null = (() => {
+    if (!latestActivity) return null;
+    const src = latestActivity.source.trim().toLowerCase();
+    if (src === 'manual' || src === '') return null;
+    if (ACTIVITY_PROVIDER_LABELS[src]) return ACTIVITY_PROVIDER_LABELS[src];
+    return src
+      .split(/[_\s]+/)
+      .map((w) => (w.length > 0 ? w[0].toUpperCase() + w.slice(1) : w))
+      .join(' ');
+  })();
+
   // Compute the slug set that the WeeklyFocusCard will render today.
   // Mirrors that card's "newPhaseEntries" filter: an onramp is
   // authored AND the user's current phase differs from the last
@@ -552,7 +581,7 @@ export default async function TodayPage({ searchParams }: Props) {
           </div>
         )}
         {/* Quiet passive-activity readout. Renders only when daily_activity
-            has a row — i.e. an Apple Health connection is feeding steps. */}
+            has a row — i.e. a connected wearable is feeding steps. */}
         {!steppedAway && latestActivity && latestActivity.steps != null && (
           <div className="rounded-xl border border-zinc-200 bg-white px-5 py-3 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
             <span className="text-zinc-500">{activityDateLabel}:</span>{' '}
@@ -560,9 +589,11 @@ export default async function TodayPage({ searchParams }: Props) {
               {latestActivity.steps.toLocaleString()}
             </strong>{' '}
             steps
-            <span className="ml-2 text-[10px] uppercase tracking-wider text-zinc-500">
-              Apple Health
-            </span>
+            {activitySourceLabel && (
+              <span className="ml-2 text-[10px] uppercase tracking-wider text-zinc-500">
+                {activitySourceLabel}
+              </span>
+            )}
           </div>
         )}
         {!steppedAway && (
