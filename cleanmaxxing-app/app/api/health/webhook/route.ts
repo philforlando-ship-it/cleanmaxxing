@@ -120,6 +120,17 @@ function isActivityEvent(t: string): boolean {
   );
 }
 
+// Some wearables emit a separate `steps` event family with a
+// time-series payload (intervals + counts) instead of the rolled-up
+// activity summary. We aggregate the intervals into daily totals and
+// upsert just the steps column, preserving any active_calories /
+// intensity values written by an activity event.
+function isStepsEvent(t: string): boolean {
+  return (
+    t.startsWith('daily.data.steps') || t.startsWith('historical.data.steps')
+  );
+}
+
 export async function POST(req: NextRequest) {
   const raw = await req.text();
 
@@ -250,15 +261,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, ignored: 'no_user_match' });
   }
 
-  // Sleep and activity events are notifications: extract the date
-  // range, fetch via the SDK, iterate the response, upsert each row.
-  if (isSleepEvent(eventType) || isActivityEvent(eventType)) {
+  // Sleep, activity, and steps events are notifications: extract the
+  // date range, fetch via the SDK, iterate the response, upsert each
+  // row.
+  const isSleep = isSleepEvent(eventType);
+  const isActivity = isActivityEvent(eventType);
+  const isSteps = isStepsEvent(eventType);
+  if (isSleep || isActivity || isSteps) {
     const notif = (event.data ?? {}) as DataNotification;
     const startDate = notif.start_date;
     const endDate = notif.end_date;
     const providerSlug = notif.provider ?? null;
-    const isSleep = isSleepEvent(eventType);
-    const branchPrefix = isSleep ? 'sleep' : 'activity';
+    const branchPrefix = isSleep ? 'sleep' : isActivity ? 'activity' : 'steps';
 
     if (!startDate || !endDate || !vitalUserId) {
       await logBranch(`${branchPrefix}_incomplete_notification`);
@@ -335,6 +349,86 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         ok: true,
         type: 'sleep_upserted',
+        count: upserted,
+      });
+    }
+
+    // Steps branch — time-series intervals aggregated to per-day
+    // totals. Some wearables emit only this event family (no
+    // comprehensive activity event); we upsert into daily_activity
+    // with just the steps/source columns so any active_calories /
+    // intensity values written by an activity event are preserved.
+    if (isSteps) {
+      let response;
+      try {
+        response = await vital.vitals.steps(vitalUserId, {
+          startDate,
+          endDate,
+          provider: providerSlug ?? undefined,
+        });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'unknown';
+        console.error('[health/webhook] vitals.steps failed', msg);
+        await logBranch('steps_fetch_failed');
+        return NextResponse.json(
+          { error: 'steps_fetch_failed', message: msg },
+          { status: 502 },
+        );
+      }
+
+      // Aggregate intervals into local-day buckets using each row's
+      // timezoneOffset. Steps that span midnight are rare enough at
+      // this granularity that bucketing by the interval's start is
+      // fine.
+      const stepsByDay = new Map<string, number>();
+      for (const row of response ?? []) {
+        const value = row.value ?? 0;
+        if (!value || !row.start) continue;
+        const offsetSec = row.timezoneOffset ?? 0;
+        const localStart = new Date(
+          new Date(row.start).getTime() + offsetSec * 1000,
+        );
+        const day = localStart.toISOString().slice(0, 10);
+        stepsByDay.set(day, (stepsByDay.get(day) ?? 0) + value);
+      }
+
+      const sourceSlug = providerSlug ?? 'unknown';
+      const mapped = vitalProviderToInternal(sourceSlug);
+      const source = mapped?.source ?? sourceSlug;
+
+      let upserted = 0;
+      for (const [date, steps] of stepsByDay) {
+        const { error } = await service.from('daily_activity').upsert(
+          {
+            user_id: cleanmaxxingUserId,
+            date,
+            steps: Math.round(steps),
+            source,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,date' },
+        );
+        if (error) {
+          console.error('[health/webhook] steps upsert failed', error);
+          await logBranch('steps_persist_failed');
+          return NextResponse.json(
+            { error: 'persist_failed', message: error.message },
+            { status: 500 },
+          );
+        }
+        upserted++;
+      }
+
+      await service
+        .from('health_integrations')
+        .update({ last_synced_at: new Date().toISOString() })
+        .eq('user_id', cleanmaxxingUserId)
+        .eq('vital_user_id', vitalUserId);
+
+      await logBranch(`steps_upserted_${upserted}`);
+      return NextResponse.json({
+        ok: true,
+        type: 'steps_upserted',
         count: upserted,
       });
     }
