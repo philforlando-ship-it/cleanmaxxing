@@ -354,10 +354,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Steps branch — time-series intervals aggregated to per-day
-    // totals. Some wearables emit only this event family (no
-    // comprehensive activity event); we upsert into daily_activity
-    // with just the steps/source columns so any active_calories /
-    // intensity values written by an activity event are preserved.
+    // totals using the user's stored IANA timezone. Bucketing by
+    // raw timezoneOffset arithmetic was off by a day in earlier
+    // testing; Intl.DateTimeFormat with the IANA tz is robust to
+    // DST + offset edge cases.
     if (isSteps) {
       let response;
       try {
@@ -376,20 +376,58 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Aggregate intervals into local-day buckets using each row's
-      // timezoneOffset. Steps that span midnight are rare enough at
-      // this granularity that bucketing by the interval's start is
-      // fine.
+      // Look up the user's IANA timezone for local-day bucketing.
+      // Default to America/New_York if unset — same default used
+      // throughout the app.
+      const { data: userRow } = await service
+        .from('users')
+        .select('timezone')
+        .eq('id', cleanmaxxingUserId)
+        .maybeSingle();
+      const userTz =
+        (userRow?.timezone as string | null) ?? 'America/New_York';
+
+      const ymdFmt = new Intl.DateTimeFormat('en-CA', {
+        timeZone: userTz,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      });
+
       const stepsByDay = new Map<string, number>();
+      let exampleRow: {
+        start?: string;
+        timezoneOffset?: number;
+        value?: number;
+        bucketedTo?: string;
+      } | null = null;
       for (const row of response ?? []) {
         const value = row.value ?? 0;
         if (!value || !row.start) continue;
-        const offsetSec = row.timezoneOffset ?? 0;
-        const localStart = new Date(
-          new Date(row.start).getTime() + offsetSec * 1000,
-        );
-        const day = localStart.toISOString().slice(0, 10);
+        const day = ymdFmt.format(new Date(row.start)); // en-CA gives YYYY-MM-DD
         stepsByDay.set(day, (stepsByDay.get(day) ?? 0) + value);
+        if (!exampleRow) {
+          exampleRow = {
+            start:
+              row.start instanceof Date
+                ? row.start.toISOString()
+                : String(row.start),
+            timezoneOffset: row.timezoneOffset,
+            value,
+            bucketedTo: day,
+          };
+        }
+      }
+
+      // Diagnostic — log one example interval so we can verify the
+      // start time + offset + bucketed day make sense if the user
+      // reports another mismatch. Drop alongside the rest of
+      // webhook_debug once ingestion is verified.
+      if (exampleRow) {
+        console.log('[health/webhook] steps example', {
+          userTz,
+          ...exampleRow,
+        });
       }
 
       const sourceSlug = providerSlug ?? 'unknown';
@@ -425,11 +463,12 @@ export async function POST(req: NextRequest) {
         .eq('user_id', cleanmaxxingUserId)
         .eq('vital_user_id', vitalUserId);
 
-      await logBranch(`steps_upserted_${upserted}`);
+      await logBranch(`steps_upserted_${upserted}_tz_${userTz}`);
       return NextResponse.json({
         ok: true,
         type: 'steps_upserted',
         count: upserted,
+        timezone: userTz,
       });
     }
 
