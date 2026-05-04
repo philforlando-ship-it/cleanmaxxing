@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { VitalClient, VitalEnvironment } from '@tryvital/vital-node';
-import crypto from 'node:crypto';
+import { Webhook } from 'svix';
 
 // Centralized Vital server-SDK factory. Reads env vars lazily so a
 // missing key doesn't crash module load — the routes that depend
@@ -73,32 +73,39 @@ export function friendlyProviderName(provider: string | null | undefined): strin
     .join(' ');
 }
 
-// Verify a Vital webhook signature. Vital signs the raw request body
-// with HMAC-SHA256 using your webhook secret and sends the hex digest
-// in the `svix-signature` header (or, on legacy webhook versions,
-// `x-vital-signature`). Returns true on a valid signature, false on
-// any mismatch or missing secret. Uses timing-safe comparison.
+// Verify a Junction (Vital) webhook. Junction uses Svix to deliver
+// webhooks, so the signing scheme is HMAC-SHA256 over
+// `${svix-id}.${svix-timestamp}.${rawBody}` with a base64-encoded
+// signature in the `svix-signature` header. The Svix SDK handles
+// header parsing, prefix stripping, and timing-safe comparison;
+// we just pass the raw body and the relevant headers through.
+//
+// VITAL_WEBHOOK_SECRET should be the full secret as Junction
+// displays it, including the `whsec_` prefix — Svix strips and
+// decodes it internally.
+//
+// Returns true on a valid signature, false on any mismatch, missing
+// header, or missing secret.
 export function verifyVitalWebhook(
   rawBody: string,
-  signatureHeader: string | null,
+  headers: {
+    svixId: string | null;
+    svixTimestamp: string | null;
+    svixSignature: string | null;
+  },
 ): boolean {
   const secret = process.env.VITAL_WEBHOOK_SECRET;
-  if (!secret || !signatureHeader) return false;
-  const expected = crypto
-    .createHmac('sha256', secret)
-    .update(rawBody, 'utf8')
-    .digest('hex');
-  // signatureHeader may include a prefix like "v1," — strip anything
-  // before a comma if present, then compare.
-  const provided = signatureHeader.includes(',')
-    ? signatureHeader.split(',').pop()!.trim()
-    : signatureHeader.trim();
-  if (provided.length !== expected.length) return false;
+  if (!secret) return false;
+  const { svixId, svixTimestamp, svixSignature } = headers;
+  if (!svixId || !svixTimestamp || !svixSignature) return false;
   try {
-    return crypto.timingSafeEqual(
-      Buffer.from(provided, 'hex'),
-      Buffer.from(expected, 'hex'),
-    );
+    const wh = new Webhook(secret);
+    wh.verify(rawBody, {
+      'svix-id': svixId,
+      'svix-timestamp': svixTimestamp,
+      'svix-signature': svixSignature,
+    });
+    return true;
   } catch {
     return false;
   }

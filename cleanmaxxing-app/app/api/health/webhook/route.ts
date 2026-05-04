@@ -61,15 +61,17 @@ function efficiencyToQuality(eff: number | undefined): number | null {
 }
 
 export async function POST(req: NextRequest) {
-  // Read the body as raw text so we can verify HMAC against the
-  // exact bytes Vital signed. JSON.parse comes after.
+  // Read the body as raw text so signature verification operates on
+  // the exact bytes Junction signed. JSON.parse comes after.
   const raw = await req.text();
-  const sigHeader =
-    req.headers.get('svix-signature') ??
-    req.headers.get('x-vital-signature') ??
-    null;
 
-  if (!verifyVitalWebhook(raw, sigHeader)) {
+  if (
+    !verifyVitalWebhook(raw, {
+      svixId: req.headers.get('svix-id'),
+      svixTimestamp: req.headers.get('svix-timestamp'),
+      svixSignature: req.headers.get('svix-signature'),
+    })
+  ) {
     return NextResponse.json(
       { error: 'invalid_signature' },
       { status: 401 },
