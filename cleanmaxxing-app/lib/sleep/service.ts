@@ -13,6 +13,10 @@ export type SleepLog = {
   hours: number;
   quality_1_5: number | null;
   notes: string | null;
+  // 'manual' for user-entered, otherwise the wearable provider slug
+  // (e.g. 'whoop', 'oura'). Used by the /today sleep card to render
+  // a "via [Provider]" tag when the row was auto-filled.
+  source: string;
 };
 
 export type SleepState = {
@@ -40,7 +44,7 @@ export async function getSleepState(
 ): Promise<SleepState> {
   const { data, error } = await supabase
     .from('sleep_logs')
-    .select('night_of, hours, quality_1_5, notes')
+    .select('night_of, hours, quality_1_5, notes, source')
     .eq('user_id', userId)
     .order('night_of', { ascending: false })
     .limit(RECENT_LIMIT);
@@ -60,12 +64,14 @@ export async function getSleepState(
       hours: number | string;
       quality_1_5: number | null;
       notes: string | null;
+      source: string | null;
     };
     return {
       night_of: row.night_of,
       hours: typeof row.hours === 'string' ? Number(row.hours) : row.hours,
       quality_1_5: row.quality_1_5,
       notes: row.notes,
+      source: row.source ?? 'manual',
     };
   });
 

@@ -30,6 +30,36 @@ const QUALITY_LABELS: Record<number, string> = {
   5: 'Great',
 };
 
+// Friendly labels for the most common Junction provider slugs.
+// Kept in sync with the equivalent map in lib/vital/client (server-
+// only, can't be imported from a client component).
+const PROVIDER_LABELS: Record<string, string> = {
+  apple_health_kit: 'Apple Health',
+  apple_health: 'Apple Health',
+  google_fit: 'Google Fit',
+  health_connect: 'Health Connect',
+  fitbit: 'Fitbit',
+  oura: 'Oura',
+  whoop: 'Whoop',
+  whoop_v2: 'Whoop',
+  garmin: 'Garmin',
+  strava: 'Strava',
+  withings: 'Withings',
+  polar: 'Polar',
+  wahoo: 'Wahoo',
+  ultrahuman: 'Ultrahuman',
+};
+
+function providerLabel(source: string): string | null {
+  if (!source || source === 'manual') return null;
+  const key = source.trim().toLowerCase();
+  if (PROVIDER_LABELS[key]) return PROVIDER_LABELS[key];
+  return key
+    .split(/[_\s]+/)
+    .map((w) => (w.length > 0 ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(' ');
+}
+
 export function SleepLogCard({
   recent,
   rollingAvgHours,
@@ -119,6 +149,11 @@ export function SleepLogCard({
                 </span>
               )}
             </span>
+            {providerLabel(existing.source) && (
+              <span className="text-[10px] uppercase tracking-wider text-zinc-500">
+                via {providerLabel(existing.source)}
+              </span>
+            )}
             {rollingCount > 1 && rollingAvgHours !== null && (
               <span className="text-xs text-zinc-500 dark:text-zinc-400">
                 {rollingAvgHours}h avg / {rollingCount} nights

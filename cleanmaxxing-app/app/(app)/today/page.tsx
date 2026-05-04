@@ -203,17 +203,14 @@ export default async function TodayPage({ searchParams }: Props) {
     chat_execution_prompt_acked: boolean | null;
   }>;
 
-  // Health integration state. "Fresh" means the last webhook event
-  // arrived within the last 24 hours — used to suppress the manual
-  // sleep prompt because Vital is presumed to be feeding sleep_logs.
-  // A stale integration falls back to the manual prompt automatically.
-  const healthIntegration = healthIntegrationRow as
-    | { provider: string | null; last_synced_at: string | null }
-    | null;
-  const vitalSleepFresh = healthIntegration?.last_synced_at
-    ? Date.now() - new Date(healthIntegration.last_synced_at).getTime() <
-      24 * 60 * 60 * 1000
-    : false;
+  // Note on health integration state: we used to suppress the
+  // manual SleepLogCard when a Vital sync was "fresh" (synced in
+  // last 24h). That hid sleep entirely from /today on days the
+  // wearable hadn't pushed last-night's data yet. Now the
+  // SleepLogCard renders unconditionally and adapts based on
+  // whether sleep_logs has a row for last night — Vital-sourced
+  // rows display values + "via [Provider]" tag; absent rows show
+  // the manual form.
 
   const latestActivity = latestActivityRow as
     | {
@@ -616,12 +613,13 @@ export default async function TodayPage({ searchParams }: Props) {
             for reflection) and the chat has no tracking side effects
             (asking Mister P something isn't the same as
             self-surveillance). */}
-        {/* Vital-sourced sleep auto-fills the sleep_logs row, so the
-            manual SleepLogCard becomes redundant when an Apple Health
-            integration has synced inside the last 24 hours. We hide
-            the whole card in that case; if the sync is stale (or no
-            integration is connected) the manual card returns. */}
-        {!steppedAway && !vitalSleepFresh && (
+        {/* SleepLogCard always renders. When a connected wearable has
+            populated last night's sleep_logs row, the card shows the
+            captured values + a "via [Provider]" tag and the Edit
+            button gives the user override control. When no row exists
+            (no wearable connected, or sync hasn't caught up), the
+            card shows the manual entry form. */}
+        {!steppedAway && (
           <div id="sleep-log" className="scroll-mt-16">
             <SleepLogCard
               recent={sleepState.recent}
