@@ -42,12 +42,17 @@ type ConnectionData = {
   source?: ClientFacingProvider;
 };
 
+// The wire format is snake_case (Junction's API surface) even
+// though their TypeScript SDK types are camelCase — Fern handles
+// the case translation in the SDK. We're parsing JSON directly,
+// so we read snake_case keys. Only the inner provider object's
+// keys are short single words and look the same in both styles.
 type SleepPayload = {
-  userId?: string;
-  calendarDate?: string; // YYYY-MM-DD
-  date?: string; // legacy ISO timestamp
-  bedtimeStart?: string;
-  bedtimeStop?: string;
+  user_id?: string;
+  calendar_date?: string; // YYYY-MM-DD
+  date?: string; // legacy ISO timestamp fallback
+  bedtime_start?: string;
+  bedtime_stop?: string;
   duration?: number; // seconds
   // 1..100 score, available on Withings/Oura/Whoop/Garmin. Preferred
   // over efficiency when present.
@@ -57,20 +62,20 @@ type SleepPayload = {
 };
 
 type ActivityPayload = {
-  userId?: string;
-  calendarDate?: string;
+  user_id?: string;
+  calendar_date?: string;
   date?: string;
   steps?: number;
   source?: ClientFacingSource;
 };
 
 type WebhookEvent = {
-  eventType?: string;
-  // Legacy fallback name used by older webhook versions.
   event_type?: string;
-  userId?: string;
-  clientUserId?: string;
-  teamId?: string;
+  // Some legacy versions used eventType; tolerate both.
+  eventType?: string;
+  user_id?: string;
+  client_user_id?: string;
+  team_id?: string;
   data?: ConnectionData | SleepPayload | ActivityPayload;
 };
 
@@ -143,8 +148,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'invalid_json' }, { status: 400 });
   }
 
-  const eventType = event.eventType ?? event.event_type ?? '';
-  const vitalUserId = event.userId ?? null;
+  const eventType = event.event_type ?? event.eventType ?? '';
+  const vitalUserId = event.user_id ?? null;
 
   const service = createServiceClient();
 
@@ -162,7 +167,7 @@ export async function POST(req: NextRequest) {
 
   // ---- Provider connection events ----
   if (CONNECTED_EVENTS.has(eventType)) {
-    const clientUserId = event.clientUserId ?? null;
+    const clientUserId = event.client_user_id ?? null;
     const data = (event.data ?? {}) as ConnectionData;
     // Junction lifted `provider` into a nested object; the legacy
     // `source` field (deprecated post-2024-01) still appears in
@@ -226,15 +231,15 @@ export async function POST(req: NextRequest) {
     const mapped = sourceSlug ? vitalProviderToInternal(sourceSlug) : null;
     const source = mapped?.source ?? sourceSlug ?? 'unknown';
     const nightOf =
-      data.calendarDate ??
+      data.calendar_date ??
       (data.date ? new Date(data.date).toISOString().slice(0, 10) : null);
     const durationSec =
       data.duration ??
-      (data.bedtimeStart && data.bedtimeStop
+      (data.bedtime_start && data.bedtime_stop
         ? Math.max(
             0,
-            (new Date(data.bedtimeStop).getTime() -
-              new Date(data.bedtimeStart).getTime()) /
+            (new Date(data.bedtime_stop).getTime() -
+              new Date(data.bedtime_start).getTime()) /
               1000,
           )
         : null);
@@ -279,7 +284,7 @@ export async function POST(req: NextRequest) {
     const mapped = sourceSlug ? vitalProviderToInternal(sourceSlug) : null;
     const source = mapped?.source ?? sourceSlug ?? 'unknown';
     const date =
-      data.calendarDate ??
+      data.calendar_date ??
       (data.date ? new Date(data.date).toISOString().slice(0, 10) : null);
     const steps = data.steps ?? null;
     if (!date || steps == null) {
