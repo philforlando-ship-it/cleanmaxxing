@@ -110,15 +110,16 @@ export function FirstConversationCard({ initial }: Props) {
         setAnswers((prev) => ({ ...prev, [current.key]: trimmed }));
         setInput('');
         if (isLast) {
-          // Show farewell briefly before the parent re-render
-          // unmounts the card via the completion gate.
           setShowFarewell(true);
-          setTimeout(() => router.refresh(), 1200);
         }
       } catch (err) {
         setError((err as Error).message);
       }
     });
+  }
+
+  function dismiss() {
+    router.refresh();
   }
 
   return (
@@ -183,6 +184,18 @@ export function FirstConversationCard({ initial }: Props) {
                 : 'Next'}
           </button>
         </form>
+      )}
+
+      {isComplete && showFarewell && (
+        <div className="mt-5 flex justify-end">
+          <button
+            type="button"
+            onClick={dismiss}
+            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          >
+            Got it
+          </button>
+        </div>
       )}
     </section>
   );
