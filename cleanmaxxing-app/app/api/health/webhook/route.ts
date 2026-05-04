@@ -158,6 +158,16 @@ export async function POST(req: NextRequest) {
   const eventType = event.event_type ?? event.eventType ?? '';
   const vitalUserId = event.user_id ?? null;
 
+  // Temporary debug log — surfaces in Vercel Runtime Logs so we can
+  // see what event types Junction is firing and which branch each
+  // hit takes. Remove once ingestion is verified working.
+  console.log('[health/webhook] received', {
+    eventType,
+    hasVitalUserId: Boolean(vitalUserId),
+    bodyKeys: Object.keys(event),
+    dataKeys: event.data ? Object.keys(event.data as object) : [],
+  });
+
   const service = createServiceClient();
 
   // Resolve our user_id from the Junction user_id. Used by data
@@ -349,5 +359,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, type: 'activity_upserted' });
   }
 
+  console.log('[health/webhook] no branch matched', { eventType });
   return NextResponse.json({ ok: true, ignored: eventType || 'unknown' });
 }
