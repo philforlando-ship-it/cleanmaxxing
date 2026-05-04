@@ -1,26 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
-import { verifyVitalWebhook, vitalProviderToInternal } from '@/lib/vital/client';
+import {
+  verifyVitalWebhook,
+  vitalProviderToInternal,
+  getVitalClient,
+} from '@/lib/vital/client';
 
-// Junction (Vital) webhook receiver. Verifies the Svix signature,
-// then routes the event by type. Field names follow Junction's
-// SDK type definitions exactly (camelCase, with provider info
-// living inside the data block):
+// Junction (Vital) webhook receiver.
 //
-//   provider.connection.created    → upsert health_integrations
-//   provider.connection.deleted    → delete health_integrations
-//   *.data.sleep.created/updated   → upsert sleep_logs
-//   *.data.activity.created/updated → upsert daily_activity
+// IMPORTANT: Junction's data webhooks are notifications, not data.
+// `daily.data.activity.created` carries `{user_id, start_date,
+// end_date, is_final, provider}` — telling us "fresh data is
+// available for this user/provider in this date range". To get
+// the actual rows we follow up with `vital.activity.get` /
+// `vital.sleep.get`. Connection events (provider.connection.*)
+// carry their data inline.
 //
-// Both `daily.data.*` (live updates) and `historical.data.*`
-// (backfill on first connect) are matched.
+// Provider connection events:
+//   provider.connection.created — body fields snake_case at top
+//     level (event_type, user_id, client_user_id, team_id, data);
+//     data.provider is a ClientFacingProvider object with
+//     {name, slug, logo}.
+//   provider.connection.deleted — same shape, removes our row.
 //
-// Source of truth for shapes:
-//   ClientFacingProviderConnectionCreatedEvent
-//   ClientFacingActivityChanged + ClientFacingActivity
-//   ClientFacingSleepChanged + ClientFacingSleep
-//   ClientFacingProvider, ClientFacingSource
-// (all in @tryvital/vital-node)
+// Data notifications (sleep, activity):
+//   daily.data.<type>.created/updated — live updates
+//   historical.data.<type>.created — first-connect backfill
+//   data.start_date / data.end_date define the range to fetch.
+//   data.provider is a string slug here (not the object form).
+//
+// SDK API responses come back camelCase via Fern serialization
+// (ClientFacingActivity.calendarDate / .caloriesActive / .low /
+// .medium / .high / .source.provider; ClientFacingSleep similar).
 
 type ClientFacingProvider = {
   name: string;
@@ -42,38 +53,15 @@ type ConnectionData = {
   source?: ClientFacingProvider;
 };
 
-// The wire format is snake_case (Junction's API surface) even
-// though their TypeScript SDK types are camelCase — Fern handles
-// the case translation in the SDK. We're parsing JSON directly,
-// so we read snake_case keys. Only the inner provider object's
-// keys are short single words and look the same in both styles.
-type SleepPayload = {
+// Data webhooks from Junction are notifications: they tell us
+// "fresh data exists for this user/provider in this date range",
+// not the data itself.
+type DataNotification = {
   user_id?: string;
-  calendar_date?: string; // YYYY-MM-DD
-  date?: string; // legacy ISO timestamp fallback
-  bedtime_start?: string;
-  bedtime_stop?: string;
-  duration?: number; // seconds
-  // 1..100 score, available on Withings/Oura/Whoop/Garmin. Preferred
-  // over efficiency when present.
-  score?: number;
-  efficiency?: number;
-  source?: ClientFacingSource;
-};
-
-type ActivityPayload = {
-  user_id?: string;
-  calendar_date?: string;
-  date?: string;
-  steps?: number;
-  // Active calories burned from physical activity (excludes BMR).
-  calories_active?: number;
-  // Minutes spent at each intensity level. WHO 150-min/week metric
-  // is the sum of medium + high across the last 7 days.
-  low?: number;
-  medium?: number;
-  high?: number;
-  source?: ClientFacingSource;
+  start_date?: string;
+  end_date?: string;
+  is_final?: boolean;
+  provider?: string;
 };
 
 type WebhookEvent = {
@@ -83,7 +71,7 @@ type WebhookEvent = {
   user_id?: string;
   client_user_id?: string;
   team_id?: string;
-  data?: ConnectionData | SleepPayload | ActivityPayload;
+  data?: ConnectionData | DataNotification;
 };
 
 // Map a 1..100 sleep score (Withings/Oura/Whoop/Garmin) to our 1..5
@@ -262,50 +250,165 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, ignored: 'no_user_match' });
   }
 
-  if (isSleepEvent(eventType)) {
-    const data = (event.data ?? {}) as SleepPayload;
-    const sourceSlug = data.source?.provider ?? null;
-    const mapped = sourceSlug ? vitalProviderToInternal(sourceSlug) : null;
-    const source = mapped?.source ?? sourceSlug ?? 'unknown';
-    const nightOf =
-      data.calendar_date ??
-      (data.date ? new Date(data.date).toISOString().slice(0, 10) : null);
-    const durationSec =
-      data.duration ??
-      (data.bedtime_start && data.bedtime_stop
-        ? Math.max(
-            0,
-            (new Date(data.bedtime_stop).getTime() -
-              new Date(data.bedtime_start).getTime()) /
-              1000,
-          )
-        : null);
-    if (!nightOf || durationSec == null) {
-      await logBranch('incomplete_sleep');
-      return NextResponse.json({ ok: true, ignored: 'incomplete_sleep' });
-    }
-    const hours = Math.round((durationSec / 3600) * 10) / 10;
-    const quality =
-      scoreToQuality(data.score) ?? efficiencyToQuality(data.efficiency);
+  // Sleep and activity events are notifications: extract the date
+  // range, fetch via the SDK, iterate the response, upsert each row.
+  if (isSleepEvent(eventType) || isActivityEvent(eventType)) {
+    const notif = (event.data ?? {}) as DataNotification;
+    const startDate = notif.start_date;
+    const endDate = notif.end_date;
+    const providerSlug = notif.provider ?? null;
+    const isSleep = isSleepEvent(eventType);
+    const branchPrefix = isSleep ? 'sleep' : 'activity';
 
-    const { error } = await service.from('sleep_logs').upsert(
-      {
-        user_id: cleanmaxxingUserId,
-        night_of: nightOf,
-        hours,
-        quality_1_5: quality,
-        source,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id,night_of' },
-    );
-    if (error) {
-      console.error('[health/webhook] failed to upsert sleep_logs', error);
-      await logBranch('sleep_persist_failed');
+    if (!startDate || !endDate || !vitalUserId) {
+      await logBranch(`${branchPrefix}_incomplete_notification`);
+      return NextResponse.json({
+        ok: true,
+        ignored: `incomplete_${branchPrefix}_notification`,
+      });
+    }
+
+    const vital = getVitalClient();
+    if (!vital) {
+      await logBranch(`${branchPrefix}_vital_not_configured`);
+      return NextResponse.json({ ok: true, ignored: 'vital_not_configured' });
+    }
+
+    if (isSleep) {
+      let response;
+      try {
+        response = await vital.sleep.get(vitalUserId, {
+          startDate,
+          endDate,
+          provider: providerSlug ?? undefined,
+        });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'unknown';
+        console.error('[health/webhook] sleep.get failed', msg);
+        await logBranch('sleep_fetch_failed');
+        return NextResponse.json(
+          { error: 'sleep_fetch_failed', message: msg },
+          { status: 502 },
+        );
+      }
+
+      let upserted = 0;
+      for (const row of response.sleep ?? []) {
+        const nightOf = row.calendarDate;
+        const durationSec = row.duration;
+        if (!nightOf || durationSec == null) continue;
+        const hours = Math.round((durationSec / 3600) * 10) / 10;
+        const quality = scoreToQuality(row.score);
+        const sourceSlug = row.source?.provider ?? providerSlug ?? 'unknown';
+        const mapped = vitalProviderToInternal(sourceSlug);
+        const source = mapped?.source ?? sourceSlug;
+
+        const { error } = await service.from('sleep_logs').upsert(
+          {
+            user_id: cleanmaxxingUserId,
+            night_of: nightOf,
+            hours,
+            quality_1_5: quality,
+            source,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,night_of' },
+        );
+        if (error) {
+          console.error('[health/webhook] sleep upsert failed', error);
+          await logBranch('sleep_persist_failed');
+          return NextResponse.json(
+            { error: 'persist_failed', message: error.message },
+            { status: 500 },
+          );
+        }
+        upserted++;
+      }
+
+      await service
+        .from('health_integrations')
+        .update({ last_synced_at: new Date().toISOString() })
+        .eq('user_id', cleanmaxxingUserId)
+        .eq('vital_user_id', vitalUserId);
+
+      await logBranch(`sleep_upserted_${upserted}`);
+      return NextResponse.json({
+        ok: true,
+        type: 'sleep_upserted',
+        count: upserted,
+      });
+    }
+
+    // Activity branch.
+    let response;
+    try {
+      response = await vital.activity.get(vitalUserId, {
+        startDate,
+        endDate,
+        provider: providerSlug ?? undefined,
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'unknown';
+      console.error('[health/webhook] activity.get failed', msg);
+      await logBranch('activity_fetch_failed');
       return NextResponse.json(
-        { error: 'persist_failed', message: error.message },
-        { status: 500 },
+        { error: 'activity_fetch_failed', message: msg },
+        { status: 502 },
       );
+    }
+
+    let upserted = 0;
+    for (const row of response.activity ?? []) {
+      const date = row.calendarDate;
+      const steps = row.steps ?? null;
+      if (!date || steps == null) continue;
+
+      // Junction sends some intensity fields as floats for sub-minute
+      // precision; round to int so the columns accept them.
+      const activeCalories =
+        row.caloriesActive != null && Number.isFinite(row.caloriesActive)
+          ? Math.round(row.caloriesActive)
+          : null;
+      const lowMinutes =
+        row.low != null && Number.isFinite(row.low)
+          ? Math.round(row.low)
+          : null;
+      const mediumMinutes =
+        row.medium != null && Number.isFinite(row.medium)
+          ? Math.round(row.medium)
+          : null;
+      const highMinutes =
+        row.high != null && Number.isFinite(row.high)
+          ? Math.round(row.high)
+          : null;
+
+      const sourceSlug = row.source?.provider ?? providerSlug ?? 'unknown';
+      const mapped = vitalProviderToInternal(sourceSlug);
+      const source = mapped?.source ?? sourceSlug;
+
+      const { error } = await service.from('daily_activity').upsert(
+        {
+          user_id: cleanmaxxingUserId,
+          date,
+          steps,
+          active_calories: activeCalories,
+          low_minutes: lowMinutes,
+          medium_minutes: mediumMinutes,
+          high_minutes: highMinutes,
+          source,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id,date' },
+      );
+      if (error) {
+        console.error('[health/webhook] activity upsert failed', error);
+        await logBranch('activity_persist_failed');
+        return NextResponse.json(
+          { error: 'persist_failed', message: error.message },
+          { status: 500 },
+        );
+      }
+      upserted++;
     }
 
     await service
@@ -314,75 +417,12 @@ export async function POST(req: NextRequest) {
       .eq('user_id', cleanmaxxingUserId)
       .eq('vital_user_id', vitalUserId);
 
-    await logBranch('sleep_upserted');
-    return NextResponse.json({ ok: true, type: 'sleep_upserted' });
-  }
-
-  if (isActivityEvent(eventType)) {
-    const data = (event.data ?? {}) as ActivityPayload;
-    const sourceSlug = data.source?.provider ?? null;
-    const mapped = sourceSlug ? vitalProviderToInternal(sourceSlug) : null;
-    const source = mapped?.source ?? sourceSlug ?? 'unknown';
-    const date =
-      data.calendar_date ??
-      (data.date ? new Date(data.date).toISOString().slice(0, 10) : null);
-    const steps = data.steps ?? null;
-    if (!date || steps == null) {
-      await logBranch('incomplete_activity');
-      return NextResponse.json({ ok: true, ignored: 'incomplete_activity' });
-    }
-
-    // Round to integers so the int columns accept the values.
-    // Junction sends some of these as floats for sub-minute precision
-    // (e.g. low: 47.6); rounding gives us same-day comparability.
-    const activeCalories =
-      data.calories_active != null && Number.isFinite(data.calories_active)
-        ? Math.round(data.calories_active)
-        : null;
-    const lowMinutes =
-      data.low != null && Number.isFinite(data.low)
-        ? Math.round(data.low)
-        : null;
-    const mediumMinutes =
-      data.medium != null && Number.isFinite(data.medium)
-        ? Math.round(data.medium)
-        : null;
-    const highMinutes =
-      data.high != null && Number.isFinite(data.high)
-        ? Math.round(data.high)
-        : null;
-
-    const { error } = await service.from('daily_activity').upsert(
-      {
-        user_id: cleanmaxxingUserId,
-        date,
-        steps,
-        active_calories: activeCalories,
-        low_minutes: lowMinutes,
-        medium_minutes: mediumMinutes,
-        high_minutes: highMinutes,
-        source,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id,date' },
-    );
-    if (error) {
-      console.error('[health/webhook] failed to upsert daily_activity', error);
-      await logBranch('activity_persist_failed');
-      return NextResponse.json(
-        { error: 'persist_failed', message: error.message },
-        { status: 500 },
-      );
-    }
-
-    await service
-      .from('health_integrations')
-      .update({ last_synced_at: new Date().toISOString() })
-      .eq('user_id', cleanmaxxingUserId)
-      .eq('vital_user_id', vitalUserId);
-
-    await logBranch('activity_upserted');
-    return NextResponse.json({ ok: true, type: 'activity_upserted' });
+    await logBranch(`activity_upserted_${upserted}`);
+    return NextResponse.json({
+      ok: true,
+      type: 'activity_upserted',
+      count: upserted,
+    });
   }
 
   console.log('[health/webhook] no branch matched', { eventType });
