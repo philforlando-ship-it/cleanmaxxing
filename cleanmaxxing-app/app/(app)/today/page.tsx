@@ -125,6 +125,7 @@ export default async function TodayPage({ searchParams }: Props) {
     { data: photoRowsRaw },
     { data: healthIntegrationRow },
     { data: latestActivityRow },
+    { data: weeklyActivityRows },
   ] = await Promise.all([
     getTodayCheckInState(supabase, user.id, timezone),
     getWeeklyReflectionState(supabase, user.id),
@@ -161,13 +162,29 @@ export default async function TodayPage({ searchParams }: Props) {
       .order('connected_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    // Most recent daily_activity row. Pulls active calories alongside
+    // steps so the daily readout can show both signals.
     supabase
       .from('daily_activity')
-      .select('date, steps, source')
+      .select('date, steps, active_calories, source')
       .eq('user_id', user.id)
       .order('date', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    // Last 7 days of intensity minutes. Drives the weekly
+    // moderate-or-vigorous metric (WHO 150-min/week target). Bounded
+    // query — 7 rows max per user.
+    supabase
+      .from('daily_activity')
+      .select('date, medium_minutes, high_minutes')
+      .eq('user_id', user.id)
+      .gte(
+        'date',
+        new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 10),
+      )
+      .order('date', { ascending: false }),
   ]);
   // Cast to the WeeklyFocusCard's ActiveGoal shape. The supabase
   // client's inferred response type drops columns it doesn't have
@@ -199,8 +216,34 @@ export default async function TodayPage({ searchParams }: Props) {
     : false;
 
   const latestActivity = latestActivityRow as
-    | { date: string; steps: number | null; source: string }
+    | {
+        date: string;
+        steps: number | null;
+        active_calories: number | null;
+        source: string;
+      }
     | null;
+
+  // Sum medium + high intensity minutes across the last 7 days.
+  // WHO recommends 150 minutes of moderate-or-vigorous per week.
+  // Null when no rows have any intensity data populated (older
+  // wearables / old rows pre-migration 0033).
+  type WeeklyActivityRow = {
+    date: string;
+    medium_minutes: number | null;
+    high_minutes: number | null;
+  };
+  const weeklyRows = (weeklyActivityRows ?? []) as WeeklyActivityRow[];
+  const weeklyHasIntensity = weeklyRows.some(
+    (r) => r.medium_minutes != null || r.high_minutes != null,
+  );
+  const weeklyModerateOrVigorousMinutes: number | null = weeklyHasIntensity
+    ? weeklyRows.reduce(
+        (sum, r) => sum + (r.medium_minutes ?? 0) + (r.high_minutes ?? 0),
+        0,
+      )
+    : null;
+  const WEEKLY_TARGET_MINUTES = 150;
 
   // Date label for the activity line — "Yesterday" when the row is
   // yesterday in the user's timezone, otherwise the short date.
@@ -580,19 +623,42 @@ export default async function TodayPage({ searchParams }: Props) {
             />
           </div>
         )}
-        {/* Quiet passive-activity readout. Renders only when daily_activity
-            has a row — i.e. a connected wearable is feeding steps. */}
+        {/* Passive-activity readout. Renders only when daily_activity
+            has a row — i.e. a connected wearable is feeding steps.
+            Two lines: yesterday's steps + active calories on the
+            first; this week's moderate-or-vigorous total against the
+            WHO 150-min target on the second. */}
         {!steppedAway && latestActivity && latestActivity.steps != null && (
           <div className="rounded-xl border border-zinc-200 bg-white px-5 py-3 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
-            <span className="text-zinc-500">{activityDateLabel}:</span>{' '}
-            <strong className="font-medium text-zinc-900 dark:text-zinc-100">
-              {latestActivity.steps.toLocaleString()}
-            </strong>{' '}
-            steps
-            {activitySourceLabel && (
-              <span className="ml-2 text-[10px] uppercase tracking-wider text-zinc-500">
-                {activitySourceLabel}
-              </span>
+            <div>
+              <span className="text-zinc-500">{activityDateLabel}:</span>{' '}
+              <strong className="font-medium text-zinc-900 dark:text-zinc-100">
+                {latestActivity.steps.toLocaleString()}
+              </strong>{' '}
+              steps
+              {latestActivity.active_calories != null && (
+                <>
+                  {' · '}
+                  <strong className="font-medium text-zinc-900 dark:text-zinc-100">
+                    {latestActivity.active_calories.toLocaleString()}
+                  </strong>{' '}
+                  active cal
+                </>
+              )}
+              {activitySourceLabel && (
+                <span className="ml-2 text-[10px] uppercase tracking-wider text-zinc-500">
+                  {activitySourceLabel}
+                </span>
+              )}
+            </div>
+            {weeklyModerateOrVigorousMinutes != null && (
+              <div className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+                <span className="text-zinc-500">This week:</span>{' '}
+                <strong className="font-medium text-zinc-900 dark:text-zinc-100">
+                  {weeklyModerateOrVigorousMinutes}
+                </strong>{' '}
+                / {WEEKLY_TARGET_MINUTES} min moderate-or-vigorous
+              </div>
             )}
           </div>
         )}

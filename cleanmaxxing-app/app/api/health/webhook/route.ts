@@ -66,6 +66,13 @@ type ActivityPayload = {
   calendar_date?: string;
   date?: string;
   steps?: number;
+  // Active calories burned from physical activity (excludes BMR).
+  calories_active?: number;
+  // Minutes spent at each intensity level. WHO 150-min/week metric
+  // is the sum of medium + high across the last 7 days.
+  low?: number;
+  medium?: number;
+  high?: number;
   source?: ClientFacingSource;
 };
 
@@ -291,11 +298,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, ignored: 'incomplete_activity' });
     }
 
+    // Round to integers so the int columns accept the values.
+    // Junction sends some of these as floats for sub-minute precision
+    // (e.g. low: 47.6); rounding gives us same-day comparability.
+    const activeCalories =
+      data.calories_active != null && Number.isFinite(data.calories_active)
+        ? Math.round(data.calories_active)
+        : null;
+    const lowMinutes =
+      data.low != null && Number.isFinite(data.low)
+        ? Math.round(data.low)
+        : null;
+    const mediumMinutes =
+      data.medium != null && Number.isFinite(data.medium)
+        ? Math.round(data.medium)
+        : null;
+    const highMinutes =
+      data.high != null && Number.isFinite(data.high)
+        ? Math.round(data.high)
+        : null;
+
     const { error } = await service.from('daily_activity').upsert(
       {
         user_id: cleanmaxxingUserId,
         date,
         steps,
+        active_calories: activeCalories,
+        low_minutes: lowMinutes,
+        medium_minutes: mediumMinutes,
+        high_minutes: highMinutes,
         source,
         updated_at: new Date().toISOString(),
       },
