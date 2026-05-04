@@ -2,55 +2,57 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { verifyVitalWebhook, vitalProviderToInternal } from '@/lib/vital/client';
 
-// Vital webhook receiver. Verifies the HMAC signature, then routes
-// the event by type:
+// Junction (Vital) webhook receiver. Verifies the Svix signature,
+// then routes the event by type:
 //
-//   daily.data.sleep.created/updated     → upsert sleep_logs
-//   daily.data.activity.created/updated  → upsert daily_activity
-//   provider.connected / .disconnected   → updates health_integrations
+//   provider.connection.created    → upsert health_integrations
+//   provider.connection.deleted    → delete health_integrations
+//   *.data.sleep.created/updated   → upsert sleep_logs
+//   *.data.activity.created/updated → upsert daily_activity
 //
-// We deliberately ignore everything else for v1. New event types
-// drop into the no-op tail without breaking ingestion.
+// Both `daily.data.*` (live updates) and `historical.data.*`
+// (backfill on first connect) are matched. Anything else is
+// accepted with a 200 + `ignored:` body so Junction's retry
+// machine doesn't loop.
 //
-// The route uses the service-role client because RLS policies on
-// these tables only allow self-writes from the authed user; webhook
-// events arrive without any user context.
+// The payload shape varies across Junction versions: some events
+// carry their fields top-level, others nest them in `data`. We
+// pull from both candidate locations on every read.
 
-type VitalSleepData = {
+type SleepData = {
   source?: { provider?: string };
   user_id?: string;
-  // Vital normalizes night_of as YYYY-MM-DD in the user's timezone.
-  // Field names vary across SDK versions; we pull a few candidates.
   date?: string;
   bedtime_start?: string;
   bedtime_end?: string;
   duration?: number; // seconds
   efficiency?: number; // 0..1
-  // Some providers expose a 1..100 score; we map to 1..5 for our
-  // existing quality_1_5 column. Others only have efficiency.
-  hr_average?: number;
 };
 
-type VitalActivityData = {
+type ActivityData = {
   source?: { provider?: string };
   user_id?: string;
   date?: string;
   steps?: number;
 };
 
-type VitalEvent = {
-  event_type?: string;
-  user_id?: string;
-  data?: VitalSleepData | VitalActivityData;
-  // Provider-connection events use a different shape:
-  provider?: string;
+type ConnectionData = {
   client_user_id?: string;
+  user_id?: string;
+  provider?: string;
 };
 
-// Convert sleep efficiency (0..1) into a coarse 1..5 quality score
-// matching the existing manual-entry scale. Conservative bands —
-// efficiency rarely runs below 0.7 and rarely above 0.95 in real
-// data. Returns null if efficiency is missing.
+type RawEvent = {
+  // Some Junction versions use `type`, others `event_type`.
+  type?: string;
+  event_type?: string;
+  // Some put identifiers at the top level, others nest them under `data`.
+  user_id?: string;
+  client_user_id?: string;
+  provider?: string;
+  data?: SleepData | ActivityData | ConnectionData | Record<string, unknown>;
+};
+
 function efficiencyToQuality(eff: number | undefined): number | null {
   if (eff == null || !Number.isFinite(eff)) return null;
   if (eff < 0.7) return 1;
@@ -58,6 +60,43 @@ function efficiencyToQuality(eff: number | undefined): number | null {
   if (eff < 0.85) return 3;
   if (eff < 0.92) return 4;
   return 5;
+}
+
+// Pull a string field from either the top-level object or its nested
+// `data` payload. Junction varies; this hides the variance.
+function pickStr(event: RawEvent, key: keyof ConnectionData): string | null {
+  const top = (event as Record<string, unknown>)[key];
+  if (typeof top === 'string' && top.length > 0) return top;
+  const nested = (event.data as Record<string, unknown> | undefined)?.[key];
+  if (typeof nested === 'string' && nested.length > 0) return nested;
+  return null;
+}
+
+const CONNECTED_EVENTS = new Set([
+  'provider.connection.created',
+  'historical.provider.connection.created',
+  // Older naming kept as fallbacks in case Junction has multiple
+  // versions in flight on the same project.
+  'provider.connected',
+  'historical.provider.connected',
+]);
+
+const DISCONNECTED_EVENTS = new Set([
+  'provider.connection.deleted',
+  'provider.disconnected',
+]);
+
+function isSleepEvent(t: string): boolean {
+  return (
+    t.startsWith('daily.data.sleep') || t.startsWith('historical.data.sleep')
+  );
+}
+
+function isActivityEvent(t: string): boolean {
+  return (
+    t.startsWith('daily.data.activity') ||
+    t.startsWith('historical.data.activity')
+  );
 }
 
 export async function POST(req: NextRequest) {
@@ -78,21 +117,21 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let event: VitalEvent;
+  let event: RawEvent;
   try {
-    event = JSON.parse(raw) as VitalEvent;
+    event = JSON.parse(raw) as RawEvent;
   } catch {
     return NextResponse.json({ error: 'invalid_json' }, { status: 400 });
   }
 
+  const eventType = event.type ?? event.event_type ?? '';
+  const vitalUserId = pickStr(event, 'user_id');
+
   const service = createServiceClient();
 
-  const eventType = event.event_type ?? '';
-  const vitalUserId = event.user_id ?? null;
-
-  // Resolve our user_id from the Vital user_id via the integrations
-  // table. Without a matching row we drop the event — the user has
-  // already disconnected on our side and Vital just hasn't caught up.
+  // Resolve our user_id from the Junction user_id. For connection
+  // events we also have client_user_id directly, which is more
+  // reliable; for data events the integration row is the only path.
   let cleanmaxxingUserId: string | null = null;
   if (vitalUserId) {
     const { data: row } = await service
@@ -103,23 +142,24 @@ export async function POST(req: NextRequest) {
     cleanmaxxingUserId = (row?.user_id as string | null) ?? null;
   }
 
-  // Provider-connection events. We upsert health_integrations from
-  // the link callback flow. client_user_id is what we set in
-  // user.create; that's our user.id.
-  if (
-    eventType === 'provider.connected' ||
-    eventType === 'historical.provider.connected'
-  ) {
-    const clientUserId = event.client_user_id ?? null;
-    const vitalProvider = event.provider ?? null;
+  // ---- Provider connection events ----
+  if (CONNECTED_EVENTS.has(eventType)) {
+    const clientUserId = pickStr(event, 'client_user_id');
+    const vitalProvider = pickStr(event, 'provider');
     if (!clientUserId || !vitalUserId || !vitalProvider) {
+      console.warn('[health/webhook] provider.connection.created with incomplete payload', {
+        eventType,
+        hasClientUserId: Boolean(clientUserId),
+        hasVitalUserId: Boolean(vitalUserId),
+        hasProvider: Boolean(vitalProvider),
+      });
       return NextResponse.json({ ok: true, ignored: 'incomplete_payload' });
     }
     const mapped = vitalProviderToInternal(vitalProvider);
     if (!mapped) {
       return NextResponse.json({ ok: true, ignored: 'unsupported_provider' });
     }
-    await service.from('health_integrations').upsert(
+    const { error } = await service.from('health_integrations').upsert(
       {
         user_id: clientUserId,
         provider: mapped.provider,
@@ -129,37 +169,38 @@ export async function POST(req: NextRequest) {
       },
       { onConflict: 'user_id,provider' },
     );
-    return NextResponse.json({ ok: true, type: 'provider.connected' });
+    if (error) {
+      console.error('[health/webhook] failed to upsert health_integrations', error);
+      return NextResponse.json(
+        { error: 'persist_failed', message: error.message },
+        { status: 500 },
+      );
+    }
+    return NextResponse.json({ ok: true, type: 'provider_connected' });
   }
 
-  if (eventType === 'provider.disconnected') {
-    if (cleanmaxxingUserId) {
+  // ---- Provider disconnection events ----
+  if (DISCONNECTED_EVENTS.has(eventType)) {
+    if (cleanmaxxingUserId && vitalUserId) {
       await service
         .from('health_integrations')
         .delete()
         .eq('user_id', cleanmaxxingUserId)
         .eq('vital_user_id', vitalUserId);
     }
-    return NextResponse.json({ ok: true, type: 'provider.disconnected' });
+    return NextResponse.json({ ok: true, type: 'provider_disconnected' });
   }
 
-  // Data ingestion events — sleep and activity for v1.
+  // ---- Data ingestion events ----
   if (!cleanmaxxingUserId) {
     return NextResponse.json({ ok: true, ignored: 'no_user_match' });
   }
 
-  // Match both daily live updates and historical backfill events.
-  // Vital fires `historical.data.<type>.created` on first connect
-  // (typically 90 days of history) and on full re-syncs; ignoring
-  // those would drop all backfill silently.
-  if (
-    eventType.startsWith('daily.data.sleep') ||
-    eventType.startsWith('historical.data.sleep')
-  ) {
-    const data = (event.data ?? {}) as VitalSleepData;
+  if (isSleepEvent(eventType)) {
+    const data = (event.data ?? {}) as SleepData;
     const provider = data.source?.provider ?? null;
     const mapped = provider ? vitalProviderToInternal(provider) : null;
-    const source = mapped?.source ?? 'vital_apple_health';
+    const source = mapped?.source ?? 'unknown';
     const nightOf = data.date ?? null;
     const durationSec =
       data.duration ??
@@ -198,14 +239,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, type: 'sleep_upserted' });
   }
 
-  if (
-    eventType.startsWith('daily.data.activity') ||
-    eventType.startsWith('historical.data.activity')
-  ) {
-    const data = (event.data ?? {}) as VitalActivityData;
+  if (isActivityEvent(eventType)) {
+    const data = (event.data ?? {}) as ActivityData;
     const provider = data.source?.provider ?? null;
     const mapped = provider ? vitalProviderToInternal(provider) : null;
-    const source = mapped?.source ?? 'vital_apple_health';
+    const source = mapped?.source ?? 'unknown';
     const date = data.date ?? null;
     const steps = data.steps ?? null;
     if (!date || steps == null) {
@@ -232,7 +270,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, type: 'activity_upserted' });
   }
 
-  // Anything else — accept and ignore. Better to swallow than to
-  // 500 and trigger Vital retries in a tight loop.
   return NextResponse.json({ ok: true, ignored: eventType || 'unknown' });
 }
