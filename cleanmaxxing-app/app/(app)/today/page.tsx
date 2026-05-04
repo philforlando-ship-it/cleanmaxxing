@@ -245,22 +245,30 @@ export default async function TodayPage({ searchParams }: Props) {
     : null;
   const WEEKLY_TARGET_MINUTES = 150;
 
-  // Date label for the activity line — "Yesterday" when the row is
-  // yesterday in the user's timezone, otherwise the short date.
-  // Computed once here so the JSX stays readable.
+  // Date label for the activity line — "Today" / "Yesterday" / short
+  // date, all relative to the user's IANA timezone. JS Date math
+  // (.setDate / Date.now arithmetic) drops the timezone context;
+  // Intl.DateTimeFormat with the IANA tz handles DST + offset edge
+  // cases correctly.
+  const ymdFmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const todayYmd = ymdFmt.format(new Date());
+  const yesterdayYmd = ymdFmt.format(new Date(Date.now() - 86_400_000));
   const activityDateLabel = (() => {
     if (!latestActivity) return '';
-    const yesterday = new Date(
-      new Date().toLocaleString('en-US', { timeZone: timezone }),
+    if (latestActivity.date === todayYmd) return 'Today';
+    if (latestActivity.date === yesterdayYmd) return 'Yesterday';
+    // Plain YYYY-MM-DD parses as midnight UTC, which renders as the
+    // previous day in tz west of UTC. Pin to noon UTC so the local
+    // date is unambiguous.
+    return new Date(`${latestActivity.date}T12:00:00Z`).toLocaleDateString(
+      'en-US',
+      { month: 'short', day: 'numeric', timeZone: timezone },
     );
-    yesterday.setDate(yesterday.getDate() - 1);
-    const ymd = yesterday.toISOString().slice(0, 10);
-    if (latestActivity.date === ymd) return 'Yesterday';
-    return new Date(latestActivity.date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      timeZone: timezone,
-    });
   })();
 
   // Friendly provider label derived from the row's source. Manual
