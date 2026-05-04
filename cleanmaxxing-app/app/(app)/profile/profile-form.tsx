@@ -14,11 +14,14 @@ type Props = {
   initial: UserProfile;
 };
 
+// "On a treatment" was removed — finasteride/minoxidil already live
+// under Current interventions, so the two fields encoded the same fact
+// in two places and could disagree. Hair status is now strictly about
+// the hair; treatments are read from current_interventions.
 const HAIR_OPTIONS: Array<{ value: HairStatus; label: string }> = [
   { value: 'full', label: 'Full head of hair' },
   { value: 'thinning', label: 'Thinning' },
   { value: 'receding', label: 'Receding' },
-  { value: 'treating', label: 'On a treatment (finasteride / minoxidil / similar)' },
   { value: 'shaved', label: 'Shaved or buzzed by choice' },
 ];
 

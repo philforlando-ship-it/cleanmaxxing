@@ -28,7 +28,6 @@ export type HairStatus =
   | 'full'
   | 'thinning'
   | 'receding'
-  | 'treating'
   | 'shaved';
 
 export type BudgetTier = 'under_50' | '50_to_150' | '150_to_500' | 'no_limit';

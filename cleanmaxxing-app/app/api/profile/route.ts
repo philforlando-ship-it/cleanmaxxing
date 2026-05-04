@@ -31,7 +31,7 @@ const RequestSchema = z.object({
   height_inches: z.number().int().min(48).max(96).nullable().optional(),
   // Tier 2 — set via /profile UI.
   hair_status: z
-    .enum(['full', 'thinning', 'receding', 'treating', 'shaved'])
+    .enum(['full', 'thinning', 'receding', 'shaved'])
     .nullable()
     .optional(),
   skin_type: z.number().int().min(1).max(6).nullable().optional(),
