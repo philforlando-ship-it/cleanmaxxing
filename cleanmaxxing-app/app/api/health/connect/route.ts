@@ -105,20 +105,19 @@ export async function POST(req: NextRequest) {
   const redirectBase =
     process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
-  // Don't pre-select a provider in the link token. When `provider`
-  // is set to apple_health_kit on a desktop browser, Vital's widget
-  // sometimes renders blank because it tries to launch an iOS-only
-  // flow with nowhere to go. Letting Vital render its provider picker
-  // gives desktop users a QR-code-to-iPhone path and mobile users a
-  // direct one — both working. We restrict the visible providers to
-  // Apple Health (and the Android equivalents we'll wire later) so
-  // the picker isn't a dump of every wearable Vital supports.
+  // No provider preselection and no filter for now. Pre-selecting
+  // apple_health_kit on a desktop browser rendered blank because
+  // Vital tried to launch an iOS-only flow with nowhere to go.
+  // filterOnProviders=['apple_health_kit'] then rendered an empty
+  // list — likely a key-mismatch post-rebrand to Junction. Letting
+  // the widget render its full picker gets us unblocked while we
+  // confirm the right filter key in the Junction dashboard. We can
+  // re-add a filter once we know it works.
   let token;
   try {
     token = await vital.link.token({
       userId: vitalUserId,
       redirectUrl: `${redirectBase}/settings?vital=connected`,
-      filterOnProviders: [VITAL_PROVIDER_APPLE_HEALTH],
     });
   } catch (e) {
     return NextResponse.json(
