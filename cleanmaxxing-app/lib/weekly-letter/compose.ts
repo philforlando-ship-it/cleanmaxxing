@@ -11,6 +11,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { getMisterPUserState, type MisterPUserState } from '@/lib/mister-p/user-state';
+import { ageFeelLabelFor } from '@/lib/confidence/context';
 
 type LetterContext = {
   state: MisterPUserState;
@@ -140,17 +141,21 @@ function formatContextBlock(ctx: LetterContext): string {
 
   if (state.confidence) {
     const c = state.confidence;
-    const fmt = (n: { value: number; trend: string | null }) =>
-      `${n.value}${n.trend ? ` ${n.trend}` : ''}`;
+    const fmtNum = (n: { value: number; trend: string | null }) =>
+      `${n.value}/10${n.trend ? ` ${n.trend}` : ''}`;
+    // The "appearance" slot is the age-feel categorical answer (Much older
+    // … Much younger), mapped to 2/4/6/8/10. Render it as the label so the
+    // letter doesn't read it as an appearance-confidence number.
+    const ageFeelTrend = c.appearance.trend ? ` ${c.appearance.trend}` : '';
     lines.push(
-      `confidence_latest: social ${fmt(c.social)}, work ${fmt(c.work)}, physical ${fmt(c.physical)}, appearance ${fmt(c.appearance)}`,
+      `confidence_latest: social ${fmtNum(c.social)}, work ${fmtNum(c.work)}, physical ${fmtNum(c.physical)}; age_feel ${ageFeelLabelFor(c.appearance.value)}${ageFeelTrend}`,
     );
   }
   if (state.stuckDimensions.length > 0) {
     lines.push(`stuck_dimensions: ${state.stuckDimensions.join(', ')}`);
   }
   if (ctx.reflectionDimsAvg !== null) {
-    lines.push(`reflection_avg: ${ctx.reflectionDimsAvg.toFixed(1)}/5`);
+    lines.push(`reflection_avg: ${ctx.reflectionDimsAvg.toFixed(1)}/10`);
   }
   if (ctx.reflectionNotes) {
     lines.push(`reflection_notes: ${ctx.reflectionNotes}`);

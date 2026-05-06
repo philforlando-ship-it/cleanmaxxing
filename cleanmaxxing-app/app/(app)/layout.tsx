@@ -3,7 +3,7 @@
 // The nav hides itself on onboarding and POV reader routes (see AppNav).
 
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, getUser } from '@/lib/supabase/server';
 import { AppNav } from '@/components/app-nav';
 import { TimezoneSync } from '@/components/timezone-sync';
 
@@ -12,10 +12,8 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const user = await getUser();
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   // Unauthed users hitting any (app) route redirect to login. Individual
   // pages still re-check this for their own data fetches, but the layout

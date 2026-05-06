@@ -1,0 +1,460 @@
+'use client';
+
+// Interactive exercise library panel — replaces the static reference
+// panel. Shows the catalog filtered by the user's equipment_access
+// (read from the assessment) and a free-form constraints text box.
+// Each exercise renders with a single-row crop of its source
+// infographic (CSS background-position trick — each infographic is
+// 4 stacked rows, we show one quarter). Users mark exercises as
+// preferred or excluded; preferences save to the assessment row
+// without re-running the LLM. A separate "Regenerate plan" button
+// triggers the report regeneration with the new picks.
+
+import { useMemo, useRef, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  MUSCLE_GROUP_LABEL,
+  STRENGTH_EXERCISES,
+  type Equipment,
+  type MuscleGroup,
+  type StrengthEquipmentAccess,
+  type StrengthExercise,
+} from '@/lib/strength/types';
+
+const GROUP_ORDER: MuscleGroup[] = [
+  'chest',
+  'back',
+  'shoulders',
+  'arms',
+  'legs',
+  'glutes',
+  'core',
+  'calves',
+];
+
+// Map equipment_access answers to which equipment categories the
+// catalog should expose. Bodyweight users shouldn't see barbell
+// exercises in the picker; full-gym users see everything.
+const EQUIPMENT_VISIBILITY: Record<
+  StrengthEquipmentAccess,
+  Equipment[]
+> = {
+  full_commercial_gym: [
+    'barbell',
+    'dumbbell',
+    'cable',
+    'machine',
+    'bodyweight',
+    'weighted_bodyweight',
+    'ez_bar',
+    'smith',
+  ],
+  home_rack_bench: [
+    'barbell',
+    'dumbbell',
+    'bodyweight',
+    'weighted_bodyweight',
+    'ez_bar',
+  ],
+  minimal_dumbbells: ['dumbbell', 'bodyweight'],
+  bodyweight_only: ['bodyweight'],
+};
+
+type Props = {
+  equipmentAccess: StrengthEquipmentAccess;
+  initialSelected: string[];
+  initialExcluded: string[];
+  initialFilterText: string | null;
+};
+
+type ExerciseStateMap = Map<string, 'selected' | 'excluded' | 'neutral'>;
+
+export function ExerciseLibraryPanel({
+  equipmentAccess,
+  initialSelected,
+  initialExcluded,
+  initialFilterText,
+}: Props) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+
+  // Per-exercise state. Reconciled from initial props on mount.
+  const [stateMap, setStateMap] = useState<ExerciseStateMap>(() => {
+    const m = new Map<string, 'selected' | 'excluded' | 'neutral'>();
+    for (const slug of initialSelected) m.set(slug, 'selected');
+    for (const slug of initialExcluded) m.set(slug, 'excluded');
+    return m;
+  });
+  const [filterText, setFilterText] = useState(initialFilterText ?? '');
+
+  // Track whether the local state has diverged from server state. Used
+  // to enable/disable Save and to show a "you have unsaved changes"
+  // hint if the user tries to regenerate.
+  const initialSelectedRef = useRef(new Set(initialSelected));
+  const initialExcludedRef = useRef(new Set(initialExcluded));
+  const initialFilterTextRef = useRef(initialFilterText ?? '');
+
+  const dirty = useMemo(() => {
+    const sel = new Set<string>();
+    const exc = new Set<string>();
+    for (const [slug, st] of stateMap) {
+      if (st === 'selected') sel.add(slug);
+      if (st === 'excluded') exc.add(slug);
+    }
+    if (sel.size !== initialSelectedRef.current.size) return true;
+    for (const s of sel) if (!initialSelectedRef.current.has(s)) return true;
+    if (exc.size !== initialExcludedRef.current.size) return true;
+    for (const s of exc) if (!initialExcludedRef.current.has(s)) return true;
+    if (filterText !== initialFilterTextRef.current) return true;
+    return false;
+  }, [stateMap, filterText]);
+
+  const [savingPrefs, startSavingPrefs] = useTransition();
+  const [regenerating, startRegenerating] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [savedHint, setSavedHint] = useState<string | null>(null);
+
+  // Filter the catalog by equipment + free-form text. The text is
+  // applied as a coarse client-side filter — substring match on label
+  // or muscles. The LLM still gets the full filter_text in the prompt
+  // for nuanced interpretation; this is just to keep the menu focused.
+  const visibleExercises = useMemo(() => {
+    const allowedEquipment = new Set(EQUIPMENT_VISIBILITY[equipmentAccess]);
+    const filterLower = filterText.trim().toLowerCase();
+    return STRENGTH_EXERCISES.filter((ex) => {
+      if (!allowedEquipment.has(ex.equipment)) return false;
+      if (filterLower.length === 0) return true;
+      // Coarse text match — any catalog entry whose label or muscles
+      // contain the filter string stays. Doesn't try to be smart about
+      // "no" / "exclude" semantics — that's the LLM's job.
+      const haystack = `${ex.label} ${ex.primary_muscles.join(
+        ' ',
+      )} ${ex.movement_pattern} ${ex.equipment}`.toLowerCase();
+      return haystack.includes(filterLower);
+    });
+  }, [equipmentAccess, filterText]);
+
+  const groupedVisible = useMemo(() => {
+    const map = new Map<MuscleGroup, StrengthExercise[]>();
+    for (const e of visibleExercises) {
+      const list = map.get(e.primary_group) ?? [];
+      list.push(e);
+      map.set(e.primary_group, list);
+    }
+    return map;
+  }, [visibleExercises]);
+
+  function setExerciseState(slug: string, next: 'selected' | 'excluded') {
+    setStateMap((prev) => {
+      const m = new Map(prev);
+      const current = m.get(slug) ?? 'neutral';
+      // Click the already-active state to clear it.
+      m.set(slug, current === next ? 'neutral' : next);
+      return m;
+    });
+  }
+
+  function savePreferences() {
+    setError(null);
+    setSavedHint(null);
+    const selected: string[] = [];
+    const excluded: string[] = [];
+    for (const [slug, st] of stateMap) {
+      if (st === 'selected') selected.push(slug);
+      if (st === 'excluded') excluded.push(slug);
+    }
+    const payload = {
+      selected_exercise_slugs: selected,
+      excluded_exercise_slugs: excluded,
+      exercise_filter_text: filterText.trim() || null,
+    };
+    startSavingPrefs(async () => {
+      try {
+        const res = await fetch('/api/plan/strength/exercise-preferences', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const body = (await res.json().catch(() => ({}))) as {
+            error?: string;
+            message?: string;
+          };
+          throw new Error(
+            body.message ?? body.error ?? `Save failed (${res.status})`,
+          );
+        }
+        // Update the "what was last saved" refs so dirty resets.
+        initialSelectedRef.current = new Set(selected);
+        initialExcludedRef.current = new Set(excluded);
+        initialFilterTextRef.current = filterText;
+        setSavedHint('Saved. Click Regenerate to update your plan.');
+      } catch (err) {
+        setError((err as Error).message);
+      }
+    });
+  }
+
+  function regeneratePlan() {
+    setError(null);
+    setSavedHint(null);
+    startRegenerating(async () => {
+      try {
+        const res = await fetch('/api/plan/strength/regenerate', {
+          method: 'POST',
+        });
+        if (!res.ok) {
+          const body = (await res.json().catch(() => ({}))) as {
+            error?: string;
+            message?: string;
+          };
+          throw new Error(
+            body.message ??
+              body.error ??
+              `Regeneration failed (${res.status})`,
+          );
+        }
+        // Refresh the page so the new report renders.
+        router.refresh();
+      } catch (err) {
+        setError((err as Error).message);
+      }
+    });
+  }
+
+  if (!open) {
+    const selectedCount = Array.from(stateMap.values()).filter(
+      (s) => s === 'selected',
+    ).length;
+    const excludedCount = Array.from(stateMap.values()).filter(
+      (s) => s === 'excluded',
+    ).length;
+    return (
+      <section className="mt-8 rounded-xl border border-zinc-200 bg-white px-5 py-4 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+            Exercise library — pick your preferences
+          </span>
+          <span className="text-[11px] uppercase tracking-wider text-zinc-500">
+            {selectedCount} preferred · {excludedCount} excluded
+          </span>
+        </div>
+        <p className="mt-1 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+          Filter the catalog by your equipment and constraints, then mark
+          which exercises Mister P should lean on or avoid. Saved picks
+          shape the next plan regeneration.
+        </p>
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="rounded-lg bg-zinc-900 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          >
+            Open
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="mt-8 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+          Exercise library
+        </h3>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="text-xs text-zinc-500 underline decoration-dotted underline-offset-2 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+        >
+          Close
+        </button>
+      </div>
+
+      <p className="mt-1 text-[12px] text-zinc-500 dark:text-zinc-400">
+        Filtered by your equipment access ({equipmentAccess.replace(/_/g, ' ')}
+        ). Use the constraints box below to narrow further. Click an exercise
+        to mark it preferred (Mister P will lean on it) or excluded (Mister P
+        won&rsquo;t recommend it).
+      </p>
+
+      <div className="mt-4">
+        <label className="block text-[11px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          Constraints (free-form, optional)
+        </label>
+        <textarea
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+          maxLength={500}
+          rows={2}
+          placeholder="e.g. no overhead pressing, bad knees so no jumping, hate barbell deadlifts"
+          className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-[13px] dark:border-zinc-700 dark:bg-zinc-900"
+        />
+        <p className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400">
+          Coarse text match filters the menu; the full text is also passed
+          to Mister P for the actual prescription.
+        </p>
+      </div>
+
+      <div className="mt-6 space-y-6">
+        {GROUP_ORDER.map((group) => {
+          const list = groupedVisible.get(group);
+          if (!list || list.length === 0) return null;
+          return (
+            <div key={group}>
+              <h4 className="text-[12px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                {MUSCLE_GROUP_LABEL[group]}
+              </h4>
+              <ul className="mt-2 space-y-3">
+                {list.map((ex) => (
+                  <ExerciseRow
+                    key={ex.slug}
+                    exercise={ex}
+                    state={stateMap.get(ex.slug) ?? 'neutral'}
+                    onMark={(next) => setExerciseState(ex.slug, next)}
+                  />
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+        {visibleExercises.length === 0 && (
+          <p className="text-[13px] text-zinc-500 dark:text-zinc-400">
+            No exercises match your equipment + constraints. Loosen the
+            constraints text to see more.
+          </p>
+        )}
+      </div>
+
+      {error && (
+        <p className="mt-4 text-[12px] text-red-600 dark:text-red-400">
+          {error}
+        </p>
+      )}
+      {savedHint && (
+        <p className="mt-4 text-[12px] text-zinc-700 dark:text-zinc-300">
+          {savedHint}
+        </p>
+      )}
+
+      <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+        <button
+          type="button"
+          onClick={savePreferences}
+          disabled={savingPrefs || regenerating || !dirty}
+          className="rounded-lg bg-zinc-900 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+        >
+          {savingPrefs ? 'Saving…' : 'Save preferences'}
+        </button>
+        <button
+          type="button"
+          onClick={regeneratePlan}
+          disabled={savingPrefs || regenerating}
+          className="rounded-lg border border-zinc-900 px-3.5 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-800"
+        >
+          {regenerating
+            ? 'Mister P is rewriting your plan…'
+            : 'Regenerate plan with these picks'}
+        </button>
+        {dirty && !savingPrefs && !regenerating && (
+          <span className="text-[11px] text-amber-700 dark:text-amber-400">
+            Unsaved picks — save before regenerating to apply them.
+          </span>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ===========================================================
+// Exercise row — single-row image crop + form cues + toggles
+// ===========================================================
+
+function ExerciseRow({
+  exercise,
+  state,
+  onMark,
+}: {
+  exercise: StrengthExercise;
+  state: 'selected' | 'excluded' | 'neutral';
+  onMark: (next: 'selected' | 'excluded') => void;
+}) {
+  const cardClass =
+    state === 'selected'
+      ? 'rounded-md border-2 border-emerald-500 bg-emerald-50 px-3 py-2.5 dark:border-emerald-500 dark:bg-emerald-950/30'
+      : state === 'excluded'
+        ? 'rounded-md border-2 border-red-400 bg-red-50 px-3 py-2.5 opacity-70 dark:border-red-500 dark:bg-red-950/30'
+        : 'rounded-md border border-zinc-200 px-3 py-2.5 dark:border-zinc-800';
+
+  return (
+    <li className={cardClass}>
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <span className="text-[14px] font-medium text-zinc-900 dark:text-zinc-100">
+          {exercise.label}
+        </span>
+        <span className="text-[10px] uppercase tracking-wider text-zinc-500">
+          {exercise.equipment.replace(/_/g, ' ')} ·{' '}
+          {exercise.movement_pattern.replace(/_/g, ' ')}
+        </span>
+      </div>
+      <p className="mt-0.5 text-[12px] text-zinc-500 dark:text-zinc-400">
+        Primary: {exercise.primary_muscles.join(', ')}
+      </p>
+
+      {/* Single-row image crop. Each source infographic is 4 stacked
+          rows; show one quarter via background-position. The container
+          aspect ratio matches the row's geometry (the source images
+          are ~1024x768 → each row is ~1024x192 → ~5.33:1). */}
+      <div
+        className="mt-3 w-full overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900"
+        style={{ aspectRatio: '1024 / 192' }}
+      >
+        <div
+          aria-label={`${exercise.label} reference`}
+          role="img"
+          style={{
+            width: '100%',
+            height: '100%',
+            backgroundImage: `url('${exercise.image_path}')`,
+            backgroundSize: '100% 400%',
+            backgroundPosition: `0% ${((exercise.image_row - 1) / 3) * 100}%`,
+            backgroundRepeat: 'no-repeat',
+          }}
+        />
+      </div>
+
+      <ul className="mt-2 ml-4 list-disc space-y-0.5 text-[13px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+        {exercise.key_points.map((p) => (
+          <li key={p}>{p}</li>
+        ))}
+      </ul>
+
+      <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px]">
+        <button
+          type="button"
+          onClick={() => onMark('selected')}
+          className={
+            state === 'selected'
+              ? 'rounded-sm bg-emerald-600 px-2 py-0.5 font-semibold text-white'
+              : 'rounded-sm border border-emerald-600 px-2 py-0.5 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40'
+          }
+        >
+          {state === 'selected' ? '✓ Preferred' : 'Prefer this'}
+        </button>
+        <button
+          type="button"
+          onClick={() => onMark('excluded')}
+          className={
+            state === 'excluded'
+              ? 'rounded-sm bg-red-600 px-2 py-0.5 font-semibold text-white'
+              : 'rounded-sm border border-red-500 px-2 py-0.5 text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40'
+          }
+        >
+          {state === 'excluded' ? '✕ Excluded' : 'Exclude'}
+        </button>
+      </div>
+    </li>
+  );
+}
+

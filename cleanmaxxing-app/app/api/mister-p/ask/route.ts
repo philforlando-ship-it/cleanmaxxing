@@ -279,10 +279,50 @@ export async function POST(req: NextRequest) {
     executionModeActive,
   );
 
+  // If the user has uploaded photos, attach them as image content
+  // parts on the user message. Up to two images: baseline face +
+  // latest hair anchor (front or top_down). Mister P's system prompt
+  // tells him how to use them. Failure to download any single photo
+  // is non-fatal — we keep going with whatever loaded, falling back
+  // to text-only when nothing did.
+  const PHOTO_BUCKET = 'progress-photos';
+  async function downloadIfPresent(path: string | null): Promise<Buffer | null> {
+    if (!path) return null;
+    try {
+      const { data } = await service.storage.from(PHOTO_BUCKET).download(path);
+      if (!data) return null;
+      return Buffer.from(await data.arrayBuffer());
+    } catch {
+      return null;
+    }
+  }
+  const [baselineFaceImage, latestHairImage] = await Promise.all([
+    downloadIfPresent(userState.baselineFacePhotoPath),
+    downloadIfPresent(userState.latestHairAnchorPhotoPath),
+  ]);
+  const imagesToAttach: Buffer[] = [];
+  if (baselineFaceImage) imagesToAttach.push(baselineFaceImage);
+  if (latestHairImage) imagesToAttach.push(latestHairImage);
+
   const result = streamText({
     model: anthropic('claude-sonnet-4-6'),
     system: systemPrompt,
-    prompt: question,
+    ...(imagesToAttach.length > 0
+      ? {
+          messages: [
+            {
+              role: 'user' as const,
+              content: [
+                ...imagesToAttach.map((image) => ({
+                  type: 'image' as const,
+                  image,
+                })),
+                { type: 'text' as const, text: question },
+              ],
+            },
+          ],
+        }
+      : { prompt: question }),
     temperature: 0.3,
     onFinish: async ({ text }) => {
       const citations = chunks.map((c) => ({ slug: c.doc_slug, title: c.doc_title }));

@@ -76,7 +76,7 @@ export function FirstRunCard() {
           <strong className="font-medium text-zinc-900 dark:text-zinc-100">
             Daily check-in
           </strong>{' '}
-          takes under a minute. The check-in card below lists your goals —
+          takes ten seconds. The check-in card below lists your goals —
           mark the ones you moved forward on today.
         </li>
         <li>

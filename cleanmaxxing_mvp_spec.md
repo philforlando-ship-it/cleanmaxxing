@@ -1,9 +1,35 @@
 # Cleanmaxxing MVP Specification
 
-**Version:** 0.5 (updated 2026-04-30 with goal-scoped chat + /profile consolidation + 180d photo)
+**Version:** 0.6 (updated 2026-05-04 with wearables, premium facial analysis, PWA + push, daily note + weekly letter, /today restructure)
 **Owner:** Phil
 **Build window:** ~6 weeks, ~4 hours/day solo
 **Purpose of this doc:** Single source of truth for the MVP build. Paste into Claude Code at the start of build sessions. Update as decisions change.
+
+**What changed in 0.6:** Eighteen migrations and roughly a dozen new surfaces, the largest single bump in scope since the original MVP cut. The headline shift is that the app stopped being a pure self-improvement workbook and started being a dashboard that ingests other tools' data.
+
+(a) **Wearables / health integration via Vital (Junction).** "Connect Apple Health" became "Connect any wearable" after the integration was reworked to lean on the Junction aggregator (Fitbit, Oura, Whoop, Garmin, Strava, Withings, Polar, Dexcom). Sleep, steps, and active calories sync via Svix-signed webhooks (snake_case wire format, event names like `daily.data.sleep.created`, `daily.data.activity.created`, `historical.data.steps.created`, `historical.data.sleep.created`, plus connection lifecycle events). The handler in `app/api/health/webhook/route.ts` treats data webhooks as notifications and fetches the actual payload via the Vital SDK rather than trusting the inline body — a workaround for Junction's habit of shipping the wire format under different shapes across event types. A diagnostic `webhook_debug` table (migration 0034) logs every event's `event_type`, `body_keys`, `data_keys`, and `branch_taken` so payload drift surfaces before it silently breaks ingest. Sleep arrives in `sleep_logs` with a `source` discriminator (`manual` / `vital_apple_health` / `vital_google_fit` / `vital_health_connect`); steps land in a new `daily_activity` table with intensity columns added in migration 0033a. The `health_integrations` table holds the per-user connection (Vital user id, scopes, last_synced_at). The `/today` SleepLogCard stays visible when Vital is feeding sleep so users can still see and edit the value rather than having the card disappear into an opaque "synced" state.
+
+(b) **Premium tier scaffolding + AI facial analysis.** First user-facing premium-only feature. `lib/billing/is-premium.ts` is the gating primitive (treats trial users as premium for the first 14 days). `POST /api/facial-analysis/analyze` takes a before/after slot pair, runs Claude Sonnet 4.6 vision over them, and writes qualitative observations to `facial_analyses` (migration 0029). The analysis explicitly refuses numeric ranking, PSL framing, or any attractiveness scoring — same rails as Mister P. Photos themselves get pulled out of `/profile` and `/settings` into a new top-level `/photos` tab with face/body categories (migration 0030 adds `progress_photos.category`) and an angle dimension (migration 0028 adds `progress_photos.angle` for front/side/closeup). Upload cap raised from 8MB → 25MB to accommodate phone HEIC conversions and high-res face captures.
+
+(c) **PWA install + web push notifications.** The web manifest, service worker, and registrar component ship in `components/service-worker-registrar.tsx` (mounted in `app/layout.tsx`); production-only registration so dev gets full network for hot-reload. `start_url` is `/today` so installed users land on the dashboard. Push subscriptions (migration 0017 `push_subscriptions` — endpoint + p256dh + auth keys) are wired to an hourly cron at `/api/cron/push-reminders` that matches each user's local-time reminder window (default 8 PM) using the new `users.timezone` IANA value and de-dups via `last_reminder_at > 20h ago`. A settings toggle controls opt-in. Icons are placeholder SVGs (white C on zinc-900); real PNGs need to land at `/apple-touch-icon.png` before launch.
+
+(d) **User-level IANA timezone + 3 AM app-day rollover.** `users.timezone` (migration 0024, defaults to `America/New_York` for backfill) and `lib/date/app-day.ts`'s `appDayFor(timezone, now)` together replace prior offset arithmetic — which got the rollover wrong for non-EST users on DST boundaries. The rule: subtract 3 hours, then format in the user's IANA zone with `Intl.DateTimeFormat('en-CA')`. So a 2:55 AM Tuesday in EST is still Monday's app-day. This now drives daily check-ins, sleep logs, workouts, daily notes, push reminders, and step bucketing. A client-side `<TimezoneSync>` mounted in `(app)/layout.tsx` writes the browser's IANA zone on first load.
+
+(e) **/today restructure — eight new card types.** A pinned hero card with a milestone ribbon and 30-day continuity line; a scripted **first-conversation card** (two-question Mister P exchange capturing blockers and past-attempts that didn't stick, replacing the prior 1.2s auto-dismiss with an explicit "Got it" — answers stored in `survey_responses` under `first_convo_blockers`, `first_convo_tried_before`, `first_convo_completed_at`); a **Mister P daily note** (migration 0019 `daily_notes` — template-driven observation + optional question selected by `lib/daily-note/templates.ts`, with the user's response read into Mister P's behavioral state block on subsequent turns); a **Mister P weekly letter** (Sunday cron at `/api/cron/weekly-letter`, LLM-synthesized from sleep / workout / reflection / chat history, stored in `weekly_letters` migration 0023, rendered as a `/today` card all week); a **sleep tracker** (nightly card with 1–5 quality scale, Mister P calibration, migration 0018); a **workout logger** (migration 0022 — type/duration/optional lift JSONB, also feeds Mister P state); a **nutrition logger** (migration 0025 — daily protein/calorie hit-or-miss); and a **self-acceptance nudge card** triggered by the Goal Fit Score risk detector. `/today` also trims itself: the profile-completion card hides at 80% complete (was: only at 100%), and the sleep card collapses to a one-liner once logged. Per-row "Restore Focus" buttons are back on completed daily check-in goals so users can re-activate without leaving the surface.
+
+(f) **Goals system overhaul.** Every template in `content/goal-templates.ts` now carries a **domain** (`nutrition` / `training` / `sleep` / `skincare` / `hair` / `grooming` / `style` / `posture` / `supplements` / `environment` / `self-acceptance`) and a **measurement_type** (`habit_adherence` / `session_log` / `progression` / `macro_tracking` / `body_metric` / `photo_comparison` / `wake_time_consistency` / `closet_audit` / `appointment_milestone` / `self_check`). Domain powers an add-time **domain-overlap warning** ("you already have a training goal active — stack or swap?"); measurement_type drives **contextual daily-check-in actions** so a `progression` goal asks "did you hit a new PR?", a `session_log` goal prompts "log your session," and a `habit_adherence` goal renders the toggle. A new **Goal Fit Score** service (`lib/goals/goal-fitness.ts`) and self-acceptance risk detector flag combos that would push appearance-vulnerable users into unhealthy comparison; when both fire, the self-acceptance nudge card surfaces. **Custom goals** now require anchoring to a closest-POV (slug picker), eliminating orphan goals the walkthrough engine couldn't serve. **Target dates** (migration 0020 `goals.target_date`, optional) convert the prior "Week N" framing into "Week N of M." The +1 process tiebreaker in the onboarding ranker is dropped — outcomes now compete on tier + focus + motivation alone, with the soft 2-of-3 process nudge in the goals-picker doing the work the tiebreaker used to.
+
+(g) **Mister P additions.** Per-goal **execution mode** (migration 0026 `goals.chat_execution_mode`, migration 0027 `goals.chat_execution_prompt_acked`) lets a user opt their goal out of foundation-first redirects so Mister P engages directly inside the goal-scoped thread (hard refusals still apply). The toggle stays hidden until Mister P's first response on the goal renders; once on, the system prompt gains an enforcement advisory and the chat input dims until the user acknowledges. **Voice input** (mic button on both chat surfaces, browser MediaRecorder → POST `/api/transcribe` wrapping OpenAI whisper-1, transcript appends rather than replaces). Mister P also acquired two non-conversational authoring surfaces: the rules-based **daily note** (above) and the LLM-authored **weekly letter** (above), both reading from but not interrupting the chat threads.
+
+(h) **Current Focus** (renamed from "This week's focus" in commit 4fc1c88) becomes phase-change-only via migration 0021's `goals.last_phase_seen`. The card only renders when the user advances a phase; otherwise it stays out of the way. AdjustBaseline and AdjustTarget controls dropped (clutter not pulling its weight). A per-user "for you" line renders above the phase prose; an "Ask Mister P about this phase" CTA routes into the goal-scoped thread.
+
+(i) **Profile / onboarding polish.** Height moves to a feet-inches dropdown (4'10"–7'2", 29 options) — still stored as inches downstream so Mister P, TDEE, and profile-completion don't see a change. `hair_status` drops the `'treating'` value (migration 0033b — redundant with `current_interventions` finasteride/minoxidil flags); enum is now `full` / `thinning` / `receding` / `shaved`. Protein target language updates from "1 g/lb" to "0.8–0.9 g/lb" everywhere it surfaces (onboarding, Mister P prompt, goal templates, profile guidance) — better aligned to recomp/cutting phases and reduces obsession potential for the target audience.
+
+(j) **Articles + homepage.** New `/other-info/pyramid` ships a visual hierarchy article (cosmetic procedures apex → hormonal/peptides → targeted treatments → refinements → high-impact → foundation base, with an "off the pyramid" sidebar naming hard refusals — bonesmashing, synthol, DNP, underground SARMs). The Brady article fixes "six rings" to "seven rings" in the body to match the title (Tampa Bay's was missed). The homepage iterated through a "That window closed" rewrite that reordered hero/sub-hero and cut the feature dump, then reverted to the prior structure with the Clav-card text refined; the "Look and feel sharper at 35, 40, 45" hero stays.
+
+(k) **Auth, theme, nav.** Email-confirmation flow gets a clear "Check your email" state with resend on signup. Theme default flips from `system` → `dark` for new users (existing users keep their setting). App nav widens to `max-w-6xl` so all six links (Today / Goals / Library / POVs / Photos / Settings) fit without wrapping behind the cluster on the right. Photo management drops out of `/settings` entirely.
+
+§5 data model: 18 new migrations (0017–0034). 0017 `push_subscriptions`. 0018 `sleep_logs`. 0019 `daily_notes`. 0020 `goals.target_date`. 0021 `goals.last_phase_seen`. 0022 `workout_logs`. 0023 `weekly_letters`. 0024 `users.timezone` (text default `America/New_York`). 0025 `nutrition_logs`. 0026 `goals.chat_execution_mode`. 0027 `goals.chat_execution_prompt_acked`. 0028 `progress_photos.angle`. 0029 `facial_analyses`. 0030 `progress_photos.category`. 0031 `health_integrations` + `daily_activity` + `sleep_logs.source`. 0032 health provider widened to open enum. 0033 — twin migrations both numbered 0033 by accident (`daily_activity_intensity` and `hair_status_drop_treating`); the migration runner sorts by filename so they apply in alphabetical order, but the next migration should be 0035 to avoid further collisions. 0034 `webhook_debug`. Goal templates also gain `domain` and `measurement_type` fields in code (no migration — they're a content-layer enum on the seed data). §6 Mister P prompt: two new advisory blocks documented — execution-mode (when `chat_execution_mode = true`, instruct direct engagement, hard refusals still apply) and the first-conversation script. Voice transcripts route into the same `user_question` field — no prompt change. Daily note authoring is rules-based via `lib/daily-note/templates.ts` (LLM authoring deferred); weekly letter authoring uses a separate prompt synthesizing the week's data without numeric summaries.
 
 **What changed in 0.5:** Two big surfaces. (a) Goal-scoped Mister P chat threads — each goal gets its own persistent thread, with a thread picker on `/today`, a goal-attached chat panel on `/goals/[id]`, a hard-clear endpoint, retrieval seeded from the focused goal's title + description + source-slug bonus, semantic-context augmentation skipped inside goal threads to prevent reflection-note language from bleeding across topics, prefill events from in-card "Ask Mister P about this" buttons routing into the matching goal's thread, and a `USER'S CURRENT FOCUS` prompt block that disambiguates references like "this" / "this goal" / "it". Migration 0013 adds `mister_p_queries.goal_id uuid references goals(id) on delete set null`; the conversation loader scopes by goal_id (15-pair window per-goal vs 8-pair General); the clear endpoint hard-deletes on confirmation. (b) `/profile` consolidation — the `/progress` folder is gone, merged into a single `/profile` page covering photos, Tier 1 stats (training, sleep, body comp, diet, height, weight), and Tier 2 personal info (hair, skin, current interventions, budget, relationship). Photos now have a fourth slot (180-day) for the slow-moving variables — hair regrowth, late aesthetic compounding, sustained recomp — with bounded `/today` nudge windows so 30d/90d/180d don't double-prompt (`[30,90)`, `[90,180)`, `[180,∞)`). Migration 0014 adds `user_profile.current_weight_lbs`; migration 0015 adds `user_profile.height_inches`; migration 0016 widens `progress_photos.slot` CHECK to include `'progress_180d'`. Weight and height fall back to the onboarding survey answers at read time, so users who answered onboarding don't see those fields as null on first `/profile` visit.
 
@@ -277,7 +303,7 @@ Mister P: "Short answer: for your age, probably not. Long answer: I've got a det
 
 ---
 
-## 2.6 Shipped Beyond the Six Features (as of 2026-04-25)
+## 2.6 Shipped Beyond the Six Features (as of 2026-05-04)
 
 Everything below was built on top of the MVP six, usually in response to a real gap surfaced in use or audit. Listed roughly in the order it was built. Each entry is one paragraph: what it is, why it exists, where it lives.
 
@@ -413,6 +439,123 @@ Targeted rewrites of the three POVs most prone to younger-internet framing, iden
 ### `sync-povs` retired; `.md` canonical (0.3)
 `scripts/sync-povs.ts` (mammoth-based regeneration of `.md` from `../Cleanmaxxing POV/*.docx`) is deleted, the `sync-povs` npm script is removed, and the `mammoth` devDependency is dropped. Reason: over multiple commits, substantial POV sections (e.g. Living the Bald Look in 08, starter-diagnostic-path in 41, two-week-launch-sequence in 51) had been added directly to `.md` without being mirrored into the `.docx`. A routine sync wiped ~540 lines across 19 files before being caught and recovered via `git checkout HEAD -- content/povs/`. Rather than reconcile every drifted `.docx`, `.md` was promoted to canonical. Edit POVs directly in `content/povs/*.md`; run `npm run embed-povs` after any change so Mister P's pgvector index picks up the new chunks. The `.docx` files remain tracked as historical snapshots; the frontmatter `source: "XX_Title.docx"` field in each `.md` is now legacy metadata, not a live pointer.
 
+### Wearables integration via Vital / Junction (0.6)
+"Connect Apple Health" became "Connect any wearable" after the integration was reworked to lean on the Junction aggregator (Fitbit, Oura, Whoop, Garmin, Strava, Withings, Polar, Dexcom, etc.). The connect surface lives at `app/(app)/settings/health-integration-card.tsx`: user clicks "Connect" → POST `/api/health/connect` returns a Junction widget URL → user authorizes on Junction → redirect lands back at `/settings`. Disconnect is two-step confirm → POST `/api/health/disconnect`. Webhook receiver at `app/api/health/webhook/route.ts` verifies payloads via Svix HMAC-SHA256 (`svix-id` / `svix-timestamp` / `svix-signature` headers) and branches on snake_case event names: `daily.data.sleep.created`, `daily.data.activity.created`, `historical.data.steps.created`, `historical.data.sleep.created`, plus `provider.connection.created` / `.deleted`. Critically, data webhooks are treated as notifications and the actual payload is fetched via the Vital SDK rather than trusted from the inline body (Junction's payload shape drifted across event types and the snake_case-vs-camelCase confusion in early integration revealed that trusting the wire is fragile). Sleep persists to `sleep_logs` with a `source` discriminator (`manual` / `vital_apple_health` / `vital_google_fit` / `vital_health_connect`); steps persist to `daily_activity`. Quality is derived from provider sleep scores via `scoreToQuality` (90+ → 5, 80–89 → 4, etc.). All bucketing uses the user's IANA timezone, not server-side offset arithmetic. Code: `app/api/health/{connect,disconnect,webhook}/route.ts`, `lib/vital/client.ts`, migrations 0031–0034.
+
+### Diagnostic webhook_debug table (0.6)
+A `webhook_debug` table (migration 0034) logs every incoming Junction event's `event_type`, `body_keys`, `data_keys`, and `branch_taken`. Purpose is operational, not analytical: payload shapes drifted three times during initial integration (snake_case vs camelCase, flat vs nested provider, notifications vs full data) and the debug table catches drift on first occurrence rather than after silent ingest failure. Periodically prune; this is not a forever table. Code: `supabase/migrations/0034_webhook_debug.sql`, `app/api/health/webhook/route.ts`.
+
+### User-level IANA timezone + 3 AM app-day rollover (0.6)
+`users.timezone` (migration 0024, defaults to `America/New_York`) replaces the prior implicit UTC-offset rollover. `lib/date/app-day.ts`'s `appDayFor(timezone, now)` subtracts 3 hours from the current instant, then formats in the user's IANA zone using `Intl.DateTimeFormat('en-CA')` to produce a YYYY-MM-DD string. Net effect: a 2:55 AM Tuesday in EST is still Monday's app-day, and DST boundaries no longer mis-bucket. This drives daily check-ins, sleep logs, workouts, daily notes, push reminders, and step bucketing. Client-side `<TimezoneSync>` in `(app)/layout.tsx` writes the browser's IANA zone on first load so the default doesn't stick when the user is actually elsewhere. Code: `lib/date/app-day.ts`, `components/timezone-sync.tsx`, migration 0024.
+
+### Premium tier scaffolding + AI facial analysis (0.6)
+First user-facing premium-only feature. `lib/billing/is-premium.ts` is the gating primitive; trial users count as premium for the first 14 days so the analysis is reachable without paywall friction during onboarding. `POST /api/facial-analysis/analyze` takes a before/after slot pair, runs Claude Sonnet 4.6 vision over them, and writes qualitative observations to `facial_analyses` (migration 0029, `observations` JSONB). The analysis explicitly refuses numeric ranking, PSL framing, decile scoring, or any attractiveness ladder language — same refusal list as Mister P. Front photos are mandatory; close-up and side angles optional. Body photos are filtered out at query time. List + detail endpoints at `app/api/facial-analysis/{list,[id]}/route.ts`. Code: `app/api/facial-analysis/analyze/route.ts`, `lib/billing/is-premium.ts`, migration 0029.
+
+### Top-level /photos tab (0.6)
+Photos pull out of `/profile` and `/settings` into a new top-level `/photos` tab in the app nav. Page renders two sections — Face photos and Body photos — each with the four-slot grid (baseline / 30d / 90d / 180d) per category. Migration 0030 adds `progress_photos.category` (`face` | `body`); migration 0028 adds `progress_photos.angle` (`front` | `side` | `closeup`) so face captures can stack multiple angles per milestone. Upload cap raised from 8 MB to 25 MB to accommodate phone HEIC conversions and high-res face photos. Bulk delete preserved. Code: `app/(app)/photos/page.tsx`, `app/(app)/photos/photo-milestone-grid.tsx`, migrations 0028, 0030.
+
+### Photo comparison with slider overlay (0.6)
+On `/profile`, two progress photos can be compared via a side-by-side render plus a draggable slider that scrubs an overlay between them. Designed to make small compounding change visible at a glance — the kind of progress that doesn't show up in a scroll-through gallery but is obvious in a swipe. Code: `app/(app)/profile/photo-compare.tsx`.
+
+### Photo ghost overlay aligning 30d/90d/180d to baseline (0.6)
+The `/photos` grid renders later captures with a subtle ghost overlay of the baseline at the same alignment, so trajectory becomes visible without leaving the page. Hair regrowth, slow recomp, and aesthetic compounding need a longer time window to look like progress; the ghost overlay closes the "I can't tell if anything changed" gap that otherwise erodes commitment around month 3. Code: `app/(app)/photos/photo-milestone-grid.tsx`.
+
+### PWA install (manifest + service worker + registrar) (0.6)
+The web manifest at `public/manifest.webmanifest`, service worker at `public/sw.js`, and `components/service-worker-registrar.tsx` together make the app installable on mobile and desktop. `start_url` is `/today` so installed users land on the dashboard. Service worker is network-first with a cached `/` fallback; `/api/`, `/auth/`, and `/_next/data/` paths bypass cache to keep per-user state fresh. Production-only registration so dev still gets full network for hot-reload. Icons are placeholder SVGs (white C on zinc-900) — real PNGs need to land at `/apple-touch-icon.png` and `/icon-{192,512}.png` before launch.
+
+### Web push notifications (0.6)
+Push subscription flow lives in settings: user toggles on, browser prompts for permission, `PushManager.subscribe()` returns endpoint + p256dh + auth keys which persist to `push_subscriptions` (migration 0017). An hourly cron at `/api/cron/push-reminders` iterates active subscriptions, computes the user's local hour using `users.timezone`, and sends a push when local hour matches `reminder_hour` (default 20 = 8 PM). De-dup via `last_reminder_at > 20h ago` so a user doesn't get hammered if the cron retries. The payload is a generic "Check in" nudge for daily reminders and a Sunday reflection prompt. Toggle off unsubscribes both endpoints (browser + DB row). Code: `app/api/cron/push-reminders/route.ts`, settings push toggle, migration 0017.
+
+### /today hero card with milestone ribbon (0.6)
+Pinned card at the top of `/today` showing the user's milestone ribbon (onboarding → first reflection → 30-day photo → 90-day photo → quarterly survey → 180-day photo) plus an "X of last 30 days" continuity line. Replaces the prior dashboard chrome with a single card that contextualizes where the user is in the arc. Stays visible as the user scrolls through check-in, weekly focus, reflection, and chart. Code: `app/(app)/today/today-hero-card.tsx`, commit f1c55ff.
+
+### First-conversation scripted card (0.6)
+After onboarding, before the daily check-in spotlight clears, users see a two-question scripted Mister P exchange: blockers (time/money/energy/knowledge) and past attempts that didn't stick. Replaces the prior 1.2-second auto-dismiss welcome with an explicit "Got it" — auto-dismiss read as glitch behavior, while the two scripted questions both capture useful behavioral state and demonstrate Mister P's voice before the user runs into him in chat. Answers persist to `survey_responses` under `first_convo_blockers`, `first_convo_tried_before`, `first_convo_completed_at`. Card unmounts after completion via `getFirstConvoState()` in `lib/first-convo/service.ts`. Code: `app/(app)/today/first-conversation-card.tsx`, `lib/first-convo/service.ts`.
+
+### Mister P daily note (rules-based observation + question) (0.6)
+A new `/today` card surfaces one templated observation + optional question per user per day. Selector lives in `lib/daily-note/templates.ts` (rules-based v1; LLM authoring deferred — the rules version exists to prove the surface and gather response data before paying inference cost on it). Observations and responses cache in `daily_notes` (migration 0019) with `template_key`, `observation`, `question`, `response`, `responded_at`. Crucially, the user's response is read into Mister P's behavioral state block on subsequent turns — so a "what's the friction this week?" answer surfaces in the next chat without the user having to repeat it. Code: `app/api/daily-note/route.ts`, `lib/daily-note/templates.ts`, `app/(app)/today/daily-note-card.tsx`, migration 0019.
+
+### Mister P weekly letter (Sunday cron + /today card) (0.6)
+A Sunday-morning cron at `/api/cron/weekly-letter` generates one letter per user per Sunday, persisted to `weekly_letters` (migration 0023). The letter reads the user's full state — sleep logs, workout logs, weekly reflections, recent chats, current goals — and renders as a `/today` card all week. Author prompt (separate from the chat system prompt) synthesizes the week's data without numeric summaries: no "you logged 4 of 7 days" tables, no streak counts, no graphs. Voice is the same Mister P voice; substance is the difference between an automated weekly recap and a coach who paid attention. Code: `app/api/cron/weekly-letter/route.ts`, `lib/weekly-letter/compose.ts`, `app/(app)/today/weekly-letter-card.tsx`, migration 0023.
+
+### Sleep tracker — nightly log card on /today (0.6)
+A dedicated nightly sleep-log card replaces the prior buried manual-entry flow. Hours and 1–5 quality scale; once logged, the card collapses to a one-liner to free vertical space (per the /today trim). When Vital is feeding sleep, the card stays visible and shows the synced value editably so users can correct a misclassified nap or override an obvious miss. Mister P reads the last week of `sleep_logs` in his behavioral state to calibrate recovery and training advice. Code: `app/(app)/today/sleep-log-card.tsx`, migration 0018, plus the source-aware merge with Vital data.
+
+### Workout logger (0.6)
+A `/today` card for logging workouts: type (`strength` / `cardio` / `mobility` / `other`), duration in minutes, and optional lift details as JSONB (lift name, sets, reps, weight). Persists to `workout_logs` (migration 0022). Mister P reads the trailing 7-day workout volume + type mix in his behavioral state block, enabling training-calibrated answers ("you've been heavy on cardio — want to talk about adding a strength block?") without the user prompting it. Code: `app/(app)/today/workout-log-card.tsx`, migration 0022.
+
+### Nutrition daily quick-log (0.6)
+Migration 0025 `nutrition_logs` and a small `/today` card for rapid daily protein/calorie hit-or-miss. The intent is not full macro tracking — that's a measurement_type mode for users who want it — but a one-tap "did I hit my target today?" log that feeds Mister P state and the weekly letter. Code: `app/(app)/today/nutrition-log-card.tsx`, migration 0025.
+
+### Self-acceptance nudge card on /today (0.6)
+Triggered by the Goal Fit Score self-acceptance risk detector. Surfaces when a user's active goal set + confidence trajectory match the pattern that reliably correlates with appearance-vulnerable users pushing themselves into unhealthy comparison loops (e.g., two appearance-focused goals stacked on a low appearance-confidence baseline). Card copy is calm, not alarmist, and links to `56-identity-beyond-appearance` rather than offering more goals. Per-goal-set localStorage dismissal so a follow-up trigger after the user has shifted focus still surfaces. Code: `app/(app)/today/self-acceptance-card.tsx`, `lib/goals/goal-fitness.ts`.
+
+### /today trim — profile completion at 80%, sleep collapses when logged (0.6)
+Two pieces of dashboard-decluttering. Profile-completion card hides at 80% rather than the prior 100% — the last 20% is typically Tier-2 personal info (relationship status, budget, etc.) that the user can fill in over time without it pestering them daily. Sleep card collapses to a one-liner once the night's entry is logged so it stops occupying the screen real estate of an open form. Both are small but additive — `/today` was getting long enough that scroll fatigue was starting to bite mid-session. Code: `app/(app)/today/profile-completion-card.tsx`, `app/(app)/today/sleep-log-card.tsx`.
+
+### Restore Focus → button on daily check-in rows (0.6)
+Per-row "Restore Focus" button on completed daily check-in goals. Clicking reverts the goal's status from `completed` or `abandoned` back to `active` without leaving the surface. Replaces the prior flow which required navigating to `/goals/[id]` and using the status-actions panel. Use case is mostly accidental status flips and "I want this back in rotation after a break." Code: `app/(app)/today/daily-check-in-card.tsx`, `app/api/goals/[id]/status/route.ts`.
+
+### Daily check-in — contextual action per measurement_type (0.6)
+The check-in row's primary control changes by goal `measurement_type`. A `progression` goal asks "Did you hit a new PR?" with a yes/no + optional metric. A `session_log` goal prompts "Log your session" linking to the workout logger. A `habit_adherence` goal renders the toggle. A `macro_tracking` goal links to nutrition log. A `photo_comparison` goal nudges the next-eligible photo capture. The legacy single-toggle check-in is the fallback for goals without a measurement_type. Code: `app/(app)/today/daily-check-in-card.tsx`, `lib/check-in/contextual-action.ts`.
+
+### Goal templates: domain + measurement_type fields (0.6)
+Every template in `content/goal-templates.ts` carries two new fields. **`domain`** is one of `nutrition` / `training` / `sleep` / `skincare` / `hair` / `grooming` / `style` / `posture` / `supplements` / `environment` / `self-acceptance` and powers the add-time domain-overlap warning. **`measurement_type`** is one of `habit_adherence` / `session_log` / `progression` / `macro_tracking` / `body_metric` / `photo_comparison` / `wake_time_consistency` / `closet_audit` / `appointment_milestone` / `self_check` and routes the daily check-in's contextual action. No DB migration — the fields live on the seed-data templates in code and don't need to round-trip through Postgres. Code: `content/goal-templates.ts`.
+
+### Goal Fit Score + self-acceptance risk detector (0.6)
+`lib/goals/goal-fitness.ts` computes a per-user Fit Score over the active goal set, considering domain coverage, measurement-type plausibility against the user's tenure and confidence trajectory, and concentration risk in appearance-focused domains. The companion **self-acceptance risk detector** flags goal sets that match the pattern of appearance-vulnerable users pushing into unhealthy comparison (the case the safety rails in §13 are designed for). When risk fires, the self-acceptance nudge card surfaces; when fit drops below threshold, the goals page surfaces an inline "review your goals" prompt at the top. The Fit Score itself is not shown as a number — the UI surfaces consequences (nudge cards, prompts), not scores, to avoid gamifying the score itself. Code: `lib/goals/goal-fitness.ts`.
+
+### Domain-overlap warning at goal-add time (0.6)
+When a user attempts to add a goal whose `domain` matches an active goal's `domain`, the library-browser shows an inline warning: "You already have a [domain] goal active — [existing title]. Stack them or swap?" with one-tap actions for both. Two same-domain goals isn't blocked (sometimes appropriate — e.g., two training goals covering different lifts) but the friction is intentional because most domain duplication is the user adding noise rather than signal. Code: `app/(app)/goals/library/library-browser.tsx`.
+
+### Custom goals require a closest-POV anchor (0.6)
+Users can type a custom goal title, but the form now requires picking a closest POV from the corpus before save (slug picker showing the top semantic matches against the typed title). Eliminates orphan goals that the walkthrough engine can't serve and that fall outside the suggestion algorithm's age/motivation calibration. The picker also cleans stale slug-fallback titles (so an anchor showing "Doc 23" gets replaced with the actual POV title). Code: `app/(app)/goals/custom/page.tsx`, `app/(app)/goals/custom/pov-picker.tsx`, commits 8722ad8 and b4f99be.
+
+### Goal target dates + "Week N of M" framing (0.6)
+Optional `target_date` on goals (migration 0020). When set, walkthrough cards convert the prior open-ended "Week N" framing into "Week N of M" computed from `target_date - created_at` in weeks. M is also surfaced in the focus card header and the goal detail page. Optional by design — outcome goals often warrant a finishline; process goals usually don't, and forcing one would be the wrong default. Code: `app/(app)/goals/[id]/page.tsx`, `app/(app)/today/current-focus-card.tsx`, migration 0020.
+
+### Current Focus rename + phase-change-only visibility (0.6)
+"This week's focus" was renamed to "Current focus" (commit 4fc1c88) — the original framing implied a weekly cadence the surface didn't actually have, since walkthrough phases run multiple weeks. Migration 0021 adds `goals.last_phase_seen`; the card only renders when the user advances a phase, then sets `last_phase_seen` to the new phase so it goes quiet until the next advancement. Removes the daily "this is still your phase" repetition that produced no information after the first viewing. AdjustBaseline and AdjustTarget controls dropped — clutter not pulling its weight after the inline picker covered the same surface. A per-user "for you" line renders above the phase prose, drawing on the goal's measurement_type and the user's confidence trajectory to localize the phase ("You're building the habit — week 3 is when most users want to skip"). An "Ask Mister P about this phase" CTA routes into the goal-scoped chat thread with the phase context prefilled. Code: `app/(app)/today/current-focus-card.tsx`, migration 0021.
+
+### Mister P per-goal execution mode toggle (0.6)
+A boolean `chat_execution_mode` on `goals` (migration 0026) lets a user opt their goal out of foundation-first redirects. Default false. When true, the goal-scoped chat advisory in `lib/mister-p/prompt.ts` instructs Mister P to skip foundation redirection and engage directly inside the thread (hard refusals and brand rails still apply — execution mode is not refusal-bypass mode). The toggle stays hidden until Mister P's first response on the goal renders, so users discover it after seeing why they'd want it. Once turned on, the chat input dims until the user acknowledges the mode is active via `chat_execution_prompt_acked` (migration 0027). Code: `app/api/mister-p/execution-mode/route.ts`, `lib/mister-p/prompt.ts`, migrations 0026 + 0027.
+
+### Voice input for Mister P chat (0.6)
+A mic button on both chat surfaces (`/today` and per-goal panel) triggers browser `MediaRecorder` to capture audio. On stop (tap or 60s timeout), audio POSTs to `/api/transcribe` (wraps OpenAI's whisper-1 model). Transcript appends to existing input rather than replacing it, so voice input mixes cleanly with typed text. No prompt change — Mister P sees the same `user_question` field; only the input modality differs. Code: `components/voice-input-button.tsx`, `app/api/transcribe/route.ts`.
+
+### Cleanmaxxing pyramid article (0.6)
+New in-app article at `/other-info/pyramid` visualizing the intervention hierarchy as a six-tier pyramid: cosmetic procedures (apex) → hormonal / peptides → targeted treatments → refinements → high-impact basics → foundation (base). An "off the pyramid" sidebar names the hard refusals (bonesmashing, synthol, DNP, underground SARMs, hairline tattoos abroad) so users encountering this content elsewhere have a referenceable position the brand will not move from. Listed first in `/other-info` as the most useful framing for new users orienting in the category. Code: `app/(app)/other-info/pyramid/page.tsx`, `content/marketing/pyramid.md`.
+
+### Height feet-inches dropdown + IANA-aware survey (0.6)
+Onboarding height question and `/profile` current-stats form both move from a raw-inches number input to a dropdown of 29 options (`4'10"` through `7'2"`). Storage remains inches as a string downstream so Mister P, TDEE, and profile-completion don't see a change. Onboarding also gains a generalized `"select"` `QuestionType` that other dropdown questions can adopt. Code: `lib/height-options.ts`, `lib/onboarding/questions.ts`, `app/(app)/profile/current-stats-form.tsx`.
+
+### hair_status enum tightened (0.6)
+Migration 0033 (the `hair_status_drop_treating` one of the twin 0033s) drops the `'treating'` value from the `hair_status` enum and nulls existing `'treating'` rows. The value was redundant with `current_interventions` flags for finasteride / minoxidil / accutane. Enum is now `full` / `thinning` / `receding` / `shaved`. Profile dropdown and Mister P prompt reflect the change. Code: `app/(app)/profile/current-stats-form.tsx`, migration 0033 (`hair_status_drop_treating`).
+
+### Protein target softened to 0.8–0.9 g/lb (0.6)
+The protein recommendation language shifts from "1 g/lb of bodyweight" to "0.8–0.9 g/lb" everywhere it surfaces: onboarding explanation, Mister P system prompt guidance, profile guidance text, and goal-template descriptions for protein-tracking goals. Two reasons: better-aligned to the recomp/cutting phases the 30+ audience typically lands in, and (more important for the safety rails) the 1 g/lb number was producing obsessive log-watching in beta testers — easier to overshoot than to hit, and the overshoot was reading as failure. The looser range gives a hit-state that's actually achievable on most days. Code: search for `protein` in `content/povs/`, `content/goal-templates.ts`, `lib/mister-p/prompt.ts`, profile guidance copy.
+
+### Onboarding ranker drops the +1 process tiebreaker (0.6)
+The prior ranker added a +1 score boost to process goals over outcomes during template scoring. Dropped because the soft "2-of-3 process" nudge on the goals-picker (one-tap swap) was already accomplishing the same end with a clearer mechanism — the user sees the swap and approves it, rather than the algorithm quietly biasing the order. Outcomes now compete on tier + focus + motivation alone. Motivation-segment adjustments (e.g., `feel-better-in-own-skin`'s ±4 process/outcome bias, `maintenance-aging`'s +3 / -3) remain. Code: `lib/onboarding/goal-suggest.ts`.
+
+### Auth signup — clear "check your email" flow (0.6)
+The post-signup screen now shows a clear "Check your email for the confirmation link" state with a resend button, replacing the prior ambiguous redirect to `/today` that left users wondering whether they were signed in or not. Resend is rate-limited via Supabase's built-in throttling. Code: `app/auth/signup/page.tsx`, `app/auth/check-email/page.tsx`.
+
+### Theme default flips system → dark (0.6)
+New users default to dark mode rather than system. Existing users keep their current setting. Rationale: the no-FOUC inline script in `app/layout.tsx` was producing a brief light flash for system-default users on dark-OS devices when the OS-preference signal arrived after first paint, and the brand+content read better in dark anyway. The toggle still cycles system / light / dark, so users on light can opt back in trivially. Code: `lib/theme.ts`, `app/layout.tsx`.
+
+### App nav widened to max-w-6xl (0.6)
+The nav container went from `max-w-2xl` to `max-w-6xl` so all six links (Today / Goals / Library / POVs / Photos / Settings) plus the right-cluster (theme toggle, email, sign out) fit on one row at desktop widths without wrapping. Mobile is unchanged. Code: `components/app-nav.tsx`.
+
+### Photo management drops out of /settings (0.6)
+The settings page's progress-photos section is removed; photo capture and gallery live exclusively at `/photos` (and the comparison slider at `/profile`). Eliminates the two-source-of-truth confusion that emerged after the 0.5 `/profile` consolidation, where the same delete button existed in two places and could leave the user on a stale view of the other. Code: `app/(app)/settings/page.tsx`.
+
+### Brady article body sync to "seven rings" (0.6)
+The Tom Brady article's body referenced "six rings" while the title (already updated in 0.4) said "seven rings." Article body now says seven, matching the actual count after the Tampa Bay win. Trivial copy fix worth flagging only because the spec previously documented the title change separately. Code: `content/marketing/tom-brady-face.md`.
+
+### Homepage iteration: "That window closed" rewrite + revert (0.6)
+The homepage was rewritten mid-sprint to lead with "That window closed" and cut the four-paragraph feature dump (commit febef28), but the rewrite didn't land — the new flow read as too one-note for users who hadn't already self-identified with the framing. Reverted to the prior structure (commit 4bc172c) with the Clav-card text refined to call out "Clavicular's framework." The "Look and feel sharper at 35, 40, 45" hero stays. Documenting the churn here so future homepage edits know that aggressive lead-with-vulnerability framings have been tried and didn't work without more supporting structure. Code: `app/page.tsx`.
+
 ---
 
 ## 3. Explicitly Out of Scope (v2+)
@@ -487,6 +630,10 @@ users
   subscription_status (trial, active, canceled, past_due)
   stripe_customer_id
   rewardful_referral_id (nullable)
+  timezone (text, IANA — added 0.6 via migration 0024, defaults to 'America/New_York'.
+            Drives the 3 AM app-day rollover via lib/date/app-day.ts; client-side
+            <TimezoneSync> in (app)/layout.tsx writes the browser's IANA zone on
+            first load.)
 
 goals
   id
@@ -499,9 +646,34 @@ goals
   status (active, completed, abandoned)
   source_slug (nullable text — POV slug this goal was templated from; used for duplicate detection and walkthrough lookup, see §2.6)
   baseline_stage (nullable text, one of: 'new' | 'light' | 'partial' | 'established' — captured at acceptance, drives the walkthrough starting week per §2.6; migration 0007)
+  target_date (nullable date — added 0.6 via migration 0020. When set,
+               walkthrough cards convert "Week N" framing to "Week N of M"
+               computed from target_date - created_at.)
+  last_phase_seen (nullable text — added 0.6 via migration 0021. Tracks
+                   the last walkthrough phase the user has been shown the
+                   Current Focus card for; the card only renders when the
+                   user advances past last_phase_seen, then writes the new
+                   phase here so it goes quiet until the next advancement.)
+  chat_execution_mode (bool default false — added 0.6 via migration 0026.
+                       When true, the goal-scoped Mister P chat advisory
+                       instructs Mister P to skip foundation redirection
+                       and engage directly. Hard refusals still apply.)
+  chat_execution_prompt_acked (bool default false — added 0.6 via migration
+                               0027. Set when the user acknowledges the
+                               execution-mode-active dimmed-input UI;
+                               un-dims the chat input.)
   created_at
   completed_at (nullable)
   source (user_created, system_suggested)
+  -- Goal templates (in code, not DB) also carry two fields added in 0.6:
+  -- domain (nutrition / training / sleep / skincare / hair / grooming / style /
+  --         posture / supplements / environment / self-acceptance) — drives
+  --         the add-time domain-overlap warning.
+  -- measurement_type (habit_adherence / session_log / progression /
+  --                   macro_tracking / body_metric / photo_comparison /
+  --                   wake_time_consistency / closet_audit /
+  --                   appointment_milestone / self_check) — drives the
+  --                   contextual daily-check-in action.
 
 check_ins
   id
@@ -536,10 +708,19 @@ progress_photos (§2.6)
         migration 0016 widened it again in 0.5 to add 'progress_180d' for the
         six-month checkpoint covering hair regrowth, late aesthetic compounding,
         and sustained recomp)
+  angle (text, one of 'front' | 'side' | 'closeup' — added 0.6 via migration
+         0028. Lets a face capture stack multiple angles per milestone for the
+         AI facial-analysis feature; body captures default to 'front'.)
+  category (text, one of 'face' | 'body' — added 0.6 via migration 0030.
+            Powers the two-section /photos page render. 'face' photos are
+            the only ones eligible for the premium AI facial-analysis
+            endpoint.)
   storage_path (text — folder-based RLS: (storage.foldername(name))[1] = auth.uid()::text)
   captured_at
   -- bytes live in Supabase Storage bucket; metadata is here
-  -- migrations 0008 (initial) + 0009 (30d slot) + 0016 (180d slot)
+  -- 25 MB upload cap as of 0.6 (was 8 MB)
+  -- migrations: 0008 (initial) + 0009 (30d slot) + 0016 (180d slot)
+  --           + 0028 (angle) + 0030 (category)
 
 survey_responses
   id
@@ -609,7 +790,9 @@ user_profile (added 0.3 via migration 0010; expanded 0.5)
   height_inches (int 48–96 — added 0.5 via migration 0015; same
                  read-time fallback to survey_responses 'height_inches')
   -- Tier 2: surfaced via /profile (Personal info form).
-  hair_status (enum: full, thinning, receding, treating, shaved)
+  hair_status (enum: full, thinning, receding, shaved
+               — 0.6 dropped 'treating' via migration 0033 (hair_status_drop_treating);
+               redundant with current_interventions finasteride/minoxidil/accutane flags.)
   skin_type (smallint 1–6, Fitzpatrick)
   current_interventions (text[] — controlled set: trt, glp1, finasteride,
                          minoxidil, retinoid, accutane, plus 0.5 additions
@@ -617,6 +800,128 @@ user_profile (added 0.3 via migration 0010; expanded 0.5)
   budget_tier (enum: under_50, 50_to_150, 150_to_500, no_limit)
   relationship_status (enum: single, dating, partnered, married)
   updated_at
+
+-- ============== 0.6 additions (migrations 0017–0034) ==============
+
+push_subscriptions (migration 0017)
+  id
+  user_id
+  endpoint (text — browser-supplied push endpoint URL)
+  p256dh, auth (text — Web Push encryption keys)
+  reminder_hour (int 0–23, default 20 — local-time hour for the daily nudge)
+  last_reminder_at (timestamptz — de-dup guard: cron skips if < 20h ago)
+  enabled (bool)
+  created_at
+  -- Hourly cron at /api/cron/push-reminders matches each user's local hour
+  -- via users.timezone and sends a "Check in" / Sunday-reflection push.
+
+sleep_logs (migration 0018; source column added in 0031)
+  id
+  user_id
+  date (unique per (user_id, date))
+  hours (numeric)
+  quality (smallint 1–5)
+  source (text, default 'manual' — one of 'manual' | 'vital_apple_health'
+          | 'vital_google_fit' | 'vital_health_connect'. Added in 0031
+          for Vital/Junction ingest. scoreToQuality() derives 1–5 from
+          provider sleep scores; manual entries override Vital values
+          last-write-wins on the unique (user_id, date) constraint.)
+  created_at
+  updated_at
+
+daily_notes (migration 0019)
+  id
+  user_id
+  date (unique per (user_id, date))
+  template_key (text — selector key from lib/daily-note/templates.ts)
+  observation (text)
+  question (nullable text)
+  response (nullable text — user's answer; read into Mister P's behavioral
+            state on subsequent turns via formatUserStateBlock)
+  responded_at (nullable timestamptz)
+  created_at
+
+workout_logs (migration 0022)
+  id
+  user_id
+  logged_at (timestamptz — bucketed by users.timezone for app-day rollover)
+  type (enum: 'strength' | 'cardio' | 'mobility' | 'other')
+  duration_minutes (int)
+  details (jsonb, nullable — for strength: { lifts: [{name, sets, reps, weight}, ...] })
+  created_at
+  -- Mister P reads trailing 7-day volume + type mix in his behavioral state
+  -- block, enabling training-calibrated answers without the user prompting.
+
+weekly_letters (migration 0023)
+  id
+  user_id
+  week_start (date — Sunday of the letter week)
+  body (text — LLM-authored from sleep/workout/reflection/chat history)
+  unique (user_id, week_start)
+  created_at
+  -- Sunday cron at /api/cron/weekly-letter generates one per user per week.
+  -- Author prompt synthesizes the week's data without numeric summaries
+  -- (no streak counts, no graphs).
+
+nutrition_logs (migration 0025)
+  id
+  user_id
+  date (unique per (user_id, date))
+  protein_hit (bool — daily target hit/miss)
+  calorie_hit (bool, nullable)
+  protein_grams (int, nullable — optional precise log)
+  calories (int, nullable)
+  created_at
+  -- Daily quick-log card on /today; intentionally simpler than full
+  -- macro tracking. Feeds Mister P state and weekly letter.
+
+facial_analyses (migration 0029)
+  id
+  user_id
+  before_photo_id, after_photo_id (FK progress_photos.id)
+  observations (jsonb — qualitative observations from Claude Sonnet 4.6 vision)
+  created_at
+  -- Premium-only: gated by lib/billing/is-premium.ts (trial users count
+  -- as premium for first 14 days). Refuses numeric ranking, PSL framing,
+  -- attractiveness scoring — same rails as Mister P. Only 'face' category
+  -- photos are eligible.
+
+health_integrations (migration 0031)
+  id
+  user_id (unique — one connection per user)
+  provider (text, open enum after migration 0032 — e.g. 'fitbit', 'oura',
+            'whoop', 'garmin', 'strava', 'withings', 'polar', 'dexcom',
+            'apple_health', 'google_fit')
+  vital_user_id (text — Junction's user identifier)
+  scopes (text[])
+  connected_at, last_synced_at (timestamptz)
+  created_at, updated_at
+
+daily_activity (migration 0031; intensity columns added in 0033 daily_activity_intensity)
+  id
+  user_id
+  date (unique per (user_id, date) — bucketed by users.timezone)
+  steps (int)
+  active_calories (int, nullable)
+  moderate_minutes, vigorous_minutes (int, nullable — added 0033 for the
+                                       weekly moderate-or-vigorous metric)
+  source (text — 'vital_<provider>' or 'manual')
+  created_at, updated_at
+
+webhook_debug (migration 0034 — diagnostic, not analytical; prune periodically)
+  id
+  received_at (timestamptz)
+  event_type (text — Junction event name, snake_case)
+  body_keys (text[] — top-level keys present in the webhook body)
+  data_keys (text[] — keys inside body.data)
+  branch_taken (text — which handler branch processed it)
+  raw_body (jsonb, nullable — captured during early integration; can be
+            dropped once Junction's payload contract is stable)
+
+-- Migration numbering note (0.6): there are TWO migrations numbered 0033
+-- (daily_activity_intensity and hair_status_drop_treating). The migration
+-- runner sorts by filename so they apply in alphabetical order, but the
+-- next migration MUST be 0035 to avoid further collisions.
 ```
 
 Keep it this simple. Resist the urge to add tables for features that aren't in MVP scope.
@@ -734,13 +1039,28 @@ User question:
 {user_question}
 ```
 
-### Additional blocks injected per request (shipped in 0.2)
+### Additional blocks injected per request (shipped in 0.2, expanded through 0.6)
 
-Three optional blocks may be appended to the system prompt on each turn, driven by the ask handler in `app/api/mister-p/ask/route.ts`:
+Optional blocks appended to the system prompt on each turn, driven by the ask handler in `app/api/mister-p/ask/route.ts`:
 
 - **Active-goals block** (`formatGoalsBlock` in `lib/mister-p/prompt.ts`) — always injected when the user has any active goals. Lists each goal with its duration and how many prior Mister P answers cited its source doc (so Mister P can skip foundations for a user who has already seen them). Includes instructions: anchor answers to what the user is working on when the question overlaps, calibrate depth by goal age and prior-chat coverage, do not force a connection when the question is unrelated.
 - **Proactive-suggestion advisory** (§2.5c) — injected when `shouldTriggerProactiveSuggestion(topicAnalysis)` is true, `chunks.length > 0`, **and** the top retrieved chunk's `doc_slug` is in the user's active goal `source_slug` set. Tells Mister P to offer one optional "full breakdown in the X doc" line after the main answer. Gated on the user-goal set because a doc that isn't backing one of their goals wouldn't be on `/povs` — the nudge would dead-end.
 - **Circuit-breaker advisory** (§13) — injected when `shouldTriggerCircuitBreaker(topicAnalysis)` is true (5+ similar-topic queries in 7 days; 3+ for the `something-specific-bothering-me` motivation segment). Takes priority over the proactive-suggestion advisory when both would fire — at most one advisory per turn.
+- **User behavioral state block** (0.3 — `formatUserStateBlock`) — specific_thing free-text, tenure, weekly completion rate, per-dimension confidence with rising/flat/declining tags, stuck dimensions. Calibration only; never narrate observations back to the user.
+- **Conversation history block** (0.3 — `formatConversationHistoryBlock`) — last 8 Q/A pairs from `mister_p_queries` (RLS-scoped). Answers truncate at 800 chars, questions at 300. Rules: never repeat verbatim, go deeper when a topic recurs, never narrate that you remember.
+- **User's current focus block** (0.5 — `formatActiveGoalFocusBlock`) — injected only when the ask request carries a validated `goal_id` (i.e., the user is asking inside a goal-scoped chat thread). Disambiguates references like "this," "this goal," "it" to the focused goal.
+- **Execution-mode advisory** (0.6) — injected when the focused goal's `chat_execution_mode = true` (only possible inside a goal-scoped thread, since the toggle lives on the goal). Tells Mister P to skip foundation-first redirects and engage directly with the user's question. Hard refusals and brand rails (no medical interpretation, no attractiveness hierarchies, no sourcing guidance) still apply — execution mode is not refusal-bypass mode. This is the only advisory that overrides Mister P's default "go to foundations first when the user is missing them" posture, and it's user-opt-in per goal.
+
+### Non-chat Mister P authoring (0.6)
+
+Two surfaces author Mister P content outside the chat ask path:
+
+- **Daily note** (`lib/daily-note/templates.ts`) — rules-based v1. A small selector picks a template based on user state (recent reflection, current goal phase, sleep trend, etc.) and substitutes user-specific values into the observation + question. LLM authoring is deferred until response data validates which template patterns are worth paying inference cost on. Responses persist to `daily_notes` and read back into the behavioral-state block above.
+- **Weekly letter** (`lib/weekly-letter/compose.ts`, cron at `/api/cron/weekly-letter`) — LLM-authored. Separate prompt from the chat system prompt. Reads sleep_logs, workout_logs, weekly_reflections, recent mister_p_queries, and active goals; synthesizes a Sunday letter that lands as a `/today` card for the rest of the week. Author prompt explicitly prohibits numeric summaries — no streak counts, no completion-rate tables, no graphs. The intent is the difference between an automated weekly recap and a coach who paid attention.
+
+### Voice input (0.6)
+
+Voice transcripts route through `/api/transcribe` (OpenAI whisper-1) and append into the same `user_question` field as typed input. No prompt change; Mister P sees the same payload regardless of input modality.
 
 ### Iteration plan
 - Write 20 test questions before shipping (10 in-scope, 5 edge cases, 5 hard refusals)

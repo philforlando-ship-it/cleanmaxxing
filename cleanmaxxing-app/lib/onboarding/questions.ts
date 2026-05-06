@@ -66,6 +66,7 @@ export const QUESTIONS: Question[] = [
       { value: 'style', label: 'Style' },
       { value: 'posture', label: 'Posture' },
       { value: 'grooming', label: 'Grooming' },
+      { value: 'sleep', label: 'Sleep' },
       { value: 'anti_aging', label: 'Anti-aging' },
     ],
     required: true,

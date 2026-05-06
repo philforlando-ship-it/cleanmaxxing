@@ -12,6 +12,27 @@ import { FirstRunCard } from './first-run-card';
 import { ProgressPhotoCard } from './progress-photo-card';
 import { StaleGoalCard } from './stale-goal-card';
 import { ProfileCompletionCard } from './profile-completion-card';
+import { HairPlanCard } from './hair-plan-card';
+import { HairRoutineCard } from './hair-routine-card';
+import { HairPhotoDueCard } from './hair-photo-due-card';
+import { StylePlanCard } from './style-plan-card';
+import { FacialHairPlanCard } from './facial-hair-plan-card';
+import { SleepPlanCard } from './sleep-plan-card';
+import { SleepCommitmentsCard } from './sleep-commitments-card';
+import { SkincarePlanCard } from './skincare-plan-card';
+import { NutritionPlanCard } from './nutrition-plan-card';
+import { StrengthPlanCard } from './strength-plan-card';
+import { CardioPlanCard } from './cardio-plan-card';
+import { getHairAssessment, getStage4State } from '@/lib/hair/service';
+import { hasStyleAssessment } from '@/lib/style/service';
+import { hasFacialHairAssessment } from '@/lib/facial-hair/service';
+import { hasSleepAssessment } from '@/lib/sleep/service';
+import { hasSkincareAssessment } from '@/lib/skincare/service';
+import { hasNutritionAssessment } from '@/lib/nutrition/service';
+import { hasStrengthAssessment } from '@/lib/strength/service';
+import { hasCardioAssessment } from '@/lib/cardio/service';
+import { getTodayCommitmentsState } from '@/lib/sleep/commitments';
+import { daysUntilNext } from '@/lib/hair/stage-5-content';
 import { SleepLogCard } from './sleep-log-card';
 import { getSleepState } from '@/lib/sleep/service';
 import { WorkoutLogCard } from './workout-log-card';
@@ -186,6 +207,117 @@ export default async function TodayPage({ searchParams }: Props) {
       )
       .order('date', { ascending: false }),
   ]);
+  // Hair + style plan tile gating. Pulls focus areas (single onboarding
+  // survey row), the hair assessment (full row — used both for the
+  // hair plan CTA and the Stage 4 / Stage 5 daily-tile derivations),
+  // and the style assessment (lightweight has-state check, since the
+  // style v0 doesn't have any /today daily tiles yet).
+  const [
+    { data: focusRow },
+    hairAssessment,
+    styleState,
+    facialHairState,
+    sleepAssessmentState,
+    skincareState,
+    nutritionAssessmentState,
+    strengthAssessmentState,
+    cardioAssessmentState,
+  ] = await Promise.all([
+    supabase
+      .from('survey_responses')
+      .select('response_value')
+      .eq('user_id', user.id)
+      .eq('question_key', 'focus_areas')
+      .maybeSingle(),
+    getHairAssessment(supabase, user.id),
+    hasStyleAssessment(supabase, user.id),
+    hasFacialHairAssessment(supabase, user.id),
+    hasSleepAssessment(supabase, user.id),
+    hasSkincareAssessment(supabase, user.id),
+    hasNutritionAssessment(supabase, user.id),
+    hasStrengthAssessment(supabase, user.id),
+    hasCardioAssessment(supabase, user.id),
+  ]);
+  let hairIsFocus = false;
+  let styleIsFocus = false;
+  let groomingIsFocus = false;
+  let sleepIsFocus = false;
+  let skinIsFocus = false;
+  let bodyCompIsFocus = false;
+  let fitnessIsFocus = false;
+  if (focusRow?.response_value) {
+    try {
+      const parsed = JSON.parse(focusRow.response_value as string);
+      if (Array.isArray(parsed)) {
+        if (parsed.includes('hair')) hairIsFocus = true;
+        if (parsed.includes('style')) styleIsFocus = true;
+        if (parsed.includes('grooming')) groomingIsFocus = true;
+        if (parsed.includes('sleep')) sleepIsFocus = true;
+        if (parsed.includes('skin')) skinIsFocus = true;
+        if (parsed.includes('body_composition')) bodyCompIsFocus = true;
+        if (parsed.includes('fitness')) fitnessIsFocus = true;
+      }
+    } catch {
+      // malformed survey value — leave all flags false
+    }
+  }
+  const hairHasReport = hairAssessment?.report_text != null;
+  // Stage 4 state — only fetched when the user has an assessment AND
+  // Stage 4 is started (so we don't run the daily-log count query for
+  // every user every render). When in progress, drives the new daily
+  // routine tile below.
+  const hairStage4 =
+    hairAssessment && hairAssessment.stage_4_started_at
+      ? await getStage4State(
+          supabase,
+          user.id,
+          hairAssessment,
+          appDayFor(timezone),
+        )
+      : null;
+
+  // Sleep commitments — only fetched when sleep is a focus area and
+  // the user has a completed plan (no commitments before the report
+  // exists). Cheap query; one read of active commitments + today's
+  // logs joined client-side in the service.
+  const sleepCommitmentsToday =
+    sleepIsFocus && sleepAssessmentState.hasReport
+      ? await getTodayCommitmentsState(
+          supabase,
+          user.id,
+          appDayFor(timezone),
+        )
+      : [];
+  const showHairRoutineTile =
+    hairIsFocus &&
+    !steppedAway &&
+    hairStage4 !== null &&
+    hairStage4.isStarted &&
+    !hairStage4.isComplete &&
+    hairStage4.target !== null;
+
+  // Stage 5 photo-due tile. Quiet between sessions — only renders when
+  // the user is on the cadence AND a session is due (today or overdue),
+  // OR they haven't taken their baseline yet. NOT a daily nag like Stage 4.
+  const hairStage5Started =
+    hairAssessment !== null &&
+    hairAssessment.stage_5_started_at !== null &&
+    hairAssessment.stage_5_cadence_days !== null;
+  const hairStage5IsFirstSession =
+    hairStage5Started && hairAssessment!.stage_5_session_count === 0;
+  const hairStage5DaysUntil = hairStage5Started
+    ? daysUntilNext(
+        hairAssessment!.stage_5_last_session_at,
+        hairAssessment!.stage_5_cadence_days!,
+      )
+    : null;
+  const showHairPhotoDueTile =
+    hairIsFocus &&
+    !steppedAway &&
+    hairStage5Started &&
+    (hairStage5IsFirstSession ||
+      (hairStage5DaysUntil !== null && hairStage5DaysUntil <= 0));
+
   // Cast to the WeeklyFocusCard's ActiveGoal shape. The supabase
   // client's inferred response type drops columns it doesn't have
   // in its generated schema (target_date was added in migration
@@ -553,6 +685,76 @@ export default async function TodayPage({ searchParams }: Props) {
           <ProfileCompletionCard completion={profileCompletion} />
         )}
 
+        {!steppedAway && hairIsFocus && (
+          <HairPlanCard state={hairHasReport ? 'done' : 'pending'} />
+        )}
+
+        {!steppedAway && styleIsFocus && (
+          <StylePlanCard state={styleState.hasReport ? 'done' : 'pending'} />
+        )}
+
+        {!steppedAway && groomingIsFocus && (
+          <FacialHairPlanCard
+            state={facialHairState.hasReport ? 'done' : 'pending'}
+          />
+        )}
+
+        {!steppedAway && sleepIsFocus && (
+          <SleepPlanCard
+            state={sleepAssessmentState.hasReport ? 'done' : 'pending'}
+          />
+        )}
+
+        {!steppedAway && sleepCommitmentsToday.length > 0 && (
+          <SleepCommitmentsCard commitments={sleepCommitmentsToday} />
+        )}
+
+        {!steppedAway && skinIsFocus && (
+          <SkincarePlanCard
+            state={skincareState.hasReport ? 'done' : 'pending'}
+          />
+        )}
+
+        {!steppedAway && bodyCompIsFocus && (
+          <NutritionPlanCard
+            state={nutritionAssessmentState.hasReport ? 'done' : 'pending'}
+          />
+        )}
+
+        {!steppedAway && fitnessIsFocus && (
+          <StrengthPlanCard
+            state={strengthAssessmentState.hasReport ? 'done' : 'pending'}
+          />
+        )}
+
+        {!steppedAway && fitnessIsFocus && (
+          <CardioPlanCard
+            state={cardioAssessmentState.hasReport ? 'done' : 'pending'}
+          />
+        )}
+
+        {showHairRoutineTile && hairStage4 && hairStage4.target !== null && (
+          <HairRoutineCard
+            count={hairStage4.count}
+            target={hairStage4.target}
+            hasLoggedToday={hairStage4.hasLoggedToday}
+            isBaldTrack={
+              hairAssessment !== null &&
+              (hairAssessment.stage_1_cut_family === 'bald_track' ||
+                hairAssessment.stage_1_cut_family === 'clean_shave' ||
+                hairAssessment.density_state === 'shaved_or_buzzed' ||
+                hairAssessment.stage_2_path === 'transition')
+            }
+          />
+        )}
+
+        {showHairPhotoDueTile && (
+          <HairPhotoDueCard
+            isFirstSession={hairStage5IsFirstSession}
+            daysUntil={hairStage5DaysUntil}
+          />
+        )}
+
         {show180dNudge && !steppedAway && (
           <ProgressPhotoCard variant="progress_180d" />
         )}
@@ -613,6 +815,25 @@ export default async function TodayPage({ searchParams }: Props) {
             for reflection) and the chat has no tracking side effects
             (asking Mister P something isn't the same as
             self-surveillance). */}
+        {/* Foundations section. The four tiles below (sleep, activity,
+            workout, nutrition) aren't tied to any focus area — they're
+            cross-cutting basics that ground every other answer the app
+            gives. Beta feedback flagged them as "what are these for, are
+            they mandatory?" — this header answers both directly without
+            re-architecting the tile gating. */}
+        {!steppedAway && (
+          <div className="pt-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              Foundations
+            </h2>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+              The daily basics — sleep, training, food. Not tied to any
+              focus area, not mandatory. What you log here grounds Mister
+              P&rsquo;s answers and quietly shapes your reports. Skip when
+              it&rsquo;s not relevant.
+            </p>
+          </div>
+        )}
         {/* SleepLogCard always renders. When a connected wearable has
             populated last night's sleep_logs row, the card shows the
             captured values + a "via [Provider]" tag and the Edit

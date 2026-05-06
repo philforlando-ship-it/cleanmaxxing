@@ -92,6 +92,21 @@ export type MisterPUserState = {
   // null when the user hasn't completed the exchange yet.
   firstConvoBlockers: string | null;
   firstConvoTriedBefore: string | null;
+
+  // Storage path for the user's baseline face photo (if uploaded).
+  // The chat route uses this to optionally attach the photo as an
+  // image content part on each turn so Mister P can reference visible
+  // features when relevant. Null when the user hasn't captured a
+  // baseline yet — Mister P falls back to text-only behavior.
+  baselineFacePhotoPath: string | null;
+
+  // Storage path for the anchor photo from the user's most recent
+  // COMPLETED hair session (front for hair track, top_down for bald
+  // track). One image per chat turn — adding all 5 hair angles would
+  // 5x the input-token cost. Anchor angle is sufficient for most
+  // visible-feature questions; the user can ask about other angles
+  // through /plan/hair/photos directly.
+  latestHairAnchorPhotoPath: string | null;
 };
 
 const MS_PER_DAY = 86_400_000;
@@ -225,6 +240,55 @@ export async function getMisterPUserState(
   const sleepState = await getSleepState(supabase, userId);
   const workoutState = await getWorkoutState(supabase, userId, now);
 
+  // Baseline face photo lookup. Filtered to (slot=baseline, angle=front,
+  // category=face) — that's the canonical headshot the user captured at
+  // onboarding. Side / close angles aren't included; the chat doesn't
+  // need them and keeping the payload to one image keeps cost predictable.
+  const { data: baselinePhotoRow } = await supabase
+    .from('progress_photos')
+    .select('storage_path')
+    .eq('user_id', userId)
+    .eq('slot', 'baseline')
+    .eq('angle', 'front')
+    .eq('category', 'face')
+    .maybeSingle();
+  const baselineFacePhotoPath =
+    (baselinePhotoRow as { storage_path: string } | null)?.storage_path ??
+    null;
+
+  // Latest completed hair session anchor photo (front for hair track,
+  // top_down for bald track). One query joins the most recent
+  // completed session to its anchor angle photo. We try 'front' first
+  // and fall back to 'top_down' if the user is on the bald track.
+  let latestHairAnchorPhotoPath: string | null = null;
+  const { data: latestSessionRow } = await supabase
+    .from('hair_photo_sessions')
+    .select('id')
+    .eq('user_id', userId)
+    .not('completed_at', 'is', null)
+    .order('captured_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const latestSessionId =
+    (latestSessionRow as { id: string } | null)?.id ?? null;
+  if (latestSessionId) {
+    const { data: anchorRow } = await supabase
+      .from('hair_photos')
+      .select('storage_path, angle')
+      .eq('user_id', userId)
+      .eq('session_id', latestSessionId)
+      .in('angle', ['front', 'top_down']);
+    const anchors = (anchorRow ?? []) as Array<{
+      storage_path: string;
+      angle: string;
+    }>;
+    // Prefer 'front' over 'top_down' when both exist (the hair track is
+    // the more common case).
+    const front = anchors.find((a) => a.angle === 'front');
+    const top = anchors.find((a) => a.angle === 'top_down');
+    latestHairAnchorPhotoPath = front?.storage_path ?? top?.storage_path ?? null;
+  }
+
   return {
     specificThing,
     daysSinceOnboarding,
@@ -243,6 +307,8 @@ export async function getMisterPUserState(
     workoutMostRecentDate: workoutState.mostRecentDate,
     firstConvoBlockers,
     firstConvoTriedBefore,
+    baselineFacePhotoPath,
+    latestHairAnchorPhotoPath,
   };
 }
 

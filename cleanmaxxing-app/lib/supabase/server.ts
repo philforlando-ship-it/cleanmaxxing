@@ -1,5 +1,19 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { cache } from 'react';
+
+// Per-request memoized auth lookup. Layout + page (and any nested
+// helpers) on the same render tree share one /auth/v1/user call
+// instead of N. Critical for pages where layout.tsx and the page
+// component both need the user, since each direct getUser() hits
+// Supabase's auth rate limiter.
+export const getUser = cache(async () => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
+});
 
 export async function createClient() {
   const cookieStore = await cookies();

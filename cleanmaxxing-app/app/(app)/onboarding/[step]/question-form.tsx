@@ -117,7 +117,10 @@ export function QuestionForm({
   }
 
   function back() {
-    if (step === 0) return;
+    if (step === 0) {
+      router.push('/onboarding/intro');
+      return;
+    }
     router.push(`/onboarding/${step - 1}`);
   }
 
@@ -289,7 +292,7 @@ export function QuestionForm({
         <button
           type="button"
           onClick={back}
-          disabled={step === 0 || pending}
+          disabled={pending}
           className="rounded-lg px-4 py-2 text-sm text-zinc-600 disabled:opacity-40 dark:text-zinc-400"
         >
           Back

@@ -111,7 +111,7 @@ function pickSuggestion(
     return 'You didn\'t check in this week. No guilt — just open the app tomorrow and do one check-in. That\'s the whole move.';
   }
   if (daysCheckedIn <= 2) {
-    return 'Try stacking the check-in onto something you already do — right after coffee, right before bed. Willpower runs out; habit stacking doesn\'t.';
+    return 'Try stacking the check-in onto something you already do at the end of the day — right after dinner, right before bed. Willpower runs out; habit stacking doesn\'t.';
   }
   if (completionRate !== null && completionRate < 0.5) {
     return 'You\'re showing up but missing on the goals themselves. That usually means one of them is too ambitious for where you are right now. Consider swapping it for something smaller.';

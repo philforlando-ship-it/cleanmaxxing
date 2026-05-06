@@ -1,12 +1,16 @@
-// Server-side helpers for the sleep tracker. Reads recent
-// sleep_logs rows for /today's card hydration and Mister P's
-// user-state calibration. The recent average is computed over
-// the last N logged nights (not a calendar window) so the metric
-// is well-defined regardless of how often the user logs and
-// regardless of their timezone — the server doesn't need to
-// know what "this week" means in user-local time.
+// Server-side helpers for the sleep tracker AND the sleep
+// assessment / plan layer. The tracker reads recent sleep_logs rows
+// (getSleepState below) for /today's card hydration and Mister P's
+// user-state calibration. The assessment layer (further down) does
+// CRUD on sleep_assessments — same Pattern A shape as hair / style /
+// facial_hair.
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type {
+  SleepAssessment,
+  SleepAssessmentInput,
+  SleepReportInputModifiers,
+} from './types';
 
 export type SleepLog = {
   night_of: string; // YYYY-MM-DD
@@ -97,5 +101,112 @@ export async function getSleepState(
     rollingAvgHours,
     rollingAvgQuality,
     rollingCount,
+  };
+}
+
+// ===========================================================
+// Sleep assessment / plan (Pattern A v0)
+// ===========================================================
+
+export async function getSleepAssessment(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<SleepAssessment | null> {
+  const { data, error } = await supabase
+    .from('sleep_assessments')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return rowToAssessment(data);
+}
+
+export async function hasSleepAssessment(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<{ hasAssessment: boolean; hasReport: boolean }> {
+  const { data, error } = await supabase
+    .from('sleep_assessments')
+    .select('user_id, report_generated_at')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return { hasAssessment: false, hasReport: false };
+  return {
+    hasAssessment: true,
+    hasReport: data.report_generated_at !== null,
+  };
+}
+
+export async function saveSleepAssessment(
+  supabase: SupabaseClient,
+  userId: string,
+  input: SleepAssessmentInput,
+): Promise<SleepAssessment> {
+  const row = {
+    user_id: userId,
+    primary_concerns: input.primary_concerns,
+    biggest_blockers: input.biggest_blockers,
+    schedule_consistency: input.schedule_consistency,
+    what_tried: input.what_tried,
+    sleep_goal_text: input.sleep_goal_text,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from('sleep_assessments')
+    .upsert(row, { onConflict: 'user_id' })
+    .select('*')
+    .single();
+  if (error) throw error;
+  return rowToAssessment(data);
+}
+
+export async function saveSleepReport(
+  supabase: SupabaseClient,
+  userId: string,
+  args: {
+    report_text: string;
+    report_model: string;
+    report_input_modifiers: SleepReportInputModifiers;
+  },
+): Promise<void> {
+  const { error } = await supabase
+    .from('sleep_assessments')
+    .update({
+      report_text: args.report_text,
+      report_generated_at: new Date().toISOString(),
+      report_input_modifiers: args.report_input_modifiers,
+      report_model: args.report_model,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId);
+  if (error) throw error;
+}
+
+function rowToAssessment(row: unknown): SleepAssessment {
+  const r = row as Record<string, unknown>;
+  return {
+    user_id: r.user_id as string,
+    primary_concerns:
+      (r.primary_concerns as SleepAssessment['primary_concerns']) ?? [],
+    biggest_blockers:
+      (r.biggest_blockers as SleepAssessment['biggest_blockers']) ?? [],
+    schedule_consistency:
+      r.schedule_consistency as SleepAssessment['schedule_consistency'],
+    what_tried: (r.what_tried as SleepAssessment['what_tried']) ?? [],
+    sleep_goal_text: (r.sleep_goal_text as string | null) ?? null,
+    otc_supplements_considered_at:
+      (r.otc_supplements_considered_at as string | null) ?? null,
+    apnea_screening_surfaced_at:
+      (r.apnea_screening_surfaced_at as string | null) ?? null,
+    report_text: (r.report_text as string | null) ?? null,
+    report_generated_at: (r.report_generated_at as string | null) ?? null,
+    report_model: (r.report_model as string | null) ?? null,
+    report_input_modifiers:
+      (r.report_input_modifiers as SleepReportInputModifiers | null) ?? null,
+    created_at: r.created_at as string,
+    updated_at: r.updated_at as string,
   };
 }

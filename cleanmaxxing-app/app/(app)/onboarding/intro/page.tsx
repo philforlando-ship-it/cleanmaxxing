@@ -21,22 +21,17 @@ export default async function OnboardingIntroPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  // Already past survey? Goal pickup. Already started survey?
-  // Resume where they left off. Mirrors the /onboarding entry
-  // logic so a direct visit to /onboarding/intro can't put a
-  // mid-survey user back at the start.
+  // Survey already submitted? Goal pickup. We don't bounce users
+  // who have *started* the survey — they may be navigating back
+  // from question 1, and the /onboarding entry redirector is the
+  // only place that sends returning users here in the first place
+  // (only when no answers exist), so a direct visit is safe.
   const { data: profile } = await supabase
     .from('users')
     .select('age_segment')
     .eq('id', user.id)
     .maybeSingle();
   if (profile?.age_segment) redirect('/onboarding/complete');
-
-  const { count: answeredCount } = await supabase
-    .from('survey_responses')
-    .select('question_key', { count: 'exact', head: true })
-    .eq('user_id', user.id);
-  if ((answeredCount ?? 0) > 0) redirect('/onboarding');
 
   return (
     <main className="mx-auto flex min-h-[100svh] max-w-xl flex-col px-6 py-10">
@@ -54,7 +49,7 @@ export default async function OnboardingIntroPage() {
           <li className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
             <div className="flex items-baseline justify-between gap-3">
               <h2 className="text-base font-medium">Daily check-in</h2>
-              <span className="shrink-0 text-xs text-zinc-500">~30 seconds</span>
+              <span className="shrink-0 text-xs text-zinc-500">~10 seconds</span>
             </div>
             <p className="mt-1.5 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
               Tick which of your goals you moved forward on today. No score,

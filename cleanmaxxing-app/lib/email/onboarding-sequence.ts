@@ -50,7 +50,7 @@ export function renderOnboardingEmail(
         subject: 'Three days in — the hard part',
         paragraphs: [
           'You\u2019re three days into the trial. If the check-ins have felt easy so far, that\u2019s normal — the first few days always do. The hard part is day 4 through day 10, when the novelty wears off and the system has to hold up on its own.',
-          'If you\u2019ve missed a day or two, that\u2019s also normal. The point isn\u2019t a clean streak. The point is whether the framework is pointing you at the right things to work on. If it\u2019s not, use the library to swap goals — there\u2019s no penalty for changing your mind.',
+          'If you\u2019ve skipped a day, the move is simple: open the app, tick whatever you actually did today, close it. Ten seconds, no streak to worry about. And if the goals you started with don\u2019t feel right, swap them in the library — a few days is enough data to know.',
           'One thing worth trying if you haven\u2019t yet: ask Mister P something you\u2019ve been wondering about. A skincare thing, a training thing, a hair thing. He\u2019ll answer from the corpus and tell you what actually matters.',
         ],
         ctaHref: `${appUrl}/today`,

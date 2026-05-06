@@ -8,6 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "embed-povs": "tsx -r dotenv/config scripts/embed-povs.ts dotenv_config_path=.env.local",
+    "generate-hair-images": "tsx -r dotenv/config scripts/generate-hair-images.ts dotenv_config_path=.env.local",
+    "generate-food-images": "tsx -r dotenv/config scripts/generate-food-images.ts dotenv_config_path=.env.local",
+    "qc-hair-images": "tsx scripts/qc-hair-images.ts",
+    "compress-hair-images": "tsx scripts/compress-hair-images.ts",
     "test-retrieval": "tsx -r dotenv/config scripts/test-retrieval.ts dotenv_config_path=.env.local",
     "test-mister-p": "tsx -r dotenv/config scripts/test-mister-p.ts dotenv_config_path=.env.local",
     "smoke-test": "tsx -r dotenv/config scripts/smoke-test.ts dotenv_config_path=.env.local",
@@ -51,6 +55,7 @@
     "dotenv": "^17.4.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"
