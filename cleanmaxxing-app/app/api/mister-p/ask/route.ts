@@ -50,6 +50,56 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Rate limit. Mister P calls Sonnet on every turn — without a cap,
+  // a misbehaving client (or a malicious one) can burn the Anthropic
+  // budget unbounded. Two windows:
+  //   - 30 requests per hour (conversational pace; protects bursts)
+  //   - 200 requests per day (longer-horizon cap; covers a sustained
+  //     attack across hours without throttling power-users)
+  // Counts use the same auth-scoped supabase client so they respect
+  // the user's RLS view of mister_p_queries (own rows only). Cheap —
+  // a single COUNT with a bounded time window.
+  const RATE_LIMIT_HOURLY = 30;
+  const RATE_LIMIT_DAILY = 200;
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const [{ count: hourCount }, { count: dayCount }] = await Promise.all([
+    supabase
+      .from('mister_p_queries')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .gte('created_at', oneHourAgo),
+    supabase
+      .from('mister_p_queries')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .gte('created_at', oneDayAgo),
+  ]);
+  if ((hourCount ?? 0) >= RATE_LIMIT_HOURLY) {
+    return NextResponse.json(
+      {
+        error: 'rate_limited',
+        limit: RATE_LIMIT_HOURLY,
+        window: '1h',
+        message:
+          "You've sent a lot of questions in the last hour. Take a beat — Mister P will be here when you come back.",
+      },
+      { status: 429 },
+    );
+  }
+  if ((dayCount ?? 0) >= RATE_LIMIT_DAILY) {
+    return NextResponse.json(
+      {
+        error: 'rate_limited',
+        limit: RATE_LIMIT_DAILY,
+        window: '24h',
+        message:
+          "You've hit the daily limit. Come back tomorrow — that's a lot of conversation already.",
+      },
+      { status: 429 },
+    );
+  }
+
   // Validate goal_id ownership before we let it scope anything. A
   // goal_id from another user must never write into this user's
   // thread or read their per-goal history. Set to null on any miss
