@@ -15,6 +15,7 @@ import {
   CIRCUIT_BREAKER_ADVISORY,
   formatGoalsBlock,
   formatActiveGoalFocusBlock,
+  formatJourneyStateBlock,
   formatUserStateBlock,
   formatConversationHistoryBlock,
   type GoalContext,
@@ -25,6 +26,7 @@ import {
   shouldTriggerProactiveSuggestion,
 } from '@/lib/mister-p/topic';
 import { getMisterPUserState } from '@/lib/mister-p/user-state';
+import { getMisterPJourneyState } from '@/lib/mister-p/journey-state';
 import { getRecentConversation } from '@/lib/mister-p/conversation';
 
 const RequestSchema = z.object({
@@ -253,8 +255,17 @@ export async function POST(req: NextRequest) {
   // confidence trajectory, stuck dimensions. Cheap to fetch alongside
   // everything else already on this request; the prompt-side copy
   // enforces "context only, don't narrate it back."
-  const userState = await getMisterPUserState(supabase, user.id);
+  // Behavioral state + per-journey snapshot fetched in parallel —
+  // both are "who is this user" context. Adding journey state lets
+  // Mister P handle adaptive-intelligence questions (workout
+  // soreness, skincare reactions, GLP-1 ongoing support, equipment
+  // upgrade prompts) without going generic.
+  const [userState, journeyState] = await Promise.all([
+    getMisterPUserState(supabase, user.id),
+    getMisterPJourneyState(supabase, user.id),
+  ]);
   const userStateBlock = formatUserStateBlock(userState);
+  const journeyStateBlock = formatJourneyStateBlock(journeyState);
 
   // Rolling conversation history — scoped to the current thread.
   // When goalId is set, we load up to 15 prior Q&A pairs from that
@@ -277,6 +288,7 @@ export async function POST(req: NextRequest) {
     conversationHistoryBlock,
     activeGoalFocusBlock,
     executionModeActive,
+    journeyStateBlock,
   );
 
   // If the user has uploaded photos, attach them as image content

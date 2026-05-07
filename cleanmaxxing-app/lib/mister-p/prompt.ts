@@ -233,9 +233,15 @@ export function buildSystemPromptFull(
   conversationHistoryBlock: string | null = null,
   activeGoalFocusBlock: string | null = null,
   executionModeActive: boolean = false,
+  journeyStateBlock: string | null = null,
 ): string {
   let prompt = MISTER_P_SYSTEM_PROMPT.replace('{retrieved_chunks}', retrievedChunks);
   if (userStateBlock) prompt += '\n\n' + userStateBlock;
+  // Journey-state block sits right after user state. Both are "here's
+  // who the user is" context. Order matters for LLM anchoring — when
+  // a question is journey-specific ("front raises kill my shoulders")
+  // the strength state needs to be salient nearby.
+  if (journeyStateBlock) prompt += '\n\n' + journeyStateBlock;
   if (conversationHistoryBlock) prompt += '\n\n' + conversationHistoryBlock;
   if (goalsBlock) prompt += '\n\n' + goalsBlock;
   // Focus block sits AFTER the goals block so it reads as "here is the
@@ -455,4 +461,153 @@ Calibration guidance:
 
 ${lines.join('\n')}
 --- END USER BEHAVIORAL STATE ---`;
+}
+
+// Active-journey state block. Mister P uses this to give grounded
+// answers about the user's plan rather than generic ones. The block
+// is strictly context — same "don't narrate it back" rule as the
+// behavioral-state block. Don't say "I see you have a hair plan";
+// just use the state to calibrate the answer.
+import type { MisterPJourneyState } from './journey-state';
+
+export function formatJourneyStateBlock(
+  state: MisterPJourneyState,
+): string | null {
+  const lines: string[] = [];
+
+  if (state.hair?.has_report) {
+    const parts: string[] = ['report ✓'];
+    if (state.hair.density_state) {
+      parts.push(`density_state=${state.hair.density_state}`);
+    }
+    if (state.hair.stage_2_path) {
+      parts.push(`stage_2_path=${state.hair.stage_2_path}`);
+    }
+    if (state.hair.stage_4_active) parts.push('stage_4 active');
+    if (state.hair.stage_5_active) {
+      const lastDays = state.hair.stage_5_days_since_last_session;
+      parts.push(
+        lastDays != null
+          ? `stage_5 active (last session ${lastDays}d ago)`
+          : 'stage_5 active (no session yet)',
+      );
+    }
+    lines.push(`hair: ${parts.join('; ')}`);
+  }
+
+  if (state.style?.has_report) {
+    lines.push('style: report ✓');
+  }
+
+  if (state.nutrition?.has_report) {
+    const parts: string[] = ['report ✓'];
+    if (state.nutrition.goal_direction) {
+      parts.push(`goal=${state.nutrition.goal_direction}`);
+    }
+    if (
+      state.nutrition.goal_weight_lbs &&
+      state.nutrition.realistic_target_weeks
+    ) {
+      parts.push(
+        `goal_weight=${state.nutrition.goal_weight_lbs}lbs over ~${state.nutrition.realistic_target_weeks}w`,
+      );
+    }
+    lines.push(`nutrition: ${parts.join('; ')}`);
+  }
+
+  if (state.strength?.has_report) {
+    const parts: string[] = ['report ✓'];
+    if (state.strength.primary_goal) {
+      parts.push(`primary_goal=${state.strength.primary_goal}`);
+    }
+    if (state.strength.bodyweight_preference) {
+      parts.push(`bw_pref=${state.strength.bodyweight_preference}`);
+    }
+    if (state.strength.injury_constraints.length > 0) {
+      parts.push(
+        `injury_constraints=${state.strength.injury_constraints.join(',')}`,
+      );
+    }
+    if (state.strength.selected_exercises_count > 0) {
+      const sample = state.strength.selected_exercises_sample.join(',');
+      parts.push(
+        `selected=${state.strength.selected_exercises_count} (sample: ${sample})`,
+      );
+    }
+    lines.push(`strength: ${parts.join('; ')}`);
+  }
+
+  if (state.cardio?.has_report) {
+    const parts: string[] = ['report ✓'];
+    if (state.cardio.modality_preference) {
+      parts.push(`modality=${state.cardio.modality_preference}`);
+    }
+    lines.push(`cardio: ${parts.join('; ')}`);
+  }
+
+  if (state.skincare?.has_report) {
+    const parts: string[] = ['report ✓'];
+    parts.push(
+      state.skincare.baseline_established
+        ? 'baseline ✓'
+        : 'baseline pending',
+    );
+    if (state.skincare.retinoid_started) {
+      const days = state.skincare.retinoid_started_days_ago;
+      parts.push(
+        days != null
+          ? `retinoid started ${days}d ago`
+          : 'retinoid started',
+      );
+    }
+    lines.push(`skincare: ${parts.join('; ')}`);
+  }
+
+  if (state.facial_hair?.has_report) {
+    const parts: string[] = ['report ✓'];
+    if (state.facial_hair.growout_test_active) {
+      const days = state.facial_hair.growout_test_started_days_ago;
+      parts.push(
+        days != null ? `growout active (${days}d in)` : 'growout active',
+      );
+    } else if (state.facial_hair.growout_test_completed) {
+      parts.push('growout complete');
+    }
+    if (state.facial_hair.minoxidil_for_beard_started) {
+      const days = state.facial_hair.minoxidil_for_beard_started_days_ago;
+      parts.push(
+        days != null
+          ? `minox-for-beard ${days}d in`
+          : 'minox-for-beard started',
+      );
+    }
+    lines.push(`facial_hair: ${parts.join('; ')}`);
+  }
+
+  if (state.active_protocols.length > 0) {
+    const protocolLines = state.active_protocols.map((p) => {
+      const since = p.started_at
+        ? ` since ${p.started_at.slice(0, 10)}`
+        : '';
+      return `- ${p.type}: ${p.status}${since}`;
+    });
+    lines.push(`active_protocols:\n${protocolLines.join('\n')}`);
+  }
+
+  if (lines.length === 0) return null;
+
+  return `--- USER'S ACTIVE JOURNEYS ---
+The user is on these journeys with these key states. Use this to ground answers about their plan — don't narrate the state back ("I see you have a hair plan" is wrong; just use it). Treat absent journeys as not active. When a question is journey-specific, branch on the relevant state rather than answering generically.
+
+Specifically, this state is what makes contextual coaching possible:
+- "Front raises hurt my shoulders" → check strength.injury_constraints + selected exercises before substituting
+- "I started moisturizer and my face is breaking out" → check skincare.baseline_established + retinoid timing
+- "Should I add a hip thrust?" → check strength.bodyweight_preference + selected exercises (don't recommend if already there)
+- "I've lost 15 lbs, what changes?" → check nutrition.goal_direction + active_protocols (especially glp1)
+- "Is my growout test done?" → check facial_hair.growout_test_started_days_ago
+
+When the user's question doesn't depend on journey state, ignore this block entirely. Don't pull state in just because it's there.
+
+${lines.join('\n')}
+--- END USER'S ACTIVE JOURNEYS ---`;
 }
