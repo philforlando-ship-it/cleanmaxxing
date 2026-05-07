@@ -1,9 +1,18 @@
-// Warm-up + mobility catalog for the strength journey.
+// Warm-up + mobility catalog. Despite the path under lib/strength/,
+// this catalog now also serves cardio users — most static mobility
+// (couch stretch, pigeon, lat stretch, lying spinal twist) applies
+// to anyone post-workout regardless of modality. A small set of
+// cardio-specific additions (calf stretch, IT band, forward fold,
+// leg swings) was added 2026-05-07 so runners + cyclists + rowers
+// can use the same panel.
 //
 // Distinct from the lifting catalog (STRENGTH_EXERCISES). The voice
 // posture matters here: most lifters mishandle stretching by doing
 // static stretches pre-lift, which the literature shows blunts force
 // production for 30-60 minutes (Behm, Simic, Kallerud meta-analyses).
+// The same finding applies to cardio — but cardio modalities are
+// largely self-warming (a 5-min easy spin warms up cycling) so the
+// dynamic-warmup demand is smaller pre-cardio than pre-lift.
 //
 // Two flow types:
 //   dynamic_warmup → pre-lift, movement-prep style. Pattern-mapped:
@@ -41,7 +50,14 @@ export type TargetArea =
   | 'spine'
   | 'tspine'
   | 'ankle'
-  | 'piriformis';
+  | 'piriformis'
+  // Cardio-relevant additions (2026-05-07). Calf tightness drives
+  // achilles + plantar fascia overuse for runners; IT band is the
+  // #1 cyclist + mid-distance-runner complaint; hamstrings tighten
+  // from cycling + rowing posture.
+  | 'calves'
+  | 'it_band'
+  | 'hamstrings';
 
 export type WarmupMobilityExercise = {
   slug: string;
@@ -140,6 +156,24 @@ export const WARMUP_MOBILITY_EXERCISES: ReadonlyArray<WarmupMobilityExercise> = 
       'Lower into one push-up',
       'Walk feet toward hands',
       'Stand tall, repeat',
+    ],
+  },
+  {
+    // Cardio-relevant universal warm-up. Particularly useful pre-run
+    // (the canonical pre-run dynamic move), but also good before any
+    // lower-body work.
+    slug: 'leg_swings',
+    label: 'Leg Swings (front-back + side-to-side)',
+    flow_type: 'dynamic_warmup',
+    pairs_with_patterns: [],
+    targets_areas: [],
+    equipment: 'bodyweight',
+    duration_or_reps: '10 each direction, each leg',
+    key_points: [
+      'Stand next to a wall or post for balance',
+      'Swing one leg front-to-back through full range',
+      'Switch to side-to-side swings (across the body)',
+      'Stay tall through the spine — don’t lean to swing',
     ],
   },
 
@@ -360,6 +394,62 @@ export const WARMUP_MOBILITY_EXERCISES: ReadonlyArray<WarmupMobilityExercise> = 
       'Reach long through both arms',
     ],
   },
+
+  // ============ Cardio-relevant static mobility (3 — 2026-05-07)
+  {
+    // Most overuse injuries in runners and walkers route through the
+    // calf-achilles-plantar-fascia chain. Static calf stretching
+    // post-cardio is one of the genuinely high-ROI interventions.
+    slug: 'standing_calf_stretch',
+    label: 'Standing Calf Stretch',
+    flow_type: 'static_mobility',
+    pairs_with_patterns: [],
+    targets_areas: ['calves'],
+    equipment: 'bodyweight',
+    duration_or_reps: '45–60s each side, both straight + bent knee',
+    key_points: [
+      'Hands on a wall, one foot back, heel pressed down',
+      'Straight back leg targets gastrocnemius',
+      'Bend the back knee to shift to soleus',
+      'Hold each variation; don’t bounce',
+    ],
+  },
+  {
+    // The #1 mid-distance runner + cyclist complaint. The figure-4
+    // / standing variation is more accessible than the floor lying
+    // version many guides show.
+    slug: 'it_band_stretch_standing',
+    label: 'IT Band Stretch (Standing)',
+    flow_type: 'static_mobility',
+    pairs_with_patterns: [],
+    targets_areas: ['it_band'],
+    equipment: 'bodyweight',
+    duration_or_reps: '45–60s each side',
+    key_points: [
+      'Cross right leg behind left, feet roughly shoulder width',
+      'Reach right arm overhead, side-bend to the left',
+      'Push the right hip out to the right',
+      'Feel the stretch along the outer right thigh',
+    ],
+  },
+  {
+    // Hamstring lengthening + low-back release. Cyclist + rower
+    // archetype — both modalities shorten hamstrings + flex the
+    // lumbar spine for hours.
+    slug: 'standing_forward_fold',
+    label: 'Standing Forward Fold',
+    flow_type: 'static_mobility',
+    pairs_with_patterns: [],
+    targets_areas: ['hamstrings', 'spine'],
+    equipment: 'bodyweight',
+    duration_or_reps: '45–90s, soft knees',
+    key_points: [
+      'Stand tall, feet hip-width',
+      'Hinge forward at the hips with soft knees',
+      'Let head and arms hang heavy',
+      'Don’t force the floor — depth comes with time',
+    ],
+  },
 ];
 
 // =====================
@@ -418,4 +508,7 @@ export const TARGET_AREA_LABEL: Record<TargetArea, string> = {
   tspine: 'Thoracic spine',
   ankle: 'Ankle',
   piriformis: 'Piriformis',
+  calves: 'Calves',
+  it_band: 'IT band',
+  hamstrings: 'Hamstrings',
 };

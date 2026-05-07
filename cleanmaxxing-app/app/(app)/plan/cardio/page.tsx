@@ -23,6 +23,11 @@ import {
 import { AddZone2Card } from './add-zone-2-card';
 import { AddHiitCard } from './add-hiit-card';
 import { RecommendedModalitiesPanel } from './recommended-modalities-panel';
+import { WarmupMobilityPanel } from '@/app/(app)/plan/strength/warmup-mobility-panel';
+import {
+  allStaticMobility,
+  universalWarmups,
+} from '@/lib/strength/warmup-mobility';
 
 type Props = {
   searchParams: Promise<{ edit?: string }>;
@@ -223,6 +228,18 @@ export default async function CardioPlanPage({ searchParams }: Props) {
             time_per_session={assessment.time_per_session}
             injury_constraints={assessment.injury_constraints}
             current_preference={assessment.modality_preference}
+          />
+
+          {/* Warm-up + mobility panel. Shared with /plan/strength —
+              the static mobility set serves cardio users post-workout
+              (calf stretch, IT band, forward fold are cardio-specific
+              additions). Cardio doesn't need lift-pattern-specific
+              dynamic warm-ups; most cardio modalities self-warm-up
+              via the first few minutes at low intensity. */}
+          <WarmupMobilityPanel
+            universalWarmups={universalWarmups()}
+            liftSpecificWarmups={[]}
+            staticMobility={allStaticMobility()}
           />
 
           {/* Add HIIT layer gate. Shows when user has structured Zone 2
