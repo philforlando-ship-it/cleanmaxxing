@@ -71,6 +71,31 @@ export async function saveStrengthAssessment(
   return rowToAssessment(data);
 }
 
+// Persist the buying-list checklist (equipment_owned). Slugs
+// validated against the catalog so a stale client can't write
+// arbitrary text. Standalone endpoint — no report regeneration is
+// triggered, since equipment_owned doesn't change the recommended
+// exercises (it only changes the buy-list panel).
+export async function saveEquipmentOwned(
+  supabase: SupabaseClient,
+  userId: string,
+  ownedSlugs: string[],
+): Promise<void> {
+  // Lazy-import to avoid pulling the gear catalog into every
+  // service consumer. The validation is the single source of truth
+  // for what's a real gear slug.
+  const { isValidGearItem } = await import('./gear');
+  const cleaned = ownedSlugs.filter(isValidGearItem);
+  const { error } = await supabase
+    .from('strength_assessments')
+    .update({
+      equipment_owned: cleaned,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId);
+  if (error) throw error;
+}
+
 export async function saveStrengthReport(
   supabase: SupabaseClient,
   userId: string,
@@ -139,6 +164,8 @@ function rowToAssessment(row: unknown): StrengthAssessment {
     bodyweight_preference:
       (r.bodyweight_preference as StrengthAssessment['bodyweight_preference']) ??
       null,
+    equipment_owned:
+      (r.equipment_owned as string[] | null) ?? null,
     selected_exercise_slugs:
       (r.selected_exercise_slugs as string[] | null) ?? [],
     excluded_exercise_slugs:

@@ -129,6 +129,11 @@ export type StrengthAssessment = {
   // pre-migration rows; treated as 'mixed' (existing behavior) by
   // recommended-exercises and report-prompt.
   bodyweight_preference: StrengthBodyweightPreference | null;
+  // Migration 0081 — buying-list state. Slugs from lib/strength/gear.ts
+  // (validated at the service layer). Null = user hasn't answered;
+  // first-render UI seeds defaults from equipment_access. Empty
+  // array is a valid distinct state ("I confirmed I have nothing").
+  equipment_owned: string[] | null;
   // User's exercise picker preferences (added in migration 0057).
   // Read by the report generator on each (re-)generation; updates do
   // NOT trigger regeneration on their own — separate endpoint.

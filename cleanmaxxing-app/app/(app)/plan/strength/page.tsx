@@ -16,6 +16,14 @@ import {
   getStrengthAssessment,
 } from '@/lib/strength/service';
 import type { StrengthAssessment } from '@/lib/strength/types';
+import { STRENGTH_EXERCISES } from '@/lib/strength/types';
+import {
+  DEFAULT_OWNED_BY_ACCESS,
+  gearRequiredForExercises,
+  isValidGearItem,
+  type GearItem,
+} from '@/lib/strength/gear';
+import { getRecommendedExercises } from '@/lib/strength/recommended-exercises';
 import { hasNutritionAssessment } from '@/lib/nutrition/service';
 import { getUserProfile } from '@/lib/profile/service';
 import {
@@ -23,6 +31,7 @@ import {
   type StrengthAssessmentInitialValues,
 } from './assessment-form';
 import { ExerciseLibraryPanel } from './exercise-library-panel';
+import { EquipmentListCard } from './equipment-list-card';
 import { BeginnerRampCard } from './beginner-ramp-card';
 import { PlateauCard } from './plateau-card';
 
@@ -227,6 +236,48 @@ export default async function StrengthPlanPage({ searchParams }: Props) {
             initialExcluded={assessment.excluded_exercise_slugs}
             initialFilterText={assessment.exercise_filter_text}
           />
+
+          {(() => {
+            // Buying-list gear computation. Source of truth for
+            // "what's in your plan" = the user's selected exercises
+            // when non-empty, falling back to the recommended subset
+            // (density/age/injury/preference filtered) when no
+            // explicit picks exist yet.
+            const selected = STRENGTH_EXERCISES.filter((ex) =>
+              assessment.selected_exercise_slugs.includes(ex.slug),
+            );
+            const sourceExercises =
+              selected.length > 0
+                ? selected
+                : getRecommendedExercises({
+                    equipment_access: assessment.equipment_access,
+                    injury_constraints: assessment.injury_constraints,
+                    priority_muscles: assessment.priority_muscles,
+                    secondary_objective: assessment.secondary_objective,
+                    bodyweight_preference: assessment.bodyweight_preference,
+                  }).recommended;
+            const required = gearRequiredForExercises(sourceExercises);
+
+            // Seed initialOwned: persisted column when non-null,
+            // otherwise equipment-access default. The card surfaces a
+            // hint when the values are seeded so the user knows to
+            // refine before the first save.
+            const isSeededDefault = assessment.equipment_owned == null;
+            const initialOwnedRaw = isSeededDefault
+              ? DEFAULT_OWNED_BY_ACCESS[assessment.equipment_access] ?? []
+              : assessment.equipment_owned ?? [];
+            const initialOwned = initialOwnedRaw.filter(
+              (s): s is GearItem => isValidGearItem(s),
+            );
+
+            return (
+              <EquipmentListCard
+                required={required}
+                initialOwned={initialOwned}
+                isSeededDefault={isSeededDefault}
+              />
+            );
+          })()}
 
           <footer className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 pt-6 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
             <span>
