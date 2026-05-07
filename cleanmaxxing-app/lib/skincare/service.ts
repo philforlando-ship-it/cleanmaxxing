@@ -62,6 +62,28 @@ export async function saveSkincareAssessment(
   return rowToAssessment(data);
 }
 
+// Stamps baseline_established_at on the user's skincare assessment.
+// Called from the baseline-floor stage card once the user confirms
+// cleanser + moisturizer + SPF are in place. Idempotent — re-marking
+// is a no-op (preserves the original timestamp).
+export async function markBaselineEstablished(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<void> {
+  const existing = await getSkincareAssessment(supabase, userId);
+  if (!existing) throw new Error('no_assessment');
+  if (existing.baseline_established_at) return;
+
+  const { error } = await supabase
+    .from('skincare_assessments')
+    .update({
+      baseline_established_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId);
+  if (error) throw error;
+}
+
 export async function saveSkincareReport(
   supabase: SupabaseClient,
   userId: string,
@@ -95,6 +117,8 @@ function rowToAssessment(row: unknown): SkincareAssessment {
       r.current_routine as SkincareAssessment['current_routine'],
     sun_exposure: r.sun_exposure as SkincareAssessment['sun_exposure'],
     skincare_goal_text: (r.skincare_goal_text as string | null) ?? null,
+    baseline_established_at:
+      (r.baseline_established_at as string | null) ?? null,
     retinoid_started_at:
       (r.retinoid_started_at as string | null) ?? null,
     last_step_up_at: (r.last_step_up_at as string | null) ?? null,

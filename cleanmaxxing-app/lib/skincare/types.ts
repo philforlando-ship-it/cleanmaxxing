@@ -39,6 +39,14 @@ export type SkincareAssessment = {
   current_routine: SkincareCurrentRoutine;
   sun_exposure: SkincareSunExposure;
   skincare_goal_text: string | null;
+  // Stage milestone (migration 0071) — baseline floor established.
+  // Confirms cleanser + moisturizer + SPF are in place before any
+  // active is introduced. Users whose current_routine at assessment
+  // is already 'cleanser_moisturizer' or 'full_routine' are treated
+  // as baseline-established at report time without needing this
+  // gate — the floor card surfaces only for 'none' / 'cleanser_only'
+  // users.
+  baseline_established_at: string | null;
   // Stage milestone (migration 0060) — introduce retinoid. The
   // single highest-leverage skincare decision once the AM/PM
   // baseline (cleanser/moisturizer/SPF) is established.
@@ -61,6 +69,11 @@ export type SkincareReportInputModifiers = {
   current_interventions: string[];
   budget_tier: string | null;
   age: number | null;
+  // Stage milestone — baseline floor in place. When null AND
+  // current_routine is 'none' or 'cleanser_only', the prompt should
+  // anchor on building the floor (cleanser + moisturizer + SPF) and
+  // explicitly defer actives.
+  baseline_established_at: string | null;
   // Stage milestone — retinoid started. When set, the prompt shifts
   // from "consider adding a retinoid" to "ramp + irritation
   // management" guidance.

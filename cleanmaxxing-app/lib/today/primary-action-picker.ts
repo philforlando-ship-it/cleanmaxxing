@@ -38,15 +38,18 @@ import type { PrimaryAction } from './types';
 // State shape
 // =====================
 
-// Picker writes 'strength' / 'cardio' as distinct values; legacy
-// users have 'fitness' which historically expanded to both. Both
-// are accepted here so the picker can route either cleanly.
+// Picker writes the journey slug ('skincare', 'strength', 'cardio',
+// etc.) as a distinct value; legacy users have older vocabulary
+// values ('skin' for skincare, 'fitness' covering strength + cardio,
+// 'grooming' for facial-hair). Both shapes are accepted here so the
+// picker can route either cleanly.
 type FocusArea =
   | 'hair'
   | 'style'
   | 'grooming'
   | 'sleep'
   | 'skin'
+  | 'skincare'
   | 'body_composition'
   | 'strength'
   | 'cardio'
@@ -212,6 +215,7 @@ export async function gatherPickerState(
             'grooming',
             'sleep',
             'skin',
+            'skincare',
             'body_composition',
             'strength',
             'cardio',
@@ -358,8 +362,9 @@ const ORDER_FOR_FIRST_RUN: FocusArea[] = [
   'fitness',
   'sleep',
   'style',
-  'grooming',
+  'skincare',
   'skin',
+  'grooming',
 ];
 
 const FIRST_RUN_BY_FOCUS: Record<
@@ -413,6 +418,12 @@ const FIRST_RUN_BY_FOCUS: Record<
     title: 'Start your facial-hair plan.',
     body: 'A short assessment about your beard pattern and goal.',
     href: '/plan/facial-hair',
+  },
+  skincare: {
+    topic: 'skincare',
+    title: 'Start your skincare plan.',
+    body: 'A short assessment about your skin type and concerns.',
+    href: '/plan/skincare',
   },
   skin: {
     topic: 'skincare',

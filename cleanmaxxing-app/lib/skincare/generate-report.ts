@@ -47,6 +47,7 @@ export async function generateAndSaveSkincareReport(
     current_interventions: profile.current_interventions,
     budget_tier: profile.budget_tier,
     age: (userRow as { age: number | null } | null)?.age ?? null,
+    baseline_established_at: assessment.baseline_established_at,
     retinoid_started_at: assessment.retinoid_started_at,
     last_step_up_at: assessment.last_step_up_at,
   };
@@ -104,6 +105,12 @@ function formatAssessmentForPrompt(
     `- budget_tier (profile): ${modifiers.budget_tier ?? 'not set'}`,
   );
   modifierLines.push(`- age (users): ${modifiers.age ?? 'not set'}`);
+  modifierLines.push(
+    `- baseline_established_at (stage milestone): ${
+      modifiers.baseline_established_at ??
+      'not yet — floor (cleanser + moisturizer + SPF) may not be in place'
+    }`,
+  );
   modifierLines.push(
     `- retinoid_started_at (stage milestone): ${
       modifiers.retinoid_started_at ??

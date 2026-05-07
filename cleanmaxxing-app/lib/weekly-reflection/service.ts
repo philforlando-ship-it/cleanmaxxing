@@ -340,7 +340,9 @@ export async function getActiveJourneysForReflection(
   if (focusAreas.includes('sleep') && hasReport(sleepRow)) {
     journeys.push({ topic: 'sleep', question: JOURNEY_QUESTIONS.sleep });
   }
-  if (focusAreas.includes('skin') && hasReport(skincareRow)) {
+  const skincareFocus =
+    focusAreas.includes('skincare') || focusAreas.includes('skin');
+  if (skincareFocus && hasReport(skincareRow)) {
     journeys.push({ topic: 'skincare', question: JOURNEY_QUESTIONS.skincare });
   }
   if (focusAreas.includes('body_composition') && hasReport(nutritionRow)) {

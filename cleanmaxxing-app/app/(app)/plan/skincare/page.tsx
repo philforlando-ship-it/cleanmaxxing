@@ -17,8 +17,15 @@ import {
   SkincareAssessmentForm,
   type SkincareAssessmentInitialValues,
 } from './assessment-form';
+import { BaselineFloorCard } from './baseline-floor-card';
 import { StartRetinoidCard } from './start-retinoid-card';
 import { StepUpCard } from './step-up-card';
+
+// Users whose current_routine at assessment is one of these are
+// treated as floor-already-established without needing the
+// BaselineFloorCard gate. The card surfaces only for users who
+// said they have nothing or cleanser-only at assessment time.
+const ROUTINE_BELOW_FLOOR: ReadonlyArray<string> = ['none', 'cleanser_only'];
 
 type Props = {
   searchParams: Promise<{ edit?: string }>;
@@ -129,14 +136,32 @@ export default async function SkincarePlanPage({ searchParams }: Props) {
             {assessment.report_text!}
           </ReactMarkdown>
 
+          {/* Baseline-floor stage. Surfaces only for users whose
+              current_routine at assessment was 'none' or
+              'cleanser_only' AND who haven't yet marked the floor
+              established. Gates the retinoid card below — the
+              retinoid card requires either a positive baseline
+              signal at assessment time (cleanser_moisturizer or
+              full_routine) OR an explicit floor-established
+              timestamp from this card. */}
+          {!assessment.baseline_established_at &&
+            ROUTINE_BELOW_FLOOR.includes(assessment.current_routine) && (
+              <BaselineFloorCard />
+            )}
+
           {/* Introduce-retinoid stage. Shows for retinoid-relevant
               concerns (acne / aging / uneven_tone) once the baseline
-              has had time to settle (3+ weeks since report) AND the
-              user hasn't already started a retinoid. */}
+              floor is in place AND it's had time to settle (3+ weeks
+              since report) AND the user hasn't already started a
+              retinoid. Floor-in-place = either current_routine is
+              cleanser_moisturizer/full_routine at assessment OR the
+              baseline-established gate has been marked. */}
           {!assessment.retinoid_started_at &&
             (assessment.primary_concern === 'acne' ||
               assessment.primary_concern === 'aging' ||
               assessment.primary_concern === 'uneven_tone') &&
+            (assessment.baseline_established_at !== null ||
+              !ROUTINE_BELOW_FLOOR.includes(assessment.current_routine)) &&
             (() => {
               const weeks = Math.floor(
                 (Date.now() -

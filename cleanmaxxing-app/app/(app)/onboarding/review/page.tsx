@@ -30,6 +30,7 @@ const FOCUS_LABELS: Record<string, string> = {
   strength: 'Strength',
   cardio: 'Cardio',
   sleep: 'Sleep',
+  skincare: 'Skincare',
   fitness: 'Fitness',
   skin: 'Skin',
   facial_aesthetics: 'Facial aesthetics',
