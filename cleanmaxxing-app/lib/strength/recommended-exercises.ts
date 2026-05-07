@@ -64,6 +64,16 @@ const INJURY_EXCLUDES: Record<StrengthInjuryConstraint, string[]> = {
     'romanian_deadlift',
     'stiff_leg_deadlift',
     'barbell_row',
+    // 2026-05-07 catalog expansion exclusions
+    'single_leg_dumbbell_rdl', // hinge with load
+    'barbell_shrug', // heavy spinal compression
+    'smith_squat', // back-loaded squat
+    'jump_squat', // spinal impact
+    'dumbbell_side_bend', // direct lateral flexion under load
+    'hanging_windshield_wiper', // heavy oblique + lumbar load
+    // Notable NON-exclusions: barbell_hip_thrust + cable_pull_through
+    // are actually low-back-friendly (hip-dominant, neutral spine);
+    // suitcase_carry is anti-lateral-flexion and often therapeutic.
   ],
   knee_pain: [
     'barbell_back_squat',
@@ -74,15 +84,43 @@ const INJURY_EXCLUDES: Record<StrengthInjuryConstraint, string[]> = {
     'split_squat',
     'heel_elevated_bw_squat',
     'front_foot_elevated_smith_lunge',
+    // 2026-05-07 catalog expansion exclusions
+    'leg_press',
+    'leg_extension', // terminal-extension is the canonical patellar-pain trigger
+    'bulgarian_split_squat',
+    'dumbbell_goblet_squat',
+    'bodyweight_squat',
+    'pistol_squat', // very high single-leg knee flexion under load
+    'smith_squat',
+    'jump_squat',
+    'wall_sit', // sustained 90° knee flexion
+    'bodyweight_split_squat',
   ],
   shoulder_or_neck_pain: [
     'standing_overhead_barbell_press',
     'super_rom_lateral_raise',
+    // 2026-05-07 catalog expansion exclusions
+    'seated_dumbbell_shoulder_press',
+    'machine_shoulder_press',
+    'dumbbell_pullover', // heavy shoulder mobility demand
+    'weighted_pull_up',
+    'weighted_chin_up',
+    'chin_up', // full hang stresses irritated shoulders
   ],
   elbow_pain: [
     'barbell_skull_crusher',
     'ez_bar_behind_neck_tricep_extension',
     'preacher_curl',
+    // 2026-05-07 catalog expansion exclusions
+    'triceps_pushdown_rope',
+    'overhead_triceps_extension_dumbbell',
+    'standing_dumbbell_curl',
+    'barbell_curl',
+    'hammer_curl_dumbbell',
+    'chin_up', // bicep loading at the elbow
+    'weighted_chin_up',
+    'weighted_pull_up',
+    'dumbbell_pullover', // long-head tricep + elbow
   ],
 };
 
