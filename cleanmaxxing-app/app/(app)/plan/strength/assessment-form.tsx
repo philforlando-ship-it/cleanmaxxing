@@ -10,7 +10,6 @@ import {
   BODYWEIGHT_PREFERENCES,
   CURRENT_SPLIT_LABEL,
   DAYS_PER_WEEK_LABEL,
-  EQUIPMENT_ACCESS_LABEL,
   INJURY_CONSTRAINT_LABEL,
   INJURY_CONSTRAINTS,
   PRIMARY_GOAL_LABEL,
@@ -45,12 +44,27 @@ const DAYS_PER_WEEKS: StrengthDaysPerWeek[] = [
   '6_days',
 ];
 
-const EQUIPMENT_ACCESSES: StrengthEquipmentAccess[] = [
-  'full_commercial_gym',
+// Home-setup tier — the conditional follow-up shown only when the
+// user says they don't train at a gym. Same enum values as
+// equipment_access (excluding full_commercial_gym which is set
+// directly when the gym binary is "yes").
+type HomeSetup = Exclude<StrengthEquipmentAccess, 'full_commercial_gym'>;
+
+const HOME_SETUPS: HomeSetup[] = [
   'home_rack_bench',
   'minimal_dumbbells',
   'bodyweight_only',
 ];
+
+// Friendlier labels for the no-gym funnel branch. Original
+// EQUIPMENT_ACCESS_LABEL values stay in lib/strength/types.ts as the
+// canonical labels (used by the report-prompt + analytics surfaces);
+// these are tuned to the "what do you have at home" framing.
+const HOME_SETUP_LABEL: Record<HomeSetup, string> = {
+  home_rack_bench: 'Home gym with a rack, bench, barbell + plates',
+  minimal_dumbbells: 'Just dumbbells (and maybe some bands)',
+  bodyweight_only: 'Nothing right now (or just a mat)',
+};
 
 const CURRENT_SPLITS: StrengthCurrentSplit[] = [
   'none_or_inconsistent',
@@ -88,10 +102,29 @@ export function StrengthAssessmentForm({
     useState<StrengthPrimaryGoal | null>(initialValues?.primary_goal ?? null);
   const [daysPerWeek, setDaysPerWeek] =
     useState<StrengthDaysPerWeek | null>(initialValues?.days_per_week ?? null);
-  const [equipmentAccess, setEquipmentAccess] =
-    useState<StrengthEquipmentAccess | null>(
-      initialValues?.equipment_access ?? null,
-    );
+  // Two-step funnel for equipment_access: a binary "do you train at
+  // a gym" leads, with a conditional home-setup follow-up only when
+  // the answer is "no." Submission collapses this back into the
+  // single equipment_access enum value the schema expects.
+  //
+  // When editing an existing assessment, derive the funnel state
+  // from the persisted enum: full_commercial_gym → trainsAtGym='yes',
+  // anything else → trainsAtGym='no' + that value as the home setup.
+  const initialTrainsAtGym: 'yes' | 'no' | null = initialValues
+    ? initialValues.equipment_access === 'full_commercial_gym'
+      ? 'yes'
+      : 'no'
+    : null;
+  const initialHomeSetup: HomeSetup | null =
+    initialValues && initialValues.equipment_access !== 'full_commercial_gym'
+      ? (initialValues.equipment_access as HomeSetup)
+      : null;
+  const [trainsAtGym, setTrainsAtGym] = useState<'yes' | 'no' | null>(
+    initialTrainsAtGym,
+  );
+  const [homeSetup, setHomeSetup] = useState<HomeSetup | null>(
+    initialHomeSetup,
+  );
   const [currentSplit, setCurrentSplit] =
     useState<StrengthCurrentSplit | null>(
       initialValues?.current_split ?? null,
@@ -137,7 +170,14 @@ export function StrengthAssessmentForm({
     setError(null);
     if (!primaryGoal) return setError('Pick a primary goal.');
     if (!daysPerWeek) return setError('Pick days per week.');
-    if (!equipmentAccess) return setError('Pick your equipment access.');
+    if (trainsAtGym === null) {
+      return setError('Tell us whether you train at a gym.');
+    }
+    if (trainsAtGym === 'no' && !homeSetup) {
+      return setError('Pick your home setup.');
+    }
+    const equipmentAccess: StrengthEquipmentAccess =
+      trainsAtGym === 'yes' ? 'full_commercial_gym' : (homeSetup as HomeSetup);
     if (!currentSplit) return setError('Pick your current split.');
     if (!secondaryObjective)
       return setError('Pick a secondary objective (or "None").');
@@ -220,21 +260,51 @@ export function StrengthAssessmentForm({
 
       <Question
         number={3}
-        title="What equipment do you have?"
-        helper="Drives the exercise vocabulary. Bodyweight users get a different list than commercial-gym users."
+        title="Do you train at a gym, or plan to?"
+        helper="Big-population catalogs only make sense if you have access to the equipment. If you don't, we'll keep it cleaner."
       >
         <div className="space-y-2">
-          {EQUIPMENT_ACCESSES.map((e) => (
-            <RadioRow
-              key={e}
-              checked={equipmentAccess === e}
-              onChange={() => setEquipmentAccess(e)}
-              disabled={pending}
-              label={EQUIPMENT_ACCESS_LABEL[e]}
-              name="equipment_access"
-            />
-          ))}
+          <RadioRow
+            checked={trainsAtGym === 'yes'}
+            onChange={() => {
+              setTrainsAtGym('yes');
+              setHomeSetup(null);
+            }}
+            disabled={pending}
+            label="Yes — full commercial gym (machines, cables, free weights)"
+            name="trains_at_gym"
+          />
+          <RadioRow
+            checked={trainsAtGym === 'no'}
+            onChange={() => setTrainsAtGym('no')}
+            disabled={pending}
+            label="No — I train at home or with limited equipment"
+            name="trains_at_gym"
+          />
         </div>
+        {trainsAtGym === 'no' && (
+          <div className="mt-5 rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+            <p className="text-[13px] font-medium text-zinc-800 dark:text-zinc-200">
+              What does your home setup look like?
+            </p>
+            <p className="mt-1 text-[12px] text-zinc-500 dark:text-zinc-400">
+              Honest answer — we’ll only recommend exercises you can
+              actually do.
+            </p>
+            <div className="mt-3 space-y-2">
+              {HOME_SETUPS.map((h) => (
+                <RadioRow
+                  key={h}
+                  checked={homeSetup === h}
+                  onChange={() => setHomeSetup(h)}
+                  disabled={pending}
+                  label={HOME_SETUP_LABEL[h]}
+                  name="home_setup"
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </Question>
 
       <Question
