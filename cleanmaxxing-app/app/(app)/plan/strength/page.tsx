@@ -32,6 +32,12 @@ import {
 } from './assessment-form';
 import { ExerciseLibraryPanel } from './exercise-library-panel';
 import { EquipmentListCard } from './equipment-list-card';
+import { WarmupMobilityPanel } from './warmup-mobility-panel';
+import {
+  allStaticMobility,
+  patternSpecificWarmups,
+  universalWarmups,
+} from '@/lib/strength/warmup-mobility';
 import { BeginnerRampCard } from './beginner-ramp-card';
 import { PlateauCard } from './plateau-card';
 
@@ -275,6 +281,36 @@ export default async function StrengthPlanPage({ searchParams }: Props) {
                 required={required}
                 initialOwned={initialOwned}
                 isSeededDefault={isSeededDefault}
+              />
+            );
+          })()}
+
+          {(() => {
+            // Warm-up + mobility panel. Lift-specific warm-ups
+            // derived from the patterns of the user's selected (or
+            // recommended-fallback) exercises. Universal warm-ups +
+            // all static mobility surface unconditionally.
+            const selected = STRENGTH_EXERCISES.filter((ex) =>
+              assessment.selected_exercise_slugs.includes(ex.slug),
+            );
+            const sourceExercises =
+              selected.length > 0
+                ? selected
+                : getRecommendedExercises({
+                    equipment_access: assessment.equipment_access,
+                    injury_constraints: assessment.injury_constraints,
+                    priority_muscles: assessment.priority_muscles,
+                    secondary_objective: assessment.secondary_objective,
+                    bodyweight_preference: assessment.bodyweight_preference,
+                  }).recommended;
+            const patterns = Array.from(
+              new Set(sourceExercises.map((ex) => ex.movement_pattern)),
+            );
+            return (
+              <WarmupMobilityPanel
+                universalWarmups={universalWarmups()}
+                liftSpecificWarmups={patternSpecificWarmups(patterns)}
+                staticMobility={allStaticMobility()}
               />
             );
           })()}
