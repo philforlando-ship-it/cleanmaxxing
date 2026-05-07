@@ -21,6 +21,7 @@ import { HairPhotoDueCard } from './hair-photo-due-card';
 import { SleepCommitmentsCard } from './sleep-commitments-card';
 import { RecoveryCheckCard } from './recovery-check-card';
 import { SkincareSpfCard } from './skincare-spf-card';
+import { FacialHairUpkeepCard } from './facial-hair-upkeep-card';
 import {
   getYesterdayStrengthWorkout,
   hasFeedbackForWorkout,
@@ -39,6 +40,8 @@ import { hasSleepAssessment } from '@/lib/sleep/service';
 import { hasStrengthAssessment } from '@/lib/strength/service';
 import { hasSkincareAssessment } from '@/lib/skincare/service';
 import { getSkincareLogState } from '@/lib/skincare/log-service';
+import { getFacialHairAssessment } from '@/lib/facial-hair/service';
+import { getFacialHairGroomState } from '@/lib/facial-hair/groom-service';
 import { getTodayCommitmentsState } from '@/lib/sleep/commitments';
 import { daysUntilNext } from '@/lib/hair/stage-5-content';
 import { getSleepState } from '@/lib/sleep/service';
@@ -207,6 +210,7 @@ export default async function TodayPage({ searchParams }: Props) {
     sleepAssessmentState,
     strengthAssessmentState,
     skincareAssessmentState,
+    facialHairAssessment,
   ] = await Promise.all([
     supabase
       .from('survey_responses')
@@ -218,6 +222,7 @@ export default async function TodayPage({ searchParams }: Props) {
     hasSleepAssessment(supabase, user.id),
     hasStrengthAssessment(supabase, user.id),
     hasSkincareAssessment(supabase, user.id),
+    getFacialHairAssessment(supabase, user.id),
   ]);
   // Focus-area flags remaining after Phase B cleanup. Style /
   // grooming / skin / body_composition flags were dropped because
@@ -233,6 +238,8 @@ export default async function TodayPage({ searchParams }: Props) {
   let fitnessIsFocus = false;
   // Skincare picker value is 'skincare' (current) or 'skin' (legacy).
   let skincareIsFocus = false;
+  // Facial hair picker value is 'facial_hair' (current) or 'grooming' (legacy).
+  let facialHairIsFocus = false;
   if (focusRow?.response_value) {
     try {
       const parsed = JSON.parse(focusRow.response_value as string);
@@ -248,6 +255,12 @@ export default async function TodayPage({ searchParams }: Props) {
         }
         if (parsed.includes('skincare') || parsed.includes('skin')) {
           skincareIsFocus = true;
+        }
+        if (
+          parsed.includes('facial_hair') ||
+          parsed.includes('grooming')
+        ) {
+          facialHairIsFocus = true;
         }
       }
     } catch {
@@ -287,6 +300,20 @@ export default async function TodayPage({ searchParams }: Props) {
   const skincareLogState =
     skincareIsFocus && skincareAssessmentState.hasReport
       ? await getSkincareLogState(supabase, user.id, timezone)
+      : null;
+
+  // Facial-hair upkeep — focus-gated, requires a finished report
+  // (we need time_commitment to set the cadence). The card itself
+  // is overdue-gated inside the service via state.isDue.
+  const facialHairGroomState =
+    facialHairIsFocus &&
+    facialHairAssessment !== null &&
+    facialHairAssessment.report_text !== null
+      ? await getFacialHairGroomState(
+          supabase,
+          user.id,
+          facialHairAssessment.time_commitment,
+        )
       : null;
   const showHairRoutineTile =
     hairIsFocus &&
@@ -699,6 +726,16 @@ export default async function TodayPage({ searchParams }: Props) {
         {!steppedAway && skincareLogState && (
           <SkincareSpfCard state={skincareLogState} timezone={timezone} />
         )}
+
+        {!steppedAway &&
+          facialHairGroomState &&
+          facialHairGroomState.isDue &&
+          facialHairAssessment && (
+            <FacialHairUpkeepCard
+              state={facialHairGroomState}
+              timeCommitment={facialHairAssessment.time_commitment}
+            />
+          )}
 
         {showRecoveryCheck && yesterdayStrengthWorkout && (
           <RecoveryCheckCard
