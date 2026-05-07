@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { processPhotoUpload } from '@/lib/photos/process-upload';
 
 const ALLOWED_SLOTS = new Set([
   'baseline',
@@ -9,23 +10,28 @@ const ALLOWED_SLOTS = new Set([
 ]);
 const ALLOWED_ANGLES = new Set(['front', 'close', 'side', 'back']);
 const ALLOWED_CATEGORIES = new Set(['face', 'body']);
-const ALLOWED_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp']);
-// 25 MB. Generous on purpose — modern phone cameras produce 3-6 MB
-// JPEGs but ProRAW / large WebP / multi-shot stacks can run higher,
-// and downstream AI analysis (planned) benefits from preserving the
-// original resolution rather than compressing aggressively at upload.
-// Matches the Whisper transcribe endpoint's cap so the per-route
-// payload ceiling is consistent across the app.
+const ALLOWED_MIMES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  // iPhone default formats — accepted at the upload boundary; the
+  // server-side processor re-encodes to JPEG so the stored object is
+  // browser-universal.
+  'image/heic',
+  'image/heif',
+]);
+// 25 MB. Generous at the input boundary — modern phone cameras
+// produce 3-6 MB JPEGs but ProRAW / large WebP / multi-shot stacks
+// can run higher. The server-side processor compresses on the way
+// down, so the stored object is much smaller than the upload.
 const MAX_SIZE_BYTES = 25 * 1024 * 1024;
 
 const BUCKET = 'progress-photos';
 
-function extFor(mime: string): string | null {
-  if (mime === 'image/jpeg') return 'jpg';
-  if (mime === 'image/png') return 'png';
-  if (mime === 'image/webp') return 'webp';
-  return null;
-}
+// Output is always JPEG after server-side processing. The legacy
+// per-mime extension function is kept only to validate the input
+// extension; storage paths use 'jpg' uniformly.
+const OUTPUT_EXT = 'jpg';
 
 // Upload or replace a progress photo. Multipart/form-data body with:
 //   file: image file (jpeg, png, or webp, ≤ 25 MB)
@@ -95,11 +101,6 @@ export async function POST(req: Request) {
     );
   }
 
-  const ext = extFor(file.type);
-  if (!ext) {
-    return NextResponse.json({ error: 'Invalid mime type' }, { status: 400 });
-  }
-
   const slot = slotRaw;
   const filename =
     slot === 'baseline'
@@ -113,9 +114,10 @@ export async function POST(req: Request) {
   // path so existing rows continue to read fine via storage_path.
   // Body photos prefix with body- so the two categories never
   // collide. The storage_path column on the row remains
-  // authoritative for reads.
+  // authoritative for reads. Output ext is always 'jpg' since the
+  // server-side processor re-encodes uniformly (E1).
   const categoryPrefix = category === 'body' ? 'body-' : '';
-  const path = `${user.id}/${categoryPrefix}${filename}-${angle}.${ext}`;
+  const path = `${user.id}/${categoryPrefix}${filename}-${angle}.${OUTPUT_EXT}`;
 
   // If an older photo exists for this exact (slot, angle, category),
   // remove it from storage first. The row upsert below handles the
@@ -135,11 +137,24 @@ export async function POST(req: Request) {
       .remove([existing.storage_path as string]);
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
+  // E1 + E4: resize + strip EXIF metadata + re-encode to JPEG. Cuts
+  // storage substantially (5-10MB phone shots → ~200-400KB) and
+  // removes GPS/camera/timestamp metadata before persistence.
+  const inputBuffer = Buffer.from(await file.arrayBuffer());
+  let processed;
+  try {
+    processed = await processPhotoUpload(inputBuffer);
+  } catch {
+    return NextResponse.json(
+      { error: 'Could not process image — file may be corrupted or unsupported' },
+      { status: 400 },
+    );
+  }
+
   const { error: uploadErr } = await supabase.storage
     .from(BUCKET)
-    .upload(path, buffer, {
-      contentType: file.type,
+    .upload(path, processed.buffer, {
+      contentType: processed.contentType,
       upsert: true,
     });
 

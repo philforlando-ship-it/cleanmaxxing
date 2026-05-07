@@ -32,6 +32,26 @@ export type MisterPJourneyState = {
   // Active Pattern D / pharmacological protocols. Each entry is a
   // single intervention with its current status. Empty when none.
   active_protocols: ProtocolSnapshot[];
+  // Photo capture state across the user's lifecycle. Lets Mister P
+  // answer "did I capture my 90d?" intelligently without guessing.
+  photos: PhotoStateSnapshot;
+};
+
+type PhotoStateSnapshot = {
+  // Face photos by milestone (boolean per slot).
+  face_baseline: boolean;
+  face_progress_30d: boolean;
+  face_progress_90d: boolean;
+  face_progress_180d: boolean;
+  // Body photos — count rather than per-slot since the user may have
+  // multiple angles per slot and the prompt mostly cares about
+  // "any body photos at all" + "most recent."
+  body_photos_count: number;
+  body_most_recent_days_ago: number | null;
+  // Hair Stage 5 sessions — completed sessions only (open sessions
+  // are in-progress and shouldn't count as "captured").
+  hair_completed_sessions: number;
+  hair_last_session_days_ago: number | null;
 };
 
 type HairJourneySnapshot = {
@@ -172,6 +192,25 @@ export async function getMisterPJourneyState(
       .in('status', ['considering', 'on_protocol', 'paused', 'off_ramp']),
   ]);
 
+  // Photo state — separate parallel block since it touches different
+  // tables. Three queries: face/body progress photos, hair completed
+  // sessions, latest captured timestamps. All RLS-scoped to user.
+  const [
+    { data: progressPhotoRows },
+    { data: hairSessionRows },
+  ] = await Promise.all([
+    supabase
+      .from('progress_photos')
+      .select('slot, category, captured_at')
+      .eq('user_id', userId),
+    supabase
+      .from('hair_photo_sessions')
+      .select('completed_at, captured_at')
+      .eq('user_id', userId)
+      .not('completed_at', 'is', null)
+      .order('completed_at', { ascending: false }),
+  ]);
+
   // Hair
   let hair: HairJourneySnapshot | null = null;
   if (hairRow) {
@@ -310,6 +349,38 @@ export async function getMisterPJourneyState(
     },
   );
 
+  // Photo state derivation
+  const photoRows = (progressPhotoRows ?? []) as Array<{
+    slot: string;
+    category: string;
+    captured_at: string;
+  }>;
+  const facePhotos = photoRows.filter((p) => p.category === 'face');
+  const bodyPhotos = photoRows.filter((p) => p.category === 'body');
+  const bodyMostRecent =
+    bodyPhotos.length > 0
+      ? bodyPhotos.reduce((acc, p) =>
+          p.captured_at > acc.captured_at ? p : acc,
+        ).captured_at
+      : null;
+
+  const hairSessions = (hairSessionRows ?? []) as Array<{
+    completed_at: string | null;
+  }>;
+  const hairLastSessionAt =
+    hairSessions.length > 0 ? hairSessions[0].completed_at : null;
+
+  const photos: PhotoStateSnapshot = {
+    face_baseline: facePhotos.some((p) => p.slot === 'baseline'),
+    face_progress_30d: facePhotos.some((p) => p.slot === 'progress_30d'),
+    face_progress_90d: facePhotos.some((p) => p.slot === 'progress_90d'),
+    face_progress_180d: facePhotos.some((p) => p.slot === 'progress_180d'),
+    body_photos_count: bodyPhotos.length,
+    body_most_recent_days_ago: daysSince(bodyMostRecent, now),
+    hair_completed_sessions: hairSessions.length,
+    hair_last_session_days_ago: daysSince(hairLastSessionAt, now),
+  };
+
   return {
     hair,
     style,
@@ -319,5 +390,6 @@ export async function getMisterPJourneyState(
     skincare,
     facial_hair,
     active_protocols,
+    photos,
   };
 }

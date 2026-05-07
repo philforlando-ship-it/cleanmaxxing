@@ -54,14 +54,12 @@ export default async function OnboardingCompletePage() {
   if (!stagingMarkers.has('onboarding_review_acked')) {
     redirect('/onboarding');
   }
+  // Marker is the only "step done" signal — see /onboarding/page.tsx
+  // for the matching change. The baseline-photo page now surfaces
+  // optional extra angles after the front-face baseline is captured;
+  // photo presence alone shouldn't skip that flow.
   if (!stagingMarkers.has('onboarding_baseline_acked')) {
-    const { data: baselineRow } = await supabase
-      .from('progress_photos')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('slot', 'baseline')
-      .maybeSingle();
-    if (!baselineRow) redirect('/onboarding');
+    redirect('/onboarding');
   }
 
   const focusRow = (stagingRows ?? []).find(

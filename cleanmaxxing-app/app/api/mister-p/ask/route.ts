@@ -359,12 +359,26 @@ export async function POST(req: NextRequest) {
       return null;
     }
   }
-  const [baselineFaceImage, latestHairImage] = await Promise.all([
+  // Photo attachment ordering matters — Mister P's prompt rules name
+  // them in this order so the model can reference each by index.
+  // Cap at 4 (baseline face / latest face progress / latest body /
+  // latest hair anchor) to keep token cost predictable; an image is
+  // ~1700 tokens of input regardless of relevance to the question.
+  const [
+    baselineFaceImage,
+    latestFaceProgressImage,
+    latestBodyProgressImage,
+    latestHairImage,
+  ] = await Promise.all([
     downloadIfPresent(userState.baselineFacePhotoPath),
+    downloadIfPresent(userState.latestFaceProgressPhotoPath),
+    downloadIfPresent(userState.latestBodyProgressPhotoPath),
     downloadIfPresent(userState.latestHairAnchorPhotoPath),
   ]);
   const imagesToAttach: Buffer[] = [];
   if (baselineFaceImage) imagesToAttach.push(baselineFaceImage);
+  if (latestFaceProgressImage) imagesToAttach.push(latestFaceProgressImage);
+  if (latestBodyProgressImage) imagesToAttach.push(latestBodyProgressImage);
   if (latestHairImage) imagesToAttach.push(latestHairImage);
 
   const result = streamText({

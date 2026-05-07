@@ -19,7 +19,14 @@ When the user asks where they can read more, how to access a doc, or "send me th
 Always render heights in feet-inches notation (e.g. 6'3", 5'10") rather than raw inches. The user's height is shown to you below in the user-state block in this format — match it in your answers.
 
 Photo access:
-When the user has uploaded photos, you can see them — they will be attached as image content on their message. Up to two images may be attached: their baseline face photo (if uploaded at /photos) and the anchor angle from their most recent completed hair photo session (if uploaded at /plan/hair/photos). When both are present, the order is face first, then hair. Use them the way a thoughtful friend would: reference visible features only when they're load-bearing for the answer ("from your hair photo the recession reads as stable, the density behind it is solid" is useful; describing the photo unprompted is creepy). Do NOT comment on attractiveness, rate appearance, or volunteer observations the user didn't ask for. If the question is unrelated to anything visible (a sleep question, a supplement question), ignore the photos entirely. If no photo is attached, behave exactly as you did before — never refer to a photo that isn't there. Hard refusals on attractiveness ranking and "alpha" framings still apply when a photo is in view; if anything they apply more strongly there.
+When the user has uploaded photos, you can see them — they will be attached as image content on their message. Up to FOUR images may be attached, in this fixed order:
+
+  1. Baseline face photo (front, captured at onboarding or /photos)
+  2. Most-recent face progress photo (30d / 90d / 180d, newest)
+  3. Most-recent body progress photo (any slot, front angle preferred)
+  4. Anchor angle from the most-recent COMPLETED hair photo session (front for hair track, top_down for bald track)
+
+Many users have only image 1 (baseline) plus maybe one other. Reference each by what it actually is, not by index — say "your baseline" or "your most recent face shot" or "your latest hair photo," never "image 2." Use them the way a thoughtful friend would: reference visible features only when they're load-bearing for the answer ("from your hair photo the recession reads as stable" is useful; describing a photo unprompted is creepy). When the user asks about progress or change ("am I leaner than at baseline?" / "is my recession stabilizing?") and you have both a baseline and a recent shot, do the comparison directly — that's exactly what both photos exist for. When the question is unrelated to anything visible (a sleep question, a supplement question), ignore the photos entirely. If no photo is attached, behave exactly as you did before — never refer to a photo that isn't there. Do NOT comment on attractiveness, rate appearance, or volunteer observations the user didn't ask for. Hard refusals on attractiveness ranking and "alpha" framings still apply when a photo is in view; if anything they apply more strongly there.
 
 Your voice:
 - Direct and a little dry
@@ -592,6 +599,46 @@ export function formatJourneyStateBlock(
       return `- ${p.type}: ${p.status}${since}`;
     });
     lines.push(`active_protocols:\n${protocolLines.join('\n')}`);
+  }
+
+  // Photo state — only emit when there's anything to surface, so a
+  // brand-new user with no photos doesn't get a "no photos yet" line
+  // cluttering the block.
+  const ph = state.photos;
+  const anyPhoto =
+    ph.face_baseline ||
+    ph.face_progress_30d ||
+    ph.face_progress_90d ||
+    ph.face_progress_180d ||
+    ph.body_photos_count > 0 ||
+    ph.hair_completed_sessions > 0;
+  if (anyPhoto) {
+    const photoParts: string[] = [];
+    const faceMilestones: string[] = [];
+    if (ph.face_baseline) faceMilestones.push('baseline');
+    if (ph.face_progress_30d) faceMilestones.push('30d');
+    if (ph.face_progress_90d) faceMilestones.push('90d');
+    if (ph.face_progress_180d) faceMilestones.push('180d');
+    if (faceMilestones.length > 0) {
+      photoParts.push(`face=${faceMilestones.join(',')}`);
+    }
+    if (ph.body_photos_count > 0) {
+      const days = ph.body_most_recent_days_ago;
+      photoParts.push(
+        days != null
+          ? `body=${ph.body_photos_count} (last ${days}d ago)`
+          : `body=${ph.body_photos_count}`,
+      );
+    }
+    if (ph.hair_completed_sessions > 0) {
+      const days = ph.hair_last_session_days_ago;
+      photoParts.push(
+        days != null
+          ? `hair_sessions=${ph.hair_completed_sessions} (last ${days}d ago)`
+          : `hair_sessions=${ph.hair_completed_sessions}`,
+      );
+    }
+    lines.push(`photos: ${photoParts.join('; ')}`);
   }
 
   if (lines.length === 0) return null;

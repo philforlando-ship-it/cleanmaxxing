@@ -100,6 +100,18 @@ export type MisterPUserState = {
   // baseline yet — Mister P falls back to text-only behavior.
   baselineFacePhotoPath: string | null;
 
+  // Most-recent face progress photo (30d / 90d / 180d, whichever is
+  // newest). When present, lets Mister P answer body-comp + facial-
+  // change questions with two-shot comparison context (baseline +
+  // most-recent). Null when no progress photos captured yet.
+  latestFaceProgressPhotoPath: string | null;
+  latestFaceProgressSlot: 'progress_30d' | 'progress_90d' | 'progress_180d' | null;
+
+  // Most-recent body progress photo (front angle preferred, any
+  // category=body row). When chat is body-comp-related, gives Mister
+  // P visual context the baseline-face + hair photos don't carry.
+  latestBodyProgressPhotoPath: string | null;
+
   // Storage path for the anchor photo from the user's most recent
   // COMPLETED hair session (front for hair track, top_down for bald
   // track). One image per chat turn — adding all 5 hair angles would
@@ -256,6 +268,51 @@ export async function getMisterPUserState(
     (baselinePhotoRow as { storage_path: string } | null)?.storage_path ??
     null;
 
+  // Most-recent face progress photo (30d / 90d / 180d). One query;
+  // we resolve "newest" client-side since the progression slots are
+  // fixed and Postgres ORDER BY on a custom enum priority is overkill.
+  const { data: faceProgressRows } = await supabase
+    .from('progress_photos')
+    .select('slot, storage_path, captured_at')
+    .eq('user_id', userId)
+    .eq('angle', 'front')
+    .eq('category', 'face')
+    .in('slot', ['progress_30d', 'progress_90d', 'progress_180d']);
+  const faceProgress = (faceProgressRows ?? []) as Array<{
+    slot: 'progress_30d' | 'progress_90d' | 'progress_180d';
+    storage_path: string;
+    captured_at: string;
+  }>;
+  const newestFaceProgress =
+    faceProgress.length > 0
+      ? faceProgress.reduce((acc, p) =>
+          p.captured_at > acc.captured_at ? p : acc,
+        )
+      : null;
+  const latestFaceProgressPhotoPath =
+    newestFaceProgress?.storage_path ?? null;
+  const latestFaceProgressSlot = newestFaceProgress?.slot ?? null;
+
+  // Most-recent body photo. category='body', any slot, prefer 'front'
+  // angle. Lightweight lookup — the body-comp question pattern is
+  // strong enough to justify the second photo column.
+  const { data: bodyRows } = await supabase
+    .from('progress_photos')
+    .select('storage_path, captured_at, angle')
+    .eq('user_id', userId)
+    .eq('category', 'body')
+    .order('captured_at', { ascending: false })
+    .limit(5);
+  const bodyPhotos = (bodyRows ?? []) as Array<{
+    storage_path: string;
+    captured_at: string;
+    angle: string;
+  }>;
+  const latestBodyProgressPhotoPath =
+    bodyPhotos.find((b) => b.angle === 'front')?.storage_path ??
+    bodyPhotos[0]?.storage_path ??
+    null;
+
   // Latest completed hair session anchor photo (front for hair track,
   // top_down for bald track). One query joins the most recent
   // completed session to its anchor angle photo. We try 'front' first
@@ -308,6 +365,9 @@ export async function getMisterPUserState(
     firstConvoBlockers,
     firstConvoTriedBefore,
     baselineFacePhotoPath,
+    latestFaceProgressPhotoPath,
+    latestFaceProgressSlot,
+    latestBodyProgressPhotoPath,
     latestHairAnchorPhotoPath,
   };
 }

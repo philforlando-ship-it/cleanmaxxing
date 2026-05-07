@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 
 type Slot = 'baseline' | 'progress_30d' | 'progress_90d' | 'progress_180d';
 type Category = 'face' | 'body';
+type Angle = 'front' | 'close' | 'side' | 'back';
 
 type Props = {
   slot: Slot;
@@ -25,6 +26,11 @@ type Props = {
   // onboarding baseline-photo page) keep working without changes.
   // The /photos page passes 'body' for the full-body section.
   category?: Category;
+  // Photo angle. Defaults to 'front' so existing callers stay on
+  // the canonical front-facing capture. Multi-angle capture surfaces
+  // (onboarding extras, /photos non-baseline slots) pass 'close',
+  // 'side', or 'back' explicitly.
+  angle?: Angle;
 };
 
 const SLOT_LABEL: Record<Slot, string> = {
@@ -38,6 +44,7 @@ export function CapturePhoto({
   slot,
   baselineUrl = null,
   category = 'face',
+  angle = 'front',
 }: Props) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -74,6 +81,7 @@ export function CapturePhoto({
       form.append('file', file);
       form.append('slot', slot);
       form.append('category', category);
+      form.append('angle', angle);
       const res = await fetch('/api/progress-photos/upload', {
         method: 'POST',
         body: form,

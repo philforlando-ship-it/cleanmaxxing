@@ -21,6 +21,7 @@ import {
   upsertHairPhotoRow,
 } from '@/lib/hair/photos/service';
 import type { HairPhotoAngle } from '@/lib/hair/photos/types';
+import { processPhotoUpload } from '@/lib/photos/process-upload';
 
 const ALLOWED_ANGLES: ReadonlySet<HairPhotoAngle> = new Set([
   'front',
@@ -31,16 +32,16 @@ const ALLOWED_ANGLES: ReadonlySet<HairPhotoAngle> = new Set([
   'styled',
   'top_down',
 ]);
-const ALLOWED_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const ALLOWED_MIMES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+]);
 const MAX_SIZE_BYTES = 25 * 1024 * 1024;
 const BUCKET = 'progress-photos';
-
-function extFor(mime: string): string | null {
-  if (mime === 'image/jpeg') return 'jpg';
-  if (mime === 'image/png') return 'png';
-  if (mime === 'image/webp') return 'webp';
-  return null;
-}
+const OUTPUT_EXT = 'jpg';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -84,11 +85,6 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  const ext = extFor(file.type);
-  if (!ext) {
-    return NextResponse.json({ error: 'Invalid mime type' }, { status: 400 });
-  }
-
   // Resolve the session: explicit id (must be user's open session),
   // or fall back to ensure-or-create the user's open session.
   let sessionId: string;
@@ -106,10 +102,11 @@ export async function POST(req: Request) {
     sessionId = session.id;
   }
 
-  // Path: {user_id}/hair/{session_id}/{angle}.{ext}
+  // Path: {user_id}/hair/{session_id}/{angle}.jpg
   // user-id-first segment matches the existing storage RLS policy
-  // ((storage.foldername(name))[1] = auth.uid()::text).
-  const path = `${user.id}/hair/${sessionId}/${angle}.${ext}`;
+  // ((storage.foldername(name))[1] = auth.uid()::text). Output is
+  // always JPEG after server-side processing (E1).
+  const path = `${user.id}/hair/${sessionId}/${angle}.${OUTPUT_EXT}`;
 
   // If an existing file at the same (session, angle) lives at a
   // different path (e.g. same angle re-uploaded with a different
@@ -129,10 +126,24 @@ export async function POST(req: Request) {
       .remove([(existingRow as { storage_path: string }).storage_path]);
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
+  // E1 + E4: resize + strip EXIF + re-encode JPEG.
+  const inputBuffer = Buffer.from(await file.arrayBuffer());
+  let processed;
+  try {
+    processed = await processPhotoUpload(inputBuffer);
+  } catch {
+    return NextResponse.json(
+      { error: 'Could not process image — file may be corrupted or unsupported' },
+      { status: 400 },
+    );
+  }
+
   const { error: uploadErr } = await supabase.storage
     .from(BUCKET)
-    .upload(path, buffer, { contentType: file.type, upsert: true });
+    .upload(path, processed.buffer, {
+      contentType: processed.contentType,
+      upsert: true,
+    });
   if (uploadErr) {
     return NextResponse.json(
       { error: `Upload failed: ${uploadErr.message}` },

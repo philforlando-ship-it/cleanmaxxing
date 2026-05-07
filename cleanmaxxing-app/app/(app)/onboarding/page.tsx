@@ -64,15 +64,14 @@ export default async function OnboardingEntryPage() {
     if (markerByKey.get('onboarding_review_acked') !== '1') {
       redirect('/onboarding/review');
     }
-    // Baseline ack OR an actual baseline photo row both count as done.
+    // The onboarding_baseline_acked marker is the only "step done"
+    // signal. A baseline photo row alone no longer short-circuits —
+    // the baseline-photo page surfaces optional extra angles after
+    // the front-face baseline is captured, and the user has to
+    // explicitly hit Continue (or Skip) to set the marker. Bouncing
+    // past on photo presence would skip the extras opportunity.
     if (markerByKey.get('onboarding_baseline_acked') !== '1') {
-      const { data: baselineRow } = await supabase
-        .from('progress_photos')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('slot', 'baseline')
-        .maybeSingle();
-      if (!baselineRow) redirect('/onboarding/baseline-photo');
+      redirect('/onboarding/baseline-photo');
     }
     redirect('/onboarding/complete');
   }
