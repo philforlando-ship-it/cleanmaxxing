@@ -35,17 +35,30 @@ export function computeCutCadenceWeeks(cutFamily: CutFamily): number {
       // names the daily reality.
       return 2;
     case 'high_taper_crop':
-      // Skin-fade lines blur quickly; tighter cadence than a classic taper.
+    case 'slick_back_undercut':
+    case 'broccoli':
+      // Skin-fade / undercut lines blur quickly; broccoli shape
+      // collapses fast as the curly volume grows out unevenly.
       return 4;
+    case 'overgrown_buzz':
+      // Faster than buzz_cut because the longer top is the
+      // load-bearing part and grows out of shape sooner.
+      return 3;
     case 'caesar':
     case 'textured_crop':
+    case 'textured_fringe':
     case 'crew_cut':
     case 'ivy_league':
     case 'slick_back':
     case 'textured_quiff':
+    case 'modern_mullet':
+    case 'side_part_combover':
       return 5;
     case 'mid_length_textured':
     case 'curtains':
+    case 'wolf_cut':
+      // Wolf is shaggy by design — holds its shape longer because the
+      // intended look IS the grown-out feel. Same cadence as curtains.
       return 7;
   }
 }

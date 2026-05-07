@@ -1,10 +1,18 @@
 # Cut family reference images
 
-Twelve reference images (one per `CutFamily` value in `lib/hair/types.ts`)
-plus optional `_mature` cohort variants for the balding-friendly subset.
-The Stage 1 card renders these so the user can see what Mister P is
-recommending instead of just reading "Caesar / Short Forward Crop" and
-having to know what that looks like.
+Reference images (one per `CutFamily` value in `lib/hair/types.ts`)
+plus optional `_mature` cohort variants for the balding-friendly subset
+and the cross-age modern cuts. The Stage 1 card renders these so the
+user can see what Mister P is recommending instead of just reading
+"Caesar / Short Forward Crop" and having to know what that looks like.
+
+The cohort filter in `lib/hair/cut-by-age.ts` already gates the
+youth-coded cuts (broccoli, wolf_cut, modern_mullet) out of the menu
+for users 30+, so those don't need `_mature` variants — the user will
+never see them rendered against the mature cohort. The cuts that DO
+need both `_young` (default `.png`) and `_mature` variants are the
+ones whose image would otherwise miscast the model's age relative to
+the user looking at the page.
 
 ## File names (must match exactly)
 
@@ -19,7 +27,14 @@ Young cohort (default):
 - `crew_cut.png`
 - `buzz_cut.png`
 - `slick_back.png`
+- `slick_back_undercut.png` — Slicked-Back Undercut (Darmody / Shelby) [migration 0077]
 - `curtains.png`
+- `textured_fringe.png` — Textured Fringe (Shelby Fringe) [migration 0077]
+- `overgrown_buzz.png` — Overgrown Buzz [migration 0077]
+- `broccoli.png` — Broccoli (Curly Taper) [migration 0077, young cohort only]
+- `wolf_cut.png` — Wolf Cut (Shaggy Flow) [migration 0077, young cohort only]
+- `modern_mullet.png` — Modern Mullet (Low-Taper) [migration 0077, young cohort only]
+- `side_part_combover.png` — Side Part with Comb-Over [migration 0077, mature cohort only]
 - `bald_track.png`
 - `clean_shave.png`
 
@@ -32,6 +47,10 @@ most likely to land on these cuts via the density-filtered menu in
 - `textured_crop_mature.png`
 - `crew_cut_mature.png`
 - `buzz_cut_mature.png`
+- `slick_back_undercut_mature.png` — also valid for 41+; Darmody/Shelby works mature per the 25-50 cohort
+- `textured_fringe_mature.png` — works 22-40; the upper edge benefits from a mature model variant
+- `overgrown_buzz_mature.png` — cross-age, mature variant for the older cohort
+- `side_part_combover_mature.png` — primary cohort for this cut is 35+ so the mature variant is the canonical one
 
 The picker in `app/(app)/plan/hair/stage-1-card.tsx` prefers the
 `_mature` variant for users 45+, then falls back to the un-suffixed
@@ -80,6 +99,42 @@ Use a consistent style across all nine so the user is comparing
   and reflective (no stubble visible at all), well-groomed beard or
   short stubble for face-frame contrast, decisive committed bald
   aesthetic — should read as "Bic'd today" not "buzz-cut yesterday."
+
+### 2026 modern set (migration 0077)
+
+- `slick_back_undercut.png`: long top about 3 inches slicked straight
+  back with light shine or matte finish, hard contrast on the sides
+  with a skin fade or very tight #0/#1 clipper length, no taper line
+  blend — distinct from a regular slick back which has even tapered
+  sides. Vintage gangster / old-money / Boardwalk Empire register.
+- `textured_fringe.png`: medium top about 2 inches with the front
+  swept forward as a fringe sitting just over the brow, choppy
+  texture, low-mid taper sides (NOT a skin fade), matte finish.
+  Distinct from curtains (which is middle-parted with no fringe) and
+  textured_crop (which is shorter and pulled higher).
+- `overgrown_buzz.png`: about a #4 or #5 guard length on top — longer
+  than a true military buzz, shorter than a crew — with very short
+  #0/#1 sides, soft natural finish (no styling product visible),
+  relaxed/low-maintenance register.
+- `broccoli.png`: tight low-mid taper on the sides with curly textured
+  volume on top forming a distinctive rounded silhouette, hair clearly
+  curly (not just wavy), mid-20s model, neutral expression — should
+  read as the cut popularized 2022-2024 without going meme-level
+  exaggerated. NO mature cohort variant (age filter excludes broccoli
+  for 30+).
+- `wolf_cut.png`: shaggy layered top with visible texture and flow,
+  mid-length sides that blend rather than fade, slight length at the
+  back (mullet-adjacent but not a true mullet), mid-20s model,
+  fashion-forward aesthetic. Clearly distinct from slick_back_undercut.
+- `modern_mullet.png`: low-taper sides (clean blend, not a fade),
+  textured medium length on top, controlled flow at the back about an
+  inch longer than the top — distinctly modern, not 80s, no party-in-
+  the-back exaggeration. Mid-20s model.
+- `side_part_combover.png`: medium top about 2-2.5 inches with a soft
+  side part combed across to one side, low taper or scissor-finish
+  sides, the combed-over top sized to gently soften an early temple
+  recession (the model can show a mild mature hairline). Mid-30s+
+  model, professional register, low-shine finish.
 
 ## Licensing
 

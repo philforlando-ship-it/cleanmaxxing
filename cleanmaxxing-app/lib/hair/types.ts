@@ -37,6 +37,16 @@ export type WhoCuts = 'self' | 'chain' | 'dedicated_barber';
 // lib/hair/cut-by-density.ts gates which cuts each user sees, so users
 // with thinning density see these prominently and users with full
 // density see the broader range.
+//
+// Migration 0077 added the 2026 modern set:
+//   slick_back_undercut — Darmody/Shelby. Distinct from slick_back
+//     (which has even sides, no contrast).
+//   textured_fringe — Peaky Blinders fringe over the brow with a low
+//     fade. Distinct from curtains (middle-part flow).
+//   overgrown_buzz — modern buzz with more length on top.
+//   broccoli, wolf_cut, modern_mullet — youth-coded, gated by the
+//     age filter in lib/hair/cut-by-age.ts.
+//   side_part_combover — soft option for early recession at 35+.
 export type CutFamily =
   | 'caesar'
   | 'high_taper_crop'
@@ -47,7 +57,14 @@ export type CutFamily =
   | 'crew_cut'
   | 'buzz_cut'
   | 'slick_back'
+  | 'slick_back_undercut'
   | 'curtains'
+  | 'textured_fringe'
+  | 'overgrown_buzz'
+  | 'broccoli'
+  | 'wolf_cut'
+  | 'modern_mullet'
+  | 'side_part_combover'
   | 'bald_track'
   | 'clean_shave';
 
@@ -61,7 +78,14 @@ export const CUT_FAMILIES: ReadonlyArray<CutFamily> = [
   'crew_cut',
   'buzz_cut',
   'slick_back',
+  'slick_back_undercut',
   'curtains',
+  'textured_fringe',
+  'overgrown_buzz',
+  'broccoli',
+  'wolf_cut',
+  'modern_mullet',
+  'side_part_combover',
   'bald_track',
   'clean_shave',
 ] as const;
@@ -86,7 +110,14 @@ export const CUT_FAMILY_LABEL: Record<CutFamily, string> = {
   crew_cut: 'Crew Cut / Short Taper',
   buzz_cut: 'Buzz Cut',
   slick_back: 'Slick Back / Flow Back',
+  slick_back_undercut: 'Slicked-Back Undercut (Darmody / Shelby)',
   curtains: 'Curtains / Middle Part Flow',
+  textured_fringe: 'Textured Fringe (Shelby Fringe)',
+  overgrown_buzz: 'Overgrown Buzz',
+  broccoli: 'Broccoli (Curly Taper)',
+  wolf_cut: 'Wolf Cut (Shaggy Flow)',
+  modern_mullet: 'Modern Mullet (Low-Taper)',
+  side_part_combover: 'Side Part with Comb-Over',
   bald_track: 'Bald track (transitioning / buzz maintenance)',
   clean_shave: 'Clean Shave (Bic’d, razor-smooth)',
 };

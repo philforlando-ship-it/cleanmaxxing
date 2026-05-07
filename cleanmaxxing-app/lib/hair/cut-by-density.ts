@@ -15,8 +15,10 @@
 import type { CutFamily, DensityState } from './types';
 
 export const CUTS_FOR_DENSITY: Record<DensityState, ReadonlyArray<CutFamily>> = {
-  // Full density — most options open. textured_quiff included; volume
-  // works when there's hair to support it.
+  // Full density — most options open. The 2026 modern roster
+  // (slick_back_undercut, broccoli, wolf, mullet, textured fringe,
+  // overgrown buzz) all work when there's actual density to carry
+  // the look. Age filter narrows further by cohort.
   full: [
     'textured_crop',
     'ivy_league',
@@ -25,14 +27,25 @@ export const CUTS_FOR_DENSITY: Record<DensityState, ReadonlyArray<CutFamily>> = 
     'crew_cut',
     'buzz_cut',
     'slick_back',
+    'slick_back_undercut',
     'curtains',
+    'textured_fringe',
+    'overgrown_buzz',
+    'broccoli',
+    'wolf_cut',
+    'modern_mullet',
     'high_taper_crop',
   ],
 
   // Mature hairline — hairline has receded to its natural adult
   // position but density is otherwise intact. Most cuts still work;
   // textured_quiff drops because the volume + lift draws attention to
-  // the temple line.
+  // the temple line. slick_back_undercut works (the undercut sides
+  // don't expose the hairline more than slick_back already does).
+  // wolf_cut + broccoli + mullet drop because their volume reads
+  // youth-coded and the mature hairline already nudges the look
+  // older. side_part_combover + textured_fringe added — both gentle
+  // hairline-aware options.
   mature_hairline: [
     'textured_crop',
     'ivy_league',
@@ -40,7 +53,11 @@ export const CUTS_FOR_DENSITY: Record<DensityState, ReadonlyArray<CutFamily>> = 
     'crew_cut',
     'buzz_cut',
     'slick_back',
+    'slick_back_undercut',
     'curtains',
+    'textured_fringe',
+    'overgrown_buzz',
+    'side_part_combover',
     'caesar',
     'high_taper_crop',
   ],
@@ -48,26 +65,32 @@ export const CUTS_FOR_DENSITY: Record<DensityState, ReadonlyArray<CutFamily>> = 
   // Receding hairline — active recession. The balding-friendly cuts
   // become the primary options. Slick back and curtains drop (both
   // expose temples). Textured quiff drops (lift draws the eye to
-  // recession).
+  // recession). textured_fringe + side_part_combover added — both
+  // mask early recession by anchoring visual weight forward / across.
   receding_hairline: [
     'caesar',
     'high_taper_crop',
     'textured_crop',
+    'textured_fringe',
+    'side_part_combover',
     'crew_cut',
     'ivy_league',
     'buzz_cut',
+    'overgrown_buzz',
   ],
 
   // Crown thinning — the top of the hair is the problem. Cuts must
   // not rely on full crown coverage. Caesar, high_taper_crop, crew,
   // and buzz are the four that work without the crown carrying the
   // look. Textured_crop included because forward movement also masks
-  // crown gaps.
+  // crown gaps. overgrown_buzz added (still buzz-territory, more
+  // length doesn't expose the crown the way longer cuts would).
   crown_thinning: [
     'caesar',
     'high_taper_crop',
     'crew_cut',
     'buzz_cut',
+    'overgrown_buzz',
     'textured_crop',
   ],
 
@@ -75,8 +98,15 @@ export const CUTS_FOR_DENSITY: Record<DensityState, ReadonlyArray<CutFamily>> = 
   // The cuts that still work are the ones that don't rely on density
   // for their visual story. Caesar reads well because the fringe is
   // the focus, not density. Buzz and high_taper_crop reduce the
-  // contrast that makes thinning visible.
-  diffuse_thinning: ['caesar', 'high_taper_crop', 'crew_cut', 'buzz_cut'],
+  // contrast that makes thinning visible. overgrown_buzz added for
+  // the same reason.
+  diffuse_thinning: [
+    'caesar',
+    'high_taper_crop',
+    'crew_cut',
+    'buzz_cut',
+    'overgrown_buzz',
+  ],
 
   // Advanced thinning — the user is at the decision point. The Pattern
   // D / transition framing in the personal report governs which

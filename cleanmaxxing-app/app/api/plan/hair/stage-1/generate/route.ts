@@ -19,7 +19,10 @@ export async function POST() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const assessment = await getHairAssessment(supabase, user.id);
+  const [assessment, { data: userRow }] = await Promise.all([
+    getHairAssessment(supabase, user.id),
+    supabase.from('users').select('age').eq('id', user.id).maybeSingle(),
+  ]);
   if (!assessment) {
     return NextResponse.json(
       { error: 'No hair assessment on file.' },
@@ -32,9 +35,10 @@ export async function POST() {
       { status: 400 },
     );
   }
+  const age = (userRow as { age: number | null } | null)?.age ?? null;
 
   try {
-    await generateAndSaveHairStage1(supabase, user.id, assessment);
+    await generateAndSaveHairStage1(supabase, user.id, assessment, age);
   } catch (err) {
     console.error('hair_stage_1_generation_failed', err);
     return NextResponse.json(

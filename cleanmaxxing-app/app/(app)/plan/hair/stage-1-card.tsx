@@ -18,6 +18,7 @@ import {
   type DensityState,
 } from '@/lib/hair/types';
 import { cutsForDensity } from '@/lib/hair/cut-by-density';
+import { cutsForAge } from '@/lib/hair/cut-by-age';
 
 // Tries the cohort-aware variant first (e.g. caesar_mature.png for
 // users 45+), then the un-suffixed file, then .jpg/.webp fallbacks.
@@ -253,6 +254,7 @@ export function HairStage1Card({
           densityState={densityState}
           recommended={cutFamily}
           cohort={cohort}
+          age={age}
         />
 
         {error && (
@@ -405,23 +407,27 @@ function TryOnSection({
   );
 }
 
-// Density-filtered alternative cuts. Surfaced under the LLM
-// recommendation as "Other cuts that work for your density." The user
-// doesn't pick from here — Mister P already picked one. This is
-// transparency: the user sees the curated subset for their density
-// instead of believing the recommendation came from the full 12-cut
-// roster. Collapsed by default; expand reveals thumbnails.
+// Density+age-filtered alternative cuts. Surfaced under the LLM
+// recommendation as "Other cuts that work for you." The user doesn't
+// pick from here — Mister P already picked one. This is transparency:
+// the user sees the curated subset for their density AND age cohort
+// (so a 42-year-old never sees broccoli alongside their slick-back).
+// Collapsed by default; expand reveals thumbnails.
 function OtherCutsForDensity({
   densityState,
   recommended,
   cohort,
+  age,
 }: {
   densityState: DensityState;
   recommended: CutFamily;
   cohort: 'young' | 'mature';
+  age: number | null;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const others = cutsForDensity(densityState).filter((c) => c !== recommended);
+  const densityCuts = cutsForDensity(densityState);
+  const ageFiltered = cutsForAge(age, densityCuts);
+  const others = ageFiltered.filter((c) => c !== recommended);
   if (others.length === 0) return null;
   return (
     <div className="mt-6 border-t border-zinc-200 pt-5 dark:border-zinc-800">
