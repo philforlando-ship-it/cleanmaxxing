@@ -20,6 +20,7 @@ import { HairRoutineCard } from './hair-routine-card';
 import { HairPhotoDueCard } from './hair-photo-due-card';
 import { SleepCommitmentsCard } from './sleep-commitments-card';
 import { RecoveryCheckCard } from './recovery-check-card';
+import { SkincareSpfCard } from './skincare-spf-card';
 import {
   getYesterdayStrengthWorkout,
   hasFeedbackForWorkout,
@@ -36,6 +37,8 @@ import { selectContextualPrompt } from '@/lib/contextual-prompt/select';
 import { ContextualPromptCard } from './contextual-prompt-card';
 import { hasSleepAssessment } from '@/lib/sleep/service';
 import { hasStrengthAssessment } from '@/lib/strength/service';
+import { hasSkincareAssessment } from '@/lib/skincare/service';
+import { getSkincareLogState } from '@/lib/skincare/log-service';
 import { getTodayCommitmentsState } from '@/lib/sleep/commitments';
 import { daysUntilNext } from '@/lib/hair/stage-5-content';
 import { getSleepState } from '@/lib/sleep/service';
@@ -203,6 +206,7 @@ export default async function TodayPage({ searchParams }: Props) {
     hairAssessment,
     sleepAssessmentState,
     strengthAssessmentState,
+    skincareAssessmentState,
   ] = await Promise.all([
     supabase
       .from('survey_responses')
@@ -213,6 +217,7 @@ export default async function TodayPage({ searchParams }: Props) {
     getHairAssessment(supabase, user.id),
     hasSleepAssessment(supabase, user.id),
     hasStrengthAssessment(supabase, user.id),
+    hasSkincareAssessment(supabase, user.id),
   ]);
   // Focus-area flags remaining after Phase B cleanup. Style /
   // grooming / skin / body_composition flags were dropped because
@@ -226,6 +231,8 @@ export default async function TodayPage({ searchParams }: Props) {
   // recovery-feedback gate downstream only needs "did the user opt
   // into strength?" so collapse both signals into one flag.
   let fitnessIsFocus = false;
+  // Skincare picker value is 'skincare' (current) or 'skin' (legacy).
+  let skincareIsFocus = false;
   if (focusRow?.response_value) {
     try {
       const parsed = JSON.parse(focusRow.response_value as string);
@@ -238,6 +245,9 @@ export default async function TodayPage({ searchParams }: Props) {
           parsed.includes('cardio')
         ) {
           fitnessIsFocus = true;
+        }
+        if (parsed.includes('skincare') || parsed.includes('skin')) {
+          skincareIsFocus = true;
         }
       }
     } catch {
@@ -270,6 +280,14 @@ export default async function TodayPage({ searchParams }: Props) {
           appDayFor(timezone),
         )
       : [];
+
+  // Skincare daily SPF — only fetched when skincare is in focus AND
+  // the user has a finished report. Same pattern as sleep
+  // commitments: focus-gated event-driven daily-action surface.
+  const skincareLogState =
+    skincareIsFocus && skincareAssessmentState.hasReport
+      ? await getSkincareLogState(supabase, user.id, timezone)
+      : null;
   const showHairRoutineTile =
     hairIsFocus &&
     !steppedAway &&
@@ -676,6 +694,10 @@ export default async function TodayPage({ searchParams }: Props) {
 
         {!steppedAway && sleepCommitmentsToday.length > 0 && (
           <SleepCommitmentsCard commitments={sleepCommitmentsToday} />
+        )}
+
+        {!steppedAway && skincareLogState && (
+          <SkincareSpfCard state={skincareLogState} timezone={timezone} />
         )}
 
         {showRecoveryCheck && yesterdayStrengthWorkout && (
