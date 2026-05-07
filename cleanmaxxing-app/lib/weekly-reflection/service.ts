@@ -331,7 +331,9 @@ export async function getActiveJourneysForReflection(
   if (focusAreas.includes('style') && hasReport(styleRow)) {
     journeys.push({ topic: 'style', question: JOURNEY_QUESTIONS.style });
   }
-  if (focusAreas.includes('grooming') && hasReport(facialHairRow)) {
+  const facialHairFocus =
+    focusAreas.includes('facial_hair') || focusAreas.includes('grooming');
+  if (facialHairFocus && hasReport(facialHairRow)) {
     journeys.push({
       topic: 'facial_hair',
       question: JOURNEY_QUESTIONS.facial_hair,

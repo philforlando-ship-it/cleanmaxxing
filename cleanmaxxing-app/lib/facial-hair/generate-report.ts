@@ -13,6 +13,7 @@ import { povFor } from '@/lib/content/pov';
 import { getUserProfile } from '@/lib/profile/service';
 import {
   CURRENT_STATE_LABEL,
+  DENSITY_AREA_LABEL,
   FACIAL_HAIR_GOAL_LABEL,
   GROWTH_QUALITY_LABEL,
   TIME_COMMITMENT_LABEL,
@@ -48,6 +49,9 @@ export async function generateAndSaveFacialHairReport(
     age: (userRow as { age: number | null } | null)?.age ?? null,
     face_shape:
       (hairRow as { face_shape: string | null } | null)?.face_shape ?? null,
+    density_cheeks: assessment.density_cheeks,
+    density_chin: assessment.density_chin,
+    density_mustache: assessment.density_mustache,
     growout_test_started_at: assessment.growout_test_started_at,
     growout_test_completed_at: assessment.growout_test_completed_at,
   };
@@ -98,6 +102,15 @@ function formatAssessmentForPrompt(
     `- face_shape (hair_assessments): ${modifiers.face_shape ?? 'not set'}`,
   );
   modifierLines.push(
+    `- density_cheeks (assessment): ${modifiers.density_cheeks ?? 'not screened (legacy assessment, use growth_quality below)'}`,
+  );
+  modifierLines.push(
+    `- density_chin (assessment): ${modifiers.density_chin ?? 'not screened (legacy assessment, use growth_quality below)'}`,
+  );
+  modifierLines.push(
+    `- density_mustache (assessment): ${modifiers.density_mustache ?? 'not screened (legacy assessment, use growth_quality below)'}`,
+  );
+  modifierLines.push(
     `- growout_test_started_at (stage milestone): ${
       modifiers.growout_test_started_at ?? 'not started'
     }`,
@@ -108,11 +121,49 @@ function formatAssessmentForPrompt(
     }`,
   );
 
+  // Density block: prefer per-area when populated, fall back to
+  // overall growth_quality for legacy rows. The prompt has rules for
+  // both shapes.
+  const densityLines: string[] = [];
+  if (
+    assessment.density_cheeks ||
+    assessment.density_chin ||
+    assessment.density_mustache
+  ) {
+    densityLines.push(
+      `- Density (cheeks): ${
+        assessment.density_cheeks
+          ? DENSITY_AREA_LABEL[assessment.density_cheeks]
+          : 'not screened'
+      }`,
+    );
+    densityLines.push(
+      `- Density (chin): ${
+        assessment.density_chin
+          ? DENSITY_AREA_LABEL[assessment.density_chin]
+          : 'not screened'
+      }`,
+    );
+    densityLines.push(
+      `- Density (mustache): ${
+        assessment.density_mustache
+          ? DENSITY_AREA_LABEL[assessment.density_mustache]
+          : 'not screened'
+      }`,
+    );
+  } else if (assessment.growth_quality) {
+    densityLines.push(
+      `- Growth quality (legacy overall read): ${GROWTH_QUALITY_LABEL[assessment.growth_quality]}`,
+    );
+  } else {
+    densityLines.push('- Density: not screened');
+  }
+
   return `Here is the user's facial-hair assessment.
 
 --- ASSESSMENT ---
 - Current state: ${CURRENT_STATE_LABEL[assessment.current_state]}
-- Growth quality: ${GROWTH_QUALITY_LABEL[assessment.growth_quality]}
+${densityLines.join('\n')}
 - Goal: ${FACIAL_HAIR_GOAL_LABEL[assessment.goal]}
 - Time commitment: ${TIME_COMMITMENT_LABEL[assessment.time_commitment]}
 

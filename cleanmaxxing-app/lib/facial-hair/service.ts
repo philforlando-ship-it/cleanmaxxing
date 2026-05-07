@@ -43,10 +43,17 @@ export async function saveFacialHairAssessment(
   userId: string,
   input: FacialHairAssessmentInput,
 ): Promise<FacialHairAssessment> {
+  // growth_quality intentionally omitted from the upsert row — new
+  // assessments collect density_cheeks / density_chin /
+  // density_mustache instead. Legacy rows that already have a
+  // growth_quality value keep it (Supabase upsert with explicit
+  // columns leaves unlisted columns alone on update).
   const row = {
     user_id: userId,
     current_state: input.current_state,
-    growth_quality: input.growth_quality,
+    density_cheeks: input.density_cheeks,
+    density_chin: input.density_chin,
+    density_mustache: input.density_mustache,
     goal: input.goal,
     time_commitment: input.time_commitment,
     facial_hair_goal_text: input.facial_hair_goal_text,
@@ -90,7 +97,13 @@ function rowToAssessment(row: unknown): FacialHairAssessment {
     user_id: r.user_id as string,
     current_state: r.current_state as FacialHairAssessment['current_state'],
     growth_quality:
-      r.growth_quality as FacialHairAssessment['growth_quality'],
+      (r.growth_quality as FacialHairAssessment['growth_quality']) ?? null,
+    density_cheeks:
+      (r.density_cheeks as FacialHairAssessment['density_cheeks']) ?? null,
+    density_chin:
+      (r.density_chin as FacialHairAssessment['density_chin']) ?? null,
+    density_mustache:
+      (r.density_mustache as FacialHairAssessment['density_mustache']) ?? null,
     goal: r.goal as FacialHairAssessment['goal'],
     time_commitment:
       r.time_commitment as FacialHairAssessment['time_commitment'],

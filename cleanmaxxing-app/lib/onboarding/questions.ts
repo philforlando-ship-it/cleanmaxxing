@@ -73,6 +73,7 @@ export const QUESTIONS: Question[] = [
       { value: 'cardio', label: 'Cardio' },
       { value: 'sleep', label: 'Sleep' },
       { value: 'skincare', label: 'Skincare' },
+      { value: 'facial_hair', label: 'Facial hair' },
     ],
     required: true,
   },

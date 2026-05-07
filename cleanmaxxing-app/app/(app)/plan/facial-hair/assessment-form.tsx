@@ -12,13 +12,13 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   CURRENT_STATE_LABEL,
+  DENSITY_AREA_LABEL,
   FACIAL_HAIR_GOAL_LABEL,
   FACIAL_HAIR_STYLES,
-  GROWTH_QUALITY_LABEL,
   TIME_COMMITMENT_LABEL,
   type CurrentState,
+  type DensityArea,
   type FacialHairGoal,
-  type GrowthQuality,
   type TimeCommitment,
 } from '@/lib/facial-hair/types';
 
@@ -31,12 +31,11 @@ const CURRENT_STATES: CurrentState[] = [
   'long_beard',
 ];
 
-const GROWTH_QUALITIES: GrowthQuality[] = [
+const DENSITY_AREAS: DensityArea[] = [
   'full',
-  'mostly_full',
+  'sparse',
   'patchy',
-  'very_patchy',
-  'unsure',
+  'not_present',
 ];
 
 const GOALS: FacialHairGoal[] = [
@@ -51,7 +50,9 @@ const TIME_COMMITMENTS: TimeCommitment[] = ['low', 'medium', 'high'];
 
 export type FacialHairAssessmentInitialValues = {
   current_state: CurrentState;
-  growth_quality: GrowthQuality;
+  density_cheeks: DensityArea | null;
+  density_chin: DensityArea | null;
+  density_mustache: DensityArea | null;
   goal: FacialHairGoal;
   time_commitment: TimeCommitment;
   facial_hair_goal_text: string | null;
@@ -69,8 +70,14 @@ export function FacialHairAssessmentForm({
   const [currentState, setCurrentState] = useState<CurrentState | null>(
     initialValues?.current_state ?? null,
   );
-  const [growthQuality, setGrowthQuality] = useState<GrowthQuality | null>(
-    initialValues?.growth_quality ?? null,
+  const [densityCheeks, setDensityCheeks] = useState<DensityArea | null>(
+    initialValues?.density_cheeks ?? null,
+  );
+  const [densityChin, setDensityChin] = useState<DensityArea | null>(
+    initialValues?.density_chin ?? null,
+  );
+  const [densityMustache, setDensityMustache] = useState<DensityArea | null>(
+    initialValues?.density_mustache ?? null,
   );
   const [goal, setGoal] = useState<FacialHairGoal | null>(
     initialValues?.goal ?? null,
@@ -87,13 +94,17 @@ export function FacialHairAssessmentForm({
   function submit() {
     setError(null);
     if (!currentState) return setError('Pick your current state.');
-    if (!growthQuality) return setError('Pick your growth quality.');
+    if (!densityCheeks) return setError('Pick your cheek density.');
+    if (!densityChin) return setError('Pick your chin density.');
+    if (!densityMustache) return setError('Pick your mustache density.');
     if (!goal) return setError('Pick a goal.');
     if (!timeCommitment) return setError('Pick a time commitment.');
 
     const payload = {
       current_state: currentState,
-      growth_quality: growthQuality,
+      density_cheeks: densityCheeks,
+      density_chin: densityChin,
+      density_mustache: densityMustache,
       goal,
       time_commitment: timeCommitment,
       facial_hair_goal_text: goalText.trim() || null,
@@ -145,20 +156,31 @@ export function FacialHairAssessmentForm({
 
       <Question
         number={2}
-        title="How does it grow in?"
-        helper="Density and patchiness. Pick honestly — patchy isn't a problem, but pretending it isn't there is."
+        title="How does it grow in by area?"
+        helper="Beards aren't uniform — most men have one zone that lags the others. Pick honestly for each. Patchy isn't a problem; pretending it isn't there is."
       >
-        <div className="space-y-2">
-          {GROWTH_QUALITIES.map((g) => (
-            <RadioRow
-              key={g}
-              checked={growthQuality === g}
-              onChange={() => setGrowthQuality(g)}
-              disabled={pending}
-              label={GROWTH_QUALITY_LABEL[g]}
-              name="growth_quality"
-            />
-          ))}
+        <div className="space-y-6">
+          <SubQuestion
+            label="Cheeks"
+            value={densityCheeks}
+            onChange={setDensityCheeks}
+            name="density_cheeks"
+            disabled={pending}
+          />
+          <SubQuestion
+            label="Chin"
+            value={densityChin}
+            onChange={setDensityChin}
+            name="density_chin"
+            disabled={pending}
+          />
+          <SubQuestion
+            label="Mustache"
+            value={densityMustache}
+            onChange={setDensityMustache}
+            name="density_mustache"
+            disabled={pending}
+          />
         </div>
       </Question>
 
@@ -321,6 +343,40 @@ function Question({
         </p>
       )}
       <div className="mt-4">{children}</div>
+    </div>
+  );
+}
+
+function SubQuestion({
+  label,
+  value,
+  onChange,
+  name,
+  disabled,
+}: {
+  label: string;
+  value: DensityArea | null;
+  onChange: (next: DensityArea) => void;
+  name: string;
+  disabled: boolean;
+}) {
+  return (
+    <div>
+      <span className="text-[13px] font-medium text-zinc-800 dark:text-zinc-200">
+        {label}
+      </span>
+      <div className="mt-2 space-y-2">
+        {DENSITY_AREAS.map((d) => (
+          <RadioRow
+            key={d}
+            checked={value === d}
+            onChange={() => onChange(d)}
+            disabled={disabled}
+            label={DENSITY_AREA_LABEL[d]}
+            name={name}
+          />
+        ))}
+      </div>
     </div>
   );
 }

@@ -18,6 +18,11 @@ export type GrowthQuality =
   | 'very_patchy'
   | 'unsure';
 
+// Per-area density (migration 0074). Replaces single growth_quality
+// for new assessments; old assessments still carry growth_quality
+// alone and the report prompt falls back to it when per-area is null.
+export type DensityArea = 'full' | 'sparse' | 'patchy' | 'not_present';
+
 export type FacialHairGoal =
   | 'grow_more'
   | 'style_what_i_have'
@@ -30,7 +35,14 @@ export type TimeCommitment = 'low' | 'medium' | 'high';
 export type FacialHairAssessment = {
   user_id: string;
   current_state: CurrentState;
-  growth_quality: GrowthQuality;
+  // Single growth slider — kept for legacy rows. New assessments
+  // collect density_cheeks / density_chin / density_mustache instead
+  // and leave this null. The report prompt prefers per-area when
+  // present.
+  growth_quality: GrowthQuality | null;
+  density_cheeks: DensityArea | null;
+  density_chin: DensityArea | null;
+  density_mustache: DensityArea | null;
   goal: FacialHairGoal;
   time_commitment: TimeCommitment;
   facial_hair_goal_text: string | null;
@@ -52,6 +64,11 @@ export type FacialHairReportInputModifiers = {
   current_interventions: string[];
   age: number | null;
   face_shape: string | null;
+  // Per-area density (migration 0074). Null on legacy rows; the
+  // prompt falls back to growth_quality when these are unset.
+  density_cheeks: DensityArea | null;
+  density_chin: DensityArea | null;
+  density_mustache: DensityArea | null;
   // Stage milestones — 4-week grow-out test. Two timestamps so the
   // prompt can branch between "in progress" (don't recommend style
   // changes) and "complete" (acknowledge the data is in).
@@ -88,6 +105,13 @@ export const TIME_COMMITMENT_LABEL: Record<TimeCommitment, string> = {
   low: 'Low — 1–2 minutes a day, basic upkeep',
   medium: 'Medium — 5–10 minutes a day, regular trimming',
   high: 'High — including barber visits and a product routine',
+};
+
+export const DENSITY_AREA_LABEL: Record<DensityArea, string> = {
+  full: 'Full — comes in dense, no visible gaps',
+  sparse: 'Sparse — connects but thin throughout',
+  patchy: 'Patchy — visible gaps that don’t fill in',
+  not_present: 'Essentially no growth here',
 };
 
 // Reference catalog — the 12 styles in public/images/facial-hair-styles/.
@@ -201,13 +225,9 @@ export const FacialHairAssessmentInputSchema = z.object({
     'medium_beard',
     'long_beard',
   ]),
-  growth_quality: z.enum([
-    'full',
-    'mostly_full',
-    'patchy',
-    'very_patchy',
-    'unsure',
-  ]),
+  density_cheeks: z.enum(['full', 'sparse', 'patchy', 'not_present']),
+  density_chin: z.enum(['full', 'sparse', 'patchy', 'not_present']),
+  density_mustache: z.enum(['full', 'sparse', 'patchy', 'not_present']),
   goal: z.enum([
     'grow_more',
     'style_what_i_have',

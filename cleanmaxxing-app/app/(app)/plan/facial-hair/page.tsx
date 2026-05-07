@@ -216,7 +216,9 @@ function assessmentToInitialValues(
 ): FacialHairAssessmentInitialValues {
   return {
     current_state: a.current_state,
-    growth_quality: a.growth_quality,
+    density_cheeks: a.density_cheeks,
+    density_chin: a.density_chin,
+    density_mustache: a.density_mustache,
     goal: a.goal,
     time_commitment: a.time_commitment,
     facial_hair_goal_text: a.facial_hair_goal_text,
