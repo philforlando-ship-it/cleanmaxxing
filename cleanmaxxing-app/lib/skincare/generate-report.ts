@@ -9,8 +9,10 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { povFor } from '@/lib/content/pov';
 import { getUserProfile } from '@/lib/profile/service';
 import {
+  BARRIER_STATE_LABEL,
   CONCERN_LABEL,
   CURRENT_ROUTINE_LABEL,
+  SENSITIVITY_HISTORY_LABEL,
   SKIN_BEHAVIOR_LABEL,
   SUN_EXPOSURE_LABEL,
   type SkincareAssessment,
@@ -47,6 +49,8 @@ export async function generateAndSaveSkincareReport(
     current_interventions: profile.current_interventions,
     budget_tier: profile.budget_tier,
     age: (userRow as { age: number | null } | null)?.age ?? null,
+    sensitivity_history: assessment.sensitivity_history,
+    barrier_state: assessment.barrier_state,
     baseline_established_at: assessment.baseline_established_at,
     retinoid_started_at: assessment.retinoid_started_at,
     last_step_up_at: assessment.last_step_up_at,
@@ -106,6 +110,14 @@ function formatAssessmentForPrompt(
   );
   modifierLines.push(`- age (users): ${modifiers.age ?? 'not set'}`);
   modifierLines.push(
+    `- sensitivity_history (assessment): ${
+      modifiers.sensitivity_history ?? 'not screened'
+    }`,
+  );
+  modifierLines.push(
+    `- barrier_state (assessment): ${modifiers.barrier_state ?? 'not screened'}`,
+  );
+  modifierLines.push(
     `- baseline_established_at (stage milestone): ${
       modifiers.baseline_established_at ??
       'not yet — floor (cleanser + moisturizer + SPF) may not be in place'
@@ -131,6 +143,16 @@ function formatAssessmentForPrompt(
 - Primary concern: ${CONCERN_LABEL[assessment.primary_concern]}
 - Current routine: ${CURRENT_ROUTINE_LABEL[assessment.current_routine]}
 - Sun exposure: ${SUN_EXPOSURE_LABEL[assessment.sun_exposure]}
+- Sensitivity history: ${
+    assessment.sensitivity_history
+      ? SENSITIVITY_HISTORY_LABEL[assessment.sensitivity_history]
+      : 'not screened (older assessment)'
+  }
+- Barrier state right now: ${
+    assessment.barrier_state
+      ? BARRIER_STATE_LABEL[assessment.barrier_state]
+      : 'not screened (older assessment)'
+  }
 
 What the user said they want:
 ${assessment.skincare_goal_text ? `"${assessment.skincare_goal_text}"` : '(nothing volunteered)'}

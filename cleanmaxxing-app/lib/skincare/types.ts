@@ -32,12 +32,21 @@ export type SkincareSunExposure =
   | 'moderate'
   | 'heavy_outdoor';
 
+export type SkincareSensitivityHistory = 'yes' | 'no' | 'unsure';
+
+export type SkincareBarrierState = 'compromised' | 'normal' | 'unsure';
+
 export type SkincareAssessment = {
   user_id: string;
   skin_behavior: SkinBehavior;
   primary_concern: SkincareConcern;
   current_routine: SkincareCurrentRoutine;
   sun_exposure: SkincareSunExposure;
+  // Migration 0073 — depth signals. Both nullable for users whose
+  // assessment pre-dates the migration. New assessments collect
+  // both; the form treats them as required.
+  sensitivity_history: SkincareSensitivityHistory | null;
+  barrier_state: SkincareBarrierState | null;
   skincare_goal_text: string | null;
   // Stage milestone (migration 0071) — baseline floor established.
   // Confirms cleanser + moisturizer + SPF are in place before any
@@ -69,6 +78,11 @@ export type SkincareReportInputModifiers = {
   current_interventions: string[];
   budget_tier: string | null;
   age: number | null;
+  // Migration 0073 — depth signals echoed into modifiers so the
+  // prompt can branch on them. Null when the assessment pre-dates
+  // the migration and the user hasn't re-edited.
+  sensitivity_history: SkincareSensitivityHistory | null;
+  barrier_state: SkincareBarrierState | null;
   // Stage milestone — baseline floor in place. When null AND
   // current_routine is 'none' or 'cleanser_only', the prompt should
   // anchor on building the floor (cleanser + moisturizer + SPF) and
@@ -118,6 +132,22 @@ export const SUN_EXPOSURE_LABEL: Record<SkincareSunExposure, string> = {
     'Heavy — outdoor work or sports, hours of direct sun most days',
 };
 
+export const SENSITIVITY_HISTORY_LABEL: Record<
+  SkincareSensitivityHistory,
+  string
+> = {
+  yes: 'Yes — I’ve had visible reactions (peeling, burning, persistent redness) to actives in the past',
+  no: 'No — I’ve used actives without much trouble, or I haven’t tried any',
+  unsure: 'Not sure — I’ve never paid close attention',
+};
+
+export const BARRIER_STATE_LABEL: Record<SkincareBarrierState, string> = {
+  compromised:
+    'Compromised right now — visible peeling, persistent redness, or burning when products go on',
+  normal: 'Normal — no visible irritation in the last few weeks',
+  unsure: 'Not sure',
+};
+
 export const SkincareAssessmentInputSchema = z.object({
   skin_behavior: z.enum([
     'oily',
@@ -144,6 +174,8 @@ export const SkincareAssessmentInputSchema = z.object({
     'overcomplicated',
   ]),
   sun_exposure: z.enum(['minimal_indoor', 'moderate', 'heavy_outdoor']),
+  sensitivity_history: z.enum(['yes', 'no', 'unsure']),
+  barrier_state: z.enum(['compromised', 'normal', 'unsure']),
   skincare_goal_text: z.string().max(280).nullable(),
 });
 

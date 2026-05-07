@@ -222,6 +222,8 @@ function assessmentToInitialValues(
     primary_concern: a.primary_concern,
     current_routine: a.current_routine,
     sun_exposure: a.sun_exposure,
+    sensitivity_history: a.sensitivity_history,
+    barrier_state: a.barrier_state,
     skincare_goal_text: a.skincare_goal_text,
   };
 }

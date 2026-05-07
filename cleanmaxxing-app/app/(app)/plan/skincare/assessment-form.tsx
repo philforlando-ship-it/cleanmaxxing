@@ -6,13 +6,17 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  BARRIER_STATE_LABEL,
   CONCERN_LABEL,
   CURRENT_ROUTINE_LABEL,
+  SENSITIVITY_HISTORY_LABEL,
   SKIN_BEHAVIOR_LABEL,
   SUN_EXPOSURE_LABEL,
   type SkinBehavior,
+  type SkincareBarrierState,
   type SkincareConcern,
   type SkincareCurrentRoutine,
+  type SkincareSensitivityHistory,
   type SkincareSunExposure,
 } from '@/lib/skincare/types';
 
@@ -49,11 +53,25 @@ const SUN_EXPOSURES: SkincareSunExposure[] = [
   'heavy_outdoor',
 ];
 
+const SENSITIVITY_HISTORIES: SkincareSensitivityHistory[] = [
+  'yes',
+  'no',
+  'unsure',
+];
+
+const BARRIER_STATES: SkincareBarrierState[] = [
+  'compromised',
+  'normal',
+  'unsure',
+];
+
 export type SkincareAssessmentInitialValues = {
   skin_behavior: SkinBehavior;
   primary_concern: SkincareConcern;
   current_routine: SkincareCurrentRoutine;
   sun_exposure: SkincareSunExposure;
+  sensitivity_history: SkincareSensitivityHistory | null;
+  barrier_state: SkincareBarrierState | null;
   skincare_goal_text: string | null;
 };
 
@@ -79,6 +97,13 @@ export function SkincareAssessmentForm({
   const [sunExposure, setSunExposure] = useState<SkincareSunExposure | null>(
     initialValues?.sun_exposure ?? null,
   );
+  const [sensitivityHistory, setSensitivityHistory] =
+    useState<SkincareSensitivityHistory | null>(
+      initialValues?.sensitivity_history ?? null,
+    );
+  const [barrierState, setBarrierState] = useState<SkincareBarrierState | null>(
+    initialValues?.barrier_state ?? null,
+  );
   const [goalText, setGoalText] = useState(
     initialValues?.skincare_goal_text ?? '',
   );
@@ -91,12 +116,17 @@ export function SkincareAssessmentForm({
     if (!concern) return setError('Pick a primary concern.');
     if (!currentRoutine) return setError('Pick your current routine.');
     if (!sunExposure) return setError('Pick a sun exposure.');
+    if (!sensitivityHistory)
+      return setError('Pick whether you’ve reacted to actives before.');
+    if (!barrierState) return setError('Pick your current barrier state.');
 
     const payload = {
       skin_behavior: skinBehavior,
       primary_concern: concern,
       current_routine: currentRoutine,
       sun_exposure: sunExposure,
+      sensitivity_history: sensitivityHistory,
+      barrier_state: barrierState,
       skincare_goal_text: goalText.trim() || null,
     };
 
@@ -201,6 +231,44 @@ export function SkincareAssessmentForm({
 
       <Question
         number={5}
+        title="Have actives ever irritated you?"
+        helper="Retinoids, AHAs, vitamin C, benzoyl peroxide. A 'yes' means we ramp slower and lean drugstore-tier first."
+      >
+        <div className="space-y-2">
+          {SENSITIVITY_HISTORIES.map((s) => (
+            <RadioRow
+              key={s}
+              checked={sensitivityHistory === s}
+              onChange={() => setSensitivityHistory(s)}
+              disabled={pending}
+              label={SENSITIVITY_HISTORY_LABEL[s]}
+              name="sensitivity_history"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={6}
+        title="What's your barrier doing right now?"
+        helper="If it's compromised, we don't add actives — we repair first. Honest read: peeling, persistent redness, burning when products go on."
+      >
+        <div className="space-y-2">
+          {BARRIER_STATES.map((b) => (
+            <RadioRow
+              key={b}
+              checked={barrierState === b}
+              onChange={() => setBarrierState(b)}
+              disabled={pending}
+              label={BARRIER_STATE_LABEL[b]}
+              name="barrier_state"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={7}
         title="Anything you want Mister P to know? (optional)"
         helper="One line. A specific situation, a constraint, a pattern."
       >

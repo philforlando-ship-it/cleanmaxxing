@@ -49,6 +49,8 @@ export async function saveSkincareAssessment(
     primary_concern: input.primary_concern,
     current_routine: input.current_routine,
     sun_exposure: input.sun_exposure,
+    sensitivity_history: input.sensitivity_history,
+    barrier_state: input.barrier_state,
     skincare_goal_text: input.skincare_goal_text,
     updated_at: new Date().toISOString(),
   };
@@ -116,6 +118,11 @@ function rowToAssessment(row: unknown): SkincareAssessment {
     current_routine:
       r.current_routine as SkincareAssessment['current_routine'],
     sun_exposure: r.sun_exposure as SkincareAssessment['sun_exposure'],
+    sensitivity_history:
+      (r.sensitivity_history as SkincareAssessment['sensitivity_history']) ??
+      null,
+    barrier_state:
+      (r.barrier_state as SkincareAssessment['barrier_state']) ?? null,
     skincare_goal_text: (r.skincare_goal_text as string | null) ?? null,
     baseline_established_at:
       (r.baseline_established_at as string | null) ?? null,
