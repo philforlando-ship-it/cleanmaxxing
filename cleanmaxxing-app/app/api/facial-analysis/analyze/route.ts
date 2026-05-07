@@ -85,10 +85,21 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Hard filter to category='face'. Body photos must never be sent to
-  // the AI route, regardless of slot. The category column was added in
-  // migration 0030; pre-existing rows backfilled to 'face' via the
-  // column default.
+  // Hard filter to category='face'. Body photos must never be sent
+  // to THIS AI route, regardless of slot. The category column was
+  // added in migration 0030; pre-existing rows backfilled to 'face'
+  // via the column default.
+  //
+  // POLICY NOTE (2026-05-07): migration 0030's original comment said
+  // body photos are "never sent to any AI." That blanket rule was
+  // written when this route was the only AI consumer. Body photos
+  // are NOW also accepted on the Mister P chat surface (where the
+  // prompt's anti-attractiveness / anti-ranking / no-tier-list rules
+  // govern), but they remain HARD-excluded from this route — the
+  // facial-analysis surface is scoring-adjacent territory and the
+  // policy posture there is the strict one. Don't relax this filter.
+  // See lib/mister-p/user-state.ts for the matching policy comment
+  // on the chat side.
   const { data: photoRows, error: photoErr } = await supabase
     .from('progress_photos')
     .select('slot, angle, storage_path, captured_at')

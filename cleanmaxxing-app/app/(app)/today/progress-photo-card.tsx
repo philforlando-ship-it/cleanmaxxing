@@ -17,6 +17,14 @@ type Variant = 'baseline' | 'progress_30d' | 'progress_90d' | 'progress_180d';
 
 type Props = {
   variant: Variant;
+  // Signed URL of the user's front-face baseline. Surfaced on
+  // non-baseline variants so the user sees what they're matching
+  // against. Null when the user has no baseline (only meaningful
+  // for the 'baseline' variant — non-baseline variants only render
+  // when a baseline already exists, but the prop stays nullable for
+  // type-safety in case the upstream gate gets relaxed). The card
+  // gracefully renders without the thumbnail when null.
+  baselineSignedUrl?: string | null;
 };
 
 const STORAGE_KEYS: Record<Variant, string> = {
@@ -45,13 +53,19 @@ function getServerSnapshot(): boolean {
   return false;
 }
 
-export function ProgressPhotoCard({ variant }: Props) {
+export function ProgressPhotoCard({
+  variant,
+  baselineSignedUrl = null,
+}: Props) {
   const storageKey = STORAGE_KEYS[variant];
   const dismissed = useSyncExternalStore(
     subscribe,
     makeGetClientSnapshot(storageKey),
     getServerSnapshot,
   );
+
+  const showBaselineThumb =
+    variant !== 'baseline' && baselineSignedUrl != null;
 
   function dismiss() {
     try {
@@ -110,6 +124,9 @@ export function ProgressPhotoCard({ variant }: Props) {
           capture gives you a middle reference point when you get there.
           Match the lighting and angle of your baseline.
         </p>
+        {showBaselineThumb && (
+          <BaselineThumbnail signedUrl={baselineSignedUrl!} />
+        )}
         <Link
           href="/photos"
           className="mt-4 inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
@@ -138,6 +155,9 @@ export function ProgressPhotoCard({ variant }: Props) {
           lighting, same angle, neutral expression. The comparison is for you
           to see.
         </p>
+        {showBaselineThumb && (
+          <BaselineThumbnail signedUrl={baselineSignedUrl!} />
+        )}
         <Link
           href="/photos"
           className="mt-4 inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
@@ -166,6 +186,9 @@ export function ProgressPhotoCard({ variant }: Props) {
         compounding, sustained recomp. Match the baseline conditions as
         closely as you can.
       </p>
+      {showBaselineThumb && (
+        <BaselineThumbnail signedUrl={baselineSignedUrl!} />
+      )}
       <Link
         href="/photos"
         className="mt-4 inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
@@ -173,5 +196,32 @@ export function ProgressPhotoCard({ variant }: Props) {
         Take 180-day photo
       </Link>
     </section>
+  );
+}
+
+// Small inline baseline-thumbnail block. Surfaces the user's
+// baseline image alongside the "match the angle/lighting" copy so
+// they have a visual reference at the moment of capture, not just a
+// text reminder. Tap-to-enlarge could be a follow-up; keeping it
+// non-interactive for now keeps the card simple.
+function BaselineThumbnail({ signedUrl }: { signedUrl: string }) {
+  return (
+    <div className="mt-4 flex items-start gap-3 rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950/60">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={signedUrl}
+        alt="Your baseline"
+        className="h-20 w-20 shrink-0 rounded object-cover"
+      />
+      <div className="min-w-0 flex-1">
+        <p className="text-[12px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          Your baseline
+        </p>
+        <p className="mt-1 text-[13px] leading-snug text-zinc-700 dark:text-zinc-300">
+          Match the angle, lighting, and distance for an honest
+          comparison.
+        </p>
+      </div>
+    </div>
   );
 }

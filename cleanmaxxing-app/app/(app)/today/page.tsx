@@ -163,7 +163,7 @@ export default async function TodayPage({ searchParams }: Props) {
       .order('created_at', { ascending: true }),
     supabase
       .from('progress_photos')
-      .select('slot')
+      .select('slot, angle, category, storage_path')
       .eq('user_id', user.id),
     // Most-recent health integration row + most-recent activity row.
     // Drives the steps line on /today and the "hide manual sleep
@@ -590,6 +590,38 @@ export default async function TodayPage({ searchParams }: Props) {
     appDayFor(timezone),
   );
   const showBaselineNudge = !hasBaseline && isFirstRun;
+
+  // C6: mint a signed URL for the user's front-face baseline so the
+  // 30/90/180 nudges can show a thumbnail of what the user is
+  // matching against. Skipped when no baseline yet (the baseline
+  // nudge variant doesn't render the thumbnail anyway). 1-hour TTL
+  // matches the /photos page convention.
+  let baselineSignedUrl: string | null = null;
+  if (hasBaseline) {
+    const baselineRow = (photoRowsRaw ?? []).find((r) => {
+      const row = r as {
+        slot: string;
+        angle: string;
+        category: string;
+        storage_path: string;
+      };
+      return (
+        row.slot === 'baseline' &&
+        row.angle === 'front' &&
+        row.category === 'face'
+      );
+    }) as
+      | {
+          storage_path: string;
+        }
+      | undefined;
+    if (baselineRow) {
+      const { data: signed } = await supabase.storage
+        .from('progress-photos')
+        .createSignedUrl(baselineRow.storage_path, 60 * 60);
+      baselineSignedUrl = signed?.signedUrl ?? null;
+    }
+  }
   // 30-day nudge window: open from day 30 until the 90-day nudge
   // takes over. Users who skip this still get the 90-day prompt on
   // schedule — the 30-day photo is optional scaffolding, not a gate.
@@ -769,13 +801,22 @@ export default async function TodayPage({ searchParams }: Props) {
         )}
 
         {show180dNudge && !steppedAway && (
-          <ProgressPhotoCard variant="progress_180d" />
+          <ProgressPhotoCard
+            variant="progress_180d"
+            baselineSignedUrl={baselineSignedUrl}
+          />
         )}
         {show90dNudge && !steppedAway && (
-          <ProgressPhotoCard variant="progress_90d" />
+          <ProgressPhotoCard
+            variant="progress_90d"
+            baselineSignedUrl={baselineSignedUrl}
+          />
         )}
         {show30dNudge && !steppedAway && (
-          <ProgressPhotoCard variant="progress_30d" />
+          <ProgressPhotoCard
+            variant="progress_30d"
+            baselineSignedUrl={baselineSignedUrl}
+          />
         )}
         {showBaselineNudge && !steppedAway && (
           <ProgressPhotoCard variant="baseline" />

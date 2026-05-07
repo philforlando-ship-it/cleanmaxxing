@@ -296,6 +296,25 @@ export async function getMisterPUserState(
   // Most-recent body photo. category='body', any slot, prefer 'front'
   // angle. Lightweight lookup — the body-comp question pattern is
   // strong enough to justify the second photo column.
+  //
+  // POLICY NOTE (2026-05-07): migration 0030's original comment said
+  // body photos are "never sent to any AI." That rule was written
+  // when the only AI consumer was the scoring-adjacent
+  // facial-analysis route. The policy is now nuanced:
+  //
+  //   - Body photos ARE allowed on the Mister P chat surface, where
+  //     the prompt's anti-attractiveness / anti-ranking rules and
+  //     "alpha"-framing refusals govern behavior. Chat asks like
+  //     "am I leaner than my baseline?" are a legitimate use case.
+  //
+  //   - Body photos remain HARD-excluded from any scoring-style
+  //     analysis route. The facial-analysis route at
+  //     app/api/facial-analysis/analyze/route.ts still filters
+  //     strictly to category='face' on the photo lookup — that
+  //     hard-filter is the load-bearing exclusion.
+  //
+  // This lookup feeds Mister P chat only. Don't reuse it for any
+  // future scoring-adjacent surface without revisiting the policy.
   const { data: bodyRows } = await supabase
     .from('progress_photos')
     .select('storage_path, captured_at, angle')

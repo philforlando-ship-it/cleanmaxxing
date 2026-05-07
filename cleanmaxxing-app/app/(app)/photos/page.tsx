@@ -55,30 +55,45 @@ export default async function PhotosPage() {
     .select('id, slot, angle, category, storage_path, captured_at')
     .eq('user_id', user.id);
 
-  const allRows: RawPhotoRow[] = await Promise.all(
-    (rowsRaw ?? []).map(async (r) => {
-      const row = r as {
+  // E2: bulk-mint signed URLs in a single roundtrip instead of N
+  // parallel single-URL calls. createSignedUrls returns the URLs
+  // ordered by the input paths array; we build a path→URL map for
+  // O(1) lookup as we shape the row objects.
+  const photoRowsTyped = (rowsRaw ?? []).map(
+    (r) =>
+      r as {
         id: string;
         slot: PhotoSlot;
         angle: PhotoAngle;
         category: PhotoCategory;
         storage_path: string;
         captured_at: string;
-      };
-      const { data: signed } = await supabase.storage
-        .from(BUCKET)
-        .createSignedUrl(row.storage_path, SIGNED_URL_TTL_SECONDS);
-      return {
-        id: row.id,
-        slot: row.slot,
-        angle: row.angle,
-        category: row.category,
-        storage_path: row.storage_path,
-        captured_at: row.captured_at,
-        signedUrl: signed?.signedUrl ?? null,
-      };
-    }),
+      },
   );
+  const paths = photoRowsTyped.map((r) => r.storage_path);
+  const signedByPath = new Map<string, string>();
+  if (paths.length > 0) {
+    const { data: signedList } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUrls(paths, SIGNED_URL_TTL_SECONDS);
+    for (const entry of signedList ?? []) {
+      const e = entry as {
+        path: string | null;
+        signedUrl: string | null;
+        error: string | null;
+      };
+      if (e.path && e.signedUrl) signedByPath.set(e.path, e.signedUrl);
+    }
+  }
+  const allRows: RawPhotoRow[] = photoRowsTyped.map((row) => ({
+    id: row.id,
+    slot: row.slot,
+    angle: row.angle,
+    category: row.category,
+    storage_path: row.storage_path,
+    captured_at: row.captured_at,
+    signedUrl: signedByPath.get(row.storage_path) ?? null,
+  }));
 
   const faceRows = allRows.filter((r) => r.category === 'face');
   const bodyRows = allRows.filter((r) => r.category === 'body');
