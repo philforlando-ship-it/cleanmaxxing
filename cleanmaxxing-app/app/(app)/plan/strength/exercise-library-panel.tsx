@@ -503,24 +503,28 @@ function ExerciseRow({
       {/* Single-row image crop. Each source infographic is 4 stacked
           rows; show one quarter via background-position. The container
           aspect ratio matches the row's geometry (the source images
-          are ~1024x768 → each row is ~1024x192 → ~5.33:1). */}
-      <div
-        className="mt-3 w-full overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900"
-        style={{ aspectRatio: '1024 / 192' }}
-      >
+          are ~1024x768 → each row is ~1024x192 → ~5.33:1). A few
+          catalog entries ship without a reference image — those skip
+          the block entirely rather than show a broken frame. */}
+      {exercise.image_path && exercise.image_row && (
         <div
-          aria-label={`${exercise.label} reference`}
-          role="img"
-          style={{
-            width: '100%',
-            height: '100%',
-            backgroundImage: `url('${exercise.image_path}')`,
-            backgroundSize: '100% 400%',
-            backgroundPosition: `0% ${((exercise.image_row - 1) / 3) * 100}%`,
-            backgroundRepeat: 'no-repeat',
-          }}
-        />
-      </div>
+          className="mt-3 w-full overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900"
+          style={{ aspectRatio: '1024 / 192' }}
+        >
+          <div
+            aria-label={`${exercise.label} reference`}
+            role="img"
+            style={{
+              width: '100%',
+              height: '100%',
+              backgroundImage: `url('${exercise.image_path}')`,
+              backgroundSize: '100% 400%',
+              backgroundPosition: `0% ${((exercise.image_row - 1) / 3) * 100}%`,
+              backgroundRepeat: 'no-repeat',
+            }}
+          />
+        </div>
+      )}
 
       <ul className="mt-2 ml-4 list-disc space-y-0.5 text-[13px] leading-relaxed text-zinc-700 dark:text-zinc-300">
         {exercise.key_points.map((p) => (

@@ -357,9 +357,12 @@ export type StrengthExercise = {
   key_points: string[];
   // Path to the source infographic. Multiple exercises share the
   // same image (4 per infographic) — the row position tells the
-  // user where to look in the image.
-  image_path: string;
-  image_row: 1 | 2 | 3 | 4;
+  // user where to look in the image. Optional: a few catalog entries
+  // (e.g. cable curl, tibialis raise, standing cable crunch added
+  // post-Image-25) ship without a reference image; the library panel
+  // hides the image block when absent.
+  image_path?: string;
+  image_row?: 1 | 2 | 3 | 4;
 };
 
 const IMG_DIR = '/images/strength-training-workouts';
@@ -1986,6 +1989,50 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
     ],
     image_path: IMG_25,
     image_row: 3,
+  },
+
+  // ============ Catalog round-up to 100 (no reference image)
+  {
+    slug: 'cable_curl',
+    label: 'Cable Curl',
+    movement_pattern: 'arm_isolation',
+    equipment: 'cable',
+    primary_group: 'arms',
+    primary_muscles: ['Biceps'],
+    key_points: [
+      'Stand tall with elbows tucked',
+      'Curl through full range',
+      'Squeeze at the top',
+      'Lower under tension',
+    ],
+  },
+  {
+    slug: 'tibialis_raise',
+    label: 'Tibialis Raise',
+    movement_pattern: 'calf',
+    equipment: 'bodyweight',
+    primary_group: 'calves',
+    primary_muscles: ['Tibialis Anterior'],
+    key_points: [
+      'Stand with heels planted',
+      'Pull toes up toward shins',
+      'Hold the squeeze briefly',
+      'Lower with control',
+    ],
+  },
+  {
+    slug: 'standing_cable_crunch',
+    label: 'Standing Cable Crunch',
+    movement_pattern: 'core',
+    equipment: 'cable',
+    primary_group: 'core',
+    primary_muscles: ['Rectus Abdominis'],
+    key_points: [
+      'Face away from high pulley',
+      'Hold rope by ears',
+      'Crunch by flexing the spine',
+      'Resist the return',
+    ],
   },
 ];
 
