@@ -89,6 +89,22 @@ export const INJURY_CONSTRAINTS: ReadonlyArray<StrengthInjuryConstraint> = [
   'elbow_pain',
 ];
 
+// Bodyweight-exercise preference (migration 0080). Distinct from
+// equipment_access — equipment_access answers "what CAN you do",
+// preference answers "what do you WANT to lean on". A
+// full_commercial_gym user can prefer BW work; a bodyweight_only
+// user is locked into BW regardless of preference, which is fine.
+export type StrengthBodyweightPreference =
+  | 'primary'
+  | 'mixed'
+  | 'fallback_only';
+
+export const BODYWEIGHT_PREFERENCES: ReadonlyArray<StrengthBodyweightPreference> = [
+  'primary',
+  'mixed',
+  'fallback_only',
+];
+
 export type StrengthAssessment = {
   user_id: string;
   primary_goal: StrengthPrimaryGoal;
@@ -109,6 +125,10 @@ export type StrengthAssessment = {
   // recommendations (the user's selected_exercise_slugs stay intact;
   // the report just routes around them).
   injury_constraints: StrengthInjuryConstraint[];
+  // Q8 (migration 0080): bodyweight-exercise preference. Null on
+  // pre-migration rows; treated as 'mixed' (existing behavior) by
+  // recommended-exercises and report-prompt.
+  bodyweight_preference: StrengthBodyweightPreference | null;
   // User's exercise picker preferences (added in migration 0057).
   // Read by the report generator on each (re-)generation; updates do
   // NOT trigger regeneration on their own — separate endpoint.
@@ -167,6 +187,9 @@ export type StrengthReportInputModifiers = {
   // input. secondary_objective null = user hasn't filled the field.
   secondary_objective: StrengthSecondaryObjective | null;
   injury_constraints: StrengthInjuryConstraint[];
+  // Q8 (migration 0080) — BW preference snapshot. Null = legacy row;
+  // prompt treats null as 'mixed'.
+  bodyweight_preference: StrengthBodyweightPreference | null;
   // Stage milestone — beginner ramp graduation. When non-null the
   // prompt treats the user as past the ramp regardless of
   // training_experience.
@@ -206,6 +229,17 @@ export const EQUIPMENT_ACCESS_LABEL: Record<StrengthEquipmentAccess, string> = {
   home_rack_bench: 'Home gym — rack, bench, barbell, plates',
   minimal_dumbbells: 'Minimal — dumbbells, bands, basic equipment',
   bodyweight_only: 'Bodyweight only / very minimal',
+};
+
+export const BODYWEIGHT_PREFERENCE_LABEL: Record<
+  StrengthBodyweightPreference,
+  string
+> = {
+  primary:
+    'Primary — I want bodyweight work to lead the plan (calisthenics-leaning)',
+  mixed: 'Mixed — bodyweight is fine alongside free weights / machines',
+  fallback_only:
+    'Fallback only — only suggest bodyweight when nothing else fits',
 };
 
 export const CURRENT_SPLIT_LABEL: Record<StrengthCurrentSplit, string> = {
@@ -2017,6 +2051,12 @@ export const StrengthAssessmentInputSchema = z.object({
       ]),
     )
     .max(4),
+  // Q8 (migration 0080). Nullable for the form-rollout window. The
+  // form requires it on next submit. recommended-exercises +
+  // report-prompt treat null as 'mixed' (existing behavior).
+  bodyweight_preference: z
+    .enum(['primary', 'mixed', 'fallback_only'])
+    .nullable(),
 });
 
 export type StrengthAssessmentInput = z.infer<

@@ -222,6 +222,7 @@ export default async function StrengthPlanPage({ searchParams }: Props) {
             injuryConstraints={assessment.injury_constraints}
             priorityMuscles={assessment.priority_muscles}
             secondaryObjective={assessment.secondary_objective}
+            bodyweightPreference={assessment.bodyweight_preference}
             initialSelected={assessment.selected_exercise_slugs}
             initialExcluded={assessment.excluded_exercise_slugs}
             initialFilterText={assessment.exercise_filter_text}
@@ -279,5 +280,6 @@ function assessmentToInitialValues(
     lagging_muscles_text: a.lagging_muscles_text,
     secondary_objective: a.secondary_objective,
     injury_constraints: a.injury_constraints,
+    bodyweight_preference: a.bodyweight_preference,
   };
 }

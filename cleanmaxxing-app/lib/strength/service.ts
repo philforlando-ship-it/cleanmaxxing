@@ -59,6 +59,7 @@ export async function saveStrengthAssessment(
     lagging_muscles_text: input.lagging_muscles_text,
     secondary_objective: input.secondary_objective,
     injury_constraints: input.injury_constraints,
+    bodyweight_preference: input.bodyweight_preference,
     updated_at: new Date().toISOString(),
   };
   const { data, error } = await supabase
@@ -135,6 +136,9 @@ function rowToAssessment(row: unknown): StrengthAssessment {
     injury_constraints:
       (r.injury_constraints as StrengthAssessment['injury_constraints'] | null) ??
       [],
+    bodyweight_preference:
+      (r.bodyweight_preference as StrengthAssessment['bodyweight_preference']) ??
+      null,
     selected_exercise_slugs:
       (r.selected_exercise_slugs as string[] | null) ?? [],
     excluded_exercise_slugs:

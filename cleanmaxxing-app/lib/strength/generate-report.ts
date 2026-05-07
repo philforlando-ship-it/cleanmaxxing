@@ -71,6 +71,7 @@ export async function generateAndSaveStrengthReport(
     lagging_muscles_text: assessment.lagging_muscles_text,
     secondary_objective: assessment.secondary_objective,
     injury_constraints: assessment.injury_constraints,
+    bodyweight_preference: assessment.bodyweight_preference,
     beginner_ramp_completed_at: assessment.beginner_ramp_completed_at,
     last_plateau_intervention_at: assessment.last_plateau_intervention_at,
     feedback_rows_last_7: feedbackSummary.rows_last_7_days,
@@ -215,6 +216,11 @@ function formatAssessmentForPrompt(
       modifiers.injury_constraints.length === 0
         ? 'none'
         : modifiers.injury_constraints.join(', ')
+    }`,
+  );
+  modifierLines.push(
+    `- bodyweight_preference (Q9 — push BW exercises as primary, mix, or only as fallback): ${
+      modifiers.bodyweight_preference ?? 'not set — treat as mixed'
     }`,
   );
   modifierLines.push(

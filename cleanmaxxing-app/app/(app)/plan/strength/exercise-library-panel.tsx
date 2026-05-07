@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import {
   MUSCLE_GROUP_LABEL,
   type MuscleGroup,
+  type StrengthBodyweightPreference,
   type StrengthEquipmentAccess,
   type StrengthExercise,
   type StrengthInjuryConstraint,
@@ -39,6 +40,7 @@ type Props = {
   injuryConstraints: StrengthInjuryConstraint[];
   priorityMuscles: StrengthPriorityMuscle[];
   secondaryObjective: StrengthSecondaryObjective | null;
+  bodyweightPreference: StrengthBodyweightPreference | null;
   initialSelected: string[];
   initialExcluded: string[];
   initialFilterText: string | null;
@@ -51,6 +53,7 @@ export function ExerciseLibraryPanel({
   injuryConstraints,
   priorityMuscles,
   secondaryObjective,
+  bodyweightPreference,
   initialSelected,
   initialExcluded,
   initialFilterText,
@@ -70,8 +73,15 @@ export function ExerciseLibraryPanel({
         injury_constraints: injuryConstraints,
         priority_muscles: priorityMuscles,
         secondary_objective: secondaryObjective,
+        bodyweight_preference: bodyweightPreference,
       }),
-    [equipmentAccess, injuryConstraints, priorityMuscles, secondaryObjective],
+    [
+      equipmentAccess,
+      injuryConstraints,
+      priorityMuscles,
+      secondaryObjective,
+      bodyweightPreference,
+    ],
   );
 
   // If the user has saved selections that are in the filteredOut

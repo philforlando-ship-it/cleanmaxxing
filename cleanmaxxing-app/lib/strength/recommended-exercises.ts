@@ -20,6 +20,7 @@
 import {
   STRENGTH_EXERCISES,
   type Equipment,
+  type StrengthBodyweightPreference,
   type StrengthEquipmentAccess,
   type StrengthExercise,
   type StrengthInjuryConstraint,
@@ -129,6 +130,7 @@ export type RecommendedExercisesArgs = {
   injury_constraints: StrengthInjuryConstraint[];
   priority_muscles: StrengthPriorityMuscle[];
   secondary_objective: StrengthSecondaryObjective | null;
+  bodyweight_preference: StrengthBodyweightPreference | null;
 };
 
 export type RecommendedExercisesResult = {
@@ -207,6 +209,14 @@ export function getRecommendedExercises(
 
   const pinSlugs = secondaryObjectivePinSlugs(args.secondary_objective);
 
+  // Bodyweight preference: 'primary' pins BW exercises to the top of
+  // recommendations; 'fallback_only' pushes them to the filteredOut
+  // set so they only surface when the user expands the menu; 'mixed'
+  // and null behave like the prior default (BW ranked equally).
+  const bwPreference = args.bodyweight_preference ?? 'mixed';
+  const isBodyweight = (ex: StrengthExercise): boolean =>
+    ex.equipment === 'bodyweight' || ex.equipment === 'weighted_bodyweight';
+
   const hiddenByEquipment: StrengthExercise[] = [];
   const filteredOut: StrengthExercise[] = [];
   const recommended: Array<{ ex: StrengthExercise; rank: number }> = [];
@@ -220,10 +230,28 @@ export function getRecommendedExercises(
       filteredOut.push(ex);
       continue;
     }
+    // Fallback-only BW preference, but ONLY when the user has another
+    // equipment tier available. A bodyweight_only user with
+    // 'fallback_only' preference is a contradiction — honor the
+    // equipment access constraint over the preference, otherwise
+    // they'd see nothing. Same logic for minimal_dumbbells where
+    // bodyweight is one of two available tiers.
+    if (
+      bwPreference === 'fallback_only' &&
+      isBodyweight(ex) &&
+      args.equipment_access !== 'bodyweight_only'
+    ) {
+      filteredOut.push(ex);
+      continue;
+    }
     // Ranking — higher rank = pinned closer to top of its group.
     let rank = 0;
     if (pinSlugs.has(ex.slug)) rank += 10;
     if (exerciseMatchesPriority(ex, args.priority_muscles)) rank += 5;
+    // BW-primary preference pushes BW above non-BW within the
+    // recommendation set. Tied with priority_muscle bonus so
+    // priority-AND-BW lands at the very top.
+    if (bwPreference === 'primary' && isBodyweight(ex)) rank += 7;
     recommended.push({ ex, rank });
   }
 

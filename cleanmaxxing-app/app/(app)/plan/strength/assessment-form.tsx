@@ -6,6 +6,8 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  BODYWEIGHT_PREFERENCE_LABEL,
+  BODYWEIGHT_PREFERENCES,
   CURRENT_SPLIT_LABEL,
   DAYS_PER_WEEK_LABEL,
   EQUIPMENT_ACCESS_LABEL,
@@ -17,6 +19,7 @@ import {
   PRIORITY_MUSCLE_MAX,
   SECONDARY_OBJECTIVE_LABEL,
   SECONDARY_OBJECTIVES,
+  type StrengthBodyweightPreference,
   type StrengthCurrentSplit,
   type StrengthDaysPerWeek,
   type StrengthEquipmentAccess,
@@ -69,6 +72,7 @@ export type StrengthAssessmentInitialValues = {
   lagging_muscles_text: string | null;
   secondary_objective: StrengthSecondaryObjective | null;
   injury_constraints: StrengthInjuryConstraint[];
+  bodyweight_preference: StrengthBodyweightPreference | null;
 };
 
 export function StrengthAssessmentForm({
@@ -108,6 +112,10 @@ export function StrengthAssessmentForm({
   const [injuryConstraints, setInjuryConstraints] = useState<
     StrengthInjuryConstraint[]
   >(initialValues?.injury_constraints ?? []);
+  const [bodyweightPreference, setBodyweightPreference] =
+    useState<StrengthBodyweightPreference | null>(
+      initialValues?.bodyweight_preference ?? null,
+    );
 
   const isEditing = initialValues !== undefined;
 
@@ -133,6 +141,8 @@ export function StrengthAssessmentForm({
     if (!currentSplit) return setError('Pick your current split.');
     if (!secondaryObjective)
       return setError('Pick a secondary objective (or "None").');
+    if (!bodyweightPreference)
+      return setError('Pick how you want bodyweight exercises handled.');
 
     const payload = {
       primary_goal: primaryGoal,
@@ -144,6 +154,7 @@ export function StrengthAssessmentForm({
       lagging_muscles_text: laggingText.trim() || null,
       secondary_objective: secondaryObjective,
       injury_constraints: injuryConstraints,
+      bodyweight_preference: bodyweightPreference,
     };
 
     startTransition(async () => {
@@ -355,6 +366,25 @@ export function StrengthAssessmentForm({
 
       <Question
         number={9}
+        title="Bodyweight exercises — push, mix, or only when needed?"
+        helper="Three options. 'Primary' means push-ups, pull-ups, and plank work lead the plan even when you have a barbell. 'Mixed' is the default — bodyweight ranks alongside everything else. 'Fallback only' means Mister P only suggests bodyweight when no equipment-based option fits."
+      >
+        <div className="space-y-2">
+          {BODYWEIGHT_PREFERENCES.map((b) => (
+            <RadioRow
+              key={b}
+              checked={bodyweightPreference === b}
+              onChange={() => setBodyweightPreference(b)}
+              disabled={pending}
+              label={BODYWEIGHT_PREFERENCE_LABEL[b]}
+              name="bodyweight_preference"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={10}
         title="Anything you want Mister P to know? (optional)"
         helper="One line. A specific situation, a constraint, a pattern. Bad shoulder, kid on the way, training before work, etc."
       >

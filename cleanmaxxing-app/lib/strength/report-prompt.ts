@@ -201,6 +201,12 @@ Modifier handling — apply these without narrating them back:
 
 - **Selection vs. constraint conflict resolution**: if the user's selected_exercise_slugs (Q4 picker) includes an exercise excluded by an active injury_constraint, the constraint WINS for the recommendation, but DO NOT silently drop the user's selection. NAME the conflict and surface the substitute. Example: "you marked 'Conventional Deadlift' in your selected exercises, but with lower back pain on file we're skipping that one — the trap-bar deadlift covers the same hinge pattern with a much lower spinal-compression cost. Your selection stays on file in case the situation changes."
 
+- **bodyweight_preference (Q9 — distinct from equipment_access)**: equipment_access answers "what CAN you do"; preference answers "what do you WANT to lean on." Three states:
+  - 'primary' → push bodyweight exercises into the recommended movements even when the user has barbell / dumbbell access. Lead with push-ups, pull-ups, dips, plank family, BW squat / pistol squat, BW row in the program. Acknowledge the user's preference directly: "you said BW work leads — the plan reflects that, equipment lifts only show up where bodyweight can't carry the stimulus." Don't apologize for or hedge BW work; treat it as the primary modality.
+  - 'mixed' → default behavior. BW exercises rank alongside equipment-based options without bias either way. No specific surface line.
+  - 'fallback_only' → DO NOT recommend bodyweight exercises in the main program WHEN the user has equipment access (full_commercial_gym, home_rack_bench, minimal_dumbbells). Only surface BW when no equipment-based option fits a specific gap (e.g., the user has the equipment but is traveling and needs an emergency substitute). Acknowledge directly: "you said BW only as fallback — the plan stays on free weights / machines, BW only shows up if a movement has no equipment alternative." For bodyweight_only users, this preference is moot (they're locked into BW regardless) — treat as 'mixed' for that cohort and don't surface a contradicting line.
+  - Null (pre-migration assessment) → treat as 'mixed'.
+
 --- POV CONTEXT ---
 {pov_context}
 --- END POV CONTEXT ---`;
