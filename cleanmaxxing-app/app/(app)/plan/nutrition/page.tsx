@@ -181,6 +181,8 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
             initialValues={
               assessment ? assessmentToInitialValues(assessment) : undefined
             }
+            currentWeightLbs={profile.current_weight_lbs}
+            heightInches={profile.height_inches}
           />
         </section>
       )}
@@ -389,6 +391,9 @@ function assessmentToInitialValues(
     dietary_pattern: a.dietary_pattern,
     meal_service_willingness: a.meal_service_willingness,
     snacking_style: a.snacking_style,
+    goal_weight_lbs: a.goal_weight_lbs,
+    goal_target_weeks: a.goal_target_weeks,
+    bf_pct_assessment: a.bf_pct_assessment,
     nutrition_goal_text: a.nutrition_goal_text,
   };
 }

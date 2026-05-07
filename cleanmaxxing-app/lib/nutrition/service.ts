@@ -130,6 +130,11 @@ export async function saveNutritionAssessment(
   userId: string,
   input: NutritionAssessmentInput,
 ): Promise<NutritionAssessment> {
+  // Goal-weight inputs only carry through when goal_direction is
+  // 'lose_fat'. The form should already not be sending them
+  // otherwise, but this is the belt-and-suspenders normalization so a
+  // stale client can't persist orphan goal data.
+  const isCutting = input.goal_direction === 'lose_fat';
   const row = {
     user_id: userId,
     goal_direction: input.goal_direction,
@@ -143,6 +148,9 @@ export async function saveNutritionAssessment(
     dietary_pattern: input.dietary_pattern,
     meal_service_willingness: input.meal_service_willingness,
     snacking_style: input.snacking_style,
+    goal_weight_lbs: isCutting ? input.goal_weight_lbs : null,
+    goal_target_weeks: isCutting ? input.goal_target_weeks : null,
+    bf_pct_assessment: input.bf_pct_assessment,
     nutrition_goal_text: input.nutrition_goal_text,
     updated_at: new Date().toISOString(),
   };
@@ -200,6 +208,28 @@ export async function saveNutritionTargets(
       protein_target_g: targets.protein_target_g,
       carb_target_g: targets.carb_target_g,
       fat_target_g: targets.fat_target_g,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId);
+  if (error) throw error;
+}
+
+// Persist the safe-rate snapshot onto the assessment row at
+// report-gen time. Called after the weight-loss-plan computation so
+// the report-prompt framing and the row stay in sync.
+export async function saveWeightLossPlanSnapshot(
+  supabase: SupabaseClient,
+  userId: string,
+  args: {
+    safe_max_weekly_pct: number | null;
+    realistic_target_weeks: number | null;
+  },
+): Promise<void> {
+  const { error } = await supabase
+    .from('nutrition_assessments')
+    .update({
+      safe_max_weekly_pct: args.safe_max_weekly_pct,
+      realistic_target_weeks: args.realistic_target_weeks,
       updated_at: new Date().toISOString(),
     })
     .eq('user_id', userId);
@@ -301,6 +331,15 @@ function rowToAssessment(row: unknown): NutritionAssessment {
     protein_target_g: (r.protein_target_g as number | null) ?? null,
     carb_target_g: (r.carb_target_g as number | null) ?? null,
     fat_target_g: (r.fat_target_g as number | null) ?? null,
+    goal_weight_lbs: (r.goal_weight_lbs as number | null) ?? null,
+    goal_target_weeks: (r.goal_target_weeks as number | null) ?? null,
+    bf_pct_assessment: (r.bf_pct_assessment as number | null) ?? null,
+    safe_max_weekly_pct:
+      r.safe_max_weekly_pct == null
+        ? null
+        : Number(r.safe_max_weekly_pct as string | number),
+    realistic_target_weeks:
+      (r.realistic_target_weeks as number | null) ?? null,
     nutrition_goal_text: (r.nutrition_goal_text as string | null) ?? null,
     last_evaluated_at: (r.last_evaluated_at as string | null) ?? null,
     report_text: (r.report_text as string | null) ?? null,

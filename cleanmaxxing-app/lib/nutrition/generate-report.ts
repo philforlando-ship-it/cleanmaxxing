@@ -28,8 +28,15 @@ import {
   getRecentProteinSignal,
   saveNutritionReport,
   saveNutritionTargets,
+  saveWeightLossPlanSnapshot,
 } from './service';
-import { computeNutritionTargets, effectiveActivityLevel } from './tdee';
+import {
+  computeNutritionTargets,
+  computeWeightLossPlan,
+  effectiveActivityLevel,
+  type WeightLossPlan,
+} from './tdee';
+import { hasStrengthAssessment } from '@/lib/strength/service';
 
 const REPORT_MODEL = 'claude-sonnet-4-6';
 const POV_SLUG = '13-body-physical-foundation';
@@ -48,12 +55,15 @@ export async function generateAndSaveNutritionReport(
     initialProfile,
   );
 
-  const [{ data: userRow }, proteinSignal] = await Promise.all([
+  const [{ data: userRow }, proteinSignal, strengthState] = await Promise.all([
     supabase.from('users').select('age').eq('id', userId).maybeSingle(),
     getRecentProteinSignal(supabase, userId),
+    hasStrengthAssessment(supabase, userId),
   ]);
 
   const age = (userRow as { age: number | null } | null)?.age ?? null;
+  const isStrengthTraining = strengthState.hasReport;
+  const isOnGlp1 = profile.current_interventions.includes('glp1');
 
   // Compute the deterministic targets (TDEE / calorie target / macro
   // grams) from profile data + goal direction. activity_level is
@@ -74,9 +84,52 @@ export async function generateAndSaveNutritionReport(
     current_interventions: profile.current_interventions,
   });
 
+  // Weight-loss plan layer — only when the user set a goal weight +
+  // timeline AND we have the demographic data to compute it. Auto-
+  // extends the timeline silently when the requested rate exceeds
+  // the safe-rate cap (per locked rule).
+  let weightLossPlan: WeightLossPlan | null = null;
+  if (
+    assessment.goal_direction === 'lose_fat' &&
+    assessment.goal_weight_lbs != null &&
+    assessment.goal_target_weeks != null &&
+    profile.current_weight_lbs != null &&
+    profile.height_inches != null &&
+    age != null
+  ) {
+    weightLossPlan = computeWeightLossPlan({
+      current_weight_lbs: profile.current_weight_lbs,
+      goal_weight_lbs: assessment.goal_weight_lbs,
+      weeks_requested: assessment.goal_target_weeks,
+      height_inches: profile.height_inches,
+      age,
+      activity_level: activity.value,
+      bf_pct: assessment.bf_pct_assessment,
+      is_strength_training: isStrengthTraining,
+      is_on_glp1: isOnGlp1,
+      current_interventions: profile.current_interventions,
+    });
+    await saveWeightLossPlanSnapshot(supabase, userId, {
+      safe_max_weekly_pct: weightLossPlan.safe_max_weekly_pct,
+      realistic_target_weeks: weightLossPlan.realistic_weeks,
+    });
+  }
+
   // Snapshot targets onto the assessment row BEFORE the LLM call so
-  // they're available even if the LLM call fails.
-  await saveNutritionTargets(supabase, userId, targets);
+  // they're available even if the LLM call fails. When the weight-loss
+  // plan was computed, prefer ITS numbers — those are goal-aware and
+  // safe-rate-capped; the flat -500 fallback would only show in the
+  // BMR panel and confuse users vs. the prompt.
+  const rowTargets = weightLossPlan
+    ? {
+        tdee_estimate: weightLossPlan.tdee,
+        calorie_target: weightLossPlan.daily_calorie_target,
+        protein_target_g: weightLossPlan.protein_g,
+        carb_target_g: weightLossPlan.carb_g,
+        fat_target_g: weightLossPlan.fat_g,
+      }
+    : targets;
+  await saveNutritionTargets(supabase, userId, rowTargets);
 
   const modifiers: NutritionReportInputModifiers = {
     bf_pct_self_estimate: profile.bf_pct_self_estimate,
@@ -98,11 +151,20 @@ export async function generateAndSaveNutritionReport(
     dietary_pattern: assessment.dietary_pattern,
     meal_service_willingness: assessment.meal_service_willingness,
     snacking_style: assessment.snacking_style,
-    tdee_estimate: targets.tdee_estimate,
-    calorie_target: targets.calorie_target,
-    protein_target_g: targets.protein_target_g,
-    carb_target_g: targets.carb_target_g,
-    fat_target_g: targets.fat_target_g,
+    tdee_estimate: weightLossPlan?.tdee ?? targets.tdee_estimate,
+    calorie_target:
+      weightLossPlan?.daily_calorie_target ?? targets.calorie_target,
+    protein_target_g:
+      weightLossPlan?.protein_g ?? targets.protein_target_g,
+    carb_target_g: weightLossPlan?.carb_g ?? targets.carb_target_g,
+    fat_target_g: weightLossPlan?.fat_g ?? targets.fat_target_g,
+    goal_weight_lbs: assessment.goal_weight_lbs,
+    goal_target_weeks: assessment.goal_target_weeks,
+    bf_pct_assessment: assessment.bf_pct_assessment,
+    safe_max_weekly_pct: weightLossPlan?.safe_max_weekly_pct ?? null,
+    realistic_target_weeks: weightLossPlan?.realistic_weeks ?? null,
+    was_timeline_extended:
+      weightLossPlan?.was_timeline_extended ?? null,
     last_evaluated_at: assessment.last_evaluated_at,
   };
 
@@ -115,7 +177,11 @@ export async function generateAndSaveNutritionReport(
   const povContext = `# ${pov.title}\n\n${pov.body}`;
   const system = buildNutritionReportSystemPrompt(povContext);
 
-  const userPrompt = formatAssessmentForPrompt(assessment, modifiers);
+  const userPrompt = formatAssessmentForPrompt(
+    assessment,
+    modifiers,
+    weightLossPlan,
+  );
 
   const { text } = await generateText({
     model: anthropic(REPORT_MODEL),
@@ -138,6 +204,7 @@ export async function generateAndSaveNutritionReport(
 function formatAssessmentForPrompt(
   assessment: NutritionAssessment,
   modifiers: NutritionReportInputModifiers,
+  weightLossPlan: WeightLossPlan | null,
 ): string {
   const modifierLines: string[] = [];
   modifierLines.push(
@@ -221,6 +288,41 @@ function formatAssessmentForPrompt(
       modifiers.last_evaluated_at ?? 'not yet — first plan'
     }`,
   );
+
+  // Weight-loss plan layer (only populated when goal_weight + timeline
+  // are set; otherwise the lines explicitly say "not set" so the
+  // prompt can fall through to the qualitative path).
+  if (weightLossPlan) {
+    modifierLines.push(
+      `- goal_weight_lbs: ${weightLossPlan.goal_weight_lbs}`,
+    );
+    modifierLines.push(
+      `- weeks_requested: ${weightLossPlan.weeks_requested}`,
+    );
+    modifierLines.push(
+      `- bf_pct_assessment: ${assessment.bf_pct_assessment ?? 'not provided — tier classified by BMI'}`,
+    );
+    modifierLines.push(
+      `- safe_rate_tier: ${weightLossPlan.tier} (max ${(weightLossPlan.safe_max_weekly_pct * 100).toFixed(1)}%/week, ≈ ${weightLossPlan.safe_max_weekly_lbs} lbs/week at current weight)`,
+    );
+    modifierLines.push(
+      `- realistic_weeks: ${weightLossPlan.realistic_weeks}${
+        weightLossPlan.was_timeline_extended
+          ? ` (auto-extended from ${weightLossPlan.weeks_requested} — requested rate exceeded the safe-rate cap)`
+          : ' (matches user request)'
+      }`,
+    );
+    modifierLines.push(
+      `- projected_loss_range_lbs: ${weightLossPlan.projected_loss_low_lbs}–${weightLossPlan.projected_loss_high_lbs} lbs over ${weightLossPlan.realistic_weeks} weeks`,
+    );
+    modifierLines.push(
+      `- daily_deficit_kcal: ${weightLossPlan.daily_deficit_kcal}`,
+    );
+  } else {
+    modifierLines.push(
+      '- goal_weight_lbs: not set (qualitative-only path; use the flat -500 deficit calorie_target above)',
+    );
+  }
 
   // v2 food picker — translate slugs to labels
   const labelFor = (slug: string) =>

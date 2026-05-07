@@ -97,6 +97,16 @@ export type NutritionAssessment = {
   protein_target_g: number | null;
   carb_target_g: number | null;
   fat_target_g: number | null;
+  // Migration 0079 — weight-loss goal layer. Optional; only populated
+  // when goal_direction is 'lose_fat'. The form enforces the
+  // BMI-22 floor on goal_weight_lbs.
+  goal_weight_lbs: number | null;
+  goal_target_weeks: number | null;
+  bf_pct_assessment: number | null;
+  // Snapshot fields persisted at report-gen time so the report's
+  // framing matches the assessment without recomputing modifiers.
+  safe_max_weekly_pct: number | null;
+  realistic_target_weeks: number | null;
   nutrition_goal_text: string | null;
   // Stage milestone (migration 0060) — 12-week re-evaluation gate.
   // Cut→maintenance transition is the most common failure mode here.
@@ -142,6 +152,16 @@ export type NutritionReportInputModifiers = {
   protein_target_g: number | null;
   carb_target_g: number | null;
   fat_target_g: number | null;
+  // Migration 0079 — weight-loss-plan modifiers. Snapshot of the
+  // safe-rate framework state used at report-gen time. The prompt
+  // branches on these to name the realistic timeline + the auto-
+  // extension when it happened.
+  goal_weight_lbs: number | null;
+  goal_target_weeks: number | null;
+  bf_pct_assessment: number | null;
+  safe_max_weekly_pct: number | null;
+  realistic_target_weeks: number | null;
+  was_timeline_extended: boolean | null;
   // Stage milestone — 12-week re-evaluation timestamp. When set, the
   // prompt knows this is a re-evaluation (not the first plan); it can
   // name shifts in weight or bf% if material.
@@ -480,6 +500,13 @@ export const NutritionAssessmentInputSchema = z.object({
       'inconsistent',
     ])
     .nullable(),
+  // Migration 0079 — weight-loss goal layer. All optional in the
+  // schema; the form enforces conditional rules (goal_weight_lbs +
+  // goal_target_weeks only when goal_direction is 'lose_fat'; goal
+  // weight ≥ BMI-22 floor for the user's height).
+  goal_weight_lbs: z.number().int().min(80).max(500).nullable(),
+  goal_target_weeks: z.number().int().min(2).max(104).nullable(),
+  bf_pct_assessment: z.number().int().min(4).max(60).nullable(),
   nutrition_goal_text: z.string().max(280).nullable(),
 });
 

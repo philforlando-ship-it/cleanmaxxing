@@ -29,6 +29,7 @@ import {
   type SnackingStyle,
   type Urgency,
 } from '@/lib/nutrition/types';
+import { bmi22FloorLbs } from '@/lib/nutrition/safe-rate';
 
 const GOAL_DIRECTIONS: GoalDirection[] = [
   'lose_fat',
@@ -114,13 +115,25 @@ export type NutritionAssessmentInitialValues = {
   dietary_pattern: DietaryPattern | null;
   meal_service_willingness: MealServiceWillingness | null;
   snacking_style: SnackingStyle | null;
+  goal_weight_lbs: number | null;
+  goal_target_weeks: number | null;
+  bf_pct_assessment: number | null;
   nutrition_goal_text: string | null;
 };
 
 export function NutritionAssessmentForm({
   initialValues,
+  currentWeightLbs,
+  heightInches,
 }: {
   initialValues?: NutritionAssessmentInitialValues;
+  // Current weight + height drive the BMI-22 goal-weight floor and
+  // the visible "max safe loss at your weight" hint when goal_direction
+  // is 'lose_fat'. Both nullable — when missing the goal-weight section
+  // still renders but loses the floor enforcement; the server-side
+  // safe-rate computation will kick in regardless.
+  currentWeightLbs?: number | null;
+  heightInches?: number | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -160,9 +173,30 @@ export function NutritionAssessmentForm({
   const [snackingStyle, setSnackingStyle] = useState<SnackingStyle | null>(
     initialValues?.snacking_style ?? null,
   );
+  const [goalWeight, setGoalWeight] = useState<string>(
+    initialValues?.goal_weight_lbs != null
+      ? String(initialValues.goal_weight_lbs)
+      : '',
+  );
+  const [goalWeeks, setGoalWeeks] = useState<string>(
+    initialValues?.goal_target_weeks != null
+      ? String(initialValues.goal_target_weeks)
+      : '',
+  );
+  const [bfPct, setBfPct] = useState<string>(
+    initialValues?.bf_pct_assessment != null
+      ? String(initialValues.bf_pct_assessment)
+      : '',
+  );
   const [goalText, setGoalText] = useState(
     initialValues?.nutrition_goal_text ?? '',
   );
+
+  // BMI-22 floor for the user's height — sub-floor goal weights get
+  // hard-rejected at the form level (no auto-extension into territory
+  // that's already underweight). Null when height is missing.
+  const goalWeightFloor =
+    heightInches != null ? bmi22FloorLbs(heightInches) : null;
 
   const isEditing = initialValues !== undefined;
 
@@ -181,6 +215,59 @@ export function NutritionAssessmentForm({
       return setError('Pick your meal-service willingness.');
     if (!snackingStyle) return setError('Pick your snacking style.');
 
+    // Weight-loss goal layer (only when goal_direction is 'lose_fat').
+    // Both fields are optional — empty inputs send null so the report
+    // falls back to the qualitative path. When set, validate the
+    // BMI-22 floor inline (the only hard reject; rate-cap violations
+    // are silently auto-extended downstream).
+    let goalWeightVal: number | null = null;
+    let goalWeeksVal: number | null = null;
+    if (goal === 'lose_fat') {
+      const gwTrim = goalWeight.trim();
+      const gwTrimWeeks = goalWeeks.trim();
+      const goalSet = gwTrim !== '' || gwTrimWeeks !== '';
+      if (goalSet) {
+        if (gwTrim === '' || gwTrimWeeks === '') {
+          return setError(
+            'Set both goal weight and timeline, or leave both blank.',
+          );
+        }
+        const gw = Number(gwTrim);
+        const gwWeeks = Number(gwTrimWeeks);
+        if (!Number.isFinite(gw) || gw < 80 || gw > 500) {
+          return setError('Goal weight must be between 80 and 500 lbs.');
+        }
+        if (!Number.isFinite(gwWeeks) || gwWeeks < 2 || gwWeeks > 104) {
+          return setError('Timeline must be between 2 and 104 weeks.');
+        }
+        if (
+          currentWeightLbs != null &&
+          gw >= currentWeightLbs
+        ) {
+          return setError(
+            'Goal weight must be below your current weight to set a cut.',
+          );
+        }
+        if (goalWeightFloor != null && gw < goalWeightFloor) {
+          return setError(
+            `Goal weight is below the BMI-22 floor (${goalWeightFloor} lbs at your height). Pick a higher target — Cleanmaxxing won't plan a cut into underweight territory.`,
+          );
+        }
+        goalWeightVal = Math.round(gw);
+        goalWeeksVal = Math.round(gwWeeks);
+      }
+    }
+
+    let bfPctVal: number | null = null;
+    const bfTrim = bfPct.trim();
+    if (bfTrim !== '') {
+      const bf = Number(bfTrim);
+      if (!Number.isFinite(bf) || bf < 4 || bf > 60) {
+        return setError('Body fat % must be between 4 and 60.');
+      }
+      bfPctVal = Math.round(bf);
+    }
+
     const payload = {
       goal_direction: goal,
       urgency,
@@ -193,6 +280,9 @@ export function NutritionAssessmentForm({
       dietary_pattern: dietaryPattern,
       meal_service_willingness: mealServiceWillingness,
       snacking_style: snackingStyle,
+      goal_weight_lbs: goalWeightVal,
+      goal_target_weeks: goalWeeksVal,
+      bf_pct_assessment: bfPctVal,
       nutrition_goal_text: goalText.trim() || null,
     };
 
@@ -428,8 +518,90 @@ export function NutritionAssessmentForm({
         </div>
       </Question>
 
+      {goal === 'lose_fat' && (
+        <Question
+          number={12}
+          title="Set a weight target? (optional)"
+          helper={
+            goalWeightFloor != null
+              ? `Both fields or neither. Mister P will check the rate against a safe-loss-per-week cap and silently extend the timeline if you've picked too aggressive. The form rejects goals below ${goalWeightFloor} lbs (BMI 22 at your height).`
+              : 'Both fields or neither. Mister P will check the rate against a safe-loss-per-week cap and silently extend the timeline if you’ve picked too aggressive. Goals below the BMI-22 floor get rejected at submit.'
+          }
+        >
+          <div className="grid grid-cols-2 gap-3 sm:max-w-md">
+            <div>
+              <label
+                htmlFor="goal_weight_lbs"
+                className="block text-[12px] font-medium text-zinc-600 dark:text-zinc-400"
+              >
+                Goal weight (lbs)
+              </label>
+              <input
+                id="goal_weight_lbs"
+                type="number"
+                inputMode="numeric"
+                min={80}
+                max={500}
+                value={goalWeight}
+                onChange={(e) => setGoalWeight(e.target.value)}
+                disabled={pending}
+                placeholder={
+                  currentWeightLbs != null
+                    ? `e.g. ${Math.max(
+                        goalWeightFloor ?? 80,
+                        Math.round(currentWeightLbs - 20),
+                      )}`
+                    : 'e.g. 180'
+                }
+                className="mt-1.5 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="goal_target_weeks"
+                className="block text-[12px] font-medium text-zinc-600 dark:text-zinc-400"
+              >
+                Timeline (weeks)
+              </label>
+              <input
+                id="goal_target_weeks"
+                type="number"
+                inputMode="numeric"
+                min={2}
+                max={104}
+                value={goalWeeks}
+                onChange={(e) => setGoalWeeks(e.target.value)}
+                disabled={pending}
+                placeholder="e.g. 12"
+                className="mt-1.5 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              />
+            </div>
+          </div>
+        </Question>
+      )}
+
       <Question
-        number={12}
+        number={goal === 'lose_fat' ? 13 : 12}
+        title="Recent body fat % reading? (optional)"
+        helper="Skip if you don't have a reading. A recent caliper, DEXA, or InBody number gives a more accurate safe-rate cap for users who are muscular (BMI alone miscategorizes athletes). Visual estimates are unreliable enough that we'd rather not have them."
+      >
+        <input
+          id="bf_pct_assessment"
+          type="number"
+          inputMode="numeric"
+          min={4}
+          max={60}
+          step={1}
+          value={bfPct}
+          onChange={(e) => setBfPct(e.target.value)}
+          disabled={pending}
+          placeholder="e.g. 18"
+          className="w-32 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        />
+      </Question>
+
+      <Question
+        number={goal === 'lose_fat' ? 14 : 13}
         title="Anything you want Mister P to know? (optional)"
         helper="One line. A specific situation, a constraint, a pattern."
       >

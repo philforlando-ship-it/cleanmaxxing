@@ -337,3 +337,145 @@ export const MISSING_INPUT_LABEL: Record<MissingInputName, string> = {
   height_inches: 'Height',
   age: 'Age',
 };
+
+// =====================
+// Weight-loss plan (migration 0079)
+// =====================
+
+import {
+  classifyTier,
+  resolveTimeline,
+  safeWeeklyRate,
+  type SafeRateTier,
+} from './safe-rate';
+
+export type WeightLossPlan = {
+  // Plan inputs (echoed back so callers can render context)
+  current_weight_lbs: number;
+  goal_weight_lbs: number;
+  weeks_requested: number;
+  // Safe-rate framework
+  tier: SafeRateTier;
+  safe_max_weekly_pct: number;
+  safe_max_weekly_lbs: number;
+  // Timeline
+  weeks_to_lose_lbs: number;
+  realistic_weeks: number;
+  was_timeline_extended: boolean;
+  // Calorie + macro plan
+  tdee: number;
+  daily_calorie_target: number;
+  daily_deficit_kcal: number;
+  protein_g: number;
+  fat_g: number;
+  carb_g: number;
+  // Range projection — based on +/- 20% of average weekly rate
+  projected_loss_low_lbs: number;
+  projected_loss_high_lbs: number;
+};
+
+// Floor to keep the plan honest. Below this, the math just rounds —
+// the user benefits more from going slower with a larger margin.
+const MIN_DAILY_DEFICIT_KCAL = 250;
+// Safety floor on daily calories (mirrors computeNutritionTargets).
+const MIN_DAILY_CALORIES = 1200;
+// Calories per pound of fat (rule of thumb — 3500 kcal ≈ 1 lb).
+const KCAL_PER_LB = 3500;
+
+export function computeWeightLossPlan(args: {
+  current_weight_lbs: number;
+  goal_weight_lbs: number;
+  weeks_requested: number;
+  height_inches: number;
+  age: number;
+  activity_level: ActivityLevelKey;
+  bf_pct: number | null;
+  is_strength_training: boolean;
+  is_on_glp1: boolean;
+  current_interventions: string[];
+}): WeightLossPlan {
+  const tier = classifyTier({
+    weightLbs: args.current_weight_lbs,
+    heightInches: args.height_inches,
+    bfPct: args.bf_pct,
+  });
+  const safePct = safeWeeklyRate({
+    tier,
+    isStrengthTraining: args.is_strength_training,
+    isOnGlp1: args.is_on_glp1,
+  });
+  const timeline = resolveTimeline({
+    currentWeightLbs: args.current_weight_lbs,
+    goalWeightLbs: args.goal_weight_lbs,
+    weeksRequested: args.weeks_requested,
+    safeWeeklyRatePct: safePct,
+  });
+
+  // BMR + TDEE.
+  const weight_kg = args.current_weight_lbs * LB_TO_KG;
+  const height_cm = args.height_inches * IN_TO_CM;
+  const bmr = 10 * weight_kg + 6.25 * height_cm - 5 * args.age + 5;
+  const tdee = Math.round(bmr * ACTIVITY_MULTIPLIER[args.activity_level]!);
+
+  // Average weekly loss across the realistic timeline.
+  const avgWeeklyLossLbs =
+    timeline.realisticWeeks > 0
+      ? timeline.weeksToLose / timeline.realisticWeeks
+      : 0;
+  const rawDailyDeficit = (avgWeeklyLossLbs * KCAL_PER_LB) / 7;
+  const dailyDeficit =
+    rawDailyDeficit < MIN_DAILY_DEFICIT_KCAL
+      ? MIN_DAILY_DEFICIT_KCAL
+      : Math.round(rawDailyDeficit);
+  const dailyCalorieTarget = Math.max(
+    MIN_DAILY_CALORIES,
+    Math.round(tdee - dailyDeficit),
+  );
+
+  // Macros — protein floor matrix uses lose_fat as the goal direction
+  // since this plan is by definition a cut. Fat at 0.35 g/lb (≈25-30%
+  // of calories), carbs fill remainder with floor.
+  const proteinPerLb = proteinFloorPerLb({
+    goal_direction: 'lose_fat',
+    age: args.age,
+    current_interventions: args.current_interventions,
+  });
+  const proteinG = Math.round(args.current_weight_lbs * proteinPerLb);
+  const fatG = Math.round(args.current_weight_lbs * 0.35);
+  const proteinKcal = proteinG * 4;
+  const fatKcal = fatG * 9;
+  const carbKcal = Math.max(200, dailyCalorieTarget - proteinKcal - fatKcal);
+  const carbG = Math.round(carbKcal / 4);
+
+  // Projection range — ±20% off the average weekly rate, applied to
+  // the realistic timeline. Surfaces honest variance instead of a
+  // single number that pretends fat loss is deterministic.
+  const projectedLow = Math.max(
+    0,
+    Math.round(avgWeeklyLossLbs * 0.8 * timeline.realisticWeeks),
+  );
+  const projectedHigh = Math.round(
+    avgWeeklyLossLbs * 1.2 * timeline.realisticWeeks,
+  );
+
+  return {
+    current_weight_lbs: args.current_weight_lbs,
+    goal_weight_lbs: args.goal_weight_lbs,
+    weeks_requested: args.weeks_requested,
+    tier,
+    safe_max_weekly_pct: safePct,
+    safe_max_weekly_lbs:
+      Math.round(args.current_weight_lbs * safePct * 10) / 10,
+    weeks_to_lose_lbs: timeline.weeksToLose,
+    realistic_weeks: timeline.realisticWeeks,
+    was_timeline_extended: timeline.wasExtended,
+    tdee,
+    daily_calorie_target: dailyCalorieTarget,
+    daily_deficit_kcal: dailyDeficit,
+    protein_g: proteinG,
+    fat_g: fatG,
+    carb_g: carbG,
+    projected_loss_low_lbs: projectedLow,
+    projected_loss_high_lbs: projectedHigh,
+  };
+}
