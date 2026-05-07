@@ -11,9 +11,20 @@ import { useRouter } from 'next/navigation';
 type Props = {
   isFirstSession: boolean;
   daysUntil: number | null; // negative = overdue; null = first session
+  // Anchor photo from the user's most recent COMPLETED session
+  // (front for hair track, top_down for bald track). Surfaced
+  // alongside the "same place, same light, same angles" copy so
+  // the user has a visual reference at the moment of capture.
+  // Null on first session (no prior to compare against) or when
+  // anchor lookup fails.
+  priorAnchorSignedUrl?: string | null;
 };
 
-export function HairPhotoDueCard({ isFirstSession, daysUntil }: Props) {
+export function HairPhotoDueCard({
+  isFirstSession,
+  daysUntil,
+  priorAnchorSignedUrl = null,
+}: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +75,25 @@ export function HairPhotoDueCard({ isFirstSession, daysUntil }: Props) {
         </a>{' '}
         for the protocol if you need a refresher.
       </p>
+      {priorAnchorSignedUrl && (
+        <div className="mt-3 flex items-start gap-3 rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-950/60">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={priorAnchorSignedUrl}
+            alt="Last session anchor"
+            className="h-16 w-16 shrink-0 rounded object-cover"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              Last session
+            </p>
+            <p className="mt-0.5 text-[12px] leading-snug text-zinc-700 dark:text-zinc-300">
+              Match this. Same angle, same crop, same lighting — that’s
+              what makes the comparison honest.
+            </p>
+          </div>
+        </div>
+      )}
       {error && (
         <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>
       )}

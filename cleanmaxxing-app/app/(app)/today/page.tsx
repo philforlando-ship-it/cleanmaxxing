@@ -345,6 +345,25 @@ export default async function TodayPage({ searchParams }: Props) {
     (hairStage5IsFirstSession ||
       (hairStage5DaysUntil !== null && hairStage5DaysUntil <= 0));
 
+  // C6 (hair analog): mint a signed URL for the latest hair-session
+  // anchor when the photo-due tile will render AND a prior anchor
+  // exists. First-session users have nothing to compare against, so
+  // the thumbnail is skipped (the card shows "Baseline" framing).
+  let priorHairAnchorSignedUrl: string | null = null;
+  if (
+    showHairPhotoDueTile &&
+    !hairStage5IsFirstSession &&
+    misterPUserState.latestHairAnchorPhotoPath
+  ) {
+    const { data: signed } = await supabase.storage
+      .from('progress-photos')
+      .createSignedUrl(
+        misterPUserState.latestHairAnchorPhotoPath,
+        60 * 60,
+      );
+    priorHairAnchorSignedUrl = signed?.signedUrl ?? null;
+  }
+
   // Strength autoregulation morning-after recovery check. Surfaces
   // when the user trained strength yesterday AND no feedback row
   // has been written yet. Two queries (workout lookup + feedback
@@ -593,9 +612,10 @@ export default async function TodayPage({ searchParams }: Props) {
 
   // C6: mint a signed URL for the user's front-face baseline so the
   // 30/90/180 nudges can show a thumbnail of what the user is
-  // matching against. Skipped when no baseline yet (the baseline
-  // nudge variant doesn't render the thumbnail anyway). 1-hour TTL
-  // matches the /photos page convention.
+  // matching against. Skipped when no baseline (the baseline-variant
+  // nudge doesn't render the thumbnail anyway). 1-hour TTL matches
+  // the /photos page convention. The hair-anchor analog is minted
+  // later, after showHairPhotoDueTile is computed.
   let baselineSignedUrl: string | null = null;
   if (hasBaseline) {
     const baselineRow = (photoRowsRaw ?? []).find((r) => {
@@ -622,6 +642,8 @@ export default async function TodayPage({ searchParams }: Props) {
       baselineSignedUrl = signed?.signedUrl ?? null;
     }
   }
+  // Hair anchor signed URL is minted later, after showHairPhotoDueTile
+  // is computed — see below.
   // 30-day nudge window: open from day 30 until the 90-day nudge
   // takes over. Users who skip this still get the 90-day prompt on
   // schedule — the 30-day photo is optional scaffolding, not a gate.
@@ -797,6 +819,7 @@ export default async function TodayPage({ searchParams }: Props) {
           <HairPhotoDueCard
             isFirstSession={hairStage5IsFirstSession}
             daysUntil={hairStage5DaysUntil}
+            priorAnchorSignedUrl={priorHairAnchorSignedUrl}
           />
         )}
 
