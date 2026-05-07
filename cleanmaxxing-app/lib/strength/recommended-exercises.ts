@@ -158,6 +158,10 @@ const PRIORITY_MUSCLE_KEYWORDS: Record<StrengthPriorityMuscle, string[]> = {
   arms: ['biceps', 'triceps', 'brachialis'],
   glutes: ['glutes'],
   hamstrings: ['hamstrings'],
+  calves: ['calves', 'gastrocnemius', 'soleus'],
+  // 'traps' matches both 'Traps' and 'Upper Traps' substrings.
+  // Avoid 'upper back' here — too many rows mention it secondarily.
+  traps: ['traps'],
 };
 
 function exerciseMatchesPriority(

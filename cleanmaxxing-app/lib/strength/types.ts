@@ -35,13 +35,20 @@ export type StrengthCurrentSplit =
 
 // Visual-leverage stack from POV 19. The user picks 0-3; the
 // report biases volume + frequency toward these.
+//
+// Migration 0082 added calves + traps after the catalog expansion
+// (calves 1 → 3 exercises, traps 0 → 1 dedicated). Both are
+// looksmaxxing visual-leverage targets — calves complete the leg
+// silhouette, traps drive upper-back density.
 export type StrengthPriorityMuscle =
   | 'side_delts'
   | 'upper_chest'
   | 'lats_back_width'
   | 'arms'
   | 'glutes'
-  | 'hamstrings';
+  | 'hamstrings'
+  | 'calves'
+  | 'traps';
 
 export const PRIORITY_MUSCLES: ReadonlyArray<StrengthPriorityMuscle> = [
   'side_delts',
@@ -50,6 +57,8 @@ export const PRIORITY_MUSCLES: ReadonlyArray<StrengthPriorityMuscle> = [
   'arms',
   'glutes',
   'hamstrings',
+  'calves',
+  'traps',
 ];
 
 export const PRIORITY_MUSCLE_MAX = 3;
@@ -264,6 +273,8 @@ export const PRIORITY_MUSCLE_LABEL: Record<StrengthPriorityMuscle, string> = {
   arms: 'Arms (biceps + triceps — sleeve fill)',
   glutes: 'Glutes (silhouette from the side, trousers + jeans hang)',
   hamstrings: 'Hamstrings (rear leg shape, partner of glute work)',
+  calves: 'Calves (lower-leg silhouette, completes the leg)',
+  traps: 'Traps (upper-back density — the “yoke” look)',
 };
 
 export const SECONDARY_OBJECTIVE_LABEL: Record<
@@ -2028,6 +2039,8 @@ export const StrengthAssessmentInputSchema = z.object({
         'arms',
         'glutes',
         'hamstrings',
+        'calves',
+        'traps',
       ]),
     )
     .max(PRIORITY_MUSCLE_MAX),
