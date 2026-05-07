@@ -52,6 +52,12 @@ export type FacialHairAssessment = {
   // test; completed_at = user finished and is ready to evaluate.
   growout_test_started_at: string | null;
   growout_test_completed_at: string | null;
+  // Stage milestone (migration 0076) — minoxidil-for-beard. Distinct
+  // from profile.current_interventions which can't separate scalp use
+  // from beard use. When set, the report shifts from "consider
+  // minoxidil" to month-band framing (0-3 mo shedding phase, 3-6 mo
+  // early progress, 12+ mo evaluation point).
+  minoxidil_for_beard_started_at: string | null;
   report_text: string | null;
   report_generated_at: string | null;
   report_model: string | null;
@@ -74,6 +80,10 @@ export type FacialHairReportInputModifiers = {
   // changes) and "complete" (acknowledge the data is in).
   growout_test_started_at: string | null;
   growout_test_completed_at: string | null;
+  // Stage milestone — minoxidil-for-beard. Distinct from
+  // profile.current_interventions; null when the user hasn't started
+  // beard-specific use of the drug.
+  minoxidil_for_beard_started_at: string | null;
 };
 
 export const CURRENT_STATE_LABEL: Record<CurrentState, string> = {

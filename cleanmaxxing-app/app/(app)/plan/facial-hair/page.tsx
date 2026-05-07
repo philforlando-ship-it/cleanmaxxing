@@ -14,6 +14,7 @@ import { redirect } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { createClient, getUser } from '@/lib/supabase/server';
+import { getUserProfile } from '@/lib/profile/service';
 import { getFacialHairAssessment } from '@/lib/facial-hair/service';
 import { listMostRecentTryOnsByStyle } from '@/lib/facial-hair/try-on/service';
 import { extractRecommendedStyleSlug } from '@/lib/facial-hair/recommended-style';
@@ -28,6 +29,41 @@ import {
 } from './assessment-form';
 import { FacialHairTryOnPanel } from './try-on-panel';
 import { GrowoutCard } from './growout-card';
+import { MinoxidilConsideringCard } from './minoxidil-considering-card';
+
+// Goal × density gate for the minoxidil-considering card. Shows
+// only for users whose stated direction wants more growth AND
+// whose density signals real patches (per-area or legacy).
+const MINOX_GOALS: ReadonlyArray<string> = ['grow_more', 'try_new_style'];
+const PATCHY_AREA_VALUES: ReadonlyArray<string> = ['patchy', 'not_present'];
+const PATCHY_LEGACY_VALUES: ReadonlyArray<string> = ['patchy', 'very_patchy'];
+
+function shouldShowMinoxidilCard(
+  assessment: FacialHairAssessment,
+  currentInterventions: ReadonlyArray<string>,
+): boolean {
+  if (assessment.minoxidil_for_beard_started_at) return false;
+  if (!MINOX_GOALS.includes(assessment.goal)) return false;
+  // Avoid double-recommending if the user's already on minoxidil per
+  // their profile — in that case the report's modifier handling
+  // already addresses it and the card would feel redundant.
+  if (currentInterventions.includes('minoxidil')) return false;
+
+  const perArea = [
+    assessment.density_cheeks,
+    assessment.density_chin,
+    assessment.density_mustache,
+  ].filter((v): v is NonNullable<typeof v> => v !== null);
+
+  if (perArea.length > 0) {
+    return perArea.some((v) => PATCHY_AREA_VALUES.includes(v));
+  }
+  // Legacy fallback — older assessments only have growth_quality.
+  return Boolean(
+    assessment.growth_quality &&
+      PATCHY_LEGACY_VALUES.includes(assessment.growth_quality),
+  );
+}
 
 type Props = {
   searchParams: Promise<{ edit?: string }>;
@@ -44,20 +80,26 @@ export default async function FacialHairPlanPage({ searchParams }: Props) {
   // Pull assessment + try-on prerequisites in parallel. Try-on only
   // shows under the report, but the data is cheap to fetch alongside
   // the assessment and lets us avoid a render/refetch flicker.
-  const [assessment, { data: baselinePhotoRow }, premium, tryOnsByStyle] =
-    await Promise.all([
-      getFacialHairAssessment(supabase, user.id),
-      supabase
-        .from('progress_photos')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('slot', 'baseline')
-        .eq('angle', 'front')
-        .eq('category', 'face')
-        .maybeSingle(),
-      getPremiumStatus(user.id),
-      listMostRecentTryOnsByStyle(supabase, user.id),
-    ]);
+  const [
+    assessment,
+    { data: baselinePhotoRow },
+    premium,
+    tryOnsByStyle,
+    profile,
+  ] = await Promise.all([
+    getFacialHairAssessment(supabase, user.id),
+    supabase
+      .from('progress_photos')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('slot', 'baseline')
+      .eq('angle', 'front')
+      .eq('category', 'face')
+      .maybeSingle(),
+    getPremiumStatus(user.id),
+    listMostRecentTryOnsByStyle(supabase, user.id),
+    getUserProfile(supabase, user.id),
+  ]);
   const hasReport = assessment?.report_text != null;
   const showForm = !assessment || !hasReport || editParam;
   const hasBaselinePhoto = baselinePhotoRow !== null;
@@ -178,6 +220,14 @@ export default async function FacialHairPlanPage({ searchParams }: Props) {
               startedAt={assessment.growout_test_started_at}
               completedAt={assessment.growout_test_completed_at}
             />
+          )}
+
+          {/* Minoxidil-considering stage card. Surfaces only when
+              density-by-area (or legacy growth_quality) signals real
+              patches AND the user wants more growth AND they're not
+              already on minoxidil per their profile. */}
+          {shouldShowMinoxidilCard(assessment, profile.current_interventions) && (
+            <MinoxidilConsideringCard />
           )}
 
           <FacialHairTryOnPanel

@@ -54,6 +54,7 @@ export async function generateAndSaveFacialHairReport(
     density_mustache: assessment.density_mustache,
     growout_test_started_at: assessment.growout_test_started_at,
     growout_test_completed_at: assessment.growout_test_completed_at,
+    minoxidil_for_beard_started_at: assessment.minoxidil_for_beard_started_at,
   };
 
   const pov = await povFor(POV_SLUG);
@@ -118,6 +119,12 @@ function formatAssessmentForPrompt(
   modifierLines.push(
     `- growout_test_completed_at (stage milestone): ${
       modifiers.growout_test_completed_at ?? 'not completed'
+    }`,
+  );
+  modifierLines.push(
+    `- minoxidil_for_beard_started_at (stage milestone): ${
+      modifiers.minoxidil_for_beard_started_at ??
+      'not started — user is not on minoxidil specifically for beard'
     }`,
   );
 

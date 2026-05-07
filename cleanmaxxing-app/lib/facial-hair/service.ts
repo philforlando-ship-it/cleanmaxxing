@@ -69,6 +69,27 @@ export async function saveFacialHairAssessment(
   return rowToAssessment(data);
 }
 
+// Stamps minoxidil_for_beard_started_at on the assessment. Called
+// from the minoxidil-considering stage card on /plan/facial-hair.
+// Idempotent — if already set, the original timestamp is preserved.
+export async function markMinoxidilForBeardStarted(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<void> {
+  const existing = await getFacialHairAssessment(supabase, userId);
+  if (!existing) throw new Error('no_assessment');
+  if (existing.minoxidil_for_beard_started_at) return;
+
+  const { error } = await supabase
+    .from('facial_hair_assessments')
+    .update({
+      minoxidil_for_beard_started_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId);
+  if (error) throw error;
+}
+
 export async function saveFacialHairReport(
   supabase: SupabaseClient,
   userId: string,
@@ -113,6 +134,8 @@ function rowToAssessment(row: unknown): FacialHairAssessment {
       (r.growout_test_started_at as string | null) ?? null,
     growout_test_completed_at:
       (r.growout_test_completed_at as string | null) ?? null,
+    minoxidil_for_beard_started_at:
+      (r.minoxidil_for_beard_started_at as string | null) ?? null,
     report_text: (r.report_text as string | null) ?? null,
     report_generated_at: (r.report_generated_at as string | null) ?? null,
     report_model: (r.report_model as string | null) ?? null,
