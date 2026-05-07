@@ -52,31 +52,28 @@ export const QUESTIONS: Question[] = [
 
   // Bucket B: Physical focus + baseline
   {
+    // Picker maps 1:1 to shippable journeys (Pattern A plans). Each
+    // value here is the topic slug that downstream services
+    // (getActiveJourneysForReflection, /today plan-card gating) read
+    // directly. Legacy values from earlier survey vocabulary
+    // (fitness, grooming, skin, facial_aesthetics, posture, anti_aging)
+    // remain valid in survey_responses for users who pre-date this
+    // change; the reflection service still maps them to journeys
+    // where applicable.
     key: 'focus_areas',
     prompt: 'Which of these do you most want to improve?',
     helper: 'Pick up to 3.',
     type: 'multi-choice',
     maxSelections: 3,
     options: [
-      { value: 'fitness', label: 'Fitness' },
-      { value: 'body_composition', label: 'Body composition' },
-      { value: 'skin', label: 'Skin' },
       { value: 'hair', label: 'Hair' },
-      { value: 'facial_aesthetics', label: 'Facial aesthetics' },
       { value: 'style', label: 'Style' },
-      { value: 'posture', label: 'Posture' },
-      { value: 'grooming', label: 'Grooming' },
+      { value: 'body_composition', label: 'Body composition' },
+      { value: 'strength', label: 'Strength' },
+      { value: 'cardio', label: 'Cardio' },
       { value: 'sleep', label: 'Sleep' },
-      { value: 'anti_aging', label: 'Anti-aging' },
     ],
     required: true,
-  },
-  {
-    key: 'specific_thing',
-    prompt: 'Is there one specific thing you think about more than you\u2019d like to?',
-    helper: 'Optional. You can skip this.',
-    type: 'text',
-    required: false,
   },
 
   // Bucket C: Confidence baseline. Four dimensions, dropped the redundant
@@ -127,23 +124,6 @@ export const QUESTIONS: Question[] = [
       { value: '10', label: 'Much younger' },
     ],
     required: true,
-  },
-
-  // Ninety-day intent. Optional free-text "what does success look
-  // like in 90 days?" Different shape from specific_thing (which
-  // taps insecurity); this is commitment language. Sits before the
-  // clinical screen so the survey still closes on the same heavy
-  // yes/no — moving it after would force a clinical-flagged user
-  // to answer one more question before their clinical-resources
-  // routing fires at finalize. Surfaced again at the monthly
-  // checkpoint so the user can compare day-30 self-read against
-  // day-0 declaration.
-  {
-    key: 'ninety_day_intent',
-    prompt: 'What does success look like in 90 days?',
-    helper: 'Optional. A sentence or two — what would you notice, do, or feel that you don’t now?',
-    type: 'text',
-    required: false,
   },
 
   // Clinical screening (per spec §13). Last question.

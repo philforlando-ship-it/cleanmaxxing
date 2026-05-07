@@ -221,6 +221,10 @@ export default async function TodayPage({ searchParams }: Props) {
   // rather than by per-card gates here.
   let hairIsFocus = false;
   let sleepIsFocus = false;
+  // The picker now writes 'strength' / 'cardio' as distinct values;
+  // legacy users have 'fitness' which expands to both. The strength
+  // recovery-feedback gate downstream only needs "did the user opt
+  // into strength?" so collapse both signals into one flag.
   let fitnessIsFocus = false;
   if (focusRow?.response_value) {
     try {
@@ -228,7 +232,13 @@ export default async function TodayPage({ searchParams }: Props) {
       if (Array.isArray(parsed)) {
         if (parsed.includes('hair')) hairIsFocus = true;
         if (parsed.includes('sleep')) sleepIsFocus = true;
-        if (parsed.includes('fitness')) fitnessIsFocus = true;
+        if (
+          parsed.includes('fitness') ||
+          parsed.includes('strength') ||
+          parsed.includes('cardio')
+        ) {
+          fitnessIsFocus = true;
+        }
       }
     } catch {
       // malformed survey value — leave all flags false

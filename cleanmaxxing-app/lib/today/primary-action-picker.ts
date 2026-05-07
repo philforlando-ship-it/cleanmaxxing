@@ -38,6 +38,9 @@ import type { PrimaryAction } from './types';
 // State shape
 // =====================
 
+// Picker writes 'strength' / 'cardio' as distinct values; legacy
+// users have 'fitness' which historically expanded to both. Both
+// are accepted here so the picker can route either cleanly.
 type FocusArea =
   | 'hair'
   | 'style'
@@ -45,6 +48,8 @@ type FocusArea =
   | 'sleep'
   | 'skin'
   | 'body_composition'
+  | 'strength'
+  | 'cardio'
   | 'fitness';
 
 type PickerState = {
@@ -208,6 +213,8 @@ export async function gatherPickerState(
             'sleep',
             'skin',
             'body_composition',
+            'strength',
+            'cardio',
             'fitness',
           ].includes(f),
         );
@@ -346,6 +353,8 @@ function bucket1_firstRunAssessment(state: PickerState): PrimaryAction | null {
 const ORDER_FOR_FIRST_RUN: FocusArea[] = [
   'hair',
   'body_composition',
+  'strength',
+  'cardio',
   'fitness',
   'sleep',
   'style',
@@ -368,6 +377,18 @@ const FIRST_RUN_BY_FOCUS: Record<
     title: 'Start your nutrition plan.',
     body: 'A short assessment about your goal, eating context, and capacity. About five minutes.',
     href: '/plan/nutrition',
+  },
+  strength: {
+    topic: 'strength',
+    title: 'Start your strength plan.',
+    body: 'A short assessment about your training, equipment, and priorities. About five minutes.',
+    href: '/plan/strength',
+  },
+  cardio: {
+    topic: 'cardio',
+    title: 'Start your cardio plan.',
+    body: 'A short assessment about your modality preferences, equipment, and goals.',
+    href: '/plan/cardio',
   },
   fitness: {
     topic: 'strength',

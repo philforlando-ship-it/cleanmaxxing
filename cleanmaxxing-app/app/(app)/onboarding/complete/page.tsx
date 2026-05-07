@@ -1,38 +1,51 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { GoalsPicker } from './goals-picker';
+import { JourneyWelcome } from './journey-welcome';
+
+// Picker labels mirror lib/onboarding/questions.ts focus_areas
+// options. Includes legacy values so users mid-flow (or returning
+// to a stale survey) still render with sensible labels.
+const JOURNEY_LABELS: Record<string, string> = {
+  hair: 'Hair',
+  style: 'Style',
+  body_composition: 'Body composition',
+  strength: 'Strength',
+  cardio: 'Cardio',
+  sleep: 'Sleep',
+  fitness: 'Fitness',
+  skin: 'Skin',
+  grooming: 'Grooming',
+};
 
 export default async function OnboardingCompletePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  // Require the survey to have been submitted (age_segment set by submit route).
-  // Users who hit this URL directly without finishing the survey get bounced.
   const { data: profile } = await supabase
     .from('users')
-    .select('age_segment')
+    .select('age_segment, onboarding_completed_at')
     .eq('id', user.id)
     .maybeSingle();
 
-  if (!profile?.age_segment) {
-    redirect('/onboarding');
-  }
+  // Already finished? Skip back to /today so the welcome screen
+  // doesn't double-fire on a refresh.
+  if (profile?.onboarding_completed_at) redirect('/today');
+  if (!profile?.age_segment) redirect('/onboarding');
 
-  // Make sure the user has been through the post-survey staging
-  // steps (review + baseline-photo). Bouncing back to the entry
-  // redirector keeps the routing logic in one place — it knows
-  // exactly where to send them next based on which marker / photo
-  // is missing. Hitting /onboarding/complete directly can't skip
-  // those steps as a result.
+  // Same staging-marker guards as before — the entry redirector at
+  // /onboarding routes here only after these are set, but bouncing
+  // a direct visitor keeps the routing logic in one place.
   const { data: stagingRows } = await supabase
     .from('survey_responses')
-    .select('question_key')
+    .select('question_key, response_value')
     .eq('user_id', user.id)
     .in('question_key', [
       'onboarding_review_acked',
       'onboarding_baseline_acked',
+      'focus_areas',
     ]);
+
   const stagingMarkers = new Set(
     (stagingRows ?? []).map((r) => r.question_key as string),
   );
@@ -49,37 +62,26 @@ export default async function OnboardingCompletePage() {
     if (!baselineRow) redirect('/onboarding');
   }
 
-  // Personalisation inputs for the "why these three?" explainer. Pulled
-  // server-side so the first render already has the user's segment +
-  // focus areas embedded — no loading flicker on the header copy.
-  const { data: focusRow } = await supabase
-    .from('survey_responses')
-    .select('response_value')
-    .eq('user_id', user.id)
-    .eq('question_key', 'focus_areas')
-    .maybeSingle();
-
-  let focusAreas: string[] = [];
+  const focusRow = (stagingRows ?? []).find(
+    (r) => r.question_key === 'focus_areas',
+  );
+  let journeyLabels: string[] = [];
   if (focusRow?.response_value) {
     try {
-      const parsed = JSON.parse(focusRow.response_value);
-      if (Array.isArray(parsed)) focusAreas = parsed;
+      const parsed = JSON.parse(focusRow.response_value as string);
+      if (Array.isArray(parsed)) {
+        journeyLabels = parsed
+          .map((v) => JOURNEY_LABELS[v as string])
+          .filter((l): l is string => Boolean(l));
+      }
     } catch {
-      // treat as empty
+      // malformed — leave empty; the welcome screen handles that case
     }
   }
 
   return (
     <main className="mx-auto flex min-h-[100svh] max-w-xl flex-col px-6 py-10">
-      <header className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Here are your three starter goals
-        </h1>
-      </header>
-      <GoalsPicker
-        ageSegment={profile.age_segment as string}
-        focusAreas={focusAreas}
-      />
+      <JourneyWelcome journeyLabels={journeyLabels} />
     </main>
   );
 }

@@ -19,13 +19,20 @@ import { ReviewContinueButton } from './review-continue-button';
 // Continue persists the marker and forwards to the baseline-photo
 // step; Edit links jump back to the corresponding question.
 
+// Includes both the current picker values (hair, style,
+// body_composition, strength, cardio, sleep) and legacy values
+// from earlier survey vocabulary so older survey rows still render
+// readable labels in this review surface.
 const FOCUS_LABELS: Record<string, string> = {
-  fitness: 'Fitness',
-  body_composition: 'Body composition',
-  skin: 'Skin',
   hair: 'Hair',
-  facial_aesthetics: 'Facial aesthetics',
   style: 'Style',
+  body_composition: 'Body composition',
+  strength: 'Strength',
+  cardio: 'Cardio',
+  sleep: 'Sleep',
+  fitness: 'Fitness',
+  skin: 'Skin',
+  facial_aesthetics: 'Facial aesthetics',
   posture: 'Posture',
   grooming: 'Grooming',
   anti_aging: 'Anti-aging',
@@ -111,8 +118,6 @@ export default async function OnboardingReviewPage() {
   const ageFeelRaw = byKey.get('confidence_appearance') ?? '';
   const ageFeelLabel = AGE_FEEL_LABELS[ageFeelRaw] ?? ageFeelRaw;
 
-  const ninetyDay = byKey.get('ninety_day_intent')?.trim();
-  const specificThing = byKey.get('specific_thing')?.trim();
   const heightVal = byKey.get('height_inches');
   const weightVal = byKey.get('weight_lbs');
 
@@ -138,11 +143,6 @@ export default async function OnboardingReviewPage() {
       questionKey: 'focus_areas',
     },
     {
-      label: 'Specific thing on your mind',
-      value: specificThing || '—',
-      questionKey: 'specific_thing',
-    },
-    {
       label: 'Social confidence (1–10)',
       value: byKey.get('confidence_social') || '—',
       questionKey: 'confidence_social',
@@ -161,11 +161,6 @@ export default async function OnboardingReviewPage() {
       label: 'Age-feel',
       value: ageFeelLabel || '—',
       questionKey: 'confidence_appearance',
-    },
-    {
-      label: '90-day intent',
-      value: ninetyDay || '—',
-      questionKey: 'ninety_day_intent',
     },
   ];
 

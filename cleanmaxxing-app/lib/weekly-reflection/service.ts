@@ -318,10 +318,13 @@ export async function getActiveJourneysForReflection(
 
   const journeys: ActiveJourney[] = [];
 
-  // Pattern A — focus area + report. Mapping focus_area → topic
-  // names because they don't always align (e.g. body_composition →
-  // nutrition; grooming → facial_hair; skin → skincare; fitness
-  // covers strength + cardio).
+  // Pattern A — focus area + report. The current onboarding picker
+  // writes journey slugs directly (hair, style, body_composition,
+  // strength, cardio, sleep). Legacy values from earlier survey
+  // vocabulary still resolve where they map cleanly: 'fitness'
+  // expands to strength + cardio, 'grooming' → facial_hair,
+  // 'skin' → skincare. Legacy-only values stay readable so users
+  // who pre-date the picker change keep their reflection journeys.
   if (focusAreas.includes('hair') && hasReport(hairRow)) {
     journeys.push({ topic: 'hair', question: JOURNEY_QUESTIONS.hair });
   }
@@ -346,10 +349,14 @@ export async function getActiveJourneysForReflection(
       question: JOURNEY_QUESTIONS.nutrition,
     });
   }
-  if (focusAreas.includes('fitness') && hasReport(strengthRow)) {
+  const strengthFocus =
+    focusAreas.includes('strength') || focusAreas.includes('fitness');
+  if (strengthFocus && hasReport(strengthRow)) {
     journeys.push({ topic: 'strength', question: JOURNEY_QUESTIONS.strength });
   }
-  if (focusAreas.includes('fitness') && hasReport(cardioRow)) {
+  const cardioFocus =
+    focusAreas.includes('cardio') || focusAreas.includes('fitness');
+  if (cardioFocus && hasReport(cardioRow)) {
     journeys.push({ topic: 'cardio', question: JOURNEY_QUESTIONS.cardio });
   }
 

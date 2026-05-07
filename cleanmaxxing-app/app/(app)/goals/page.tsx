@@ -18,24 +18,18 @@ export default async function GoalsPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Goals</h1>
-          <p className="mt-2 text-sm text-zinc-500">
-            {goals?.length ?? 0} active
-          </p>
-        </div>
-        <Link
-          href="/goals/library"
-          className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-        >
-          Browse library
-        </Link>
+      <div>
+        <h1 className="text-3xl font-semibold tracking-tight">Goals</h1>
+        <p className="mt-2 text-sm text-zinc-500">
+          {goals?.length ?? 0} active
+        </p>
       </div>
 
       {!goals || goals.length === 0 ? (
         <p className="mt-10 text-sm text-zinc-500">
-          No active goals yet. <Link href="/goals/library" className="underline">Browse the library</Link> to add some.
+          You don’t have any goals here. New plans run as journeys —
+          open <Link href="/today" className="underline">Today</Link> to
+          see what’s next.
         </p>
       ) : (
         <ul className="mt-8 flex flex-col gap-4">
