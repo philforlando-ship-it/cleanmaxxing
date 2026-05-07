@@ -28,6 +28,7 @@ import {
 import { getMisterPUserState } from '@/lib/mister-p/user-state';
 import { getMisterPJourneyState } from '@/lib/mister-p/journey-state';
 import { getRecentConversation } from '@/lib/mister-p/conversation';
+import { logCostEvent } from '@/lib/cost-events/log';
 
 const RequestSchema = z.object({
   question: z.string().min(1).max(2000),
@@ -386,7 +387,7 @@ export async function POST(req: NextRequest) {
         }
       : { prompt: question }),
     temperature: 0.3,
-    onFinish: async ({ text }) => {
+    onFinish: async ({ text, usage }) => {
       const citations = chunks.map((c) => ({ slug: c.doc_slug, title: c.doc_title }));
       const wasRefused =
         /That's not something I cover yet|That's not something I cover|Not something I'll help with|can't help|hard line|off-limits|off the table/i.test(text);
@@ -400,6 +401,18 @@ export async function POST(req: NextRequest) {
         was_refused: wasRefused,
         refusal_reason: wasRefused ? 'out_of_scope_or_hard_refusal' : null,
         topic_embedding: questionEmbedding as unknown as string,
+      });
+
+      // F2 cost telemetry. Non-fatal — failures here don't affect
+      // the chat response. Token counts come from the SDK's usage
+      // payload; the kind matches the pricing table key in
+      // lib/cost-events/log.ts.
+      logCostEvent({
+        user_id: user.id,
+        kind: 'anthropic_sonnet_4_6',
+        tokens_input: usage?.inputTokens,
+        tokens_output: usage?.outputTokens,
+        feature: 'mister_p_chat',
       });
     },
   });
