@@ -34,6 +34,7 @@ export const CUTS_FOR_DENSITY: Record<DensityState, ReadonlyArray<CutFamily>> = 
     'broccoli',
     'wolf_cut',
     'modern_mullet',
+    'pompadour',
     'high_taper_crop',
   ],
 
@@ -58,6 +59,7 @@ export const CUTS_FOR_DENSITY: Record<DensityState, ReadonlyArray<CutFamily>> = 
     'textured_fringe',
     'overgrown_buzz',
     'side_part_combover',
+    'pompadour',
     'caesar',
     'high_taper_crop',
   ],
@@ -77,6 +79,7 @@ export const CUTS_FOR_DENSITY: Record<DensityState, ReadonlyArray<CutFamily>> = 
     'ivy_league',
     'buzz_cut',
     'overgrown_buzz',
+    'short_fade',
   ],
 
   // Crown thinning — the top of the hair is the problem. Cuts must
@@ -91,6 +94,7 @@ export const CUTS_FOR_DENSITY: Record<DensityState, ReadonlyArray<CutFamily>> = 
     'crew_cut',
     'buzz_cut',
     'overgrown_buzz',
+    'short_fade',
     'textured_crop',
   ],
 
@@ -98,31 +102,38 @@ export const CUTS_FOR_DENSITY: Record<DensityState, ReadonlyArray<CutFamily>> = 
   // The cuts that still work are the ones that don't rely on density
   // for their visual story. Caesar reads well because the fringe is
   // the focus, not density. Buzz and high_taper_crop reduce the
-  // contrast that makes thinning visible. overgrown_buzz added for
-  // the same reason.
+  // contrast that makes thinning visible. overgrown_buzz and
+  // short_fade added for the same reason — both keep the top short
+  // enough that diffuse thinning has nothing to hide behind.
   diffuse_thinning: [
     'caesar',
     'high_taper_crop',
     'crew_cut',
     'buzz_cut',
     'overgrown_buzz',
+    'short_fade',
   ],
 
   // Advanced thinning — the user is at the decision point. The Pattern
   // D / transition framing in the personal report governs which
-  // direction the user is heading; this menu spans both: the three
-  // shortest hair cuts (high_taper_crop, crew_cut, buzz_cut) for users
-  // staying with hair, and bald_track + clean_shave for transitioning.
+  // direction the user is heading; this menu spans both: the shortest
+  // hair cuts for users staying with hair (high_taper_crop, crew_cut,
+  // buzz_cut, short_fade), and the deliberate-bald paths
+  // (bald_track / bald_fade / clean_shave) for transitioning.
   advanced_thinning: [
     'high_taper_crop',
     'crew_cut',
     'buzz_cut',
+    'short_fade',
     'bald_track',
+    'bald_fade',
     'clean_shave',
   ],
 
-  // Shaved or buzzed — bald presentation. Two paths only.
-  shaved_or_buzzed: ['bald_track', 'clean_shave'],
+  // Shaved or buzzed — bald presentation. Three paths now: bald_track
+  // (transitioning / buzz maintenance), bald_fade (deliberate shaved
+  // with structure), clean_shave (smooth Bic'd commitment).
+  shaved_or_buzzed: ['bald_track', 'bald_fade', 'clean_shave'],
 };
 
 export function cutsForDensity(state: DensityState): ReadonlyArray<CutFamily> {

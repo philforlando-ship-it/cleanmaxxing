@@ -65,6 +65,9 @@ export type CutFamily =
   | 'wolf_cut'
   | 'modern_mullet'
   | 'side_part_combover'
+  | 'pompadour'
+  | 'bald_fade'
+  | 'short_fade'
   | 'bald_track'
   | 'clean_shave';
 
@@ -86,6 +89,9 @@ export const CUT_FAMILIES: ReadonlyArray<CutFamily> = [
   'wolf_cut',
   'modern_mullet',
   'side_part_combover',
+  'pompadour',
+  'bald_fade',
+  'short_fade',
   'bald_track',
   'clean_shave',
 ] as const;
@@ -118,6 +124,9 @@ export const CUT_FAMILY_LABEL: Record<CutFamily, string> = {
   wolf_cut: 'Wolf Cut (Shaggy Flow)',
   modern_mullet: 'Modern Mullet (Low-Taper)',
   side_part_combover: 'Side Part with Comb-Over',
+  pompadour: 'Pompadour',
+  bald_fade: 'Bald Fade (deliberate shaved + fade)',
+  short_fade: 'Short Fade (balding-friendly very-short top)',
   bald_track: 'Bald track (transitioning / buzz maintenance)',
   clean_shave: 'Clean Shave (Bic’d, razor-smooth)',
 };

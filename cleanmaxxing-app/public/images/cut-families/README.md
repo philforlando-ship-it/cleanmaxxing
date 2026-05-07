@@ -6,6 +6,26 @@ and the cross-age modern cuts. The Stage 1 card renders these so the
 user can see what Mister P is recommending instead of just reading
 "Caesar / Short Forward Crop" and having to know what that looks like.
 
+## Scope (read this)
+
+This catalog is calibrated for **straight-to-wavy hair** (Andre Walker
+type 1A–2C). That's the dominant pattern for white/Caucasian men and
+most Latinos and East Asians. It is NOT calibrated for type 3 (curly)
+or type 4 (coily) hair — Black men's hair conventions, line-ups, 360
+waves, twist-outs, locs, and curl-sponge fade work all sit outside
+the current catalog.
+
+Some cuts in this catalog DO translate to coily hair (caesar, buzz,
+taper fade, bald presentations, side_part_combover). Many do not
+(slick_back family, curtains, wolf, broccoli interpreted as loose
+curl, mid-length flow cuts).
+
+A textured-hair catalog is a separate future project — it needs its
+own POV content, prompt vocabulary, and reference imagery cast for
+the textures it serves. Until that ships, the prompt's voice rules
+should keep recommendations honest when a coily-hair user reaches
+this surface (Mister P shouldn't recommend slick_back to a 4A user).
+
 The cohort filter in `lib/hair/cut-by-age.ts` already gates the
 youth-coded cuts (broccoli, wolf_cut, modern_mullet) out of the menu
 for users 30+, so those don't need `_mature` variants — the user will
@@ -35,8 +55,50 @@ Young cohort (default):
 - `wolf_cut.png` — Wolf Cut (Shaggy Flow) [migration 0077, young cohort only]
 - `modern_mullet.png` — Modern Mullet (Low-Taper) [migration 0077, young cohort only]
 - `side_part_combover.png` — Side Part with Comb-Over [migration 0077, mature cohort only]
+- `pompadour.png` — Pompadour (volume on top + fade) [migration 0078]
+- `bald_fade.png` — Bald Fade (deliberate shaved + fade) [migration 0078]
+- `short_fade.png` — Short Fade (balding-friendly very-short top) [migration 0078]
 - `bald_track.png`
 - `clean_shave.png`
+
+## Density-aware (`_balding`) variants
+
+Migration 0078 introduced a 2×2 image grid keyed on (age cohort × density):
+
+- `<cut>.png` — young + non-balding (default)
+- `<cut>_mature.png` — mature + non-balding
+- `<cut>_balding.png` — young + active recession/thinning
+- `<cut>_balding_mature.png` — mature + active recession/thinning
+
+`CutFamilyImage` in `app/(app)/plan/hair/stage-1-card.tsx` picks the
+best-available file by trying suffixes in priority order for the
+current quadrant, then falling back to less-specific variants.
+"Balding" = density in {receding_hairline, crown_thinning,
+diffuse_thinning, advanced_thinning, shaved_or_buzzed}; mature_hairline
+is intentionally NOT in this set (that state is "hairline at adult
+position but density intact" — the regular images already represent
+it well).
+
+Image cohort uses **effective age** = actual age + (6 - age_feel) × 2,
+where age_feel is the 2/4/6/8/10 onboarding `confidence_appearance`
+answer (6 = "about my age"). A 47-year-old who reads as much younger
+gets the young images; a 38-year-old who reads as much older gets
+mature ones. Cut menu eligibility (in `lib/hair/cut-by-age.ts`) stays
+on actual age — that's about content appropriateness for actual hair
+coverage, not visual representation.
+
+You don't need every variant for every cut. Common patterns:
+
+- Cuts gated to young by `cut-by-age.ts` (broccoli / wolf_cut /
+  modern_mullet) only need `<cut>.png` — they never render against
+  mature or balding cohorts.
+- Cuts gated to balding-density buckets (caesar / high_taper_crop /
+  short_fade / etc.) benefit from at least `<cut>.png` +
+  `<cut>_balding_mature.png` to cover the youngest and oldest balding
+  cases.
+- Cross-age + cross-density cuts (slick_back_undercut, textured_fringe,
+  overgrown_buzz, side_part_combover) want all four variants if you're
+  generating image content carefully.
 
 Mature cohort (~45+) — only the balding-friendly subset, since users 45+ are
 most likely to land on these cuts via the density-filtered menu in
@@ -135,6 +197,24 @@ Use a consistent style across all nine so the user is comparing
   sides, the combed-over top sized to gently soften an early temple
   recession (the model can show a mild mature hairline). Mid-30s+
   model, professional register, low-shine finish.
+
+### Migration 0078 set
+
+- `pompadour.png`: medium top about 2.5-3 inches lifted up and back
+  with visible structure and shine, low/mid taper or fade on sides,
+  intentional and dressed-up register. Distinct from slick_back (no
+  height) and slick_back_undercut (slicked flat-back rather than
+  lifted). Mid-20s to mid-30s model, dense straight or wavy hair.
+- `bald_fade.png`: scalp shaved or extremely close-cropped on top with
+  a clean fade transition into the temples, neckline, and beard line.
+  Distinct from bald_track (less intentional) and clean_shave (smooth
+  all the way down with no fade structure). Strong jaw + deliberate
+  beard recommended in the framing. Cross-age model.
+- `short_fade.png`: very short top under half an inch, fade transition
+  into the sides — less aggressive than buzz, more shaped than crew.
+  Reads as a balding-aware option specifically. Cross-age model with
+  visible mild thinning OK in the framing (this cut serves the
+  receding/thinning cohort).
 
 ## Licensing
 

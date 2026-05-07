@@ -66,6 +66,7 @@ export default async function HairPlanPage({ searchParams }: Props) {
     { data: userRow },
     { data: baselinePhotoRow },
     premium,
+    { data: ageFeelRow },
   ] = await Promise.all([
     getHairAssessment(supabase, user.id),
     getUserProfile(supabase, user.id),
@@ -83,7 +84,25 @@ export default async function HairPlanPage({ searchParams }: Props) {
       .eq('category', 'face')
       .maybeSingle(),
     getPremiumStatus(user.id),
+    supabase
+      .from('survey_responses')
+      .select('response_value')
+      .eq('user_id', user.id)
+      .eq('question_key', 'confidence_appearance')
+      .maybeSingle(),
   ]);
+
+  // Self-perceived age delta. confidence_appearance is the 2/4/6/8/10
+  // age-feel choice from onboarding (6 = "about my age"). Combined
+  // with actual age inside HairStage1Card to compute an effective
+  // age that drives image-cohort selection.
+  const ageFeelRaw = (ageFeelRow as { response_value: string | null } | null)
+    ?.response_value;
+  const ageFeelValue = ageFeelRaw ? Number(ageFeelRaw) : NaN;
+  const ageFeelClean =
+    Number.isFinite(ageFeelValue) && ageFeelValue >= 2 && ageFeelValue <= 10
+      ? ageFeelValue
+      : null;
   const hasBaselinePhoto = baselinePhotoRow !== null;
   const hasReport = assessment?.report_text != null;
   const showForm = !assessment || !hasReport || editParam;
@@ -252,6 +271,7 @@ export default async function HairPlanPage({ searchParams }: Props) {
             existingTryOnUrl={existingTryOn?.signed_url ?? null}
             densityState={assessment.density_state}
             age={(userRow as { age: number | null } | null)?.age ?? null}
+            ageFeelValue={ageFeelClean}
           />
 
           <HairStage2Card

@@ -37,13 +37,21 @@ export function computeCutCadenceWeeks(cutFamily: CutFamily): number {
     case 'high_taper_crop':
     case 'slick_back_undercut':
     case 'broccoli':
+    case 'bald_fade':
+    case 'pompadour':
       // Skin-fade / undercut lines blur quickly; broccoli shape
-      // collapses fast as the curly volume grows out unevenly.
+      // collapses fast as the curly volume grows out unevenly;
+      // bald_fade depends entirely on the fade transition staying
+      // sharp; pompadour height + fade combo is high-maintenance.
       return 4;
     case 'overgrown_buzz':
       // Faster than buzz_cut because the longer top is the
       // load-bearing part and grows out of shape sooner.
       return 3;
+    case 'short_fade':
+      // Short top + fade — fade lines blur fast but the very-short
+      // top means the overall silhouette holds. Same cadence as buzz.
+      return 2;
     case 'caesar':
     case 'textured_crop':
     case 'textured_fringe':

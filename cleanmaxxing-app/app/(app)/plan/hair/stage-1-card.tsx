@@ -20,30 +20,74 @@ import {
 import { cutsForDensity } from '@/lib/hair/cut-by-density';
 import { cutsForAge } from '@/lib/hair/cut-by-age';
 
-// Tries the cohort-aware variant first (e.g. caesar_mature.png for
-// users 45+), then the un-suffixed file, then .jpg/.webp fallbacks.
-// Lets reference assets ship incrementally without the UI breaking
-// when only some cut family images exist.
+// Density states where we prefer the `_balding` image variant when
+// one exists. `mature_hairline` is intentionally excluded — that
+// state is "hairline at adult position but density intact," not
+// active recession; the regular images already represent it well.
+const BALDING_DENSITY_STATES: ReadonlyArray<DensityState> = [
+  'receding_hairline',
+  'crown_thinning',
+  'diffuse_thinning',
+  'advanced_thinning',
+  'shaved_or_buzzed',
+];
+
+// Image candidates in priority order for a (cutFamily, cohort,
+// isBalding) tuple. Each suffix priority is then crossed with the
+// .png / .jpg / .webp extension order so reference assets can ship
+// in any of those formats.
+//
+// Suffix priority by quadrant:
+//   balding + mature   → _balding_mature, _mature, _balding, ""
+//   balding + young    → _balding, "", _balding_mature, _mature
+//   non-balding + mature → _mature, "", _balding_mature, _balding
+//   non-balding + young  → "", _mature, _balding, _balding_mature
+//
+// The fallbacks let the UI degrade gracefully when only some
+// variants exist for a given cut.
+function imageCandidates(
+  cutFamily: CutFamily,
+  cohort: 'young' | 'mature',
+  isBalding: boolean,
+): string[] {
+  const isMature = cohort === 'mature';
+  let suffixOrder: string[];
+  if (isBalding && isMature) {
+    suffixOrder = ['_balding_mature', '_mature', '_balding', ''];
+  } else if (isBalding && !isMature) {
+    suffixOrder = ['_balding', '', '_balding_mature', '_mature'];
+  } else if (!isBalding && isMature) {
+    suffixOrder = ['_mature', '', '_balding_mature', '_balding'];
+  } else {
+    suffixOrder = ['', '_mature', '_balding', '_balding_mature'];
+  }
+  const exts = ['.png', '.jpg', '.webp'];
+  const out: string[] = [];
+  for (const suffix of suffixOrder) {
+    for (const ext of exts) {
+      out.push(`${cutFamily}${suffix}${ext}`);
+    }
+  }
+  return out;
+}
+
+// Renders the best available reference image for a cut family,
+// keyed on (age cohort × density). The cohort signal is the
+// effective-age computed from actual age + age-feel — a 47-year-old
+// who self-identifies as much younger gets the young images.
 function CutFamilyImage({
   cutFamily,
   cohort,
+  density,
   className = 'mt-3 max-h-64 w-full rounded-md object-cover',
 }: {
   cutFamily: CutFamily;
   cohort: 'young' | 'mature';
+  density: DensityState | null;
   className?: string;
 }) {
-  const candidates =
-    cohort === 'mature'
-      ? [
-          `${cutFamily}_mature.png`,
-          `${cutFamily}_mature.jpg`,
-          `${cutFamily}_mature.webp`,
-          `${cutFamily}.png`,
-          `${cutFamily}.jpg`,
-          `${cutFamily}.webp`,
-        ]
-      : [`${cutFamily}.png`, `${cutFamily}.jpg`, `${cutFamily}.webp`];
+  const isBalding = density != null && BALDING_DENSITY_STATES.includes(density);
+  const candidates = imageCandidates(cutFamily, cohort, isBalding);
   const [idx, setIdx] = useState(0);
   const [hidden, setHidden] = useState(false);
   if (hidden) return null;
@@ -73,12 +117,35 @@ type Props = {
   isPremium: boolean;
   hasBaselinePhoto: boolean;
   existingTryOnUrl: string | null;
-  // Density drives the alternative-cuts menu rendered alongside
-  // the LLM recommendation. Age 45+ flips the imagery to the mature
-  // cohort variants when available.
+  // Density drives the alternative-cuts menu and the image-variant
+  // chooser (CutFamilyImage prefers _balding files when the user is
+  // in active recession / thinning).
   densityState: DensityState;
   age: number | null;
+  // Self-perceived age delta from confidence_appearance (2-10 scale,
+  // 6 = "about my age"). Combined with actual age to compute the
+  // image cohort: a 47yo who reads as much younger gets young
+  // images, a 38yo who reads as much older gets mature ones. Null
+  // when the user hasn't taken the survey or the value couldn't
+  // be parsed.
+  ageFeelValue: number | null;
 };
+
+// Effective age for image-cohort selection. Cut menu eligibility
+// stays on actual age (in lib/hair/cut-by-age.ts) — that's about
+// content appropriateness for actual hair coverage. Image cohort is
+// purely visual representation, so it tracks how the user reads.
+//
+// Formula: effective_age = age + (6 - age_feel_value) × 2
+// Scale 2 gives a ±8-year swing across the 5 age-feel options.
+function effectiveAgeForImageCohort(
+  age: number | null,
+  ageFeelValue: number | null,
+): number | null {
+  if (age == null) return null;
+  if (ageFeelValue == null) return age;
+  return age + (6 - ageFeelValue) * 2;
+}
 
 export function HairStage1Card({
   cutFamily,
@@ -90,8 +157,11 @@ export function HairStage1Card({
   existingTryOnUrl,
   densityState,
   age,
+  ageFeelValue,
 }: Props) {
-  const cohort: 'young' | 'mature' = age != null && age >= 45 ? 'mature' : 'young';
+  const effectiveAge = effectiveAgeForImageCohort(age, ageFeelValue);
+  const cohort: 'young' | 'mature' =
+    effectiveAge != null && effectiveAge >= 45 ? 'mature' : 'young';
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -228,7 +298,11 @@ export function HairStage1Card({
         <p className="mt-1 text-base font-semibold text-zinc-900 dark:text-zinc-100">
           {CUT_FAMILY_LABEL[cutFamily]}
         </p>
-        <CutFamilyImage cutFamily={cutFamily} cohort={cohort} />
+        <CutFamilyImage
+          cutFamily={cutFamily}
+          cohort={cohort}
+          density={densityState}
+        />
         <p className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400">
           Reference image. Yours will look different — same family, your
           face, your texture, your hairline.
@@ -458,6 +532,7 @@ function OtherCutsForDensity({
                 <CutFamilyImage
                   cutFamily={slug}
                   cohort={cohort}
+                  density={densityState}
                   className="h-32 w-full rounded object-cover"
                 />
                 <p className="mt-2 text-[12px] font-medium leading-tight text-zinc-800 dark:text-zinc-200">
