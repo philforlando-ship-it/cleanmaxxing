@@ -591,7 +591,7 @@ function FallbackImage({ base, alt }: { base: string; alt: string }) {
         if (extIndex < exts.length - 1) setExtIndex(extIndex + 1);
         else setHidden(true);
       }}
-      className="h-20 w-20 shrink-0 rounded object-cover"
+      className="h-40 w-40 shrink-0 rounded object-cover"
     />
   );
 }
