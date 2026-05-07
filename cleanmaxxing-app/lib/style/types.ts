@@ -1,5 +1,6 @@
-// Shared types + Zod schema for style v0. Mirrors check constraints in
-// supabase/migrations/0043_style_assessments.sql.
+// Shared types + Zod schemas for the style plan. Mirrors check
+// constraints in supabase/migrations/0043_style_assessments.sql and
+// the stage columns added in 0064_style_assessments_stages_1_to_3.sql.
 
 import { z } from 'zod';
 
@@ -29,6 +30,17 @@ export type ClosetState =
   | 'outdated'
   | 'starting_from_scratch';
 
+// Stage 1 — closet audit. The user marks each archetype-specific chip
+// keep/cut/replace. The actual chip catalog lives in
+// lib/style/closet-audit-content.ts; the slug strings are validated
+// against that catalog at the API boundary.
+export type ClosetAuditDirection = 'keep' | 'cut' | 'replace';
+
+export type ClosetAuditSelections = Record<string, ClosetAuditDirection>;
+
+// Stage 2 — foundation pieces. Slug strings are validated at the API
+// boundary against lib/style/foundation-pieces-content.ts.
+
 export type StyleAssessment = {
   user_id: string;
   frame_estimate: FrameEstimate;
@@ -40,6 +52,16 @@ export type StyleAssessment = {
   report_generated_at: string | null;
   report_model: string | null;
   report_input_modifiers: StyleReportInputModifiers | null;
+  // Stage 1 — closet audit
+  stage_1_chip_selections: ClosetAuditSelections | null;
+  stage_1_audit_text: string | null;
+  stage_1_generated_at: string | null;
+  stage_1_completed_at: string | null;
+  // Stage 2 — foundation pieces
+  stage_2_pieces_acquired: string[];
+  stage_2_completed_at: string | null;
+  // Stage 3 — fit calibration
+  stage_3_acknowledged_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -134,4 +156,28 @@ export const StyleAssessmentInputSchema = z.object({
 
 export type StyleAssessmentInput = z.infer<
   typeof StyleAssessmentInputSchema
+>;
+
+// Stage 1 — closet audit chip submission. The route handler verifies
+// every key is a known chip slug for the user's target_archetype
+// against lib/style/closet-audit-content.ts; this Zod schema only
+// enforces shape.
+export const StyleStage1AuditSchema = z.object({
+  chip_selections: z.record(
+    z.string(),
+    z.enum(['keep', 'cut', 'replace']),
+  ),
+});
+
+export type StyleStage1AuditInput = z.infer<typeof StyleStage1AuditSchema>;
+
+// Stage 2 — toggle a foundation piece slug acquired/not. The route
+// handler verifies the slug belongs to the user's archetype catalog.
+export const StyleStage2PieceToggleSchema = z.object({
+  piece_slug: z.string().min(1).max(80),
+  acquired: z.boolean(),
+});
+
+export type StyleStage2PieceToggleInput = z.infer<
+  typeof StyleStage2PieceToggleSchema
 >;

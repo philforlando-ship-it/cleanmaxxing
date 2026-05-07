@@ -9,11 +9,21 @@ import {
   CURRENT_SPLIT_LABEL,
   DAYS_PER_WEEK_LABEL,
   EQUIPMENT_ACCESS_LABEL,
+  INJURY_CONSTRAINT_LABEL,
+  INJURY_CONSTRAINTS,
   PRIMARY_GOAL_LABEL,
+  PRIORITY_MUSCLES,
+  PRIORITY_MUSCLE_LABEL,
+  PRIORITY_MUSCLE_MAX,
+  SECONDARY_OBJECTIVE_LABEL,
+  SECONDARY_OBJECTIVES,
   type StrengthCurrentSplit,
   type StrengthDaysPerWeek,
   type StrengthEquipmentAccess,
+  type StrengthInjuryConstraint,
   type StrengthPrimaryGoal,
+  type StrengthPriorityMuscle,
+  type StrengthSecondaryObjective,
 } from '@/lib/strength/types';
 
 const PRIMARY_GOALS: StrengthPrimaryGoal[] = [
@@ -55,6 +65,10 @@ export type StrengthAssessmentInitialValues = {
   equipment_access: StrengthEquipmentAccess;
   current_split: StrengthCurrentSplit;
   strength_goal_text: string | null;
+  priority_muscles: StrengthPriorityMuscle[];
+  lagging_muscles_text: string | null;
+  secondary_objective: StrengthSecondaryObjective | null;
+  injury_constraints: StrengthInjuryConstraint[];
 };
 
 export function StrengthAssessmentForm({
@@ -81,8 +95,35 @@ export function StrengthAssessmentForm({
   const [goalText, setGoalText] = useState(
     initialValues?.strength_goal_text ?? '',
   );
+  const [priorityMuscles, setPriorityMuscles] = useState<
+    StrengthPriorityMuscle[]
+  >(initialValues?.priority_muscles ?? []);
+  const [laggingText, setLaggingText] = useState(
+    initialValues?.lagging_muscles_text ?? '',
+  );
+  const [secondaryObjective, setSecondaryObjective] =
+    useState<StrengthSecondaryObjective | null>(
+      initialValues?.secondary_objective ?? null,
+    );
+  const [injuryConstraints, setInjuryConstraints] = useState<
+    StrengthInjuryConstraint[]
+  >(initialValues?.injury_constraints ?? []);
 
   const isEditing = initialValues !== undefined;
+
+  function togglePriority(m: StrengthPriorityMuscle) {
+    setPriorityMuscles((prev) => {
+      if (prev.includes(m)) return prev.filter((x) => x !== m);
+      if (prev.length >= PRIORITY_MUSCLE_MAX) return prev;
+      return [...prev, m];
+    });
+  }
+
+  function toggleInjury(i: StrengthInjuryConstraint) {
+    setInjuryConstraints((prev) =>
+      prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i],
+    );
+  }
 
   function submit() {
     setError(null);
@@ -90,6 +131,8 @@ export function StrengthAssessmentForm({
     if (!daysPerWeek) return setError('Pick days per week.');
     if (!equipmentAccess) return setError('Pick your equipment access.');
     if (!currentSplit) return setError('Pick your current split.');
+    if (!secondaryObjective)
+      return setError('Pick a secondary objective (or "None").');
 
     const payload = {
       primary_goal: primaryGoal,
@@ -97,6 +140,10 @@ export function StrengthAssessmentForm({
       equipment_access: equipmentAccess,
       current_split: currentSplit,
       strength_goal_text: goalText.trim() || null,
+      priority_muscles: priorityMuscles,
+      lagging_muscles_text: laggingText.trim() || null,
+      secondary_objective: secondaryObjective,
+      injury_constraints: injuryConstraints,
     };
 
     startTransition(async () => {
@@ -200,6 +247,114 @@ export function StrengthAssessmentForm({
 
       <Question
         number={5}
+        title="Which muscles do you most want to develop? (optional, pick up to 3)"
+        helper="The visual-leverage stack. The plan biases volume + frequency toward what you pick — more sets per week and 2x-a-week minimum frequency on these specifically. Skip if you want balanced development."
+      >
+        <div className="space-y-2">
+          {PRIORITY_MUSCLES.map((m) => {
+            const checked = priorityMuscles.includes(m);
+            const atCap =
+              !checked && priorityMuscles.length >= PRIORITY_MUSCLE_MAX;
+            return (
+              <label
+                key={m}
+                className={
+                  checked
+                    ? 'flex cursor-pointer items-start gap-3 rounded-md border border-zinc-900 bg-zinc-50 px-3 py-2 dark:border-zinc-100 dark:bg-zinc-800'
+                    : atCap
+                      ? 'flex cursor-not-allowed items-start gap-3 rounded-md border border-zinc-200 px-3 py-2 opacity-50 dark:border-zinc-800'
+                      : 'flex cursor-pointer items-start gap-3 rounded-md border border-zinc-200 px-3 py-2 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900'
+                }
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => togglePriority(m)}
+                  disabled={pending || atCap}
+                  className="mt-0.5 h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700"
+                />
+                <span className="flex-1 text-sm text-zinc-900 dark:text-zinc-100">
+                  {PRIORITY_MUSCLE_LABEL[m]}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+        <p className="mt-2 text-[12px] text-zinc-500 dark:text-zinc-400">
+          {priorityMuscles.length}/{PRIORITY_MUSCLE_MAX} picked
+        </p>
+      </Question>
+
+      <Question
+        number={6}
+        title="Anything that feels lagging? (optional)"
+        helper="Free text. ‘Calves never grow’, ‘left side smaller than right’, ‘flat upper chest’. Mister P folds it into the prescription."
+      >
+        <input
+          type="text"
+          value={laggingText}
+          onChange={(e) => setLaggingText(e.target.value)}
+          disabled={pending}
+          maxLength={280}
+          placeholder="e.g. calves never grow despite three sessions a week"
+          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        />
+      </Question>
+
+      <Question
+        number={7}
+        title="Any secondary objective alongside strength?"
+        helper="Most 35+ users want strength PLUS something. Pick the one secondary that matters most — the plan honors it without diluting the primary goal. ‘None’ is fine."
+      >
+        <div className="space-y-2">
+          {SECONDARY_OBJECTIVES.map((s) => (
+            <RadioRow
+              key={s}
+              checked={secondaryObjective === s}
+              onChange={() => setSecondaryObjective(s)}
+              disabled={pending}
+              label={SECONDARY_OBJECTIVE_LABEL[s]}
+              name="secondary_objective"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={8}
+        title="Any chronic conditions to design around? (optional)"
+        helper="Multi-select. The plan routes around these — no deadlifts under heavy load with lower-back pain on file, no overhead pressing with shoulder/neck issues, etc. Skip if you don’t have any."
+      >
+        <div className="space-y-2">
+          {INJURY_CONSTRAINTS.map((i) => {
+            const checked = injuryConstraints.includes(i);
+            return (
+              <label
+                key={i}
+                className={
+                  checked
+                    ? 'flex cursor-pointer items-start gap-3 rounded-md border border-zinc-900 bg-zinc-50 px-3 py-2 dark:border-zinc-100 dark:bg-zinc-800'
+                    : 'flex cursor-pointer items-start gap-3 rounded-md border border-zinc-200 px-3 py-2 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900'
+                }
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggleInjury(i)}
+                  disabled={pending}
+                  className="mt-0.5 h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700"
+                />
+                <span className="flex-1 text-sm text-zinc-900 dark:text-zinc-100">
+                  {INJURY_CONSTRAINT_LABEL[i]}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </Question>
+
+      <Question
+        number={9}
         title="Anything you want Mister P to know? (optional)"
         helper="One line. A specific situation, a constraint, a pattern. Bad shoulder, kid on the way, training before work, etc."
       >

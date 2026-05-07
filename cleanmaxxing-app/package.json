@@ -9,6 +9,7 @@
     "lint": "eslint",
     "embed-povs": "tsx -r dotenv/config scripts/embed-povs.ts dotenv_config_path=.env.local",
     "generate-hair-images": "tsx -r dotenv/config scripts/generate-hair-images.ts dotenv_config_path=.env.local",
+    "generate-style-images": "tsx -r dotenv/config scripts/generate-style-images.ts dotenv_config_path=.env.local",
     "generate-food-images": "tsx -r dotenv/config scripts/generate-food-images.ts dotenv_config_path=.env.local",
     "qc-hair-images": "tsx scripts/qc-hair-images.ts",
     "compress-hair-images": "tsx scripts/compress-hair-images.ts",

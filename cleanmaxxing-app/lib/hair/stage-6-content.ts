@@ -34,6 +34,10 @@ export function computeCutCadenceWeeks(cutFamily: CutFamily): number {
       // for the column constraint (column is in weeks). The card copy
       // names the daily reality.
       return 2;
+    case 'high_taper_crop':
+      // Skin-fade lines blur quickly; tighter cadence than a classic taper.
+      return 4;
+    case 'caesar':
     case 'textured_crop':
     case 'crew_cut':
     case 'ivy_league':

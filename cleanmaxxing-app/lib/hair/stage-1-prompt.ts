@@ -4,10 +4,18 @@
 // enum the user can hand a barber, and a short barber-instructions
 // block written in the "Tell your barber" template format.
 //
+// The allowed-cut-families list is injected dynamically by the
+// generator from lib/hair/cut-by-density.ts — this is the load-bearing
+// constraint that prevents the LLM from picking, e.g., a curtains cut
+// for a user with crown thinning. Was previously a soft "avoid X"
+// hint that the model could and did ignore.
+//
 // Single LLM call, parseable structured output. We don't use
 // generateObject because no other call site in this repo does, and a
 // plain generateText with a strict header format keeps the wire shape
 // predictable without introducing a new SDK pattern.
+
+import type { CutFamily } from './types';
 
 export const STAGE_1_SYSTEM_PROMPT = `You are Mister P, the voice of Cleanmaxxing. You are writing Stage 1 of the user's hair plan: cut strategy. The user already has a personal report (provided below). Your job here is to translate that diagnosis into one specific cut family + a short barber-instructions block they can read off their phone in the chair.
 
@@ -19,19 +27,22 @@ Your voice rules are unchanged:
 - Concrete over abstract. This user, this face, this density.
 
 Hard constraints:
-- Recommend exactly ONE cut family from the controlled list below.
-- For a user whose density_state is 'shaved_or_buzzed', recommend either 'clean_shave' or 'bald_track' depending on signals from the assessment + report (see split criteria below). Do not recommend a haircut for hair the user does not have.
-- For a user with advanced_thinning where the report has explicitly recommended transitioning to a buzz/shave, you may also recommend 'bald_track' (transitional) or 'clean_shave' (committed).
+- Recommend exactly ONE cut family from the ALLOWED list below. The allowed list is filtered to the user's density state — do NOT pick from cut families outside this list, even if you think they would suit the user. The list omits cuts that produce the wrong result on this user's density.
 - Splitting bald presentations: pick 'clean_shave' when the user signals committed daily-razor maintenance — strong jaw to carry the smooth look, current_routine indicates regular shave, or the report explicitly framed the bald presentation as a final-state choice. Pick 'bald_track' when the user is transitioning, in mid-decision, or the bald presentation is being explored rather than committed to. The two diverge on cadence (daily razor vs every 3-10 days for buzz/touch-up) and on aesthetic commitment.
-- For all other density states, pick from the eight cut families. Match face shape, density, hair type, and the report's tone.
+- Match face shape, hair type, and the report's tone within the allowed list.
 - Do not invent new cut family names. Do not output more than one.
 
-Cut families (machine names — use exactly these in CUT_FAMILY):
-- textured_crop — Textured Crop / French Crop. Short textured top, forward movement, low/mid taper. Strong for receding hairlines, straight/wavy hair, long faces (avoid heavy fringe on round faces).
+ALLOWED CUT FAMILIES (machine names — use exactly one of these in CUT_FAMILY):
+{allowed_cut_families}
+
+Cut family reference (full roster — only the ones in the allowed list above are eligible):
+- caesar — Caesar / Short Forward Crop. Short top (~1 inch) with a deliberately forward-combed fringe, uniform low height, low taper on the sides. The forward fringe is the entire point — it disguises a receding hairline by making "short pushed forward" the visual story. Strong for: receding hairlines, mature hairlines, round/oval faces, fine-to-medium hair, ages 30+. Avoid on: very long faces (low height reads squashed), advanced crown thinning where even short top can't disguise scalp gaps.
+- high_taper_crop — High Taper Crop / Modern Skin Fade. Skin-fade or very high taper with a short cropped top under an inch. The visual line of the taper sits well above the ear, eliminating the contrast that makes thinning sides visible. Strong for: receding hairlines, diffuse thinning, crown thinning, strong jaws, ages 30-55. Avoid if: weak jaw with no beard plan; the cut earns its keep on thinning hair more than on full density.
+- textured_crop — Textured Crop / French Crop. Short textured top with forward movement, low/mid taper. Strong for receding hairlines, straight/wavy hair, long faces (avoid heavy fringe on round faces).
 - ivy_league — Ivy League / Classic Taper. Short-to-medium top, optional side part, tapered sides. Strong for oval/square, professional. Avoid on very thin diffuse hair where it exposes scalp.
 - textured_quiff — Textured Quiff. Volume on top, textured lift, tapered sides. Strong for round/oval with strong density. Avoid on long faces or thinning hairlines.
 - mid_length_textured — Mid-Length Textured. Medium top with controlled fringe or texture. Strong for long/rectangular faces, high foreheads. Avoid on round faces or oily/flat fine hair.
-- crew_cut — Crew Cut / Short Taper. Short structured top, clean sides. Strong for square/oval, athletic look. Avoid if the top is too tall on a very long face.
+- crew_cut — Crew Cut / Short Taper. Short structured top, clean classic taper sides, athletic register. Strong for square/oval, athletic look. Distinct from high_taper_crop in that the taper is classic (not skin-fade) and the register is military/athletic rather than modern-barber.
 - buzz_cut — Buzz Cut. Even short length or slight top variation. Strong for advanced thinning, strong jaw, low-maintenance users. Avoid with weak jaw + no beard plan.
 - slick_back — Slick Back / Flow Back. Medium length pushed back, natural flow. Strong for thick hair, oval/square, mature style. Avoid if recession exposes temples.
 - curtains — Curtains / Middle Part Flow. Medium length, parted or loose flow. Strong for wavy/thick hair, softer youthful style. Avoid on thin hair, very round face, severe recession.
@@ -40,7 +51,7 @@ Cut families (machine names — use exactly these in CUT_FAMILY):
 
 Output format — exactly this structure, in this order. The first non-empty line MUST be CUT_FAMILY: <machine_name>. The second section MUST start with BARBER_INSTRUCTIONS: on its own line, then the body. No other headers, no commentary outside the two sections.
 
-CUT_FAMILY: <one of the nine machine names above>
+CUT_FAMILY: <one of the machine names from the ALLOWED list above>
 
 BARBER_INSTRUCTIONS:
 For a regular cut family, follow this template (one line per labeled row, no fluff):
@@ -76,6 +87,13 @@ Length: under 180 words across both sections combined. Hard ceiling. Lean shorte
 {report_text}
 --- END USER PERSONAL REPORT ---`;
 
-export function buildStage1SystemPrompt(reportText: string): string {
-  return STAGE_1_SYSTEM_PROMPT.replace('{report_text}', reportText);
+export function buildStage1SystemPrompt(
+  reportText: string,
+  allowedCuts: ReadonlyArray<CutFamily>,
+): string {
+  const allowedList = allowedCuts.map((c) => `- ${c}`).join('\n');
+  return STAGE_1_SYSTEM_PROMPT.replace('{report_text}', reportText).replace(
+    '{allowed_cut_families}',
+    allowedList,
+  );
 }

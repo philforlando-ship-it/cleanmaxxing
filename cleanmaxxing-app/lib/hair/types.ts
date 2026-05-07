@@ -27,10 +27,19 @@ export type HairTypeDensity = 'low' | 'medium' | 'high';
 
 export type WhoCuts = 'self' | 'chain' | 'dedicated_barber';
 
-// Stage 1 — cut family. Eight named cuts a barber will recognize, plus
-// 'bald_track' for users whose density_state is 'shaved_or_buzzed'.
-// Mirrors the check constraint in 0036_hair_assessments_stage_1.sql.
+// Stage 1 — cut family. Twelve named cuts a barber will recognize, plus
+// 'bald_track' / 'clean_shave' for users whose density_state is
+// 'shaved_or_buzzed' or who are transitioning toward bald. Mirrors the
+// check constraint history in 0036 → 0045 → 0065.
+//
+// 'caesar' and 'high_taper_crop' are balding-friendly cuts added in
+// migration 0065. The density-filtered menu in
+// lib/hair/cut-by-density.ts gates which cuts each user sees, so users
+// with thinning density see these prominently and users with full
+// density see the broader range.
 export type CutFamily =
+  | 'caesar'
+  | 'high_taper_crop'
   | 'textured_crop'
   | 'ivy_league'
   | 'textured_quiff'
@@ -43,6 +52,8 @@ export type CutFamily =
   | 'clean_shave';
 
 export const CUT_FAMILIES: ReadonlyArray<CutFamily> = [
+  'caesar',
+  'high_taper_crop',
   'textured_crop',
   'ivy_league',
   'textured_quiff',
@@ -66,6 +77,8 @@ export const STAGE_2_PATH_LABEL: Record<Stage2Path, string> = {
 };
 
 export const CUT_FAMILY_LABEL: Record<CutFamily, string> = {
+  caesar: 'Caesar / Short Forward Crop',
+  high_taper_crop: 'High Taper Crop / Modern Skin Fade',
   textured_crop: 'Textured Crop / French Crop',
   ivy_league: 'Ivy League / Classic Taper',
   textured_quiff: 'Textured Quiff',

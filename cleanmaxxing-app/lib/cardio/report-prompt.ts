@@ -102,6 +102,35 @@ Modifier handling — apply these without narrating them back:
 
 - **modality_preference is 'swimming'** → Zone 2 swimming is excellent low-impact aerobic work. Name that pace calibration is harder in water (talk test doesn't work) — use perceived effort: comfortable rhythm with clear breathing effort.
 
+- **C1 — equipment_access (drives modality recommendations)**: name 1-3 specific modalities that fit what the user actually has. Don't recommend modalities they can't run.
+  - 'full_gym' → all modalities on the table
+  - 'home_treadmill' → incline walking + running + treadmill HIIT (Norwegian 4×4 works on a treadmill)
+  - 'home_bike' → cycling Zone 2 + cycling 4×4 HIIT. Best at-home VO2max stimulus available.
+  - 'outdoor_only' → running, walking, hiking, outdoor cycling. Talk test for intensity. No equipment cost.
+  - 'classes_studio' → spin, rowing class, hiking groups. Recovery cost watch — many classes are HIIT-flavored even when marketed as Zone 2.
+  - 'none_minimal' → brisk incline walking (outdoors or via stairs / hills), bodyweight HIIT (burpees, jumping jacks). Step count is the load-bearing surface; formal sessions are bonus.
+
+- **C1 — outdoor_access (climate / location)**:
+  - 'year_round' → outdoor modalities take priority where they fit. Less indoor monotony.
+  - 'seasonal' → recommend an indoor backup for the off-season; default prescription assumes the indoor option.
+  - 'rare' or 'never' → indoor only. Don't recommend outdoor running or cycling as the primary protocol.
+
+- **C1 — time_per_session**:
+  - 'under_20min' → recommend 4×4 HIIT (15 min total) or step-count-only. Zone 2 needs 30+ min for full benefit; under 20 min is a poor fit.
+  - '20_to_40min' → standard Zone 2 sessions (30 min) + 4×4 HIIT fits. The most common case.
+  - '40plus_min' → extended Zone 2 sessions are on the table; recommend not exceeding 60 min routinely (diminishing returns + recovery cost).
+
+- **C2 — occupation_activity (cardio downweighting for high-activity day jobs)**:
+  - 'sedentary' or 'mostly_standing' → standard prescription. Step count + structured cardio per the rest of the rules.
+  - 'mostly_active' → step count baseline is already met by the day job. Reduce structured cardio prescription by ~20%; e.g., 3 sessions becomes 2.
+  - 'very_active' (construction / warehouse / trades / heavy labor) → name explicitly: "your day job is doing the daily-movement layer for you. The cardio prescription downweights — heart-health framing remains, but you don't need to stack volume." For 'very_active' + age 45+, recommend 1-2 Zone 2 sessions weekly + 1 HIIT max for VO2max specifically. For 'very_active' + age under 35, step count + 1 cardio session weekly is sufficient.
+
+- **injury_constraints (modality exclusions)**:
+  - 'knee_pain' → exclude running and high-impact running drills. Substitute incline walking, cycling, rowing, swimming, or elliptical. Name explicitly: "with knee pain on file, running stays off — cycling and rowing give the same Zone 2 outcome."
+  - 'back_pain' (lower or mid) → exclude rowing under heavy load (form breakdown under fatigue is a back-injury risk for sustained sets). Recommend cycling, walking, or pool work. If user has access to rowing only, prescribe shorter sessions (20 min max) at strict form-first intensity.
+  - 'hip_pain' → exclude running and stair-climbing. Cycling (with bike fit attention) and swimming work. Walking on flat is usually fine; hills aggravate.
+  - 'respiratory_condition' (asthma, COPD, etc.) → no HIIT first. Build Zone 2 base for at least 8 weeks; only consider HIIT after a clean asymptomatic stretch and (per the escalation criteria) a physician check-in. Recommend the modality the user already tolerates without breathing distress.
+
 - **Escalation criteria** (always include in "What we're not doing" if the user has any cardiac risk markers in current_interventions OR is 45+ with 'mostly_sedentary' or 'light_movement'): chest discomfort or unusual shortness of breath during exertion, sudden drops in exercise tolerance, resting HR trending up 5-10 bpm over weeks without cause, repeated BP above 140/90, fainting/pre-syncope/irregular heartbeat during or after exercise — these are physician territory, not training adjustments.
 
 --- POV CONTEXT ---

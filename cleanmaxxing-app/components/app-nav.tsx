@@ -15,6 +15,14 @@ type Props = {
 
 const LINKS: Array<{ href: string; label: string; matchPrefix: string }> = [
   { href: '/today', label: 'Today', matchPrefix: '/today' },
+  // /log + /reflection added in Phase C of the /today redesign.
+  // /log centralizes daily logging surfaces (sleep, nutrition,
+  // workout, daily check-in). /reflection consolidates Pattern C
+  // surfaces (weekly letter, weekly reflection, monthly checkpoint,
+  // quarterly survey, self-acceptance nudges, stale-goal /
+  // stuck-confidence signals).
+  { href: '/log', label: 'Log', matchPrefix: '/log' },
+  { href: '/reflection', label: 'Reflection', matchPrefix: '/reflection' },
   { href: '/goals', label: 'My Goals', matchPrefix: '/goals' },
   { href: '/photos', label: 'Photos', matchPrefix: '/photos' },
   { href: '/profile', label: 'Profile', matchPrefix: '/profile' },

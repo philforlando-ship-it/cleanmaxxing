@@ -16,11 +16,25 @@
 //   recomp / maintain → 0
 //   gain_muscle → +250 kcal/day (lean bulk)
 //
-// Macro split:
-//   Protein: 0.8 g/lb body weight (1.0 g/lb if cutting or 50+ or
-//     on GLP-1)
-//   Fat: ~0.35 g/lb body weight (≈25-30% of calories)
-//   Carbs: remaining calories ÷ 4
+// Protein floor matrix (T4 — May 2026 rebalance from the 0.8/1.0
+// binary to per-cohort branching):
+//   goal_baseline:
+//     maintain / not_sure → 0.75 g/lb
+//     recomp              → 0.85 g/lb
+//     lose_fat            → 1.00 g/lb
+//     gain_muscle         → 1.00 g/lb
+//   modifier overrides (take MAX with goal_baseline):
+//     GLP-1 active     → 1.10 g/lb
+//     age >= 50        → 1.00 g/lb
+//   ceiling: 1.20 g/lb
+//
+// Net effect: median user (maintain, no modifiers) drops from 0.8
+// to 0.75 g/lb. Recomp users go up from 0.8 to 0.85. Gain-muscle
+// users go up from 0.8 to 1.0. GLP-1 users go up from 1.0 to 1.1.
+// Cutting + age 50+ stay at 1.0.
+//
+// Fat: ~0.35 g/lb body weight (≈25-30% of calories).
+// Carbs: remaining calories ÷ 4.
 //
 // All outputs are nullable when inputs are missing — the report
 // generator handles the "no targets, fall back to qualitative" path.
@@ -36,6 +50,66 @@ const ACTIVITY_MULTIPLIER: Record<string, number> = {
   moderately_active: 1.55,
   very_active: 1.725,
 };
+
+// Onboarding doesn't ask about activity level directly, and many users
+// never visit /profile to set it explicitly. Without inference the BMR
+// calc would refuse to compute for a sizable fraction of users. The
+// fallback ladder:
+//   1. Explicit profile.activity_level — use as-is.
+//   2. profile.daily_training_minutes — derive from training load.
+//   3. Default to 'lightly_active' (the median honest value for a
+//      sedentary modern man with occasional movement). Surfaced
+//      transparently as 'default' so the UI can label the assumption.
+//
+// Returns the resolved activity level + the source so callers can
+// surface the inference rather than silently lying.
+export type ActivityLevelKey =
+  | 'sedentary'
+  | 'lightly_active'
+  | 'moderately_active'
+  | 'very_active';
+
+export type ActivityLevelSource =
+  | 'explicit'
+  | 'inferred_from_training_minutes'
+  | 'default';
+
+export type EffectiveActivityLevel = {
+  value: ActivityLevelKey;
+  source: ActivityLevelSource;
+};
+
+export function effectiveActivityLevel(args: {
+  explicit: string | null;
+  daily_training_minutes: number | null;
+}): EffectiveActivityLevel {
+  if (args.explicit && args.explicit in ACTIVITY_MULTIPLIER) {
+    return {
+      value: args.explicit as ActivityLevelKey,
+      source: 'explicit',
+    };
+  }
+  const mins = args.daily_training_minutes;
+  if (mins != null && Number.isFinite(mins)) {
+    if (mins >= 60) {
+      return { value: 'very_active', source: 'inferred_from_training_minutes' };
+    }
+    if (mins >= 30) {
+      return {
+        value: 'moderately_active',
+        source: 'inferred_from_training_minutes',
+      };
+    }
+    if (mins >= 15) {
+      return {
+        value: 'lightly_active',
+        source: 'inferred_from_training_minutes',
+      };
+    }
+    return { value: 'sedentary', source: 'inferred_from_training_minutes' };
+  }
+  return { value: 'lightly_active', source: 'default' };
+}
 
 const GOAL_ADJUSTMENT: Record<GoalDirection, number> = {
   lose_fat: -500,
@@ -91,12 +165,11 @@ export function computeNutritionTargets(args: {
     Math.round(tdee + GOAL_ADJUSTMENT[goal_direction]),
   );
 
-  // Protein floor — bumped for cuts, age 50+, or GLP-1 (muscle
-  // preservation conditions).
-  const isOnGlp1 = args.current_interventions.includes('glp1');
-  const isCutting = goal_direction === 'lose_fat';
-  const isOlder = age >= 50;
-  const proteinPerLb = isOnGlp1 || isCutting || isOlder ? 1.0 : 0.8;
+  const proteinPerLb = proteinFloorPerLb({
+    goal_direction,
+    age,
+    current_interventions: args.current_interventions,
+  });
   const proteinG = Math.round(weight_lbs * proteinPerLb);
 
   // Fat — 0.35 g/lb (≈25-30% of calories at typical intake levels).
@@ -118,3 +191,149 @@ export function computeNutritionTargets(args: {
     fat_target_g: fatG,
   };
 }
+
+// Per-cohort protein floor calculation. Exported so the BMR
+// calculator panel and any future surfaces share one source of truth.
+//
+// Returns g/lb of bodyweight. Multiply by weight_lbs for grams.
+// max-based so users with multiple cohort signals (e.g. cutting on
+// GLP-1 at age 55) land at the highest applicable floor, not summed.
+export function proteinFloorPerLb(args: {
+  goal_direction: GoalDirection;
+  age: number | null;
+  current_interventions: string[];
+}): number {
+  const goalBaseline: Record<GoalDirection, number> = {
+    maintain: 0.75,
+    not_sure: 0.75,
+    recomp: 0.85,
+    lose_fat: 1.0,
+    gain_muscle: 1.0,
+  };
+
+  let floor = goalBaseline[args.goal_direction];
+  if (args.current_interventions.includes('glp1')) {
+    floor = Math.max(floor, 1.1);
+  }
+  if (args.age != null && args.age >= 50) {
+    floor = Math.max(floor, 1.0);
+  }
+
+  // Defensive ceiling — no current path hits this, but caps any future
+  // modifier stack so we never prescribe an absurd protein number.
+  return Math.min(floor, 1.2);
+}
+
+// =====================
+// BMR calculator panel helpers (T4 Phase 3)
+// =====================
+
+// What inputs are required to render the BMR calculator panel.
+// activity_level is intentionally NOT in the required set because
+// effectiveActivityLevel always resolves to a usable value (explicit,
+// inferred from daily_training_minutes, or defaulted) — the panel
+// surfaces the source so the assumption isn't silent.
+export type BmrCalculatorInputs = {
+  weight_lbs: number | null;
+  height_inches: number | null;
+  age: number | null;
+  activity_level: string | null;
+  daily_training_minutes: number | null;
+  current_interventions: string[];
+};
+
+export type MissingInputName = 'weight_lbs' | 'height_inches' | 'age';
+
+export type MissingInputResult = {
+  bmr: null;
+  tdee: null;
+  per_goal: null;
+  missing: MissingInputName[];
+  activity_level_source: null;
+};
+
+export type CompleteCalcResult = {
+  bmr: number;
+  tdee: number;
+  per_goal: Record<GoalsForPanel, NutritionTargets>;
+  missing: [];
+  activity_level: ActivityLevelKey;
+  activity_level_source: ActivityLevelSource;
+};
+
+export type BmrCalculatorResult = MissingInputResult | CompleteCalcResult;
+
+// The four goals shown side-by-side in the panel. 'not_sure' is
+// excluded — it doesn't produce a meaningful target row.
+export type GoalsForPanel = 'lose_fat' | 'maintain' | 'recomp' | 'gain_muscle';
+
+const PANEL_GOALS: ReadonlyArray<GoalsForPanel> = [
+  'lose_fat',
+  'maintain',
+  'recomp',
+  'gain_muscle',
+];
+
+// One-shot calculator for the panel. When weight + height + age are
+// present, runs computeNutritionTargets for each of the 4 panel goals
+// and bundles BMR + TDEE alongside; activity_level is resolved via
+// effectiveActivityLevel so the calc doesn't refuse for users who
+// haven't set it explicitly. When weight/height/age are missing, returns
+// the list so the UI can prompt for them.
+export function computeBmrCalculator(
+  inputs: BmrCalculatorInputs,
+): BmrCalculatorResult {
+  const missing: MissingInputName[] = [];
+  if (inputs.weight_lbs == null) missing.push('weight_lbs');
+  if (inputs.height_inches == null) missing.push('height_inches');
+  if (inputs.age == null) missing.push('age');
+
+  if (missing.length > 0) {
+    return {
+      bmr: null,
+      tdee: null,
+      per_goal: null,
+      missing,
+      activity_level_source: null,
+    };
+  }
+
+  const activity = effectiveActivityLevel({
+    explicit: inputs.activity_level,
+    daily_training_minutes: inputs.daily_training_minutes,
+  });
+
+  const weight_kg = inputs.weight_lbs! * LB_TO_KG;
+  const height_cm = inputs.height_inches! * IN_TO_CM;
+  const bmr = Math.round(
+    10 * weight_kg + 6.25 * height_cm - 5 * inputs.age! + 5,
+  );
+  const tdee = Math.round(bmr * ACTIVITY_MULTIPLIER[activity.value]!);
+
+  const per_goal = {} as Record<GoalsForPanel, NutritionTargets>;
+  for (const goal of PANEL_GOALS) {
+    per_goal[goal] = computeNutritionTargets({
+      weight_lbs: inputs.weight_lbs,
+      height_inches: inputs.height_inches,
+      age: inputs.age,
+      activity_level: activity.value,
+      goal_direction: goal,
+      current_interventions: inputs.current_interventions,
+    });
+  }
+
+  return {
+    bmr,
+    tdee,
+    per_goal,
+    missing: [],
+    activity_level: activity.value,
+    activity_level_source: activity.source,
+  };
+}
+
+export const MISSING_INPUT_LABEL: Record<MissingInputName, string> = {
+  weight_lbs: 'Weight',
+  height_inches: 'Height',
+  age: 'Age',
+};

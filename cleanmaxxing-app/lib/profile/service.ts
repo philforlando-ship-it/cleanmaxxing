@@ -116,6 +116,63 @@ export async function getUserProfile(
   };
 }
 
+// Idempotent backfill for the body-stats columns. Onboarding asks for
+// height + weight and writes them to survey_responses, but the profile
+// columns are the canonical read for surfaces like the BMR calculator
+// panel on /plan/nutrition. Pre-existing users completed onboarding
+// before that mirror was wired in /api/onboarding/submit, so their
+// profile columns are null even though the survey rows exist. This
+// helper closes that gap on first read — does nothing once the columns
+// are set, makes one upsert + returns the fresh row otherwise.
+export async function syncBodyStatsFromSurveyIfMissing(
+  supabase: SupabaseClient,
+  userId: string,
+  profile: UserProfile,
+): Promise<UserProfile> {
+  if (
+    profile.current_weight_lbs !== null &&
+    profile.height_inches !== null
+  ) {
+    return profile;
+  }
+
+  const { data: rows } = await supabase
+    .from('survey_responses')
+    .select('question_key, response_value')
+    .eq('user_id', userId)
+    .in('question_key', ['weight_lbs', 'height_inches']);
+  if (!rows || rows.length === 0) return profile;
+
+  const byKey = new Map(
+    (rows as Array<{ question_key: string; response_value: string }>).map(
+      (r) => [r.question_key, r.response_value],
+    ),
+  );
+
+  const patch: UserProfilePatch = {};
+  if (profile.current_weight_lbs === null) {
+    const raw = byKey.get('weight_lbs');
+    const n = raw && raw.trim() !== '' ? Number(raw) : NaN;
+    if (Number.isFinite(n) && n >= 80 && n <= 500) {
+      patch.current_weight_lbs = Math.round(n * 10) / 10;
+    }
+  }
+  if (profile.height_inches === null) {
+    const raw = byKey.get('height_inches');
+    const n = raw && raw.trim() !== '' ? Number(raw) : NaN;
+    if (Number.isFinite(n) && n >= 48 && n <= 96) {
+      patch.height_inches = Math.round(n);
+    }
+  }
+  if (Object.keys(patch).length === 0) return profile;
+
+  try {
+    return await upsertUserProfile(supabase, userId, patch);
+  } catch {
+    return profile;
+  }
+}
+
 export async function upsertUserProfile(
   supabase: SupabaseClient,
   userId: string,

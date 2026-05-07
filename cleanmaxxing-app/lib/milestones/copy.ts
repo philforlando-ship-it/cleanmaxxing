@@ -1,0 +1,86 @@
+// User-facing copy for each milestone trigger. Authored Mister
+// P-voice strings.
+//
+// Voice posture (locked from H1/H2 framing decision):
+// - No cohort comparison. EVER.
+// - No "Achievement unlocked" / confetti / emoji.
+// - No streak count celebrations ("7 days in a row!").
+// - Lean on Option A (self-comparison) for outcome milestones,
+//   Option C (process-anchored) for behavioral milestones.
+// - Keep titles short and dry. Bodies one to two sentences.
+
+import { categoryForTriggerKey } from './types';
+
+export type MilestoneCopy = {
+  title: string;
+  body: string;
+};
+
+const STATIC_COPY: Record<string, MilestoneCopy> = {
+  protein_floor_autopilot: {
+    title: 'Protein floor — autopilot is built.',
+    body: 'You hit your floor 12 of the last 14 days. That\'s the threshold where consistent protein stops being something you have to think about and starts being how you eat.',
+  },
+  strength_consistency_8_weeks: {
+    title: 'Eight weeks consistent.',
+    body: 'Eight weeks straight with at least two strength sessions each. The volume is what produces the adaptation — the show-up is the work.',
+  },
+  hair_stage_4_completed: {
+    title: 'Hair Stage 4 — done.',
+    body: 'You hit the daily-routine target. Stage 5 unlocks from here — quarterly photo monitoring, less hands-on, lower-frequency.',
+  },
+  nutrition_plan_three_months_old: {
+    title: 'Three months on your nutrition plan.',
+    body: 'Body composition changes show up over months, not weeks. Three months in is the window where the plan starts to compound — keep the floor, give it time, come back when something shifts.',
+  },
+  strength_plan_three_months_old: {
+    title: 'Three months on your strength plan.',
+    body: 'Three months is the window where consistency starts to lock in adaptation. Strength gains are downstream of show-up rate; you\'ve been showing up.',
+  },
+  body_fat_below_25: {
+    title: 'Body fat — under 25%.',
+    body: 'Self-estimate moved into the under-25% bracket. The visual difference between this and where you started is the kind of change that compounds with the next few percent.',
+  },
+  body_fat_below_20: {
+    title: 'Body fat — under 20%.',
+    body: 'Under 20% is the bracket where definition starts becoming visible without flexing. The work to get from here to under 15% is the same work, just compounded — keep doing what got you here.',
+  },
+  body_fat_below_15: {
+    title: 'Body fat — under 15%.',
+    body: 'Under 15% is the bracket where the underlying structure shows reliably. Going below this is harder per pound and rarely the right tradeoff for general health — worth deciding whether you\'re chasing a contest peak or holding here.',
+  },
+  body_fat_below_12: {
+    title: 'Body fat — under 12%.',
+    body: 'Under 12% is competition / photo-shoot range. It costs more to maintain than to reach. Most people hold here for a window, then settle 3-5 points higher for sustainable life.',
+  },
+  weight_5lb_below_start: {
+    title: 'Five pounds below where you started.',
+    body: 'Five pounds is the threshold where the change is real, not water. The plan is producing movement — the next move is keeping the protein floor and the training cadence so the loss is fat, not muscle.',
+  },
+  sleep_consistency_4_weeks: {
+    title: 'Four weeks of consistent sleep.',
+    body: 'Standard deviation under an hour over the last four weeks. That stability — going to bed and waking at consistent times — is the highest-ROI sleep variable in the framework. The hours are downstream of the rhythm.',
+  },
+};
+
+const GLP1_THREE_MONTHS_COPY: MilestoneCopy = {
+  title: 'Three months on the GLP-1 protocol.',
+  body: 'You\'re in the window where the medication is doing its work. The next three months are when habit infrastructure either holds or doesn\'t — protein floor, training cadence, hunger tolerance. Spend this stretch building.',
+};
+
+// Returns copy for any trigger key. Falls back to a generic
+// placeholder for unknown keys (shouldn't happen — but a missing
+// copy entry shouldn't crash the surface).
+export function copyForTriggerKey(triggerKey: string): MilestoneCopy {
+  const category = categoryForTriggerKey(triggerKey);
+  if (category === 'glp1_three_months_on_protocol') {
+    return GLP1_THREE_MONTHS_COPY;
+  }
+  if (category === 'unknown') {
+    return {
+      title: 'Milestone reached.',
+      body: 'A milestone fired but the copy is missing — file a bug.',
+    };
+  }
+  return STATIC_COPY[category];
+}

@@ -52,6 +52,11 @@ export async function saveCardioAssessment(
     modality_preference: input.modality_preference,
     days_per_week: input.days_per_week,
     cardio_goal_text: input.cardio_goal_text,
+    injury_constraints: input.injury_constraints,
+    equipment_access: input.equipment_access,
+    outdoor_access: input.outdoor_access,
+    time_per_session: input.time_per_session,
+    occupation_activity: input.occupation_activity,
     updated_at: new Date().toISOString(),
   };
   const { data, error } = await supabase
@@ -118,6 +123,18 @@ function rowToAssessment(row: unknown): CardioAssessment {
       r.modality_preference as CardioAssessment['modality_preference'],
     days_per_week: r.days_per_week as CardioAssessment['days_per_week'],
     cardio_goal_text: (r.cardio_goal_text as string | null) ?? null,
+    injury_constraints:
+      (r.injury_constraints as CardioAssessment['injury_constraints'] | null) ??
+      [],
+    equipment_access:
+      (r.equipment_access as CardioAssessment['equipment_access']) ?? null,
+    outdoor_access:
+      (r.outdoor_access as CardioAssessment['outdoor_access']) ?? null,
+    time_per_session:
+      (r.time_per_session as CardioAssessment['time_per_session']) ?? null,
+    occupation_activity:
+      (r.occupation_activity as CardioAssessment['occupation_activity']) ??
+      null,
     zone_2_layer_started_at:
       (r.zone_2_layer_started_at as string | null) ?? null,
     hiit_layer_started_at:

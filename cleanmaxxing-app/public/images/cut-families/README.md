@@ -1,13 +1,18 @@
 # Cut family reference images
 
-Ten reference images, one per `CutFamily` value in `lib/hair/types.ts`.
+Twelve reference images (one per `CutFamily` value in `lib/hair/types.ts`)
+plus optional `_mature` cohort variants for the balding-friendly subset.
 The Stage 1 card renders these so the user can see what Mister P is
-recommending instead of just reading "Textured Crop / French Crop"
-and having to know what that looks like.
+recommending instead of just reading "Caesar / Short Forward Crop" and
+having to know what that looks like.
 
 ## File names (must match exactly)
 
-- `textured_crop.png` (or .jpg / .webp)
+Young cohort (default):
+
+- `caesar.png` — Caesar / Short Forward Crop (balding-friendly)
+- `high_taper_crop.png` — High Taper Crop / Modern Skin Fade (balding-friendly)
+- `textured_crop.png`
 - `ivy_league.png`
 - `textured_quiff.png`
 - `mid_length_textured.png`
@@ -18,8 +23,20 @@ and having to know what that looks like.
 - `bald_track.png`
 - `clean_shave.png`
 
-The Stage 1 card's image lookup tries `.png` first, then `.jpg`, then
-`.webp`. If no image exists, the card stays text-only.
+Mature cohort (~45+) — only the balding-friendly subset, since users 45+ are
+most likely to land on these cuts via the density-filtered menu in
+`lib/hair/cut-by-density.ts`:
+
+- `caesar_mature.png`
+- `high_taper_crop_mature.png`
+- `textured_crop_mature.png`
+- `crew_cut_mature.png`
+- `buzz_cut_mature.png`
+
+The picker in `app/(app)/plan/hair/stage-1-card.tsx` prefers the
+`_mature` variant for users 45+, then falls back to the un-suffixed
+file. Lookup order: `.png` → `.jpg` → `.webp`. If no image exists,
+the card stays text-only.
 
 ## Generation prompts (paste into DALL-E 3 or Imagen 3)
 

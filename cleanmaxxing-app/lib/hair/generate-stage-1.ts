@@ -17,6 +17,7 @@ import {
   type HairAssessment,
 } from './types';
 import { buildStage1SystemPrompt } from './stage-1-prompt';
+import { cutsForDensity } from './cut-by-density';
 import { saveHairStage1 } from './service';
 
 const STAGE_1_MODEL = 'claude-sonnet-4-6';
@@ -33,8 +34,9 @@ export async function generateAndSaveHairStage1(
     throw new Error('Stage 1 requires a personal report to be generated first.');
   }
 
-  const system = buildStage1SystemPrompt(assessment.report_text);
-  const userPrompt = `Generate Stage 1 for this user. The report above is the diagnosis. Your job is to translate it into one cut family and a short barber-instructions block. Density state on file: ${assessment.density_state}. Face shape: ${assessment.face_shape}. Stay under 180 words across both sections.`;
+  const allowedCuts = cutsForDensity(assessment.density_state);
+  const system = buildStage1SystemPrompt(assessment.report_text, allowedCuts);
+  const userPrompt = `Generate Stage 1 for this user. The report above is the diagnosis. Your job is to translate it into one cut family and a short barber-instructions block. Density state on file: ${assessment.density_state}. Face shape: ${assessment.face_shape}. Pick exactly one cut family from the ALLOWED list in the system prompt. Stay under 180 words across both sections.`;
 
   const { text } = await generateText({
     model: anthropic(STAGE_1_MODEL),

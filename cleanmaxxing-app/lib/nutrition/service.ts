@@ -5,9 +5,10 @@
 //
 // Intentionally small tracker: hit/miss + optional grams. We don't
 // store a per-user target — the brand position is that the user
-// knows their number (0.8–0.9 g/lb body weight per content) and the
-// log is about felt-sense compliance, not surveillance. A future
-// macro tracker is its own product.
+// knows their number (0.75–1.0 g/lb baseline by goal, 1.1 on GLP-1;
+// see lib/nutrition/tdee.ts for the per-cohort matrix) and the log
+// is about felt-sense compliance, not surveillance. A future macro
+// tracker is its own product.
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { addDaysToAppDay, appDayFor } from '@/lib/date/app-day';
@@ -138,6 +139,10 @@ export async function saveNutritionAssessment(
     fasting_protocol: input.fasting_protocol,
     alcohol_use: input.alcohol_use,
     cannabis_use: input.cannabis_use,
+    cooking_capacity: input.cooking_capacity,
+    dietary_pattern: input.dietary_pattern,
+    meal_service_willingness: input.meal_service_willingness,
+    snacking_style: input.snacking_style,
     nutrition_goal_text: input.nutrition_goal_text,
     updated_at: new Date().toISOString(),
   };
@@ -279,6 +284,15 @@ function rowToAssessment(row: unknown): NutritionAssessment {
       (r.alcohol_use as NutritionAssessment['alcohol_use']) ?? 'none',
     cannabis_use:
       (r.cannabis_use as NutritionAssessment['cannabis_use']) ?? 'none',
+    cooking_capacity:
+      (r.cooking_capacity as NutritionAssessment['cooking_capacity']) ?? null,
+    dietary_pattern:
+      (r.dietary_pattern as NutritionAssessment['dietary_pattern']) ?? null,
+    meal_service_willingness:
+      (r.meal_service_willingness as NutritionAssessment['meal_service_willingness']) ??
+      null,
+    snacking_style:
+      (r.snacking_style as NutritionAssessment['snacking_style']) ?? null,
     food_preferences: (r.food_preferences as string[] | null) ?? [],
     food_exclusions: (r.food_exclusions as string[] | null) ?? [],
     food_filter_text: (r.food_filter_text as string | null) ?? null,

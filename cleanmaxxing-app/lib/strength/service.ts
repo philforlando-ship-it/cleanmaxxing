@@ -55,6 +55,10 @@ export async function saveStrengthAssessment(
     equipment_access: input.equipment_access,
     current_split: input.current_split,
     strength_goal_text: input.strength_goal_text,
+    priority_muscles: input.priority_muscles,
+    lagging_muscles_text: input.lagging_muscles_text,
+    secondary_objective: input.secondary_objective,
+    injury_constraints: input.injury_constraints,
     updated_at: new Date().toISOString(),
   };
   const { data, error } = await supabase
@@ -121,6 +125,16 @@ function rowToAssessment(row: unknown): StrengthAssessment {
       r.equipment_access as StrengthAssessment['equipment_access'],
     current_split: r.current_split as StrengthAssessment['current_split'],
     strength_goal_text: (r.strength_goal_text as string | null) ?? null,
+    priority_muscles:
+      (r.priority_muscles as StrengthAssessment['priority_muscles'] | null) ??
+      [],
+    lagging_muscles_text: (r.lagging_muscles_text as string | null) ?? null,
+    secondary_objective:
+      (r.secondary_objective as StrengthAssessment['secondary_objective']) ??
+      null,
+    injury_constraints:
+      (r.injury_constraints as StrengthAssessment['injury_constraints'] | null) ??
+      [],
     selected_exercise_slugs:
       (r.selected_exercise_slugs as string[] | null) ?? [],
     excluded_exercise_slugs:

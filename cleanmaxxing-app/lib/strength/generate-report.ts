@@ -16,6 +16,7 @@ import {
   DAYS_PER_WEEK_LABEL,
   EQUIPMENT_ACCESS_LABEL,
   PRIMARY_GOAL_LABEL,
+  PRIORITY_MUSCLE_LABEL,
   STRENGTH_EXERCISES,
   type StrengthAssessment,
   type StrengthReportInputModifiers,
@@ -25,6 +26,7 @@ import {
   getRecentStrengthSessionCount,
   saveStrengthReport,
 } from './service';
+import { getStrengthFeedbackSummary } from './feedback';
 
 const REPORT_MODEL = 'claude-sonnet-4-6';
 const POV_SLUG = '19-strength-training';
@@ -41,11 +43,13 @@ export async function generateAndSaveStrengthReport(
     sessionCount,
     nutritionAssessment,
     sleepState,
+    feedbackSummary,
   ] = await Promise.all([
     supabase.from('users').select('age').eq('id', userId).maybeSingle(),
     getRecentStrengthSessionCount(supabase, userId, 7),
     getNutritionAssessment(supabase, userId),
     getSleepState(supabase, userId),
+    getStrengthFeedbackSummary(supabase, userId, 7),
   ]);
 
   const modifiers: StrengthReportInputModifiers = {
@@ -63,8 +67,19 @@ export async function generateAndSaveStrengthReport(
     selected_exercise_slugs: assessment.selected_exercise_slugs,
     excluded_exercise_slugs: assessment.excluded_exercise_slugs,
     exercise_filter_text: assessment.exercise_filter_text,
+    priority_muscles: assessment.priority_muscles,
+    lagging_muscles_text: assessment.lagging_muscles_text,
+    secondary_objective: assessment.secondary_objective,
+    injury_constraints: assessment.injury_constraints,
     beginner_ramp_completed_at: assessment.beginner_ramp_completed_at,
     last_plateau_intervention_at: assessment.last_plateau_intervention_at,
+    feedback_rows_last_7: feedbackSummary.rows_last_7_days,
+    feedback_consecutive_high_soreness:
+      feedbackSummary.consecutive_high_soreness,
+    feedback_consecutive_low_soreness:
+      feedbackSummary.consecutive_low_soreness,
+    feedback_joint_pain_count: feedbackSummary.joint_pain_count,
+    feedback_most_recent_energy: feedbackSummary.most_recent_energy,
   };
 
   const pov = await povFor(POV_SLUG);
@@ -175,6 +190,34 @@ function formatAssessmentForPrompt(
     }`,
   );
   modifierLines.push(
+    `- priority_muscles (Q5 — looksmaxxing visual-leverage muscles to bias volume + frequency toward, ${modifiers.priority_muscles.length} picked): ${
+      modifiers.priority_muscles.length === 0
+        ? 'none — default volume distribution applies'
+        : modifiers.priority_muscles
+            .map((m) => PRIORITY_MUSCLE_LABEL[m])
+            .join(', ')
+    }`,
+  );
+  modifierLines.push(
+    `- lagging_muscles_text (Q5 free-text — muscles the user feels are under-developed): ${
+      modifiers.lagging_muscles_text
+        ? `"${modifiers.lagging_muscles_text}"`
+        : 'none volunteered'
+    }`,
+  );
+  modifierLines.push(
+    `- secondary_objective (Q7 — strength + something else, single value): ${
+      modifiers.secondary_objective ?? 'not set — treat as none'
+    }`,
+  );
+  modifierLines.push(
+    `- injury_constraints (Q8 — chronic conditions producing exercise EXCLUSIONS, multi-select): ${
+      modifiers.injury_constraints.length === 0
+        ? 'none'
+        : modifiers.injury_constraints.join(', ')
+    }`,
+  );
+  modifierLines.push(
     `- beginner_ramp_completed_at (stage milestone): ${
       modifiers.beginner_ramp_completed_at ?? 'not yet — user is in the ramp window if training_experience says so'
     }`,
@@ -183,6 +226,31 @@ function formatAssessmentForPrompt(
     `- last_plateau_intervention_at (stage milestone): ${
       modifiers.last_plateau_intervention_at ??
       'never — user has not run the SFR re-test gate'
+    }`,
+  );
+  modifierLines.push(
+    `- recovery_check_rows_last_7 (strength_session_feedback morning-after entries): ${modifiers.feedback_rows_last_7}`,
+  );
+  modifierLines.push(
+    `- consecutive_high_soreness_muscles (soreness=3 on two recent rows — DROP a set on these next session): ${
+      modifiers.feedback_consecutive_high_soreness.length === 0
+        ? 'none'
+        : modifiers.feedback_consecutive_high_soreness.join(', ')
+    }`,
+  );
+  modifierLines.push(
+    `- consecutive_low_soreness_muscles (soreness<=2 on two recent rows — eligible to ADD a set): ${
+      modifiers.feedback_consecutive_low_soreness.length === 0
+        ? 'none'
+        : modifiers.feedback_consecutive_low_soreness.join(', ')
+    }`,
+  );
+  modifierLines.push(
+    `- joint_pain_reports_in_window: ${modifiers.feedback_joint_pain_count}`,
+  );
+  modifierLines.push(
+    `- most_recent_morning_energy_1_5: ${
+      modifiers.feedback_most_recent_energy ?? 'no recent reading'
     }`,
   );
 

@@ -33,6 +33,62 @@ export type StrengthCurrentSplit =
   | '5_day_aesthetic'
   | 'other';
 
+// Visual-leverage stack from POV 19. The user picks 0-3; the
+// report biases volume + frequency toward these.
+export type StrengthPriorityMuscle =
+  | 'side_delts'
+  | 'upper_chest'
+  | 'lats_back_width'
+  | 'arms'
+  | 'glutes'
+  | 'hamstrings';
+
+export const PRIORITY_MUSCLES: ReadonlyArray<StrengthPriorityMuscle> = [
+  'side_delts',
+  'upper_chest',
+  'lats_back_width',
+  'arms',
+  'glutes',
+  'hamstrings',
+];
+
+export const PRIORITY_MUSCLE_MAX = 3;
+
+// T1 — multi-objective intent. v1 caps at one secondary objective per
+// user; the prompt's combinatorial space is bounded by primary × this.
+// Adding more secondaries later is a Zod-schema change, not a migration.
+export type StrengthSecondaryObjective =
+  | 'weight_loss'
+  | 'core_strength'
+  | 'mobility_flexibility'
+  | 'cardiovascular_health'
+  | 'general_function'
+  | 'none';
+
+export const SECONDARY_OBJECTIVES: ReadonlyArray<StrengthSecondaryObjective> = [
+  'weight_loss',
+  'core_strength',
+  'mobility_flexibility',
+  'cardiovascular_health',
+  'general_function',
+  'none',
+];
+
+// Partial A4 — high-impact injury subset for 35+ chronic conditions.
+// Multi-select since knee + lower-back, etc. is a common pair.
+export type StrengthInjuryConstraint =
+  | 'lower_back_pain'
+  | 'knee_pain'
+  | 'shoulder_or_neck_pain'
+  | 'elbow_pain';
+
+export const INJURY_CONSTRAINTS: ReadonlyArray<StrengthInjuryConstraint> = [
+  'lower_back_pain',
+  'knee_pain',
+  'shoulder_or_neck_pain',
+  'elbow_pain',
+];
+
 export type StrengthAssessment = {
   user_id: string;
   primary_goal: StrengthPrimaryGoal;
@@ -40,6 +96,19 @@ export type StrengthAssessment = {
   equipment_access: StrengthEquipmentAccess;
   current_split: StrengthCurrentSplit;
   strength_goal_text: string | null;
+  // Q5 (migration 0062): looksmaxxing priority muscles + optional
+  // "what feels lagging" free text. Empty array = no priority bias.
+  priority_muscles: StrengthPriorityMuscle[];
+  lagging_muscles_text: string | null;
+  // Q6 (migration 0067): one secondary objective alongside the
+  // primary goal. Null when the user hasn't filled this in since
+  // the field landed; nominally 'none' for "no secondary."
+  secondary_objective: StrengthSecondaryObjective | null;
+  // Q7 (migration 0067): high-impact injury constraints. Empty array
+  // = no constraints. Drives exercise EXCLUSIONS in the report's
+  // recommendations (the user's selected_exercise_slugs stay intact;
+  // the report just routes around them).
+  injury_constraints: StrengthInjuryConstraint[];
   // User's exercise picker preferences (added in migration 0057).
   // Read by the report generator on each (re-)generation; updates do
   // NOT trigger regeneration on their own — separate endpoint.
@@ -90,6 +159,14 @@ export type StrengthReportInputModifiers = {
   selected_exercise_slugs: string[];
   excluded_exercise_slugs: string[];
   exercise_filter_text: string | null;
+  // Q5 priority muscles + lagging text (migration 0062), snapshotted
+  // at gen time so the prompt's volume/frequency bias is reproducible.
+  priority_muscles: StrengthPriorityMuscle[];
+  lagging_muscles_text: string | null;
+  // Q6 + Q7 (migration 0067) snapshotted into modifiers for prompt
+  // input. secondary_objective null = user hasn't filled the field.
+  secondary_objective: StrengthSecondaryObjective | null;
+  injury_constraints: StrengthInjuryConstraint[];
   // Stage milestone — beginner ramp graduation. When non-null the
   // prompt treats the user as past the ramp regardless of
   // training_experience.
@@ -97,6 +174,13 @@ export type StrengthReportInputModifiers = {
   // Stage milestone — plateau intervention. When non-null the prompt
   // leans on the SFR test re-evaluation framing for the next move.
   last_plateau_intervention_at: string | null;
+  // Autoregulation summary — last 7 days of morning-after recovery
+  // checks (migration 0063). Empty when no feedback rows exist.
+  feedback_rows_last_7: number;
+  feedback_consecutive_high_soreness: string[];
+  feedback_consecutive_low_soreness: string[];
+  feedback_joint_pain_count: number;
+  feedback_most_recent_energy: number | null;
 };
 
 export const PRIMARY_GOAL_LABEL: Record<StrengthPrimaryGoal, string> = {
@@ -132,6 +216,41 @@ export const CURRENT_SPLIT_LABEL: Record<StrengthCurrentSplit, string> = {
   bro_split: 'Body-part split (chest day, back day, legs day, etc.)',
   '5_day_aesthetic': '5-day aesthetic split (Israetel-style)',
   other: 'Other / custom',
+};
+
+export const PRIORITY_MUSCLE_LABEL: Record<StrengthPriorityMuscle, string> = {
+  side_delts: 'Side delts (shoulder width — V-taper from the front)',
+  upper_chest: 'Upper chest (clavicular pec — fills out the shirt up top)',
+  lats_back_width: 'Lats / back width (V-taper from behind)',
+  arms: 'Arms (biceps + triceps — sleeve fill)',
+  glutes: 'Glutes (silhouette from the side, trousers + jeans hang)',
+  hamstrings: 'Hamstrings (rear leg shape, partner of glute work)',
+};
+
+export const SECONDARY_OBJECTIVE_LABEL: Record<
+  StrengthSecondaryObjective,
+  string
+> = {
+  weight_loss: 'Weight loss — strength training while cutting at the same time',
+  core_strength:
+    'Core strength — explicit core priority (back protection, daily function)',
+  mobility_flexibility:
+    'Mobility & flexibility — keep range of motion, less stiffness',
+  cardiovascular_health:
+    'Cardiovascular health — integrate zone-2 cardio with the strength work',
+  general_function:
+    'General function — daily-life capability (carries, unilateral, posture)',
+  none: 'None — strength is the only goal',
+};
+
+export const INJURY_CONSTRAINT_LABEL: Record<
+  StrengthInjuryConstraint,
+  string
+> = {
+  lower_back_pain: 'Lower back pain — chronic or recurring',
+  knee_pain: 'Knee pain — chronic or recurring',
+  shoulder_or_neck_pain: 'Shoulder or neck pain — chronic or recurring',
+  elbow_pain: 'Elbow pain — tennis / golfer’s elbow or similar',
 };
 
 // =====================
@@ -895,6 +1014,46 @@ export const StrengthAssessmentInputSchema = z.object({
     'other',
   ]),
   strength_goal_text: z.string().max(280).nullable(),
+  // Q5: 0-3 priority muscles + optional lagging note. Cardinality
+  // enforced here (DB has only the value-set check). Empty array is
+  // valid — means "no priority bias, default volume distribution."
+  priority_muscles: z
+    .array(
+      z.enum([
+        'side_delts',
+        'upper_chest',
+        'lats_back_width',
+        'arms',
+        'glutes',
+        'hamstrings',
+      ]),
+    )
+    .max(PRIORITY_MUSCLE_MAX),
+  lagging_muscles_text: z.string().max(280).nullable(),
+  // Q6 + Q7 (migration 0067). Both nullable to support the migration
+  // window where existing assessments don't have these. The form
+  // requires them on next submit. injury_constraints enum-array
+  // enforced at the API boundary (DB stores raw text[]).
+  secondary_objective: z
+    .enum([
+      'weight_loss',
+      'core_strength',
+      'mobility_flexibility',
+      'cardiovascular_health',
+      'general_function',
+      'none',
+    ])
+    .nullable(),
+  injury_constraints: z
+    .array(
+      z.enum([
+        'lower_back_pain',
+        'knee_pain',
+        'shoulder_or_neck_pain',
+        'elbow_pain',
+      ]),
+    )
+    .max(4),
 });
 
 export type StrengthAssessmentInput = z.infer<

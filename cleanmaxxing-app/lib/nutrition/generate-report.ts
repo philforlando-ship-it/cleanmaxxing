@@ -7,7 +7,10 @@ import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { povFor } from '@/lib/content/pov';
-import { getUserProfile } from '@/lib/profile/service';
+import {
+  getUserProfile,
+  syncBodyStatsFromSurveyIfMissing,
+} from '@/lib/profile/service';
 import {
   ALCOHOL_USE_LABEL,
   CANNABIS_USE_LABEL,
@@ -26,7 +29,7 @@ import {
   saveNutritionReport,
   saveNutritionTargets,
 } from './service';
-import { computeNutritionTargets } from './tdee';
+import { computeNutritionTargets, effectiveActivityLevel } from './tdee';
 
 const REPORT_MODEL = 'claude-sonnet-4-6';
 const POV_SLUG = '13-body-physical-foundation';
@@ -36,7 +39,14 @@ export async function generateAndSaveNutritionReport(
   userId: string,
   assessment: NutritionAssessment,
 ): Promise<{ report_text: string }> {
-  const profile = await getUserProfile(supabase, userId);
+  const initialProfile = await getUserProfile(supabase, userId);
+  // Backfill weight/height from survey_responses if profile columns
+  // are still null. Same reason as /plan/nutrition page.
+  const profile = await syncBodyStatsFromSurveyIfMissing(
+    supabase,
+    userId,
+    initialProfile,
+  );
 
   const [{ data: userRow }, proteinSignal] = await Promise.all([
     supabase.from('users').select('age').eq('id', userId).maybeSingle(),
@@ -46,13 +56,20 @@ export async function generateAndSaveNutritionReport(
   const age = (userRow as { age: number | null } | null)?.age ?? null;
 
   // Compute the deterministic targets (TDEE / calorie target / macro
-  // grams) from profile data + goal direction. These are nullable when
-  // the profile is incomplete; the prompt has a fallback rule.
+  // grams) from profile data + goal direction. activity_level is
+  // resolved via effectiveActivityLevel — uses explicit profile value
+  // when set, infers from daily_training_minutes when not. Targets are
+  // still nullable when weight/height/age are missing; the prompt has
+  // a fallback rule.
+  const activity = effectiveActivityLevel({
+    explicit: profile.activity_level,
+    daily_training_minutes: profile.daily_training_minutes,
+  });
   const targets = computeNutritionTargets({
     weight_lbs: profile.current_weight_lbs,
     height_inches: profile.height_inches,
     age,
-    activity_level: profile.activity_level,
+    activity_level: activity.value,
     goal_direction: assessment.goal_direction,
     current_interventions: profile.current_interventions,
   });
@@ -77,6 +94,10 @@ export async function generateAndSaveNutritionReport(
     fasting_protocol: assessment.fasting_protocol,
     alcohol_use: assessment.alcohol_use,
     cannabis_use: assessment.cannabis_use,
+    cooking_capacity: assessment.cooking_capacity,
+    dietary_pattern: assessment.dietary_pattern,
+    meal_service_willingness: assessment.meal_service_willingness,
+    snacking_style: assessment.snacking_style,
     tdee_estimate: targets.tdee_estimate,
     calorie_target: targets.calorie_target,
     protein_target_g: targets.protein_target_g,
@@ -160,6 +181,20 @@ function formatAssessmentForPrompt(
   );
   modifierLines.push(`- alcohol_use: ${modifiers.alcohol_use}`);
   modifierLines.push(`- cannabis_use: ${modifiers.cannabis_use}`);
+
+  // T2 capacity & willingness modifiers
+  modifierLines.push(
+    `- cooking_capacity: ${modifiers.cooking_capacity ?? 'not set — work from felt sense'}`,
+  );
+  modifierLines.push(
+    `- dietary_pattern: ${modifiers.dietary_pattern ?? 'not set'}`,
+  );
+  modifierLines.push(
+    `- meal_service_willingness: ${modifiers.meal_service_willingness ?? 'not set'}`,
+  );
+  modifierLines.push(
+    `- snacking_style: ${modifiers.snacking_style ?? 'not set'}`,
+  );
 
   // v2 computed targets (numbers — load-bearing for the prompt)
   modifierLines.push(

@@ -103,7 +103,36 @@ Frame rules (strict):
 - No text, no labels, no annotations, no watermarks.
 - Single subject, single composition, single image.`;
 
+// Mature-cohort prefix — used when --cohort=mature is passed. Models a
+// mid-40s man with mature hairline / mild thinning so the imagery
+// matches the audience for the balding-friendly subset of cuts. The
+// `_mature` suffix in the filename is the visual fork; the picker on
+// the Stage 1 card prefers the mature variant for users 45+.
+const CUT_FAMILY_PREFIX_MATURE = `Photoreal portrait of a SINGLE male model in his mid-40s with a mature hairline and slight gray at the temples acceptable, naturally aging well — real-looking face, no cosmetic enhancement, no obviously young features. Neutral expression, head and upper shoulders only, looking forward, plain neutral gray studio background, even soft lighting, no styling products visible in frame, hair as the only focus.
+
+Composition rules (strict):
+- Subject is centered horizontally in the frame.
+- Head occupies the upper-middle third of the composition.
+- Head and shoulders together fill roughly 60% of the image area — not a tight zoom, not a distant shot.
+- Camera distance: standard portrait headshot, like a professional ID photo.
+
+Frame rules (strict):
+- ONE photograph fills the entire output.
+- No diptych, no split frame, no before/after, no comparison shot, no side-by-side, no grid, no collage, no multiple poses.
+- No text, no labels, no annotations, no watermarks.
+- Single subject, single composition, single image.`;
+
 const CUT_FAMILIES: ReadonlyArray<{ filename: string; suffix: string }> = [
+  {
+    filename: 'caesar.png',
+    suffix:
+      'Short top about an inch in length, deliberately combed forward in a clean fringe across the forehead, uniform low height with no lift or volume, low taper on the sides. Visibly designed around a mature or slightly receding hairline — the forward fringe is the focal point and disguises any recession at the temples. Matte finish, clean clipper work on the sides.',
+  },
+  {
+    filename: 'high_taper_crop.png',
+    suffix:
+      'Very high taper or skin fade with the visual line of the taper sitting well above the ear, almost halfway up the side of the head. Top kept short, under one inch, lightly textured forward with a subtle fringe. Modern barbershop aesthetic — sharp clipper line at the high taper, clean transition from skin to hair. Strong jaw and short well-groomed beard or stubble for face-frame contrast.',
+  },
   {
     filename: 'textured_crop.png',
     suffix:
@@ -160,8 +189,11 @@ const CUT_FAMILIES: ReadonlyArray<{ filename: string; suffix: string }> = [
 // CLI args
 // ==========================================
 
+type Cohort = 'young' | 'mature';
+
 type Args = {
   only: 'face-shapes' | 'cut-families' | 'all';
+  cohort: Cohort;
   force: boolean;
   model: string;
   quality: string;
@@ -171,6 +203,7 @@ type Args = {
 function parseArgs(argv: readonly string[]): Args {
   const args: Args = {
     only: 'all',
+    cohort: 'young',
     force: false,
     model: 'dall-e-3',
     quality: 'standard',
@@ -181,6 +214,9 @@ function parseArgs(argv: readonly string[]): Args {
     else if (arg.startsWith('--only=')) {
       const v = arg.slice('--only='.length);
       if (v === 'face-shapes' || v === 'cut-families') args.only = v;
+    } else if (arg.startsWith('--cohort=')) {
+      const v = arg.slice('--cohort='.length);
+      if (v === 'young' || v === 'mature') args.cohort = v;
     } else if (arg.startsWith('--model=')) {
       args.model = arg.slice('--model='.length);
     } else if (arg.startsWith('--quality=')) {
@@ -191,6 +227,20 @@ function parseArgs(argv: readonly string[]): Args {
   }
   return args;
 }
+
+// The mature cohort renders only the balding-friendly subset, since
+// users 45+ are most likely to land on these cuts via the
+// density-filtered menu in lib/hair/cut-by-density.ts. The other
+// young-only cuts (quiff, slick back, curtains, ivy league,
+// mid-length, bald_track, clean_shave) stay un-paired in the mature
+// directory until proven needed.
+const MATURE_CUT_SLUGS: ReadonlyArray<string> = [
+  'caesar',
+  'high_taper_crop',
+  'textured_crop',
+  'crew_cut',
+  'buzz_cut',
+];
 
 // ==========================================
 // Generation
@@ -353,14 +403,34 @@ async function main() {
   }
 
   if (args.only === 'cut-families' || args.only === 'all') {
-    await runBatch(
-      client,
-      args,
-      'Cut families',
-      join(repoRoot, 'public', 'images', 'cut-families'),
-      CUT_FAMILY_PREFIX,
-      CUT_FAMILIES,
-    );
+    if (args.cohort === 'mature') {
+      // Mature cohort: filter to the balding-friendly subset and
+      // suffix each filename with `_mature` so the picker on the
+      // Stage 1 card can fork on cohort.
+      const matureItems = CUT_FAMILIES.filter((item) =>
+        MATURE_CUT_SLUGS.includes(item.filename.replace(/\.png$/, '')),
+      ).map((item) => ({
+        ...item,
+        filename: item.filename.replace(/\.png$/, '_mature.png'),
+      }));
+      await runBatch(
+        client,
+        args,
+        'Cut families (mature, ~45)',
+        join(repoRoot, 'public', 'images', 'cut-families'),
+        CUT_FAMILY_PREFIX_MATURE,
+        matureItems,
+      );
+    } else {
+      await runBatch(
+        client,
+        args,
+        'Cut families',
+        join(repoRoot, 'public', 'images', 'cut-families'),
+        CUT_FAMILY_PREFIX,
+        CUT_FAMILIES,
+      );
+    }
   }
 
   console.log('\nDone. Reload /plan/hair to see the images render.');

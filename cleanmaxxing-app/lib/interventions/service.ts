@@ -70,6 +70,34 @@ export async function getIntervention(
   return data as Intervention;
 }
 
+// Lightweight state derivation for /today tiles. Returns the rollup
+// of a Pattern D protocol type for the given user without fetching
+// every column or pulling events. Three states: no row of this type
+// at all, ≥1 active (on_protocol or paused), or all rows status='off'.
+//
+// Used by /today/glp1-plan-card et al — keeps the today render path
+// from doing a full listInterventions when only this rollup is needed.
+export type ProtocolRollup = 'no_protocol' | 'on_protocol' | 'already_off';
+
+export async function getProtocolRollup(
+  supabase: SupabaseClient,
+  userId: string,
+  type: InterventionType,
+): Promise<ProtocolRollup> {
+  const { data, error } = await supabase
+    .from('interventions')
+    .select('status')
+    .eq('user_id', userId)
+    .eq('type', type);
+  if (error) throw error;
+  const rows = (data ?? []) as Array<{ status: string }>;
+  if (rows.length === 0) return 'no_protocol';
+  if (rows.some((r) => r.status === 'on_protocol' || r.status === 'paused')) {
+    return 'on_protocol';
+  }
+  return 'already_off';
+}
+
 // Look up the user's currently-on-protocol intervention of a given
 // type, if any. Returns null when none exists. Used by Pattern D
 // surfaces to avoid creating a duplicate active row when the user

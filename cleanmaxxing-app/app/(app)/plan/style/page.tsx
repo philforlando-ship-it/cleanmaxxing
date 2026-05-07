@@ -14,12 +14,22 @@ import { redirect } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { createClient } from '@/lib/supabase/server';
-import { getStyleAssessment } from '@/lib/style/service';
+import {
+  getStyleAssessment,
+  isStyleReportStale,
+} from '@/lib/style/service';
+import { getUserProfile } from '@/lib/profile/service';
+import { chipsForArchetype } from '@/lib/style/closet-audit-content';
+import { foundationPiecesFor } from '@/lib/style/foundation-pieces-content';
+import { fitPrinciplesFor } from '@/lib/style/fit-calibration-content';
 import type { StyleAssessment } from '@/lib/style/types';
 import {
   StyleAssessmentForm,
   type StyleAssessmentInitialValues,
 } from './assessment-form';
+import { StyleStage1Card } from './stage-1-card';
+import { StyleStage2Card } from './stage-2-card';
+import { StyleStage3Card } from './stage-3-card';
 
 type Props = {
   searchParams: Promise<{ edit?: string }>;
@@ -38,6 +48,27 @@ export default async function StylePlanPage({ searchParams }: Props) {
   const assessment = await getStyleAssessment(supabase, user.id);
   const hasReport = assessment?.report_text != null;
   const showForm = !assessment || !hasReport || editParam;
+
+  // Profile + age fetched once and threaded into every modifier-aware
+  // surface (staleness banner, Stage 2 piece guidance, Stage 3
+  // principles).
+  const [profile, userRow] = await Promise.all([
+    getUserProfile(supabase, user.id),
+    supabase.from('users').select('age').eq('id', user.id).maybeSingle(),
+  ]);
+  const age =
+    (userRow.data as { age: number | null } | null)?.age ?? null;
+  const ageCohort: 'young' | 'mature' = age != null && age >= 45 ? 'mature' : 'young';
+
+  const stalenessReasons =
+    assessment && hasReport
+      ? isStyleReportStale(assessment.report_input_modifiers, {
+          bf_pct_self_estimate: profile.bf_pct_self_estimate,
+          budget_tier: profile.budget_tier,
+          current_interventions: profile.current_interventions,
+          age,
+        })
+      : [];
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -89,6 +120,23 @@ export default async function StylePlanPage({ searchParams }: Props) {
             }
           />
         </section>
+      )}
+
+      {!showForm && assessment && hasReport && stalenessReasons.length > 0 && (
+        <aside className="mt-8 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+          <p className="font-medium">Your plan is out of date.</p>
+          <p className="mt-1 leading-relaxed">
+            This plan was written before some of your inputs changed.
+            Re-submit your answers and Mister P will rewrite it.{' '}
+            <Link
+              href="/plan/style?edit=1"
+              className="underline decoration-dotted underline-offset-2"
+            >
+              Edit answers
+            </Link>
+            .
+          </p>
+        </aside>
       )}
 
       {!showForm && assessment && hasReport && (
@@ -149,6 +197,46 @@ export default async function StylePlanPage({ searchParams }: Props) {
             </Link>
           </footer>
         </article>
+      )}
+
+      {!showForm && assessment && hasReport && (
+        <>
+          <StyleStage1Card
+            targetArchetype={assessment.target_archetype}
+            ageCohort={ageCohort}
+            chips={chipsForArchetype(assessment.target_archetype)}
+            existingSelections={assessment.stage_1_chip_selections}
+            auditText={assessment.stage_1_audit_text}
+            generatedAt={assessment.stage_1_generated_at}
+            completedAt={assessment.stage_1_completed_at}
+          />
+
+          {assessment.stage_1_completed_at && (
+            <StyleStage2Card
+              pieces={foundationPiecesFor({
+                archetype: assessment.target_archetype,
+                frame: assessment.frame_estimate,
+                budget: profile.budget_tier,
+                bf_pct: profile.bf_pct_self_estimate,
+                age,
+              })}
+              initialAcquired={assessment.stage_2_pieces_acquired}
+              completedAt={assessment.stage_2_completed_at}
+            />
+          )}
+
+          {assessment.stage_2_completed_at && (
+            <StyleStage3Card
+              principles={fitPrinciplesFor({
+                archetype: assessment.target_archetype,
+                frame: assessment.frame_estimate,
+                bf_pct: profile.bf_pct_self_estimate,
+                age,
+              })}
+              acknowledgedAt={assessment.stage_3_acknowledged_at}
+            />
+          )}
+        </>
       )}
     </main>
   );

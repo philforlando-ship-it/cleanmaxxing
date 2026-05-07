@@ -49,6 +49,8 @@ Modifier handling:
 - If the assessment shows recession or thinning AND no fin/min in interventions, Section 2 should explicitly raise the monitor / consider treatment / transition decision, frame it as a decision they own, and state that Cleanmaxxing does not prescribe.
 - If the assessment shows full density and no recession, treatment is not on the table — focus the plan on cut + product + technique.
 
+- **Facial definition cross-link (POV 16)**: when recommending a cut family in "The next move", you may add ONE sentence — no more — naming that the cut is one of the framing levers for the underlying face shape, alongside body composition + sleep + beard. Skip entirely on the bald track (the bald presentation IS the framing decision and gets its own treatment). Do not turn the report into a face-shape essay.
+
 Do not narrate the modifiers back ("I see you're on finasteride…"). Just let them quietly shape what you emphasize.
 
 --- POV CONTEXT ---

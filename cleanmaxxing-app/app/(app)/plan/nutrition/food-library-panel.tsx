@@ -11,10 +11,13 @@ import { useMemo, useRef, useState, useTransition } from 'react';
 import {
   FOOD_CATEGORY_LABEL,
   FOOD_CATEGORY_PICK_RANGE,
-  FOODS,
   type Food,
   type FoodCategory,
+  type CookingCapacity,
+  type DietaryPattern,
+  type GoalDirection,
 } from '@/lib/nutrition/types';
+import { getRecommendedFoods } from '@/lib/nutrition/recommended-foods';
 
 const CATEGORY_ORDER: FoodCategory[] = [
   'protein',
@@ -26,6 +29,13 @@ const CATEGORY_ORDER: FoodCategory[] = [
 ];
 
 type Props = {
+  // T2 / picker-bias inputs (May 2026). When dietaryPattern or
+  // cookingCapacity is null (pre-T2 assessment), the recommender
+  // gracefully degrades — no dietary filter, no cooking-capacity
+  // up-rank.
+  dietaryPattern: DietaryPattern | null;
+  cookingCapacity: CookingCapacity | null;
+  goalDirection: GoalDirection;
   initialPreferences: string[];
   initialExclusions: string[];
   initialFilterText: string | null;
@@ -34,6 +44,9 @@ type Props = {
 type FoodStateMap = Map<string, 'preferred' | 'excluded' | 'neutral'>;
 
 export function FoodLibraryPanel({
+  dietaryPattern,
+  cookingCapacity,
+  goalDirection,
   initialPreferences,
   initialExclusions,
   initialFilterText,
@@ -47,6 +60,35 @@ export function FoodLibraryPanel({
     return m;
   });
   const [filterText, setFilterText] = useState(initialFilterText ?? '');
+
+  // Recommended subset based on assessment + profile. The picker
+  // default-renders the recommended group; "Show all" toggle reveals
+  // filteredOut foods dimmed below it. Foods filtered by an explicit
+  // food_exclusion stay in filteredOut so the user can see what they
+  // already excluded.
+  const recommendedResult = useMemo(
+    () =>
+      getRecommendedFoods({
+        dietary_pattern: dietaryPattern,
+        cooking_capacity: cookingCapacity,
+        goal_direction: goalDirection,
+        food_exclusions: initialExclusions,
+      }),
+    [dietaryPattern, cookingCapacity, goalDirection, initialExclusions],
+  );
+
+  // Auto-expand if user has preferences in the filteredOut set —
+  // they need to see those picks. Once toggled manually, that's
+  // respected.
+  const filteredOutSlugSet = useMemo(
+    () => new Set(recommendedResult.filteredOut.map((f) => f.slug)),
+    [recommendedResult.filteredOut],
+  );
+  const hasFilteredOutPicks = useMemo(
+    () => initialPreferences.some((s) => filteredOutSlugSet.has(s)),
+    [initialPreferences, filteredOutSlugSet],
+  );
+  const [showAll, setShowAll] = useState(hasFilteredOutPicks);
 
   const initialPreferencesRef = useRef(new Set(initialPreferences));
   const initialExclusionsRef = useRef(new Set(initialExclusions));
@@ -73,27 +115,60 @@ export function FoodLibraryPanel({
   const [error, setError] = useState<string | null>(null);
   const [savedHint, setSavedHint] = useState<string | null>(null);
 
-  const grouped = useMemo(() => {
+  // Apply the free-form text filter on top of recommended (always)
+  // and filteredOut (when showAll). The LLM still gets the full
+  // filter_text in the meal plan prompt.
+  const filterLower = filterText.trim().toLowerCase();
+  function passesText(f: Food): boolean {
+    if (filterLower.length === 0) return true;
+    return `${f.label} ${f.tags.join(' ')}`.toLowerCase().includes(filterLower);
+  }
+
+  const groupedRecommended = useMemo(() => {
     const map = new Map<FoodCategory, Food[]>();
-    for (const f of FOODS) {
+    for (const f of recommendedResult.recommended) {
+      if (!passesText(f)) continue;
       const list = map.get(f.category) ?? [];
       list.push(f);
       map.set(f.category, list);
     }
     return map;
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recommendedResult.recommended, filterLower]);
 
-  // Per-category counts for the "X of Y picked" hint.
+  const groupedFilteredOut = useMemo(() => {
+    if (!showAll) return new Map<FoodCategory, Food[]>();
+    const map = new Map<FoodCategory, Food[]>();
+    for (const f of recommendedResult.filteredOut) {
+      if (!passesText(f)) continue;
+      const list = map.get(f.category) ?? [];
+      list.push(f);
+      map.set(f.category, list);
+    }
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recommendedResult.filteredOut, showAll, filterLower]);
+
+  // Per-category counts for the "X of Y picked" hint. Counts across
+  // BOTH recommended and filteredOut so the "X picked" doesn't lie
+  // when the user has selections in the dimmed group.
   const categoryPickedCount = useMemo(() => {
     const counts = new Map<FoodCategory, number>();
     for (const cat of CATEGORY_ORDER) counts.set(cat, 0);
-    for (const food of FOODS) {
+    for (const food of [
+      ...recommendedResult.recommended,
+      ...recommendedResult.filteredOut,
+    ]) {
       if (stateMap.get(food.slug) === 'preferred') {
         counts.set(food.category, (counts.get(food.category) ?? 0) + 1);
       }
     }
     return counts;
-  }, [stateMap]);
+  }, [
+    recommendedResult.recommended,
+    recommendedResult.filteredOut,
+    stateMap,
+  ]);
 
   function setFoodState(slug: string, next: 'preferred' | 'excluded') {
     setStateMap((prev) => {
@@ -222,7 +297,7 @@ export function FoodLibraryPanel({
 
       <div className="mt-6 space-y-7">
         {CATEGORY_ORDER.map((category) => {
-          const list = grouped.get(category);
+          const list = groupedRecommended.get(category);
           if (!list || list.length === 0) return null;
           const range = FOOD_CATEGORY_PICK_RANGE[category];
           const picked = categoryPickedCount.get(category) ?? 0;
@@ -252,6 +327,48 @@ export function FoodLibraryPanel({
             </div>
           );
         })}
+
+        {/* Show all toggle — reveals foods filtered out by dietary
+            pattern or explicit exclusion. The user can still pick
+            from these; the recommendation is informational. */}
+        {recommendedResult.filteredOut.length > 0 && (
+          <div className="border-t border-zinc-200 pt-4 dark:border-zinc-800">
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="text-[12px] text-zinc-600 underline decoration-dotted underline-offset-2 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+            >
+              {showAll ? 'Hide' : 'Show'}{' '}
+              {recommendedResult.filteredOut.length} more foods that
+              don&rsquo;t fit your profile
+            </button>
+            {showAll && (
+              <div className="mt-4 space-y-7 opacity-70">
+                {CATEGORY_ORDER.map((category) => {
+                  const list = groupedFilteredOut.get(category);
+                  if (!list || list.length === 0) return null;
+                  return (
+                    <div key={`fo-${category}`}>
+                      <h4 className="text-[12px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                        {FOOD_CATEGORY_LABEL[category]}
+                      </h4>
+                      <ul className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                        {list.map((food) => (
+                          <FoodChip
+                            key={food.slug}
+                            food={food}
+                            state={stateMap.get(food.slug) ?? 'neutral'}
+                            onMark={(next) => setFoodState(food.slug, next)}
+                          />
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {error && (
@@ -306,10 +423,23 @@ function FoodChip({
           back gracefully if the image isn't generated yet (next/image
           shows alt text + the bg color shows through). */}
       <FoodImage slug={food.slug} label={food.label} />
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-[13px] leading-tight text-zinc-900 dark:text-zinc-100">
-          {food.label}
-        </span>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <span className="block text-[13px] leading-tight text-zinc-900 dark:text-zinc-100">
+            {food.label}
+          </span>
+          {/* Macros — educational only. Format: "165 kcal · 31p / 0c / 4f"
+              with the serving label tucked underneath. The user reads the
+              SHAPE of the food (mostly protein? mostly carbs?) without
+              weighing anything. */}
+          <span className="mt-0.5 block text-[10px] leading-tight text-zinc-500 dark:text-zinc-400">
+            {food.kcal_per_serving} kcal · {food.protein_g}p / {food.carb_g}c
+            / {food.fat_g}f
+          </span>
+          <span className="block text-[10px] leading-tight text-zinc-400 dark:text-zinc-500">
+            per {food.serving_label}
+          </span>
+        </div>
         <div className="flex shrink-0 items-center gap-1 text-[10px]">
           <button
             type="button"

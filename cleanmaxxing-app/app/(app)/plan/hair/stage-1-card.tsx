@@ -15,26 +15,47 @@ import { useRouter } from 'next/navigation';
 import {
   CUT_FAMILY_LABEL,
   type CutFamily,
+  type DensityState,
 } from '@/lib/hair/types';
+import { cutsForDensity } from '@/lib/hair/cut-by-density';
 
-// Tries .png → .jpg → .webp before giving up and rendering nothing.
+// Tries the cohort-aware variant first (e.g. caesar_mature.png for
+// users 45+), then the un-suffixed file, then .jpg/.webp fallbacks.
 // Lets reference assets ship incrementally without the UI breaking
 // when only some cut family images exist.
-function CutFamilyImage({ cutFamily }: { cutFamily: CutFamily }) {
-  const [extIndex, setExtIndex] = useState(0);
+function CutFamilyImage({
+  cutFamily,
+  cohort,
+  className = 'mt-3 max-h-64 w-full rounded-md object-cover',
+}: {
+  cutFamily: CutFamily;
+  cohort: 'young' | 'mature';
+  className?: string;
+}) {
+  const candidates =
+    cohort === 'mature'
+      ? [
+          `${cutFamily}_mature.png`,
+          `${cutFamily}_mature.jpg`,
+          `${cutFamily}_mature.webp`,
+          `${cutFamily}.png`,
+          `${cutFamily}.jpg`,
+          `${cutFamily}.webp`,
+        ]
+      : [`${cutFamily}.png`, `${cutFamily}.jpg`, `${cutFamily}.webp`];
+  const [idx, setIdx] = useState(0);
   const [hidden, setHidden] = useState(false);
-  const exts = ['.png', '.jpg', '.webp'];
   if (hidden) return null;
   return (
     /* eslint-disable-next-line @next/next/no-img-element */
     <img
-      src={`/images/cut-families/${cutFamily}${exts[extIndex]}`}
+      src={`/images/cut-families/${candidates[idx]}`}
       alt={CUT_FAMILY_LABEL[cutFamily]}
       onError={() => {
-        if (extIndex < exts.length - 1) setExtIndex(extIndex + 1);
+        if (idx < candidates.length - 1) setIdx(idx + 1);
         else setHidden(true);
       }}
-      className="mt-3 max-h-64 w-full rounded-md object-cover"
+      className={className}
     />
   );
 }
@@ -51,6 +72,11 @@ type Props = {
   isPremium: boolean;
   hasBaselinePhoto: boolean;
   existingTryOnUrl: string | null;
+  // Density drives the alternative-cuts menu rendered alongside
+  // the LLM recommendation. Age 45+ flips the imagery to the mature
+  // cohort variants when available.
+  densityState: DensityState;
+  age: number | null;
 };
 
 export function HairStage1Card({
@@ -61,7 +87,10 @@ export function HairStage1Card({
   isPremium,
   hasBaselinePhoto,
   existingTryOnUrl,
+  densityState,
+  age,
 }: Props) {
+  const cohort: 'young' | 'mature' = age != null && age >= 45 ? 'mature' : 'young';
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -198,7 +227,7 @@ export function HairStage1Card({
         <p className="mt-1 text-base font-semibold text-zinc-900 dark:text-zinc-100">
           {CUT_FAMILY_LABEL[cutFamily]}
         </p>
-        <CutFamilyImage cutFamily={cutFamily} />
+        <CutFamilyImage cutFamily={cutFamily} cohort={cohort} />
         <p className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400">
           Reference image. Yours will look different — same family, your
           face, your texture, your hairline.
@@ -218,6 +247,12 @@ export function HairStage1Card({
           tryOnGenerating={tryOnGenerating}
           tryOnError={tryOnError}
           onGenerate={generateTryOn}
+        />
+
+        <OtherCutsForDensity
+          densityState={densityState}
+          recommended={cutFamily}
+          cohort={cohort}
         />
 
         {error && (
@@ -365,6 +400,67 @@ function TryOnSection({
         <p className="mt-3 text-xs text-red-600 dark:text-red-400">
           {tryOnError}
         </p>
+      )}
+    </div>
+  );
+}
+
+// Density-filtered alternative cuts. Surfaced under the LLM
+// recommendation as "Other cuts that work for your density." The user
+// doesn't pick from here — Mister P already picked one. This is
+// transparency: the user sees the curated subset for their density
+// instead of believing the recommendation came from the full 12-cut
+// roster. Collapsed by default; expand reveals thumbnails.
+function OtherCutsForDensity({
+  densityState,
+  recommended,
+  cohort,
+}: {
+  densityState: DensityState;
+  recommended: CutFamily;
+  cohort: 'young' | 'mature';
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const others = cutsForDensity(densityState).filter((c) => c !== recommended);
+  if (others.length === 0) return null;
+  return (
+    <div className="mt-6 border-t border-zinc-200 pt-5 dark:border-zinc-800">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-baseline justify-between text-left"
+      >
+        <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          Other cuts that work for your density
+        </span>
+        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+          {expanded ? 'Hide' : `Show ${others.length}`}
+        </span>
+      </button>
+      {expanded && (
+        <>
+          <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+            Mister P picked the one above. These are the others that
+            also fit your density — for context, not for picking.
+          </p>
+          <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {others.map((slug) => (
+              <li
+                key={slug}
+                className="rounded-md border border-zinc-200 bg-zinc-50 p-2 dark:border-zinc-800 dark:bg-zinc-950"
+              >
+                <CutFamilyImage
+                  cutFamily={slug}
+                  cohort={cohort}
+                  className="h-32 w-full rounded object-cover"
+                />
+                <p className="mt-2 text-[12px] font-medium leading-tight text-zinc-800 dark:text-zinc-200">
+                  {CUT_FAMILY_LABEL[slug]}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </div>
   );

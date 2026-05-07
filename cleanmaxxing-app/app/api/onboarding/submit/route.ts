@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { ageToSegment, QUESTIONS } from '@/lib/onboarding/questions';
+import { upsertUserProfile } from '@/lib/profile/service';
 import { weekStartString } from '@/lib/weekly-reflection/service';
 
 export async function POST() {
@@ -140,6 +141,37 @@ export async function POST() {
     // Intentionally don't surface errors here — the seed is a UX nicety,
     // not a correctness requirement. The baseline is already persisted
     // in confidence_dimensions, so the trend chart renders either way.
+  }
+
+  // Mirror the height + weight onboarding answers into user_profile so
+  // surfaces that read user_profile directly (e.g., the BMR calculator
+  // panel on /plan/nutrition) get values without requiring a second
+  // visit to /profile. Survey-response fallback in Mister P's
+  // effectiveWeight/effectiveHeight still applies for older users who
+  // pre-date this mirror.
+  const heightVal = byKey.get('height_inches');
+  const weightVal = byKey.get('weight_lbs');
+  const heightNum =
+    heightVal && heightVal.trim() !== '' ? Number(heightVal) : NaN;
+  const weightNum =
+    weightVal && weightVal.trim() !== '' ? Number(weightVal) : NaN;
+  const profilePatch: {
+    height_inches?: number;
+    current_weight_lbs?: number;
+  } = {};
+  if (Number.isFinite(heightNum) && heightNum >= 48 && heightNum <= 96) {
+    profilePatch.height_inches = Math.round(heightNum);
+  }
+  if (Number.isFinite(weightNum) && weightNum >= 80 && weightNum <= 500) {
+    profilePatch.current_weight_lbs = Math.round(weightNum * 10) / 10;
+  }
+  if (Object.keys(profilePatch).length > 0) {
+    try {
+      await upsertUserProfile(supabase, user.id, profilePatch);
+    } catch {
+      // Non-fatal — the survey row is still authoritative via Mister P's
+      // effectiveWeight/effectiveHeight fallback. Don't block onboarding.
+    }
   }
 
   // Note: onboarding_completed_at is NOT set here. It gets set by

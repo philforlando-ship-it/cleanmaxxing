@@ -14,12 +14,14 @@ import { useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   MUSCLE_GROUP_LABEL,
-  STRENGTH_EXERCISES,
-  type Equipment,
   type MuscleGroup,
   type StrengthEquipmentAccess,
   type StrengthExercise,
+  type StrengthInjuryConstraint,
+  type StrengthPriorityMuscle,
+  type StrengthSecondaryObjective,
 } from '@/lib/strength/types';
+import { getRecommendedExercises } from '@/lib/strength/recommended-exercises';
 
 const GROUP_ORDER: MuscleGroup[] = [
   'chest',
@@ -32,36 +34,11 @@ const GROUP_ORDER: MuscleGroup[] = [
   'calves',
 ];
 
-// Map equipment_access answers to which equipment categories the
-// catalog should expose. Bodyweight users shouldn't see barbell
-// exercises in the picker; full-gym users see everything.
-const EQUIPMENT_VISIBILITY: Record<
-  StrengthEquipmentAccess,
-  Equipment[]
-> = {
-  full_commercial_gym: [
-    'barbell',
-    'dumbbell',
-    'cable',
-    'machine',
-    'bodyweight',
-    'weighted_bodyweight',
-    'ez_bar',
-    'smith',
-  ],
-  home_rack_bench: [
-    'barbell',
-    'dumbbell',
-    'bodyweight',
-    'weighted_bodyweight',
-    'ez_bar',
-  ],
-  minimal_dumbbells: ['dumbbell', 'bodyweight'],
-  bodyweight_only: ['bodyweight'],
-};
-
 type Props = {
   equipmentAccess: StrengthEquipmentAccess;
+  injuryConstraints: StrengthInjuryConstraint[];
+  priorityMuscles: StrengthPriorityMuscle[];
+  secondaryObjective: StrengthSecondaryObjective | null;
   initialSelected: string[];
   initialExcluded: string[];
   initialFilterText: string | null;
@@ -71,12 +48,47 @@ type ExerciseStateMap = Map<string, 'selected' | 'excluded' | 'neutral'>;
 
 export function ExerciseLibraryPanel({
   equipmentAccess,
+  injuryConstraints,
+  priorityMuscles,
+  secondaryObjective,
   initialSelected,
   initialExcluded,
   initialFilterText,
 }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  // Recommended subset: applies equipment + injury hard filters and
+  // priority + secondary up-rank. The picker default-renders the
+  // recommended group; "Show all" toggle reveals filteredOut
+  // exercises dimmed below it. hiddenByEquipment never renders —
+  // those exercises are irrelevant to this user.
+  const recommendedResult = useMemo(
+    () =>
+      getRecommendedExercises({
+        equipment_access: equipmentAccess,
+        injury_constraints: injuryConstraints,
+        priority_muscles: priorityMuscles,
+        secondary_objective: secondaryObjective,
+      }),
+    [equipmentAccess, injuryConstraints, priorityMuscles, secondaryObjective],
+  );
+
+  // If the user has saved selections that are in the filteredOut
+  // set (e.g. they picked "deadlift" before lower_back_pain went
+  // on file), auto-expand so they don't lose visibility on those
+  // picks. Once they've toggled the panel manually, respect that.
+  const filteredOutSlugSet = useMemo(
+    () => new Set(recommendedResult.filteredOut.map((e) => e.slug)),
+    [recommendedResult.filteredOut],
+  );
+  const hasFilteredOutSelections = useMemo(
+    () =>
+      initialSelected.some((s) => filteredOutSlugSet.has(s)) ||
+      initialExcluded.some((s) => filteredOutSlugSet.has(s)),
+    [initialSelected, initialExcluded, filteredOutSlugSet],
+  );
+  const [showAll, setShowAll] = useState(hasFilteredOutSelections);
 
   // Per-exercise state. Reconciled from initial props on mount.
   const [stateMap, setStateMap] = useState<ExerciseStateMap>(() => {
@@ -114,35 +126,49 @@ export function ExerciseLibraryPanel({
   const [error, setError] = useState<string | null>(null);
   const [savedHint, setSavedHint] = useState<string | null>(null);
 
-  // Filter the catalog by equipment + free-form text. The text is
-  // applied as a coarse client-side filter — substring match on label
-  // or muscles. The LLM still gets the full filter_text in the prompt
-  // for nuanced interpretation; this is just to keep the menu focused.
-  const visibleExercises = useMemo(() => {
-    const allowedEquipment = new Set(EQUIPMENT_VISIBILITY[equipmentAccess]);
-    const filterLower = filterText.trim().toLowerCase();
-    return STRENGTH_EXERCISES.filter((ex) => {
-      if (!allowedEquipment.has(ex.equipment)) return false;
-      if (filterLower.length === 0) return true;
-      // Coarse text match — any catalog entry whose label or muscles
-      // contain the filter string stays. Doesn't try to be smart about
-      // "no" / "exclude" semantics — that's the LLM's job.
-      const haystack = `${ex.label} ${ex.primary_muscles.join(
-        ' ',
-      )} ${ex.movement_pattern} ${ex.equipment}`.toLowerCase();
-      return haystack.includes(filterLower);
-    });
-  }, [equipmentAccess, filterText]);
+  // Apply the free-form text filter on top of the recommended
+  // subset (and filteredOut when showAll is on). The LLM still
+  // gets the full filter_text in the prompt for nuanced
+  // interpretation; this is just to keep the menu focused.
+  const filterLower = filterText.trim().toLowerCase();
+  function passesText(ex: StrengthExercise): boolean {
+    if (filterLower.length === 0) return true;
+    const haystack = `${ex.label} ${ex.primary_muscles.join(
+      ' ',
+    )} ${ex.movement_pattern} ${ex.equipment}`.toLowerCase();
+    return haystack.includes(filterLower);
+  }
 
-  const groupedVisible = useMemo(() => {
+  const recommendedVisible = useMemo(
+    () => recommendedResult.recommended.filter(passesText),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [recommendedResult.recommended, filterLower],
+  );
+  const filteredOutVisible = useMemo(
+    () => (showAll ? recommendedResult.filteredOut.filter(passesText) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [recommendedResult.filteredOut, showAll, filterLower],
+  );
+
+  const groupedRecommended = useMemo(() => {
     const map = new Map<MuscleGroup, StrengthExercise[]>();
-    for (const e of visibleExercises) {
+    for (const e of recommendedVisible) {
       const list = map.get(e.primary_group) ?? [];
       list.push(e);
       map.set(e.primary_group, list);
     }
     return map;
-  }, [visibleExercises]);
+  }, [recommendedVisible]);
+
+  const groupedFilteredOut = useMemo(() => {
+    const map = new Map<MuscleGroup, StrengthExercise[]>();
+    for (const e of filteredOutVisible) {
+      const list = map.get(e.primary_group) ?? [];
+      list.push(e);
+      map.set(e.primary_group, list);
+    }
+    return map;
+  }, [filteredOutVisible]);
 
   function setExerciseState(slug: string, next: 'selected' | 'excluded') {
     setStateMap((prev) => {
@@ -273,10 +299,16 @@ export function ExerciseLibraryPanel({
       </div>
 
       <p className="mt-1 text-[12px] text-zinc-500 dark:text-zinc-400">
-        Filtered by your equipment access ({equipmentAccess.replace(/_/g, ' ')}
-        ). Use the constraints box below to narrow further. Click an exercise
-        to mark it preferred (Mister P will lean on it) or excluded (Mister P
-        won&rsquo;t recommend it).
+        Recommended for you ({recommendedResult.recommended.length}) —
+        filtered to your equipment ({equipmentAccess.replace(/_/g, ' ')})
+        {injuryConstraints.length > 0 && (
+          <>
+            {' '}
+            and routed around your injury constraints
+          </>
+        )}
+        . Click an exercise to mark it preferred (Mister P will lean on
+        it) or excluded (Mister P won&rsquo;t recommend it).
       </p>
 
       <div className="mt-4">
@@ -299,7 +331,7 @@ export function ExerciseLibraryPanel({
 
       <div className="mt-6 space-y-6">
         {GROUP_ORDER.map((group) => {
-          const list = groupedVisible.get(group);
+          const list = groupedRecommended.get(group);
           if (!list || list.length === 0) return null;
           return (
             <div key={group}>
@@ -319,11 +351,56 @@ export function ExerciseLibraryPanel({
             </div>
           );
         })}
-        {visibleExercises.length === 0 && (
+        {recommendedVisible.length === 0 && (
           <p className="text-[13px] text-zinc-500 dark:text-zinc-400">
-            No exercises match your equipment + constraints. Loosen the
-            constraints text to see more.
+            No exercises match your filter. Loosen the constraints text to
+            see more.
           </p>
+        )}
+
+        {/* Show all toggle — reveals exercises that don't fit your
+            profile (filtered out by injury constraints). The user can
+            still pick from these; the recommendation is informational. */}
+        {recommendedResult.filteredOut.length > 0 && (
+          <div className="border-t border-zinc-200 pt-4 dark:border-zinc-800">
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="text-[12px] text-zinc-600 underline decoration-dotted underline-offset-2 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+            >
+              {showAll ? 'Hide' : 'Show'}{' '}
+              {recommendedResult.filteredOut.length} more exercises that
+              don&rsquo;t fit your profile
+            </button>
+            {showAll && (
+              <div className="mt-4 space-y-6 opacity-70">
+                {GROUP_ORDER.map((group) => {
+                  const list = groupedFilteredOut.get(group);
+                  if (!list || list.length === 0) return null;
+                  return (
+                    <div key={`fo-${group}`}>
+                      <h4 className="text-[12px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                        {MUSCLE_GROUP_LABEL[group]}
+                      </h4>
+                      <ul className="mt-2 space-y-3">
+                        {list.map((ex) => (
+                          <ExerciseRow
+                            key={ex.slug}
+                            exercise={ex}
+                            state={stateMap.get(ex.slug) ?? 'neutral'}
+                            onMark={(next) =>
+                              setExerciseState(ex.slug, next)
+                            }
+                            doesNotFitProfile
+                          />
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -375,10 +452,15 @@ function ExerciseRow({
   exercise,
   state,
   onMark,
+  doesNotFitProfile = false,
 }: {
   exercise: StrengthExercise;
   state: 'selected' | 'excluded' | 'neutral';
   onMark: (next: 'selected' | 'excluded') => void;
+  // True when rendered under "Show all" — the exercise was filtered
+  // out by an injury constraint or profile mismatch. Renders a
+  // small badge so the user knows this isn't a top recommendation.
+  doesNotFitProfile?: boolean;
 }) {
   const cardClass =
     state === 'selected'
@@ -398,6 +480,12 @@ function ExerciseRow({
           {exercise.movement_pattern.replace(/_/g, ' ')}
         </span>
       </div>
+      {doesNotFitProfile && (
+        <p className="mt-1 text-[11px] italic text-zinc-500 dark:text-zinc-400">
+          Doesn&rsquo;t fit your profile — pickable, but not in your
+          recommended set.
+        </p>
+      )}
       <p className="mt-0.5 text-[12px] text-zinc-500 dark:text-zinc-400">
         Primary: {exercise.primary_muscles.join(', ')}
       </p>

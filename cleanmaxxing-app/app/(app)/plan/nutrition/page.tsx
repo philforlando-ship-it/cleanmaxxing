@@ -15,6 +15,12 @@ import { redirect } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { createClient, getUser } from '@/lib/supabase/server';
+import { getProtocolRollup } from '@/lib/interventions/service';
+import {
+  getUserProfile,
+  syncBodyStatsFromSurveyIfMissing,
+} from '@/lib/profile/service';
+import { computeBmrCalculator } from '@/lib/nutrition/tdee';
 import {
   getNutritionAssessment,
   getRecentProteinSignal,
@@ -25,6 +31,7 @@ import {
   NutritionAssessmentForm,
   type NutritionAssessmentInitialValues,
 } from './assessment-form';
+import { BmrCalculatorPanel } from './bmr-calculator-panel';
 import { FoodLibraryPanel } from './food-library-panel';
 import { MealPlanPanel } from './meal-plan-panel';
 import { NutritionReEvalCard } from './re-eval-card';
@@ -44,11 +51,37 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
   // Pull assessment + protein signal + most-recent meal plan in
   // parallel. Targets are read off the assessment row (snapshotted at
   // generation time, no recomputation needed for display).
-  const [assessment, proteinSignal, mostRecentMealPlan] = await Promise.all([
+  const [
+    assessment,
+    proteinSignal,
+    mostRecentMealPlan,
+    glp1Rollup,
+    initialProfile,
+    { data: userRow },
+  ] = await Promise.all([
     getNutritionAssessment(supabase, user.id),
     getRecentProteinSignal(supabase, user.id),
     getMostRecentMealPlan(supabase, user.id),
+    getProtocolRollup(supabase, user.id, 'glp1'),
+    getUserProfile(supabase, user.id),
+    supabase.from('users').select('age').eq('id', user.id).maybeSingle(),
   ]);
+  // Backfill weight/height from the onboarding survey if the profile
+  // columns are still null (pre-dates the onboarding-submit mirror).
+  const profile = await syncBodyStatsFromSurveyIfMissing(
+    supabase,
+    user.id,
+    initialProfile,
+  );
+  const age = (userRow as { age: number | null } | null)?.age ?? null;
+  const bmrResult = computeBmrCalculator({
+    weight_lbs: profile.current_weight_lbs,
+    height_inches: profile.height_inches,
+    age,
+    activity_level: profile.activity_level,
+    daily_training_minutes: profile.daily_training_minutes,
+    current_interventions: profile.current_interventions,
+  });
   const hasReport = assessment?.report_text != null;
   const showForm = !assessment || !hasReport || editParam;
   const hasComputedTargets =
@@ -91,6 +124,23 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
           </p>
         )}
       </header>
+
+      <BmrCalculatorPanel result={bmrResult} />
+
+      {glp1Rollup === 'on_protocol' && (
+        <aside className="mt-6 rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 text-[13px] text-zinc-800 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
+          You&rsquo;re on a GLP-1. The protein floor here gets emphasized
+          — appetite suppression makes underhitting easy. The protocol
+          surface is at{' '}
+          <Link
+            href="/plan/glp1"
+            className="underline decoration-dotted underline-offset-2 hover:text-zinc-950 dark:hover:text-zinc-100"
+          >
+            /plan/glp1
+          </Link>
+          .
+        </aside>
+      )}
 
       {/* Pre-form data preview — only when there's no plan yet AND the
           user has logged at least one day. */}
@@ -151,7 +201,24 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
               unit="kcal"
             />
           </dl>
-          <p className="mt-3 text-[12px] text-zinc-500 dark:text-zinc-400">
+          {(() => {
+            const cal = assessment.calorie_target!;
+            const p = assessment.protein_target_g!;
+            const c = assessment.carb_target_g!;
+            const f = assessment.fat_target_g!;
+            const pPct = Math.round(((p * 4) / cal) * 100);
+            const cPct = Math.round(((c * 4) / cal) * 100);
+            const fPct = Math.round(((f * 9) / cal) * 100);
+            return (
+              <p className="mt-3 text-[12px] text-zinc-600 dark:text-zinc-300">
+                Macro split:{' '}
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                  {pPct}% protein · {cPct}% carbs · {fPct}% fat
+                </span>
+              </p>
+            );
+          })()}
+          <p className="mt-2 text-[12px] text-zinc-500 dark:text-zinc-400">
             Computed from your weight, height, age, and activity level
             (Mifflin-St Jeor × activity multiplier), adjusted for your
             goal. Re-runs whenever you re-generate the plan.
@@ -221,6 +288,9 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
           })()}
 
           <FoodLibraryPanel
+            dietaryPattern={assessment.dietary_pattern}
+            cookingCapacity={assessment.cooking_capacity}
+            goalDirection={assessment.goal_direction}
             initialPreferences={assessment.food_preferences}
             initialExclusions={assessment.food_exclusions}
             initialFilterText={assessment.food_filter_text}
@@ -315,6 +385,10 @@ function assessmentToInitialValues(
     fasting_protocol: a.fasting_protocol,
     alcohol_use: a.alcohol_use,
     cannabis_use: a.cannabis_use,
+    cooking_capacity: a.cooking_capacity,
+    dietary_pattern: a.dietary_pattern,
+    meal_service_willingness: a.meal_service_willingness,
+    snacking_style: a.snacking_style,
     nutrition_goal_text: a.nutrition_goal_text,
   };
 }

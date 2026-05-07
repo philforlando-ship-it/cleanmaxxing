@@ -81,10 +81,9 @@ export function MealPlanPanel({ initialPlan, hasComputedTargets }: Props) {
       {!hasComputedTargets && (
         <p className="mt-2 text-[12px] text-amber-700 dark:text-amber-400">
           Heads up: your TDEE / macro targets aren&rsquo;t computed yet
-          (profile is missing weight, height, age, or activity level).
-          Mister P will fall back to qualitative guidance — the meal plan
-          will be less specific. Add the missing info on /profile for
-          tighter numbers.
+          (profile is missing weight, height, or age). Mister P will fall
+          back to qualitative guidance — the meal plan will be less
+          specific. Add the missing info on /profile for tighter numbers.
         </p>
       )}
 

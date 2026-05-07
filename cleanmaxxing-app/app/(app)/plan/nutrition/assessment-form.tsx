@@ -8,17 +8,25 @@ import { useRouter } from 'next/navigation';
 import {
   ALCOHOL_USE_LABEL,
   CANNABIS_USE_LABEL,
+  COOKING_CAPACITY_LABEL,
+  DIETARY_PATTERN_LABEL,
   EATING_CONTEXT_LABEL,
   FASTING_PROTOCOL_LABEL,
   GOAL_DIRECTION_LABEL,
+  MEAL_SERVICE_WILLINGNESS_LABEL,
   NUTRITION_WHAT_TRIED_LABEL,
+  SNACKING_STYLE_LABEL,
   URGENCY_LABEL,
   type AlcoholUse,
   type CannabisUse,
+  type CookingCapacity,
+  type DietaryPattern,
   type EatingContext,
   type FastingProtocol,
   type GoalDirection,
+  type MealServiceWillingness,
   type NutritionWhatTried,
+  type SnackingStyle,
   type Urgency,
 } from '@/lib/nutrition/types';
 
@@ -65,6 +73,35 @@ const ALCOHOL_USES: AlcoholUse[] = ['none', 'occasional', 'moderate', 'heavy'];
 
 const CANNABIS_USES: CannabisUse[] = ['none', 'occasional', 'regular'];
 
+const COOKING_CAPACITIES: CookingCapacity[] = [
+  'cook_often_real_meals',
+  'cook_simple_quick',
+  'cook_rarely',
+  'dont_cook',
+];
+
+const DIETARY_PATTERNS: DietaryPattern[] = [
+  'omnivore',
+  'pescatarian',
+  'vegetarian',
+  'vegan',
+  'mixed_no_pattern',
+];
+
+const MEAL_SERVICE_WILLINGNESSES: MealServiceWillingness[] = [
+  'actively_using',
+  'open_to_it',
+  'prefer_not',
+  'no_thanks',
+];
+
+const SNACKING_STYLES: SnackingStyle[] = [
+  'three_meals_no_snacks',
+  'three_meals_plus_snacks',
+  'grazer',
+  'inconsistent',
+];
+
 export type NutritionAssessmentInitialValues = {
   goal_direction: GoalDirection;
   urgency: Urgency;
@@ -73,6 +110,10 @@ export type NutritionAssessmentInitialValues = {
   fasting_protocol: FastingProtocol;
   alcohol_use: AlcoholUse;
   cannabis_use: CannabisUse;
+  cooking_capacity: CookingCapacity | null;
+  dietary_pattern: DietaryPattern | null;
+  meal_service_willingness: MealServiceWillingness | null;
+  snacking_style: SnackingStyle | null;
   nutrition_goal_text: string | null;
 };
 
@@ -106,6 +147,19 @@ export function NutritionAssessmentForm({
   const [cannabisUse, setCannabisUse] = useState<CannabisUse | null>(
     initialValues?.cannabis_use ?? null,
   );
+  const [cookingCapacity, setCookingCapacity] = useState<CookingCapacity | null>(
+    initialValues?.cooking_capacity ?? null,
+  );
+  const [dietaryPattern, setDietaryPattern] = useState<DietaryPattern | null>(
+    initialValues?.dietary_pattern ?? null,
+  );
+  const [mealServiceWillingness, setMealServiceWillingness] =
+    useState<MealServiceWillingness | null>(
+      initialValues?.meal_service_willingness ?? null,
+    );
+  const [snackingStyle, setSnackingStyle] = useState<SnackingStyle | null>(
+    initialValues?.snacking_style ?? null,
+  );
   const [goalText, setGoalText] = useState(
     initialValues?.nutrition_goal_text ?? '',
   );
@@ -121,6 +175,11 @@ export function NutritionAssessmentForm({
     if (!fastingProtocol) return setError('Pick a fasting protocol (or "None").');
     if (!alcoholUse) return setError('Pick alcohol use level.');
     if (!cannabisUse) return setError('Pick cannabis use level.');
+    if (!cookingCapacity) return setError('Pick your cooking capacity.');
+    if (!dietaryPattern) return setError('Pick your dietary pattern.');
+    if (!mealServiceWillingness)
+      return setError('Pick your meal-service willingness.');
+    if (!snackingStyle) return setError('Pick your snacking style.');
 
     const payload = {
       goal_direction: goal,
@@ -130,6 +189,10 @@ export function NutritionAssessmentForm({
       fasting_protocol: fastingProtocol,
       alcohol_use: alcoholUse,
       cannabis_use: cannabisUse,
+      cooking_capacity: cookingCapacity,
+      dietary_pattern: dietaryPattern,
+      meal_service_willingness: mealServiceWillingness,
+      snacking_style: snackingStyle,
       nutrition_goal_text: goalText.trim() || null,
     };
 
@@ -291,6 +354,82 @@ export function NutritionAssessmentForm({
 
       <Question
         number={8}
+        title="What's your real cooking capacity?"
+        helper="Honest read on what you can sustain — not what you did last week. Drives whether the plan recommends real cooking, simple meals, or assembly / services."
+      >
+        <div className="space-y-2">
+          {COOKING_CAPACITIES.map((c) => (
+            <RadioRow
+              key={c}
+              checked={cookingCapacity === c}
+              onChange={() => setCookingCapacity(c)}
+              disabled={pending}
+              label={COOKING_CAPACITY_LABEL[c]}
+              name="cooking_capacity"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={9}
+        title="Dietary pattern?"
+        helper="Drives how the protein floor gets hit and which food categories the plan leans on. ‘Mixed / no clear pattern’ is fine."
+      >
+        <div className="space-y-2">
+          {DIETARY_PATTERNS.map((d) => (
+            <RadioRow
+              key={d}
+              checked={dietaryPattern === d}
+              onChange={() => setDietaryPattern(d)}
+              disabled={pending}
+              label={DIETARY_PATTERN_LABEL[d]}
+              name="dietary_pattern"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={10}
+        title="Meal services — open to them?"
+        helper="If your cooking capacity is low, services like Factor / Trifecta / Tovala can carry weight. Mister P only recommends them if you're open to it."
+      >
+        <div className="space-y-2">
+          {MEAL_SERVICE_WILLINGNESSES.map((m) => (
+            <RadioRow
+              key={m}
+              checked={mealServiceWillingness === m}
+              onChange={() => setMealServiceWillingness(m)}
+              disabled={pending}
+              label={MEAL_SERVICE_WILLINGNESS_LABEL[m]}
+              name="meal_service_willingness"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={11}
+        title="How do you eat across the day?"
+        helper="Three meals vs. snacking vs. grazing changes how protein gets distributed and what snack guidance (if any) shows up in the plan."
+      >
+        <div className="space-y-2">
+          {SNACKING_STYLES.map((s) => (
+            <RadioRow
+              key={s}
+              checked={snackingStyle === s}
+              onChange={() => setSnackingStyle(s)}
+              disabled={pending}
+              label={SNACKING_STYLE_LABEL[s]}
+              name="snacking_style"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={12}
         title="Anything you want Mister P to know? (optional)"
         helper="One line. A specific situation, a constraint, a pattern."
       >

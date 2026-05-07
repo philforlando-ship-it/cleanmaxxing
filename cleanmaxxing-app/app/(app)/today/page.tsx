@@ -2,67 +2,53 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { DevResetButton } from './dev-reset-button';
-import { DailyCheckInCard } from './daily-check-in-card';
 import { MisterPChatCard, type ChatMessage } from './mister-p-chat-card';
-import { WeeklyReflectionCard } from './weekly-reflection-card';
-import { ConfidenceTrendChart } from './confidence-trend-chart';
-import { MonthlyCheckpointCard } from './monthly-checkpoint-card';
 import { WeeklyFocusCard } from './weekly-focus-card';
 import { FirstRunCard } from './first-run-card';
 import { ProgressPhotoCard } from './progress-photo-card';
-import { StaleGoalCard } from './stale-goal-card';
 import { ProfileCompletionCard } from './profile-completion-card';
-import { HairPlanCard } from './hair-plan-card';
+// Phase B (May 2026): plan-card imports removed — journey tiles now
+// covered by the PrimaryActionCard. Phase C: log cards moved to
+// /log; Pattern C cards (weekly letter, weekly reflection, monthly
+// checkpoint, quarterly survey, self-acceptance nudge, stale goal,
+// stuck confidence) moved to /reflection. Imports below are the
+// post-Phase-C residual set: event-driven daily-action tiles
+// (hair routine / photo / sleep commitments / recovery check),
+// onboarding cards, profile completion, weekly focus, Mister P
+// chat surface, and the still-on-/today daily note.
 import { HairRoutineCard } from './hair-routine-card';
 import { HairPhotoDueCard } from './hair-photo-due-card';
-import { StylePlanCard } from './style-plan-card';
-import { FacialHairPlanCard } from './facial-hair-plan-card';
-import { SleepPlanCard } from './sleep-plan-card';
 import { SleepCommitmentsCard } from './sleep-commitments-card';
-import { SkincarePlanCard } from './skincare-plan-card';
-import { NutritionPlanCard } from './nutrition-plan-card';
-import { StrengthPlanCard } from './strength-plan-card';
-import { CardioPlanCard } from './cardio-plan-card';
+import { RecoveryCheckCard } from './recovery-check-card';
+import {
+  getYesterdayStrengthWorkout,
+  hasFeedbackForWorkout,
+} from '@/lib/strength/feedback';
 import { getHairAssessment, getStage4State } from '@/lib/hair/service';
-import { hasStyleAssessment } from '@/lib/style/service';
-import { hasFacialHairAssessment } from '@/lib/facial-hair/service';
+import { pickPrimaryAction } from '@/lib/today/primary-action-picker';
+import { PrimaryActionCard } from './primary-action-card';
+import { EscapeHatch } from './escape-hatch';
+import { detectAndRecordMilestones } from '@/lib/milestones/detect';
+import { listRecentMilestones } from '@/lib/milestones/service';
+import { getWeeklyReflectionState } from '@/lib/weekly-reflection/service';
+import { ProgressVisual } from './progress-visual';
+import { selectContextualPrompt } from '@/lib/contextual-prompt/select';
+import { ContextualPromptCard } from './contextual-prompt-card';
 import { hasSleepAssessment } from '@/lib/sleep/service';
-import { hasSkincareAssessment } from '@/lib/skincare/service';
-import { hasNutritionAssessment } from '@/lib/nutrition/service';
 import { hasStrengthAssessment } from '@/lib/strength/service';
-import { hasCardioAssessment } from '@/lib/cardio/service';
 import { getTodayCommitmentsState } from '@/lib/sleep/commitments';
 import { daysUntilNext } from '@/lib/hair/stage-5-content';
-import { SleepLogCard } from './sleep-log-card';
 import { getSleepState } from '@/lib/sleep/service';
-import { WorkoutLogCard } from './workout-log-card';
-import { getWorkoutState } from '@/lib/workout/service';
-import { WeeklyLetterCard } from './weekly-letter-card';
-import { getCurrentWeeklyLetter } from '@/lib/weekly-letter/service';
-import { SelfAcceptanceNudgeCard } from './self-acceptance-nudge-card';
-import { pickSelfAcceptanceNudge } from '@/lib/self-acceptance/risk-signals';
-import { templateBySlug } from '@/content/goal-templates';
 import { onrampFor, currentState, isBaselineStage } from '@/lib/content/onramp';
 import { getMisterPUserState } from '@/lib/mister-p/user-state';
 import { FirstConversationCard } from './first-conversation-card';
 import { getFirstConvoState } from '@/lib/first-convo/service';
 import { DailyNoteCard } from './daily-note-card';
 import { getOrCreateTodayNote } from '@/lib/daily-note/service';
-import { StuckConfidenceCard } from './stuck-confidence-card';
-import { QuarterlySurveyCard } from './quarterly-survey-card';
-import { getTodayCheckInState, getWeeklyCheckInSummary, getStalestGoal } from '@/lib/check-in/service';
-import { appDayFor, daysBetweenAppDays } from '@/lib/date/app-day';
+import { getWeeklyCheckInSummary, getStalestGoal } from '@/lib/check-in/service';
+import { appDayFor, daysBetweenAppDays, previousAppDayFor } from '@/lib/date/app-day';
 import { getProfileCompletion } from '@/lib/profile/completion';
 import { getStuckConfidenceSignal } from '@/lib/confidence/stuck-signal';
-import { getQuarterlySurveyState } from '@/lib/quarterly-survey/service';
-import { getWeeklyReflectionState } from '@/lib/weekly-reflection/service';
-import { getCheckpointState } from '@/lib/checkpoint/service';
-import { getNutritionState } from '@/lib/nutrition/service';
-import { NutritionLogCard } from './nutrition-log-card';
-import { TodayHeroCard } from './today-hero-card';
-import { pickHero } from '@/lib/today/hero';
-import { pickMilestone } from '@/lib/today/milestones';
-import { getShowUpStat } from '@/lib/continuity/show-up-stat';
 
 // Ninety-day progress-photo window. Matches the /profile page's
 // PROGRESS_WINDOW_DAYS and the POVs' typical visible-change timeline.
@@ -101,8 +87,10 @@ type Props = {
 };
 
 export default async function TodayPage({ searchParams }: Props) {
-  const params = await searchParams;
-  const welcome = params.welcome === '1';
+  await searchParams; // No-op — the only param we read here was
+  // ?welcome=1 for the daily-check-in spotlight, which moved to
+  // /log in Phase C. Awaiting still satisfies Next.js's
+  // searchParams-must-be-awaited contract.
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
@@ -126,43 +114,41 @@ export default async function TodayPage({ searchParams }: Props) {
     timezone,
   );
 
+  // Phase D: detect + record any new milestones BEFORE the
+  // listRecentMilestones fetch below, so a freshly-fired
+  // milestone shows up in the same render. Idempotent — the
+  // unique (user_id, trigger_key) index prevents double-fires.
+  // Wrapped to never throw; a milestone-detection failure must
+  // not break /today.
+  await detectAndRecordMilestones(supabase, user.id).catch((err) => {
+    console.error('milestones_detect_failed', err);
+  });
+
   const [
-    checkInState,
-    reflectionState,
-    checkpointState,
     weeklySummary,
     staleGoal,
     stuckSignal,
-    quarterlyState,
     profileCompletion,
     sleepState,
-    workoutState,
-    nutritionState,
-    weeklyLetter,
-    selfAcceptanceNudge,
     misterPUserState,
     firstConvoState,
+    reflectionState,
+    recentMilestones,
     { data: goalsRaw },
     { data: photoRowsRaw },
     { data: healthIntegrationRow },
     { data: latestActivityRow },
     { data: weeklyActivityRows },
   ] = await Promise.all([
-    getTodayCheckInState(supabase, user.id, timezone),
-    getWeeklyReflectionState(supabase, user.id),
-    getCheckpointState(supabase, user.id),
     getWeeklyCheckInSummary(supabase, user.id, timezone),
     getStalestGoal(supabase, user.id, timezone),
     getStuckConfidenceSignal(supabase, user.id),
-    getQuarterlySurveyState(supabase, user.id),
     getProfileCompletion(supabase, user.id),
     getSleepState(supabase, user.id),
-    getWorkoutState(supabase, user.id),
-    getNutritionState(supabase, user.id, timezone),
-    getCurrentWeeklyLetter(supabase, user.id),
-    pickSelfAcceptanceNudge(supabase, user.id),
     getMisterPUserState(supabase, user.id),
     getFirstConvoState(supabase, user.id),
+    getWeeklyReflectionState(supabase, user.id),
+    listRecentMilestones(supabase, user.id),
     supabase
       .from('goals')
       .select('id, title, source_slug, created_at, baseline_stage, target_date, last_phase_seen, chat_execution_mode, chat_execution_prompt_acked')
@@ -215,13 +201,8 @@ export default async function TodayPage({ searchParams }: Props) {
   const [
     { data: focusRow },
     hairAssessment,
-    styleState,
-    facialHairState,
     sleepAssessmentState,
-    skincareState,
-    nutritionAssessmentState,
     strengthAssessmentState,
-    cardioAssessmentState,
   ] = await Promise.all([
     supabase
       .from('survey_responses')
@@ -230,38 +211,29 @@ export default async function TodayPage({ searchParams }: Props) {
       .eq('question_key', 'focus_areas')
       .maybeSingle(),
     getHairAssessment(supabase, user.id),
-    hasStyleAssessment(supabase, user.id),
-    hasFacialHairAssessment(supabase, user.id),
     hasSleepAssessment(supabase, user.id),
-    hasSkincareAssessment(supabase, user.id),
-    hasNutritionAssessment(supabase, user.id),
     hasStrengthAssessment(supabase, user.id),
-    hasCardioAssessment(supabase, user.id),
   ]);
+  // Focus-area flags remaining after Phase B cleanup. Style /
+  // grooming / skin / body_composition flags were dropped because
+  // their plan cards moved to the PrimaryActionCard's picker — those
+  // focus areas are still honored, just by lib/today/primary-action-picker
+  // rather than by per-card gates here.
   let hairIsFocus = false;
-  let styleIsFocus = false;
-  let groomingIsFocus = false;
   let sleepIsFocus = false;
-  let skinIsFocus = false;
-  let bodyCompIsFocus = false;
   let fitnessIsFocus = false;
   if (focusRow?.response_value) {
     try {
       const parsed = JSON.parse(focusRow.response_value as string);
       if (Array.isArray(parsed)) {
         if (parsed.includes('hair')) hairIsFocus = true;
-        if (parsed.includes('style')) styleIsFocus = true;
-        if (parsed.includes('grooming')) groomingIsFocus = true;
         if (parsed.includes('sleep')) sleepIsFocus = true;
-        if (parsed.includes('skin')) skinIsFocus = true;
-        if (parsed.includes('body_composition')) bodyCompIsFocus = true;
         if (parsed.includes('fitness')) fitnessIsFocus = true;
       }
     } catch {
       // malformed survey value — leave all flags false
     }
   }
-  const hairHasReport = hairAssessment?.report_text != null;
   // Stage 4 state — only fetched when the user has an assessment AND
   // Stage 4 is started (so we don't run the daily-log count query for
   // every user every render). When in progress, drives the new daily
@@ -317,6 +289,44 @@ export default async function TodayPage({ searchParams }: Props) {
     hairStage5Started &&
     (hairStage5IsFirstSession ||
       (hairStage5DaysUntil !== null && hairStage5DaysUntil <= 0));
+
+  // Strength autoregulation morning-after recovery check. Surfaces
+  // when the user trained strength yesterday AND no feedback row
+  // has been written yet. Two queries (workout lookup + feedback
+  // existence) are cheap and only run when fitness is in scope.
+  const todayAppDay = appDayFor(timezone);
+  const yesterdayAppDay = previousAppDayFor(timezone);
+  const yesterdayStrengthWorkout =
+    fitnessIsFocus && !steppedAway && strengthAssessmentState.hasReport
+      ? await getYesterdayStrengthWorkout(supabase, user.id, yesterdayAppDay)
+      : null;
+  const recoveryCheckDone = yesterdayStrengthWorkout
+    ? await hasFeedbackForWorkout(
+        supabase,
+        yesterdayStrengthWorkout.id,
+        todayAppDay,
+      )
+    : false;
+  const showRecoveryCheck =
+    yesterdayStrengthWorkout !== null && !recoveryCheckDone;
+  // Best-effort lift summary for the card header. workout_logs.lifts
+  // is a free-form jsonb — we just collect names if present.
+  const recoveryCheckLiftSummary = (() => {
+    if (!yesterdayStrengthWorkout) return null;
+    const lifts = yesterdayStrengthWorkout.lifts;
+    if (!Array.isArray(lifts) || lifts.length === 0) return null;
+    const names = lifts
+      .map((l) =>
+        typeof l === 'object' && l !== null && 'name' in l
+          ? String((l as { name: unknown }).name)
+          : null,
+      )
+      .filter((n): n is string => Boolean(n))
+      .slice(0, 4);
+    if (names.length === 0) return null;
+    const more = lifts.length > names.length ? ` +${lifts.length - names.length} more` : '';
+    return names.join(' · ') + more;
+  })();
 
   // Cast to the WeeklyFocusCard's ActiveGoal shape. The supabase
   // client's inferred response type drops columns it doesn't have
@@ -552,14 +562,12 @@ export default async function TodayPage({ searchParams }: Props) {
   // app-day in their stored timezone (3am-local cutoff) so the same
   // boundary applies as the rest of /today.
   //
-  // Sunday density fix: when a fresh weekly letter exists, suppress
-  // the daily note for Sundays so the user gets one reflective
-  // surface instead of two stacked back-to-back. The letter is the
-  // bigger reflective surface; the note can wait until Monday.
-  const isSunday = new Date().getDay() === 0;
-  const suppressNoteForLetter = isSunday && Boolean(weeklyLetter);
+  // Phase C note: the Sunday-suppression-when-weekly-letter-exists
+  // dance was dropped here. The weekly letter moved to /reflection,
+  // so there's no /today stack-up problem to defend against. The
+  // daily note still surfaces every day post-onboarding.
   let todayNote = null;
-  if (!steppedAway && firstConvoState.completed && !suppressNoteForLetter) {
+  if (!steppedAway && firstConvoState.completed) {
     const { count: priorNotesCount } = await supabase
       .from('daily_notes')
       .select('id', { count: 'exact', head: true })
@@ -583,46 +591,30 @@ export default async function TodayPage({ searchParams }: Props) {
   }
 
   // Hero priority resolver. Picks one surface to pin at the top so
-  // a returning user has a primary action above the waterfall. The
-  // CTA scrolls to the underlying card via anchorId — the hero is a
-  // pointer, not a duplicate logger. We pass the same data the
-  // underlying cards consume so the hero never disagrees with what
-  // the card itself shows.
-  const todayDayForHero = appDayFor(timezone);
-  const nutritionLoggedToday = Boolean(
-    nutritionState.today && nutritionState.today.date === todayDayForHero,
-  );
-  const activeGoalSlugs = activeGoals
-    .map((g) => g.source_slug)
-    .filter((s): s is string => Boolean(s));
-  const hero = pickHero({
-    weekday: new Date().getDay(),
-    steppedAway,
-    hasActiveGoals: activeGoals.length > 0,
-    checkIn: checkInState,
-    reflection: reflectionState,
-    recentSleep: sleepState.recent,
-    recentWorkouts: workoutState.recent,
-    nutritionLoggedToday,
-    timezone,
-    activeGoalSlugs,
-  });
-
-  // Milestone ribbon (day 7/30/90/180, first check-in, first goal
-  // graduated). Fires only on the day the moment is reached so a
-  // missed day doesn't carry the ribbon forward indefinitely.
-  const milestone = steppedAway
-    ? null
-    : await pickMilestone(supabase, user.id, timezone, daysSinceOnboarding);
-
-  // Soft continuity stat: "X of the last 30 days" with anything
-  // logged. Suppressed inside the first 7 days so the line isn't
-  // noise like "1 of 1." See lib/continuity/show-up-stat.ts.
-  const showUpStat = steppedAway
-    ? null
-    : await getShowUpStat(supabase, user.id, timezone, daysSinceOnboarding);
+  // hero / milestone / showUpStat / nutritionLoggedToday / pickHero
+  // inputs removed in Phase B — they fed TodayHeroCard, which the
+  // PrimaryActionCard supersedes. The milestone / continuity
+  // surfaces will return as Area 3 (Phase D) with absolute /
+  // self-comparison framing rather than the legacy shape.
 
   const isDev = process.env.NODE_ENV === 'development';
+
+  // Phase A of the /today redesign — single primary action surfaced
+  // above the existing tile waterfall. The picker runs its own data
+  // fetch (some redundant with the above; acceptable for v1) so it
+  // can be lifted to other surfaces unchanged.
+  const primaryAction = await pickPrimaryAction(supabase, user.id);
+
+  // Phase E — Area 2 contextual prompt. Returns null when no
+  // prompt fires (empty Area 2 is better than filler). Takes
+  // primaryAction.kind so prompts can suppress themselves when
+  // they'd duplicate the Area 1 message.
+  const contextualPrompt = await selectContextualPrompt(
+    supabase,
+    user.id,
+    primaryAction.kind,
+    todayAppDay,
+  );
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -634,17 +626,13 @@ export default async function TodayPage({ searchParams }: Props) {
       </div>
 
       <div className="mt-10 space-y-6">
-        {hero && (
-          <TodayHeroCard
-            hero={hero}
-            milestoneText={milestone?.ribbonText ?? null}
-            continuity={
-              showUpStat && showUpStat.eligible
-                ? { showedUp: showUpStat.showedUp, total: showUpStat.total }
-                : null
-            }
-          />
-        )}
+        <PrimaryActionCard action={primaryAction} />
+
+        {/* Phase E — Area 2 contextual prompt. Renders zero or
+            one prompt; null when nothing fires. Sits between Area
+            1 and the rest so it stays in the natural reading flow
+            without competing with Area 1 for attention. */}
+        <ContextualPromptCard prompt={contextualPrompt} />
 
         {isFirstRun && !steppedAway && <FirstRunCard />}
 
@@ -652,24 +640,8 @@ export default async function TodayPage({ searchParams }: Props) {
           <FirstConversationCard initial={firstConvoState} />
         )}
 
-        {weeklyLetter && (
-          <WeeklyLetterCard
-            weekStart={weeklyLetter.week_start}
-            body={weeklyLetter.body}
-          />
-        )}
-
-        {!steppedAway && selfAcceptanceNudge && (() => {
-          const tmpl = templateBySlug(selfAcceptanceNudge.recommendedSlug);
-          const title = tmpl?.title ?? 'this short read';
-          return (
-            <SelfAcceptanceNudgeCard
-              patternLabel={selfAcceptanceNudge.intro}
-              recommendedSlug={selfAcceptanceNudge.recommendedSlug}
-              recommendedTitle={title}
-            />
-          );
-        })()}
+        {/* WeeklyLetterCard / SelfAcceptanceNudgeCard moved to
+            /reflection in Phase C of the /today redesign. */}
 
         {!steppedAway && todayNote && (
           <div id="daily-note" className="scroll-mt-16">
@@ -685,51 +657,23 @@ export default async function TodayPage({ searchParams }: Props) {
           <ProfileCompletionCard completion={profileCompletion} />
         )}
 
-        {!steppedAway && hairIsFocus && (
-          <HairPlanCard state={hairHasReport ? 'done' : 'pending'} />
-        )}
-
-        {!steppedAway && styleIsFocus && (
-          <StylePlanCard state={styleState.hasReport ? 'done' : 'pending'} />
-        )}
-
-        {!steppedAway && groomingIsFocus && (
-          <FacialHairPlanCard
-            state={facialHairState.hasReport ? 'done' : 'pending'}
-          />
-        )}
-
-        {!steppedAway && sleepIsFocus && (
-          <SleepPlanCard
-            state={sleepAssessmentState.hasReport ? 'done' : 'pending'}
-          />
-        )}
+        {/* Plan-card render blocks removed in Phase B of the /today
+            redesign. The PrimaryActionCard at the top now surfaces
+            the right journey's next action; per-journey "open your
+            plan" tiles are redundant. SleepCommitmentsCard +
+            RecoveryCheckCard remain because they're daily-action
+            surfaces, not journey-pointer tiles. */}
 
         {!steppedAway && sleepCommitmentsToday.length > 0 && (
           <SleepCommitmentsCard commitments={sleepCommitmentsToday} />
         )}
 
-        {!steppedAway && skinIsFocus && (
-          <SkincarePlanCard
-            state={skincareState.hasReport ? 'done' : 'pending'}
-          />
-        )}
-
-        {!steppedAway && bodyCompIsFocus && (
-          <NutritionPlanCard
-            state={nutritionAssessmentState.hasReport ? 'done' : 'pending'}
-          />
-        )}
-
-        {!steppedAway && fitnessIsFocus && (
-          <StrengthPlanCard
-            state={strengthAssessmentState.hasReport ? 'done' : 'pending'}
-          />
-        )}
-
-        {!steppedAway && fitnessIsFocus && (
-          <CardioPlanCard
-            state={cardioAssessmentState.hasReport ? 'done' : 'pending'}
+        {showRecoveryCheck && yesterdayStrengthWorkout && (
+          <RecoveryCheckCard
+            workoutLogId={yesterdayStrengthWorkout.id}
+            recordedOn={todayAppDay}
+            yesterdayLabel="Yesterday"
+            liftSummary={recoveryCheckLiftSummary}
           />
         )}
 
@@ -768,21 +712,8 @@ export default async function TodayPage({ searchParams }: Props) {
           <ProgressPhotoCard variant="baseline" />
         )}
 
-        {checkpointState.status === 'eligible' && !steppedAway && (
-          <MonthlyCheckpointCard summary={checkpointState.summary} />
-        )}
-
-        {quarterlyState.status === 'eligible' && !steppedAway && (
-          <QuarterlySurveyCard prior={quarterlyState.prior} />
-        )}
-
-        {staleGoal && !steppedAway && (
-          <StaleGoalCard staleGoal={staleGoal} />
-        )}
-
-        {stuckSignal && !steppedAway && (
-          <StuckConfidenceCard signal={stuckSignal} />
-        )}
+        {/* MonthlyCheckpoint / QuarterlySurvey / StaleGoal /
+            StuckConfidence cards moved to /reflection in Phase C. */}
 
         {steppedAway && (
           <section className="rounded-xl border border-zinc-300 bg-zinc-50 p-6 dark:border-zinc-700 dark:bg-zinc-900">
@@ -815,46 +746,11 @@ export default async function TodayPage({ searchParams }: Props) {
             for reflection) and the chat has no tracking side effects
             (asking Mister P something isn't the same as
             self-surveillance). */}
-        {/* Foundations section. The four tiles below (sleep, activity,
-            workout, nutrition) aren't tied to any focus area — they're
-            cross-cutting basics that ground every other answer the app
-            gives. Beta feedback flagged them as "what are these for, are
-            they mandatory?" — this header answers both directly without
-            re-architecting the tile gating. */}
-        {!steppedAway && (
-          <div className="pt-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Foundations
-            </h2>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-400">
-              The daily basics — sleep, training, food. Not tied to any
-              focus area, not mandatory. What you log here grounds Mister
-              P&rsquo;s answers and quietly shapes your reports. Skip when
-              it&rsquo;s not relevant.
-            </p>
-          </div>
-        )}
-        {/* SleepLogCard always renders. When a connected wearable has
-            populated last night's sleep_logs row, the card shows the
-            captured values + a "via [Provider]" tag and the Edit
-            button gives the user override control. When no row exists
-            (no wearable connected, or sync hasn't caught up), the
-            card shows the manual entry form. */}
-        {!steppedAway && (
-          <div id="sleep-log" className="scroll-mt-16">
-            <SleepLogCard
-              recent={sleepState.recent}
-              rollingAvgHours={sleepState.rollingAvgHours}
-              rollingCount={sleepState.rollingCount}
-              timezone={timezone}
-            />
-          </div>
-        )}
-        {/* Passive-activity readout. Renders only when daily_activity
-            has a row — i.e. a connected wearable is feeding steps.
-            Two lines: yesterday's steps + active calories on the
-            first; this week's moderate-or-vigorous total against the
-            WHO 150-min target on the second. */}
+        {/* Sleep / nutrition / workout / daily-check-in log cards
+            moved to /log in Phase C. The passive-activity readout
+            (steps + weekly minutes) stays here for now — it's a
+            quiet readout, not a logger; it might move to Area 2 in
+            Phase E or to /log later. */}
         {!steppedAway && latestActivity && latestActivity.steps != null && (
           <div className="rounded-xl border border-zinc-200 bg-white px-5 py-3 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
             <div>
@@ -889,34 +785,11 @@ export default async function TodayPage({ searchParams }: Props) {
             )}
           </div>
         )}
-        {!steppedAway && (
-          <div id="workout-log" className="scroll-mt-16">
-            <WorkoutLogCard recent={workoutState.recent} timezone={timezone} />
-          </div>
-        )}
-        {!steppedAway && (
-          <div id="nutrition-log" className="scroll-mt-16">
-            <NutritionLogCard state={nutritionState} timezone={timezone} />
-          </div>
-        )}
-        {!steppedAway && (
-          <div id="daily-check-in" className="scroll-mt-16">
-            <DailyCheckInCard
-              initialState={checkInState}
-              spotlight={welcome && checkInState.check_in_id === null}
-              slugsWithFocus={slugsWithFocus}
-            />
-          </div>
-        )}
-        {/* This Week's Focus sits directly under Daily Check-In so the
-            user's flow is "tick today → see what to focus on this week
-            for those same goals" without scrolling past unrelated
-            surfaces. Letter pills (A./B./C.) line up between the two
-            cards, and the Focus → links on each daily row scroll to
-            the matching entry below. The weekly count line + progress
-            bar (formerly its own WeeklySummaryStrip) is now folded
-            into this card's header so the weekly narrative reads as
-            one card, not two. */}
+        {/* WeeklyFocusCard stays here — it's the goal-tracking
+            companion to the daily check-in. WeeklyReflectionCard +
+            ConfidenceTrendChart moved to /reflection in Phase C.
+            MisterPChatCard stays for now; will be reconsidered in
+            Phase E. */}
         {!steppedAway && (
           <WeeklyFocusCard
             goals={activeGoals}
@@ -924,16 +797,23 @@ export default async function TodayPage({ searchParams }: Props) {
             userState={misterPUserState}
           />
         )}
+
+        {/* Phase D — Area 3 progress visual. Renders milestone fires
+            (when active in their 7-day window) above a confidence
+            trend chart + weekly check-in counter. Component
+            self-hides when there's no history and no recent
+            milestones (first-day users). Voice posture: absolute /
+            self-comparison only — no cohort framing. */}
+        <ProgressVisual
+          recentMilestones={recentMilestones}
+          confidenceHistory={reflectionState.history}
+          weeklyTickedCount={weeklySummary.ticked}
+          weeklyPossibleCount={weeklySummary.possible}
+        />
+
         <MisterPChatCard goals={chatGoals} initialThreads={initialThreads} />
-        {!steppedAway && (
-          <div id="weekly-reflection" className="scroll-mt-16">
-            <WeeklyReflectionCard
-              initialState={reflectionState}
-              weeklySummary={weeklySummary}
-            />
-          </div>
-        )}
-        <ConfidenceTrendChart history={reflectionState.history} />
+
+        <EscapeHatch />
       </div>
     </main>
   );

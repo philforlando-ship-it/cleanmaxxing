@@ -59,6 +59,11 @@ export async function generateAndSaveCardioReport(
     strength_days_per_week: strengthAssessment?.days_per_week ?? null,
     zone_2_layer_started_at: assessment.zone_2_layer_started_at,
     hiit_layer_started_at: assessment.hiit_layer_started_at,
+    injury_constraints: assessment.injury_constraints,
+    equipment_access: assessment.equipment_access,
+    outdoor_access: assessment.outdoor_access,
+    time_per_session: assessment.time_per_session,
+    occupation_activity: assessment.occupation_activity,
   };
 
   const pov = await povFor(POV_SLUG);
@@ -138,6 +143,33 @@ function formatAssessmentForPrompt(
     `- hiit_layer_started_at (stage milestone): ${
       modifiers.hiit_layer_started_at ??
       'not yet — user has not added HIIT layer to Zone 2 base'
+    }`,
+  );
+  modifierLines.push(
+    `- injury_constraints (Q9 — exercise modality EXCLUSIONS): ${
+      modifiers.injury_constraints.length === 0
+        ? 'none'
+        : modifiers.injury_constraints.join(', ')
+    }`,
+  );
+  modifierLines.push(
+    `- equipment_access (Q5 — what the user can actually use): ${
+      modifiers.equipment_access ?? 'not set'
+    }`,
+  );
+  modifierLines.push(
+    `- outdoor_access (Q6 — climate / location reality): ${
+      modifiers.outdoor_access ?? 'not set'
+    }`,
+  );
+  modifierLines.push(
+    `- time_per_session (Q7 — realistic time budget): ${
+      modifiers.time_per_session ?? 'not set'
+    }`,
+  );
+  modifierLines.push(
+    `- occupation_activity (Q8 — day-job activity baseline; drives C2 cardio downweighting): ${
+      modifiers.occupation_activity ?? 'not set'
     }`,
   );
 

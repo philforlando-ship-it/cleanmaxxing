@@ -22,6 +22,7 @@ import {
 } from './assessment-form';
 import { AddZone2Card } from './add-zone-2-card';
 import { AddHiitCard } from './add-hiit-card';
+import { RecommendedModalitiesPanel } from './recommended-modalities-panel';
 
 type Props = {
   searchParams: Promise<{ edit?: string }>;
@@ -211,6 +212,19 @@ export default async function CardioPlanPage({ searchParams }: Props) {
               ) : null;
             })()}
 
+          {/* Recommended-modalities panel — ranks the 7 modalities
+              for the user based on equipment / outdoor / time /
+              injury. Read-only; informational. Does NOT render
+              when screening fields are missing (pre-migration
+              assessments — Edit answers to populate). */}
+          <RecommendedModalitiesPanel
+            equipment_access={assessment.equipment_access}
+            outdoor_access={assessment.outdoor_access}
+            time_per_session={assessment.time_per_session}
+            injury_constraints={assessment.injury_constraints}
+            current_preference={assessment.modality_preference}
+          />
+
           {/* Add HIIT layer gate. Shows when user has structured Zone 2
               in place (either picked '1_2_days'+ originally OR went
               through the NEAT→Zone 2 gate) AND hasn't yet added HIIT.
@@ -278,5 +292,10 @@ function assessmentToInitialValues(
     modality_preference: a.modality_preference,
     days_per_week: a.days_per_week,
     cardio_goal_text: a.cardio_goal_text,
+    injury_constraints: a.injury_constraints,
+    equipment_access: a.equipment_access,
+    outdoor_access: a.outdoor_access,
+    time_per_session: a.time_per_session,
+    occupation_activity: a.occupation_activity,
   };
 }
