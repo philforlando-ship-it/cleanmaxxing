@@ -57,6 +57,7 @@ export async function generateAndSaveCardioReport(
     age: (userRow as { age: number | null } | null)?.age ?? null,
     cardio_sessions_last_7: sessionCount,
     nutrition_goal_direction: nutritionAssessment?.goal_direction ?? null,
+    nutrition_alcohol_use: nutritionAssessment?.alcohol_use ?? null,
     strength_days_per_week: strengthAssessment?.days_per_week ?? null,
     zone_2_layer_started_at: assessment.zone_2_layer_started_at,
     hiit_layer_started_at: assessment.hiit_layer_started_at,
@@ -65,6 +66,7 @@ export async function generateAndSaveCardioReport(
     outdoor_access: assessment.outdoor_access,
     time_per_session: assessment.time_per_session,
     occupation_activity: assessment.occupation_activity,
+    programming_priority: assessment.programming_priority,
   };
 
   const pov = await povFor(POV_SLUG);
@@ -138,6 +140,11 @@ function formatAssessmentForPrompt(
     }`,
   );
   modifierLines.push(
+    `- nutrition_alcohol_use (nutrition_assessments, when present): ${
+      modifiers.nutrition_alcohol_use ?? 'no nutrition assessment yet'
+    }`,
+  );
+  modifierLines.push(
     `- strength_days_per_week (strength_assessments, when present): ${
       modifiers.strength_days_per_week ?? 'no strength assessment yet'
     }`,
@@ -155,30 +162,35 @@ function formatAssessmentForPrompt(
     }`,
   );
   modifierLines.push(
-    `- injury_constraints (Q9 — exercise modality EXCLUSIONS): ${
+    `- injury_constraints (Q10 — exercise modality EXCLUSIONS): ${
       modifiers.injury_constraints.length === 0
         ? 'none'
         : modifiers.injury_constraints.join(', ')
     }`,
   );
   modifierLines.push(
-    `- equipment_access (Q5 — what the user can actually use): ${
+    `- equipment_access (Q6 — what the user can actually use): ${
       modifiers.equipment_access ?? 'not set'
     }`,
   );
   modifierLines.push(
-    `- outdoor_access (Q6 — climate / location reality): ${
+    `- outdoor_access (Q7 — climate / location reality): ${
       modifiers.outdoor_access ?? 'not set'
     }`,
   );
   modifierLines.push(
-    `- time_per_session (Q7 — realistic time budget): ${
+    `- time_per_session (Q8 — realistic time budget): ${
       modifiers.time_per_session ?? 'not set'
     }`,
   );
   modifierLines.push(
-    `- occupation_activity (Q8 — day-job activity baseline; drives C2 cardio downweighting): ${
+    `- occupation_activity (Q9 — day-job activity baseline; drives C2 cardio downweighting): ${
       modifiers.occupation_activity ?? 'not set'
+    }`,
+  );
+  modifierLines.push(
+    `- programming_priority (Q5 — strength-cardio trade-off arbiter; drives 3-options framing when both journeys conflict): ${
+      modifiers.programming_priority ?? 'not set'
     }`,
   );
 

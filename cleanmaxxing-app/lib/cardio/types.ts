@@ -98,6 +98,27 @@ export const CARDIO_OCCUPATION_ACTIVITIES: ReadonlyArray<CardioOccupationActivit
   'very_active',
 ];
 
+// Migration 0088 (May 2026) — cross-journey programming priority. The
+// trade-off arbiter when cardio and strength conflict on recovery.
+// Distinct from primary_role (cardio's job) — this is the overall
+// fitness priority that wins when both journeys ramp up. Nullable on
+// pre-migration rows.
+
+export type CardioProgrammingPriority =
+  | 'strength'
+  | 'muscle_gain'
+  | 'fat_loss'
+  | 'general_fitness'
+  | 'athletic_conditioning';
+
+export const CARDIO_PROGRAMMING_PRIORITIES: ReadonlyArray<CardioProgrammingPriority> = [
+  'strength',
+  'muscle_gain',
+  'fat_loss',
+  'general_fitness',
+  'athletic_conditioning',
+];
+
 export type CardioAssessment = {
   user_id: string;
   primary_role: CardioPrimaryRole;
@@ -111,6 +132,8 @@ export type CardioAssessment = {
   outdoor_access: CardioOutdoorAccess | null;
   time_per_session: CardioTimePerSession | null;
   occupation_activity: CardioOccupationActivity | null;
+  // Migration 0088 — cross-journey programming priority.
+  programming_priority: CardioProgrammingPriority | null;
   // Stage milestone (migration 0060) — NEAT → structured Zone 2.
   // Fires for users who started at '0_days' (step count only) once
   // step count baseline is established (4+ weeks).
@@ -139,6 +162,11 @@ export type CardioReportInputModifiers = {
   cardio_sessions_last_7: number;
   // Cross-modifier from nutrition (when assessed)
   nutrition_goal_direction: string | null;
+  // Cross-modifier from nutrition: alcohol_use. The cardio prompt
+  // names the recovery + HR-elevation cost when this is 'moderate'
+  // or 'heavy' — Zone 2 sessions especially read poorly the day
+  // after a drinking night. 2026-05-08 add per Phil's brain dump.
+  nutrition_alcohol_use: string | null;
   // Cross-modifier from strength (when assessed)
   strength_days_per_week: string | null;
   // Stage milestone — NEAT → Zone 2 transition timestamp. When set,
@@ -154,6 +182,8 @@ export type CardioReportInputModifiers = {
   outdoor_access: CardioOutdoorAccess | null;
   time_per_session: CardioTimePerSession | null;
   occupation_activity: CardioOccupationActivity | null;
+  // Migration 0088 — programming priority (cross-journey arbiter).
+  programming_priority: CardioProgrammingPriority | null;
 };
 
 export const PRIMARY_ROLE_LABEL: Record<CardioPrimaryRole, string> = {
@@ -247,6 +277,22 @@ export const CARDIO_OCCUPATION_ACTIVITY_LABEL: Record<
   very_active: 'Very active — construction, warehouse, trades, heavy labor',
 };
 
+export const CARDIO_PROGRAMMING_PRIORITY_LABEL: Record<
+  CardioProgrammingPriority,
+  string
+> = {
+  strength:
+    'Strength — heavier lifts, better numbers; cardio plays support',
+  muscle_gain:
+    'Muscle gain — visible muscle, hypertrophy; cardio plays support',
+  fat_loss:
+    'Fat loss — leanness, body composition; cardio earns more room',
+  general_fitness:
+    'General fitness — keep both moving; neither dominates',
+  athletic_conditioning:
+    'Athletic conditioning — performance for a sport or activity',
+};
+
 export const CardioAssessmentInputSchema = z.object({
   primary_role: z.enum([
     'support_fat_loss',
@@ -303,6 +349,17 @@ export const CardioAssessmentInputSchema = z.object({
     .nullable(),
   occupation_activity: z
     .enum(['sedentary', 'mostly_standing', 'mostly_active', 'very_active'])
+    .nullable(),
+  // Migration 0088 — programming_priority. Nullable to support pre-
+  // migration assessments; the form requires it on next submit.
+  programming_priority: z
+    .enum([
+      'strength',
+      'muscle_gain',
+      'fat_loss',
+      'general_fitness',
+      'athletic_conditioning',
+    ])
     .nullable(),
 });
 

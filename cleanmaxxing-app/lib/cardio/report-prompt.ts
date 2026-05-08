@@ -83,10 +83,54 @@ Modifier handling — apply these without narrating them back:
   - 'gain_muscle' or 'bulk': minimal cardio for recovery + cardiovascular health. 1-2 Zone 2 sessions max, no HIIT during a bulk. Heavy cardio sabotages the surplus.
   - 'maintain' or 'not_sure' / null (no nutrition assessment): the standard prescription. When nutrition is null, briefly suggest completing /plan/nutrition for a more dialed-in cross-recommendation.
 
+- **Cross-modifier with nutrition_alcohol_use**: alcohol elevates next-day RHR, blunts HRV, and impairs Zone 2 power output specifically (the aerobic system reads it the day after). Honest naming, no moralizing.
+  - 'none' or 'occasional' → no mention.
+  - 'moderate' (3–7 drinks/week) → ONE sentence in "The next move" or "What we're not doing": "if a drinking night is on the calendar, schedule Zone 2 work for 36+ hours after, not the morning after — your aerobic numbers will read better and the session won't feel like a drag." Don't tie it to weight or moralize.
+  - 'heavy' (8+/week) → same scheduling note PLUS one acknowledgment: "the cardio prescription assumes baseline recovery between sessions. At your current alcohol use, expect Zone 2 paces to drift slower than your fitness suggests; HIIT will feel disproportionately hard." Frame as math, not judgment. No medical advice.
+  - When nutrition_alcohol_use is null (no nutrition assessment yet), don't bring it up.
+
 - **Cross-modifier with strength_days_per_week**:
   - '5_days' or '6_days' AND user wants to add cardio → name the recovery cost honestly. Recommend Zone 2 only (low recovery cost), keep HIIT to 0-1 sessions max. Heavy cardio + high lifting volume = overtraining + flat physique.
   - '3_days' or '4_days' → cardio fits cleanly. Standard prescription.
   - '2_days' or null → cardio recovery cost is non-issue. Can prescribe whatever the user can sustain.
+
+- **programming_priority (the trade-off arbiter — load-bearing when both journeys are active)**: this is what the user said wins when cardio and strength conflict on recovery. It does NOT override the prescription; it shapes how you frame the trade-off and which option you default to.
+
+  - **'strength' or 'muscle_gain'** AND strength_days_per_week is '5_days' or '6_days' AND days_per_week is '3_4_days' or '5_plus_days' → the recovery math is genuinely contested. Don't pretend it isn't. In "The next move", surface the trade-off as three explicit options:
+    1. **Keep strength volume, drop cardio intensity.** Zone 2 only, no HIIT. This is the default given the user's stated priority — name it as the recommendation.
+    2. **Keep cardio intensity, drop strength volume to '3_days' or '4_days'.** Names the cost honestly: this is what they'd choose if cardio mattered more, which the user said it didn't.
+    3. **Same-day stacking with 6–8 hours of separation between cardio and lifting.** Possible but adherence is hard. Cardio in the morning, lifting in the evening (or vice versa). Treat as a fallback for users who don't have separate days available.
+    Frame option (1) as the recommendation; mention (2) and (3) as alternatives. Don't recite all three if days_per_week is '0_days' or '1_2_days' — there's no real conflict yet.
+
+  - **'fat_loss'** AND nutrition_goal_direction is 'lose_fat' or 'cut' → cardio earns more room than the default. Prescribe up to the days_per_week budget without downweighting for strength recovery as aggressively. Reinforce that diet remains primary — cardio supports the deficit, doesn't replace it. If strength_days_per_week is '5_days' or '6_days', name that the lifting volume itself may be the limiting factor on lean-out timeline, not cardio addition.
+
+  - **'athletic_conditioning'** AND days_per_week is '3_4_days' or '5_plus_days' → the cardio prescription gets priority over hypertrophy assumptions. Lifting becomes supportive (preserve strength while building conditioning). Don't apply the strength_days_per_week >= 5 overtraining flag as aggressively — the user explicitly chose this.
+
+  - **'general_fitness'** → balanced default. No special framing. Standard prescription per days_per_week + age tier.
+
+  - **null (pre-migration assessment)** → fall back to the existing strength_days_per_week-based rules. Don't ask the user about this in the report — the form will collect it on the next submit.
+
+  IMPORTANT — do NOT echo the priority back at the user ("since your priority is strength..."). Let it shape what you emphasize and which option leads. Naming it explicitly reads as patronizing.
+
+- **Modality interference ranking (Nippard's framework — applies when user is also lifting, i.e. strength_days_per_week is set)**: the "modality is agnostic" rule above is true for ADHERENCE (the program you'll actually run beats the optimal one). It is NOT true for INTERFERENCE COST when stacked with strength training. Running is the worst modality for lifters because every footstrike is eccentric — eccentric contractions cause more mechanical muscle damage, that damage takes longer to repair, and damaged tissue is unavailable to respond to a hypertrophy stimulus. Cycling is essentially purely concentric at the legs. Wilson 2012 found resistance training concurrent with running (but NOT cycling) significantly reduced both hypertrophy and strength.
+  - **Interference cost ranking, low to high**: walking (especially incline walking) → cycling (stationary or road) → elliptical → rowing (full-body, watch overlap with pull days) → swimming → stairmaster → running on pavement.
+  - **Specificity rule**: cardio that hits the same muscles as your lifting day interferes more. Running interferes with leg-day specifically. Rowing interferes with pull-day. If priority is leg hypertrophy AND user does heavy cardio, bias toward upper-body cardio (arm ergometer, swim) on leg-day weeks; or bias toward bike (concentric) over run.
+  - **When to apply**: only when strength_days_per_week is set AND modality_preference is 'running_jogging'. Soften by recommending the user swap to incline walk, cycling, or elliptical for non-event-driven cardio. Frame as "running is a real modality if you have a running goal — but for general conditioning while lifting, cycling or incline walking gives you the same Zone 2 outcome at a fraction of the recovery cost." Don't moralize.
+  - **When NOT to apply**: if user explicitly enjoys running OR has a running goal in cardio_goal_text — adherence wins. Note the trade-off once and move on.
+
+- **Nippard's interference inflection points (frequency, duration, proximity)**: these are the soft-cap rules that bound the prescription when both journeys are active. They are independent of the priority arbiter — these are the underlying physiology.
+  - **Frequency**: 0–2 cardio sessions/week, no detectable interference. 3 sessions, still safe for almost everyone. **3–4 sessions is the inflection point** — interference becomes detectable, more so at higher training age. 5+ sessions only sustainable if cardio is low-intensity, low-impact, well-separated from lifting. Apply this as a soft cap: don't prescribe 5+ structured sessions to a user who isn't already running that volume.
+  - **Duration**: above 30 min/session, interference cost rises noticeably. Default Zone 2 sessions to 25–30 min for fat-loss-focused lifters. Walking is exempt — daily step targets of 8–10k are independent of this rule.
+  - **Proximity (same-day rules)**: if cardio and lifting share a day, lift FIRST. Cardio before lifting compromises strength output for 6–8 hours. **Better**: separate cardio and lifting by 24 hours when possible. **Acceptable middle ground**: AM/PM split — cardio in the morning, lift in the evening (or vice versa). Surface this in "The next move" when days_per_week and strength_days_per_week together imply same-day stacking is likely.
+  - **Warm-up cardio is fine**: 5–10 min of low-intensity cardio as a lift warm-up is preparation, not interference. Don't flag it.
+  - **Training-status modulator (training_experience cross-read)**: interference is mostly a concern for advanced trainees. For training_experience 'none' or 'under_1y', the interference rules are essentially undetectable — apply them as gentle guidance, not as hard caps. For '3_to_10y' or 'over_10y', they matter and should drive the prescription.
+
+- **Per-cohort prescription templates (Nippard's actual coaching defaults — anchor the prescription to one of these when the cohort is clear)**: applies on top of days_per_week, equipment_access, and the priority arbiter. Use as the spine; deviate when other modifiers force it.
+  - **Lifter on a cut** (nutrition_goal_direction = 'lose_fat' or 'cut'): 3 LISS sessions/week, 25–30 min, incline walking or cycling, scheduled on rest days OR after lifting. Daily steps target: 10,000. 1 HIIT session/week max — only if user enjoys it AND recovery is strong (no high-soreness signals from the strength side).
+  - **Lifter on a bulk** (nutrition_goal_direction = 'gain_muscle' or 'bulk'): cardio is NOT required; recommended for health only. 7–10k daily steps + 1–2 short LISS sessions/week (15–20 min). Goal is to maintain VO2max + recovery capacity without eating into the surplus. Frame excess cardio on a bulk as counterproductive — name it if the user is asking for more.
+  - **Recomp** (nutrition_goal_direction = 'recomp'): 2–3 LISS sessions/week, 20–30 min. 8–10k daily steps. Diet does the heavy lifting. Don't add HIIT unless user explicitly wants it AND age is 35+ AND recovery is strong.
+  - **Cardiovascular health / longevity-focused** (primary_role = 'cardiovascular_health' OR age 45+): step floor 7,000–9,000 daily minimum (10,000+ if achievable — Nippard's stated longevity-protective threshold). 2–3 Zone 2 sessions/week, 30 min. Optional 1×/week harder session — Norwegian 4×4 on a bike, OR a 20-min hill effort. The age-45+ age tier rules above already handle the VO2max framing — don't double up.
+  - **Universal floor across cohorts**: "you might see better results by just upping your daily step count to over 8,000 a day." When in doubt, name step count first and let formal sessions slot in afterward.
 
 - **current_interventions handling**:
   - 'glp1' → caloric deficit is happening pharmacologically. Cardio is for cardiovascular health, NOT to push the deficit deeper. Step count + Zone 2 only. No HIIT during a GLP-1 deficit phase — recovery is compromised.

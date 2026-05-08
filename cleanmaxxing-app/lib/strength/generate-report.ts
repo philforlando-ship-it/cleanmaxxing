@@ -10,6 +10,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { kindForAnthropicModel, logCostEvent } from '@/lib/cost-events/log';
 import { povFor } from '@/lib/content/pov';
 import { getUserProfile } from '@/lib/profile/service';
+import { getCardioAssessment } from '@/lib/cardio/service';
 import { getNutritionAssessment } from '@/lib/nutrition/service';
 import { getSleepState } from '@/lib/sleep/service';
 import {
@@ -45,12 +46,14 @@ export async function generateAndSaveStrengthReport(
     { data: userRow },
     sessionCount,
     nutritionAssessment,
+    cardioAssessment,
     sleepState,
     feedbackSummary,
   ] = await Promise.all([
     supabase.from('users').select('age').eq('id', userId).maybeSingle(),
     getRecentStrengthSessionCount(supabase, userId, 7),
     getNutritionAssessment(supabase, userId),
+    getCardioAssessment(supabase, userId),
     getSleepState(supabase, userId),
     getStrengthFeedbackSummary(supabase, userId, 7),
   ]);
@@ -65,6 +68,14 @@ export async function generateAndSaveStrengthReport(
     age: (userRow as { age: number | null } | null)?.age ?? null,
     strength_sessions_last_7: sessionCount,
     nutrition_goal_direction: nutritionAssessment?.goal_direction ?? null,
+    nutrition_alcohol_use: nutritionAssessment?.alcohol_use ?? null,
+    cardio_days_per_week: cardioAssessment?.days_per_week ?? null,
+    cardio_zone_2_layer_active:
+      cardioAssessment?.zone_2_layer_started_at != null,
+    cardio_hiit_layer_active:
+      cardioAssessment?.hiit_layer_started_at != null,
+    cardio_programming_priority:
+      cardioAssessment?.programming_priority ?? null,
     sleep_rolling_avg_hours: sleepState.rollingAvgHours,
     sleep_rolling_count: sleepState.rollingCount,
     selected_exercise_slugs: assessment.selected_exercise_slugs,
@@ -188,6 +199,31 @@ function formatAssessmentForPrompt(
   modifierLines.push(
     `- nutrition_goal_direction (nutrition_assessments, when present): ${
       modifiers.nutrition_goal_direction ?? 'no nutrition assessment yet'
+    }`,
+  );
+  modifierLines.push(
+    `- nutrition_alcohol_use (nutrition_assessments, when present): ${
+      modifiers.nutrition_alcohol_use ?? 'no nutrition assessment yet'
+    }`,
+  );
+  modifierLines.push(
+    `- cardio_days_per_week (cardio_assessments, when present): ${
+      modifiers.cardio_days_per_week ?? 'no cardio assessment yet'
+    }`,
+  );
+  modifierLines.push(
+    `- cardio_zone_2_layer_active (cardio stage milestone): ${
+      modifiers.cardio_zone_2_layer_active ? 'yes' : 'no'
+    }`,
+  );
+  modifierLines.push(
+    `- cardio_hiit_layer_active (cardio stage milestone): ${
+      modifiers.cardio_hiit_layer_active ? 'yes' : 'no'
+    }`,
+  );
+  modifierLines.push(
+    `- cardio_programming_priority (cardio Q5 — strength-cardio trade-off arbiter, when set): ${
+      modifiers.cardio_programming_priority ?? 'not set'
     }`,
   );
   modifierLines.push(

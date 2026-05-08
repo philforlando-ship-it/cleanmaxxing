@@ -183,6 +183,20 @@ export type StrengthReportInputModifiers = {
   strength_sessions_last_7: number;
   // Cross-modifier from the nutrition plan (when assessed)
   nutrition_goal_direction: string | null;
+  // Cross-modifier from nutrition: alcohol_use. The strength prompt
+  // names the recovery cost when this is 'moderate' or 'heavy' — a
+  // hard session within ~24h of a drinking night underperforms.
+  // 2026-05-08 add per Phil's brain dump.
+  nutrition_alcohol_use: string | null;
+  // Cross-modifier from the cardio plan (when assessed). Cross-journey
+  // energy + fatigue architecture, slice 3 (2026-05-08). Strength must
+  // see cardio volume so it can soften the volume target when cardio
+  // is the genuine recovery bottleneck. See memory:
+  // project_cross_journey_energy_fatigue_architecture.md.
+  cardio_days_per_week: string | null;
+  cardio_zone_2_layer_active: boolean;
+  cardio_hiit_layer_active: boolean;
+  cardio_programming_priority: string | null;
   // Cross-modifier from sleep tracker (rolling 7-night avg hours).
   // Recovery is the load-bearing variable for hypertrophy adaptation;
   // chronic poor sleep means programming has to soften.
