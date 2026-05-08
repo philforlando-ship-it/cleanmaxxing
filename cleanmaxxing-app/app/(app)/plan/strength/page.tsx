@@ -16,6 +16,7 @@ import {
   getStrengthAssessment,
 } from '@/lib/strength/service';
 import type { StrengthAssessment } from '@/lib/strength/types';
+import type { TrainingExperience } from '@/lib/profile/service';
 import { STRENGTH_EXERCISES } from '@/lib/strength/types';
 import {
   DEFAULT_OWNED_BY_ACCESS,
@@ -144,8 +145,14 @@ export default async function StrengthPlanPage({ searchParams }: Props) {
         <section className={assessment && !hasReport ? 'mt-4' : 'mt-8'}>
           <StrengthAssessmentForm
             initialValues={
-              assessment ? assessmentToInitialValues(assessment) : undefined
+              assessment
+                ? assessmentToInitialValues(
+                    assessment,
+                    profile.training_experience,
+                  )
+                : undefined
             }
+            initialTrainingExperience={profile.training_experience}
           />
         </section>
       )}
@@ -359,11 +366,15 @@ function DataRow({
 
 function assessmentToInitialValues(
   a: StrengthAssessment,
+  trainingExperience: TrainingExperience | null,
 ): StrengthAssessmentInitialValues {
   return {
     primary_goal: a.primary_goal,
     days_per_week: a.days_per_week,
     equipment_access: a.equipment_access,
+    // Lives on user_profile, not on the strength_assessments row.
+    // Pulled from profile so the form pre-fills it on edit.
+    training_experience: trainingExperience,
     current_split: a.current_split,
     strength_goal_text: a.strength_goal_text,
     priority_muscles: a.priority_muscles,

@@ -13,7 +13,14 @@
 //
 // Goal adjustments (relative to TDEE):
 //   lose_fat → −500 kcal/day (~1 lb/week)
-//   recomp / maintain → 0
+//   recomp → tiered by training_experience:
+//     none / under_1y / null → 0 (eat at TDEE; ride newbie / return-
+//                                 from-detrain gains)
+//     1_to_3y and beyond     → −200 (lean recomp; experienced lifters
+//                                 don't get free muscle so the slight
+//                                 deficit prioritizes the fat side
+//                                 while protein + lifting hold muscle)
+//   maintain → 0
 //   gain_muscle → +250 kcal/day (lean bulk)
 //
 // Protein floor matrix (T4 — May 2026 rebalance from the 0.8/1.0
@@ -40,6 +47,7 @@
 // generator handles the "no targets, fall back to qualitative" path.
 
 import type { GoalDirection } from './types';
+import type { TrainingExperience } from '@/lib/profile/service';
 
 const LB_TO_KG = 0.453592;
 const IN_TO_CM = 2.54;
@@ -111,13 +119,43 @@ export function effectiveActivityLevel(args: {
   return { value: 'lightly_active', source: 'default' };
 }
 
-const GOAL_ADJUSTMENT: Record<GoalDirection, number> = {
+// Static base for non-recomp goals. Recomp is handled separately by
+// recompAdjustment() since it depends on training_experience.
+const GOAL_ADJUSTMENT_BASE: Record<
+  Exclude<GoalDirection, 'recomp'>,
+  number
+> = {
   lose_fat: -500,
-  recomp: 0,
   maintain: 0,
   gain_muscle: 250,
   not_sure: 0,
 };
+
+// Recomp deficit by training experience. Beginners and detrained
+// returners eat at TDEE (newbie/memory gains carry the muscle side
+// at maintenance). Anyone past ~1y of structured training gets the
+// lean-recomp prescription: small deficit, high protein, lifting
+// holds the muscle while the deficit does the fat.
+function recompAdjustment(
+  experience: TrainingExperience | null,
+): number {
+  if (
+    experience === null ||
+    experience === 'none' ||
+    experience === 'under_1y'
+  ) {
+    return 0;
+  }
+  return -200;
+}
+
+function goalAdjustment(
+  goal: GoalDirection,
+  experience: TrainingExperience | null,
+): number {
+  if (goal === 'recomp') return recompAdjustment(experience);
+  return GOAL_ADJUSTMENT_BASE[goal];
+}
 
 export type NutritionTargets = {
   tdee_estimate: number | null;
@@ -134,9 +172,14 @@ export function computeNutritionTargets(args: {
   activity_level: string | null;
   goal_direction: GoalDirection;
   current_interventions: string[];
+  // Optional. When goal_direction is 'recomp', tiers the calorie
+  // adjustment (null/none/under_1y → 0; 1y+ → −200). For non-recomp
+  // goals this is unused; pass null when you don't have it.
+  training_experience?: TrainingExperience | null;
 }): NutritionTargets {
   const { weight_lbs, height_inches, age, activity_level, goal_direction } =
     args;
+  const trainingExperience = args.training_experience ?? null;
 
   // BMR / TDEE require all of weight, height, age, activity. Without
   // them, the qualitative report is the fallback.
@@ -162,7 +205,7 @@ export function computeNutritionTargets(args: {
   const tdee = Math.round(bmr * ACTIVITY_MULTIPLIER[activity_level]!);
   const calorieTarget = Math.max(
     1200, // safety floor — don't prescribe sub-1200 even on aggressive cut
-    Math.round(tdee + GOAL_ADJUSTMENT[goal_direction]),
+    Math.round(tdee + goalAdjustment(goal_direction, trainingExperience)),
   );
 
   const proteinPerLb = proteinFloorPerLb({
@@ -240,6 +283,9 @@ export type BmrCalculatorInputs = {
   activity_level: string | null;
   daily_training_minutes: number | null;
   current_interventions: string[];
+  // Drives the recomp-row calorie target inside per_goal. Null
+  // collapses to the beginner-friendly 0-deficit recomp.
+  training_experience: TrainingExperience | null;
 };
 
 export type MissingInputName = 'weight_lbs' | 'height_inches' | 'age';
@@ -319,6 +365,7 @@ export function computeBmrCalculator(
       activity_level: activity.value,
       goal_direction: goal,
       current_interventions: inputs.current_interventions,
+      training_experience: inputs.training_experience,
     });
   }
 

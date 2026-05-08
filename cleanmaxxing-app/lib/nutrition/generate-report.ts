@@ -83,6 +83,7 @@ export async function generateAndSaveNutritionReport(
     activity_level: activity.value,
     goal_direction: assessment.goal_direction,
     current_interventions: profile.current_interventions,
+    training_experience: profile.training_experience,
   });
 
   // Weight-loss plan layer — only when the user set a goal weight +

@@ -81,6 +81,7 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
     activity_level: profile.activity_level,
     daily_training_minutes: profile.daily_training_minutes,
     current_interventions: profile.current_interventions,
+    training_experience: profile.training_experience,
   });
   const hasReport = assessment?.report_text != null;
   const showForm = !assessment || !hasReport || editParam;

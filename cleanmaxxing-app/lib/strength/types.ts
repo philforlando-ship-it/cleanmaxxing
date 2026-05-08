@@ -2265,6 +2265,17 @@ export const StrengthAssessmentInputSchema = z.object({
     'minimal_dumbbells',
     'bodyweight_only',
   ]),
+  // Q4 — training experience. Lives on user_profile (single source
+  // of truth across journeys); the strength assessment route writes
+  // it through to user_profile.training_experience rather than
+  // duplicating it on strength_assessments. Required on the form.
+  training_experience: z.enum([
+    'none',
+    'under_1y',
+    '1_to_3y',
+    '3_to_10y',
+    'over_10y',
+  ]),
   current_split: z.enum([
     'none_or_inconsistent',
     'full_body',

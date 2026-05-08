@@ -27,6 +27,24 @@ import {
   type StrengthPriorityMuscle,
   type StrengthSecondaryObjective,
 } from '@/lib/strength/types';
+import type { TrainingExperience } from '@/lib/profile/service';
+
+const TRAINING_EXPERIENCES: TrainingExperience[] = [
+  'none',
+  'under_1y',
+  '1_to_3y',
+  '3_to_10y',
+  'over_10y',
+];
+
+// Tuned for the in-form question. Profile page has its own labels.
+const TRAINING_EXPERIENCE_FORM_LABEL: Record<TrainingExperience, string> = {
+  none: 'Never trained — or it was a long time ago',
+  under_1y: 'Under a year of consistent training',
+  '1_to_3y': '1 to 3 years',
+  '3_to_10y': '3 to 10 years',
+  over_10y: '10+ years',
+};
 
 const PRIMARY_GOALS: StrengthPrimaryGoal[] = [
   'size',
@@ -80,6 +98,11 @@ export type StrengthAssessmentInitialValues = {
   primary_goal: StrengthPrimaryGoal;
   days_per_week: StrengthDaysPerWeek;
   equipment_access: StrengthEquipmentAccess;
+  // Lives on user_profile (single source of truth across journeys).
+  // Page passes profile.training_experience here so the form pre-fills
+  // when the user has already answered it on /profile or in a prior
+  // strength assessment.
+  training_experience: TrainingExperience | null;
   current_split: StrengthCurrentSplit;
   strength_goal_text: string | null;
   priority_muscles: StrengthPriorityMuscle[];
@@ -91,8 +114,15 @@ export type StrengthAssessmentInitialValues = {
 
 export function StrengthAssessmentForm({
   initialValues,
+  // First-time users (no assessment yet) may already have
+  // training_experience set on their profile from /profile or a
+  // legacy strength assessment. Pre-fill the new Q4 from that signal
+  // so they don't re-answer. Ignored when initialValues is provided
+  // (edit case) — that path already carries the value.
+  initialTrainingExperience,
 }: {
   initialValues?: StrengthAssessmentInitialValues;
+  initialTrainingExperience?: TrainingExperience | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -125,6 +155,12 @@ export function StrengthAssessmentForm({
   const [homeSetup, setHomeSetup] = useState<HomeSetup | null>(
     initialHomeSetup,
   );
+  const [trainingExperience, setTrainingExperience] =
+    useState<TrainingExperience | null>(
+      initialValues?.training_experience ??
+        initialTrainingExperience ??
+        null,
+    );
   const [currentSplit, setCurrentSplit] =
     useState<StrengthCurrentSplit | null>(
       initialValues?.current_split ?? null,
@@ -178,6 +214,8 @@ export function StrengthAssessmentForm({
     }
     const equipmentAccess: StrengthEquipmentAccess =
       trainsAtGym === 'yes' ? 'full_commercial_gym' : (homeSetup as HomeSetup);
+    if (!trainingExperience)
+      return setError('Pick your training experience.');
     if (!currentSplit) return setError('Pick your current split.');
     if (!secondaryObjective)
       return setError('Pick a secondary objective (or "None").');
@@ -188,6 +226,7 @@ export function StrengthAssessmentForm({
       primary_goal: primaryGoal,
       days_per_week: daysPerWeek,
       equipment_access: equipmentAccess,
+      training_experience: trainingExperience,
       current_split: currentSplit,
       strength_goal_text: goalText.trim() || null,
       priority_muscles: priorityMuscles,
@@ -309,6 +348,25 @@ export function StrengthAssessmentForm({
 
       <Question
         number={4}
+        title="How much strength training experience do you have?"
+        helper="Time spent doing structured lifting, not general gym presence. The plan tunes prescription depth and the recomp deficit off this — beginners eat at maintenance and ride newbie gains; experienced lifters get a slight deficit so recomp is honest about what's possible."
+      >
+        <div className="space-y-2">
+          {TRAINING_EXPERIENCES.map((te) => (
+            <RadioRow
+              key={te}
+              checked={trainingExperience === te}
+              onChange={() => setTrainingExperience(te)}
+              disabled={pending}
+              label={TRAINING_EXPERIENCE_FORM_LABEL[te]}
+              name="training_experience"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={5}
         title="What does your current training look like?"
         helper="The plan respects what's already working. ‘Nothing structured’ triggers the beginner ramp regardless of how strong you feel."
       >
@@ -327,7 +385,7 @@ export function StrengthAssessmentForm({
       </Question>
 
       <Question
-        number={5}
+        number={6}
         title="Which muscles do you most want to develop? (optional, pick up to 3)"
         helper="The visual-leverage stack. The plan biases volume + frequency toward what you pick — more sets per week and 2x-a-week minimum frequency on these specifically. Skip if you want balanced development."
       >
@@ -367,7 +425,7 @@ export function StrengthAssessmentForm({
       </Question>
 
       <Question
-        number={6}
+        number={7}
         title="Anything that feels lagging? (optional)"
         helper="Free text. ‘Calves never grow’, ‘left side smaller than right’, ‘flat upper chest’. Mister P folds it into the prescription."
       >
@@ -383,7 +441,7 @@ export function StrengthAssessmentForm({
       </Question>
 
       <Question
-        number={7}
+        number={8}
         title="Any secondary objective alongside strength?"
         helper="Most 35+ users want strength PLUS something. Pick the one secondary that matters most — the plan honors it without diluting the primary goal. ‘None’ is fine."
       >
@@ -402,7 +460,7 @@ export function StrengthAssessmentForm({
       </Question>
 
       <Question
-        number={8}
+        number={9}
         title="Any chronic conditions to design around? (optional)"
         helper="Multi-select. The plan routes around these — no deadlifts under heavy load with lower-back pain on file, no overhead pressing with shoulder/neck issues, etc. Skip if you don’t have any."
       >
@@ -435,7 +493,7 @@ export function StrengthAssessmentForm({
       </Question>
 
       <Question
-        number={9}
+        number={10}
         title="Bodyweight exercises — push, mix, or only when needed?"
         helper="Three options. 'Primary' means push-ups, pull-ups, and plank work lead the plan even when you have a barbell. 'Mixed' is the default — bodyweight ranks alongside everything else. 'Fallback only' means Mister P only suggests bodyweight when no equipment-based option fits."
       >
@@ -454,7 +512,7 @@ export function StrengthAssessmentForm({
       </Question>
 
       <Question
-        number={10}
+        number={11}
         title="Anything you want Mister P to know? (optional)"
         helper="One line. A specific situation, a constraint, a pattern. Bad shoulder, kid on the way, training before work, etc."
       >
