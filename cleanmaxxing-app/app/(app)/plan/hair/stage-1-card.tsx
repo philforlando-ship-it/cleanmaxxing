@@ -79,7 +79,7 @@ function CutFamilyImage({
   cutFamily,
   cohort,
   density,
-  className = 'mt-3 max-h-64 w-full rounded-md object-cover',
+  className = 'mt-3 max-h-64 w-full rounded-md object-cover object-top',
 }: {
   cutFamily: CutFamily;
   cohort: 'young' | 'mature';
@@ -303,9 +303,13 @@ export function HairStage1Card({
           cohort={cohort}
           density={densityState}
         />
-        <p className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400">
-          Reference image. Yours will look different — same family, your
-          face, your texture, your hairline.
+        <p className="mt-1 text-[11px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+          AI-generated reference. Yours will look different — same family,
+          your face, your hairline. Reference cuts here are calibrated for
+          straight-to-wavy hair (types 1–2C); coily and tightly-curled
+          textures (types 3B–4C) sit, lay, and shape differently — book a
+          barber who specializes in your texture and bring this as a
+          starting point, not a target.
         </p>
 
         <p className="mt-5 text-sm text-zinc-600 dark:text-zinc-400">
@@ -533,7 +537,7 @@ function OtherCutsForDensity({
                   cutFamily={slug}
                   cohort={cohort}
                   density={densityState}
-                  className="h-32 w-full rounded object-cover"
+                  className="h-32 w-full rounded object-cover object-top"
                 />
                 <p className="mt-2 text-[12px] font-medium leading-tight text-zinc-800 dark:text-zinc-200">
                   {CUT_FAMILY_LABEL[slug]}

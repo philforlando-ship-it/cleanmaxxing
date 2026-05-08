@@ -290,6 +290,12 @@ export function StyleStage1Card({
         {ARCHETYPE_LABEL[targetArchetype]}
       </p>
       <ArchetypeImage archetype={targetArchetype} cohort={ageCohort} />
+      <p className="mt-1 text-[11px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+        AI-generated reference. The proportions skew taller and slimmer
+        than most bodies — focus on the silhouette, fabric weight, and
+        color palette, not the model. The same archetype reads on every
+        body type when the fit is calibrated to yours.
+      </p>
 
       <ul className="mt-6 space-y-2">
         {chips.map((chip) => {
