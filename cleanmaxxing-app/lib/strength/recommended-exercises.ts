@@ -41,6 +41,7 @@ const EQUIPMENT_VISIBILITY: Record<
     'weighted_bodyweight',
     'ez_bar',
     'smith',
+    'kettlebell',
   ],
   home_rack_bench: [
     'barbell',
@@ -48,6 +49,7 @@ const EQUIPMENT_VISIBILITY: Record<
     'bodyweight',
     'weighted_bodyweight',
     'ez_bar',
+    'kettlebell',
   ],
   minimal_dumbbells: ['dumbbell', 'bodyweight'],
   bodyweight_only: ['bodyweight'],

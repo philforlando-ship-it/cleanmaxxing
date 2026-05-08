@@ -329,7 +329,8 @@ export type Equipment =
   | 'bodyweight'
   | 'weighted_bodyweight'
   | 'ez_bar'
-  | 'smith';
+  | 'smith'
+  | 'kettlebell';
 
 export type MuscleGroup =
   | 'chest'
@@ -2032,6 +2033,162 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Hold rope by ears',
       'Crunch by flexing the spine',
       'Resist the return',
+    ],
+  },
+
+  // ============ Catalog gap-fill batch (no reference image)
+  {
+    slug: 'farmers_carry',
+    label: "Farmer's Carry",
+    movement_pattern: 'core',
+    equipment: 'dumbbell',
+    primary_group: 'core',
+    primary_muscles: ['Forearms', 'Traps', 'Core'],
+    key_points: [
+      'Heavy dumbbell in each hand',
+      'Stand tall with chest up',
+      'Walk in a straight line',
+      'Keep shoulders packed',
+    ],
+  },
+  {
+    slug: 'dumbbell_step_up',
+    label: 'Dumbbell Step-Up',
+    movement_pattern: 'lunge',
+    equipment: 'dumbbell',
+    primary_group: 'legs',
+    primary_muscles: ['Quads', 'Glutes', 'Hamstrings'],
+    key_points: [
+      'Box at knee height',
+      'Drive through whole foot',
+      'Stand fully tall on top',
+      'Lower under control',
+    ],
+  },
+  {
+    slug: 'lateral_lunge',
+    label: 'Lateral Lunge',
+    movement_pattern: 'lunge',
+    equipment: 'dumbbell',
+    primary_group: 'legs',
+    primary_muscles: ['Adductors', 'Quads', 'Glutes'],
+    key_points: [
+      'Step wide to the side',
+      'Sit hips back into stepping leg',
+      'Trail leg stays straight',
+      'Push off to return',
+    ],
+  },
+  {
+    slug: 'rear_delt_fly',
+    label: 'Rear Delt Fly',
+    movement_pattern: 'shoulder_isolation',
+    equipment: 'dumbbell',
+    primary_group: 'shoulders',
+    primary_muscles: ['Rear Delts', 'Upper Back'],
+    key_points: [
+      'Hinge at hips, chest tall',
+      'Soft bend in elbows',
+      'Raise arms to the sides',
+      'Squeeze shoulder blades back',
+    ],
+  },
+  {
+    slug: 'nordic_curl',
+    label: 'Nordic Curl',
+    movement_pattern: 'leg_isolation',
+    equipment: 'bodyweight',
+    primary_group: 'legs',
+    primary_muscles: ['Hamstrings', 'Glutes'],
+    key_points: [
+      'Anchor ankles under support',
+      'Body stays straight from knees up',
+      'Lower forward as slowly as possible',
+      'Catch with hands at the bottom',
+    ],
+  },
+  {
+    slug: 'incline_push_up',
+    label: 'Incline Push-Up',
+    movement_pattern: 'horizontal_push',
+    equipment: 'bodyweight',
+    primary_group: 'chest',
+    primary_muscles: ['Chest', 'Front Delts', 'Triceps'],
+    key_points: [
+      'Hands on a sturdy elevated surface',
+      'Body straight from head to heels',
+      'Lower chest to surface',
+      'Press up without flaring elbows',
+    ],
+  },
+  {
+    slug: 'assisted_pull_up',
+    label: 'Assisted Pull-Up',
+    movement_pattern: 'vertical_pull',
+    equipment: 'machine',
+    primary_group: 'back',
+    primary_muscles: ['Lats', 'Biceps', 'Upper Back'],
+    key_points: [
+      'Set assistance to leave 6–10 honest reps',
+      'Full hang at the bottom',
+      'Pull elbows down and back',
+      'Control the descent',
+    ],
+  },
+  {
+    slug: 'kettlebell_swing',
+    label: 'Kettlebell Swing',
+    movement_pattern: 'hinge',
+    equipment: 'kettlebell',
+    primary_group: 'glutes',
+    primary_muscles: ['Glutes', 'Hamstrings', 'Lower Back'],
+    key_points: [
+      'Hinge — not a squat',
+      'Bell hikes back between thighs',
+      'Snap hips to drive bell up',
+      'Bell floats to chest height, no higher',
+    ],
+  },
+  {
+    slug: 'box_jump',
+    label: 'Box Jump',
+    movement_pattern: 'squat',
+    equipment: 'bodyweight',
+    primary_group: 'legs',
+    primary_muscles: ['Quads', 'Glutes', 'Calves'],
+    key_points: [
+      'Pick a box you can land soft on',
+      'Quarter squat then explode',
+      'Land in athletic stance',
+      'Step down — never jump down',
+    ],
+  },
+  {
+    slug: 'landmine_press',
+    label: 'Landmine Press',
+    movement_pattern: 'vertical_push',
+    equipment: 'barbell',
+    primary_group: 'shoulders',
+    primary_muscles: ['Front Delts', 'Side Delts', 'Triceps', 'Upper Chest'],
+    key_points: [
+      'One end of bar in landmine, free end at shoulder',
+      'Brace core and ribs down',
+      'Press out and up along the bar arc',
+      'Lower under control',
+    ],
+  },
+  {
+    slug: 'copenhagen_plank',
+    label: 'Copenhagen Plank',
+    movement_pattern: 'core',
+    equipment: 'bodyweight',
+    primary_group: 'core',
+    primary_muscles: ['Adductors', 'Obliques', 'Core'],
+    key_points: [
+      'Side plank position with top leg on bench',
+      'Inner side of top foot on the bench',
+      'Drive top leg down into bench',
+      'Keep hips stacked and high',
     ],
   },
 ];

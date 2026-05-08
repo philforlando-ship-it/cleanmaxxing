@@ -31,6 +31,7 @@ export type GearItem =
   | 'ab_wheel'
   | 'resistance_bands'
   | 'exercise_mat'
+  | 'kettlebells'
   // Umbrella for cable / smith / specific machines (leg press, pec
   // deck, etc.). Surfaced when the user's plan includes machine /
   // cable / smith exercises — the recommendation is "you'll want
@@ -50,6 +51,7 @@ export const GEAR_ITEMS: ReadonlyArray<GearItem> = [
   'ab_wheel',
   'resistance_bands',
   'exercise_mat',
+  'kettlebells',
   'gym_access',
 ];
 
@@ -72,6 +74,7 @@ export const GEAR_LABEL: Record<GearItem, string> = {
   ab_wheel: 'Ab wheel',
   resistance_bands: 'Resistance bands',
   exercise_mat: 'Exercise / yoga mat',
+  kettlebells: 'Kettlebell (one or two)',
   gym_access: 'Gym access (cable, machines, smith)',
 };
 
@@ -100,6 +103,8 @@ export const GEAR_BLURB: Record<GearItem, string> = {
     'Cheap, packable, useful for warm-ups, finishers, and as cable substitutes for travel / minimal setups.',
   exercise_mat:
     'Floor work and lying exercises (planks, hip thrust, glute bridge, BW work) on hard floors gets old fast. $20-$40.',
+  kettlebells:
+    'A single moderate-weight kettlebell unlocks swings, goblet squats, and carries. Cheap and compact. Skip if you have no plans to swing.',
   gym_access:
     'Membership, work-gym, or building gym. Required for cable, smith, and most machine work in this plan.',
 };
@@ -121,6 +126,7 @@ export const DEFAULT_OWNED_BY_ACCESS: Record<string, GearItem[]> = {
     'dip_belt',
     'ab_wheel',
     'exercise_mat',
+    'kettlebells',
     'gym_access',
   ],
   home_rack_bench: [
@@ -245,6 +251,8 @@ export function gearForExercise(ex: StrengthExercise): GearItem[] {
       // Default — assume bar + belt. Dip-belt-only variants are in
       // the override map.
       return ['pull_up_bar', 'dip_belt'];
+    case 'kettlebell':
+      return ['kettlebells'];
   }
 }
 
