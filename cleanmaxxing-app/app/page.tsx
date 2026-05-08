@@ -22,7 +22,7 @@ const PILLARS = [
   {
     number: '02',
     title: 'Process + outcomes',
-    body: 'Goals are weekly habits \u2014 protein, sleep, training, skincare, posture. The thing that compounds is consistency over years. That\u2019s what the app tracks.',
+    body: 'The plan organizes around journeys \u2014 hair, body composition, sleep, skincare, strength, style, cardio, facial hair. Each one is a structured weekly rhythm, not a one-off goal. What compounds is consistency over years. That\u2019s what the app tracks.',
   },
   {
     number: '03',
@@ -128,14 +128,16 @@ export default function Home() {
           <dl className="mt-12 space-y-10">
             <div>
               <dt className="text-sm font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
-                A guided starter plan
+                A guided starting plan
               </dt>
               <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-                An onboarding conversation, not a form, produces three
-                starter goals matched to your age, focus areas, and where
-                you&rsquo;re actually starting from. They&rsquo;re ranked by
-                what moves the needle for a man in his 30s or 40s, rather
-                than what sounds impressive.
+                A short onboarding picker, not a form, identifies the
+                journeys that fit your starting point — hair, body
+                composition, sleep, skincare, strength, style, cardio,
+                facial hair. Your picks shape priority; the foundation
+                tiers (sleep, body comp, skin) anchor regardless. Ranked
+                by what moves the needle for a man in his 30s or 40s,
+                rather than what sounds impressive.
               </dd>
             </div>
 
@@ -146,11 +148,11 @@ export default function Home() {
               <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
                 Direct, a little dry, willing to tell you something
                 isn&rsquo;t worth your time. He&rsquo;s grounded in a
-                100&ndash;200k+ word corpus and he sees your goals, your
-                check-in history, and your reflection notes. The answer
-                you get is calibrated to where you actually are. He
-                won&rsquo;t sell you supplements, vendor links, or cycle
-                protocols.
+                100&ndash;200k+ word corpus and he sees your active
+                journeys, your check-in history, and your reflection
+                notes. The answer you get is calibrated to where you
+                actually are. He won&rsquo;t sell you supplements, vendor
+                links, or cycle protocols.
               </dd>
             </div>
 
@@ -159,10 +161,11 @@ export default function Home() {
                 Daily check-ins, weekly reflection
               </dt>
               <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-                Ten seconds a day on your goals. About a minute on Sunday
-                on how the week went, across four dimensions rather than
-                one global self-worth score. The chart tracks the trend.
-                No streaks, no fire emojis, no global rating.
+                Ten seconds on the daily check-in. Two minutes on Sunday
+                on the weekly reflection — process adherence per active
+                journey, plus a few outcome questions on what actually
+                changed. Not a self-rating, not a global score. The chart
+                tracks the trend over time. No streaks, no fire emojis.
               </dd>
             </div>
 
@@ -171,7 +174,7 @@ export default function Home() {
                 Step away when you need to
               </dt>
               <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-                One tap pauses tracking without losing your goals or
+                One tap pauses tracking without losing your journeys or
                 progress. Taking a break is a legitimate choice, sometimes
                 the right one, and we say so. Most products in this
                 category hide that option. We surface it.

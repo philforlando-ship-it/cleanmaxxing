@@ -86,8 +86,8 @@ export default async function MisterPBackgroundPage() {
           Ready to try it?
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          Fourteen days free. No credit card. Ten seconds a day on your
-          goals, sixty seconds on Sunday on how the week went.
+          Fourteen days free. No credit card. Ten seconds on the daily
+          check-in, a couple of minutes on Sunday on how the week went.
         </p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <Link
