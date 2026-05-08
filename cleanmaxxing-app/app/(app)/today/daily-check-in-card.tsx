@@ -101,14 +101,12 @@ export function DailyCheckInCard({
       <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
         <h2 className="text-lg font-medium">Daily check-in</h2>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          No active goals yet. Head to the library to pick some.
+          Nothing to check in on yet. Pick a journey from{' '}
+          <Link href="/today" className="underline">
+            Today
+          </Link>{' '}
+          and the daily check-in lights up once the plan is generated.
         </p>
-        <Link
-          href="/goals/library"
-          className="mt-4 inline-block rounded-lg border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-        >
-          Browse goals
-        </Link>
       </section>
     );
   }

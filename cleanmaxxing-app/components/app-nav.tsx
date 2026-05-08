@@ -28,13 +28,15 @@ const LINKS: Array<{ href: string; label: string; matchPrefix: string }> = [
   // stuck-confidence signals).
   { href: '/log', label: 'Log', matchPrefix: '/log' },
   { href: '/reflection', label: 'Reflection', matchPrefix: '/reflection' },
-  { href: '/goals', label: 'My Goals', matchPrefix: '/goals' },
   { href: '/photos', label: 'Photos', matchPrefix: '/photos' },
   { href: '/profile', label: 'Profile', matchPrefix: '/profile' },
-  { href: '/goals/library', label: 'Goal Library', matchPrefix: '/goals/library' },
   { href: '/system', label: 'The System', matchPrefix: '/system' },
   { href: '/other-info', label: 'Articles', matchPrefix: '/other-info' },
   { href: '/settings', label: 'Settings', matchPrefix: '/settings' },
+  // /goals + /goals/library nav links retired May 8 — the journey-
+  // first model replaces the goals-picker era; the routes still
+  // resolve for any direct links / legacy bookmarks but no longer
+  // appear in chrome. Same pattern used for /povs.
 ];
 
 const ADMIN_LINKS: Array<{ href: string; label: string; matchPrefix: string }> = [
