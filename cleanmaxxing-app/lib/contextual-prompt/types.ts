@@ -8,6 +8,7 @@ export type ContextualPromptKind =
   | 'skipped_check_ins'
   | 'process_adherence_declining'
   | 'glp1_hydration'
+  | 'sleep_deficit_7d'
   | 'sleep_variance_high';
 
 export type ContextualPrompt = {
@@ -34,5 +35,6 @@ export const PRIMARY_ACTION_INCOMPATIBILITIES: Record<
   // they're informational, not judgmental. Suppress only when
   // stepped away (the user has explicitly opted out).
   glp1_hydration: ['stepped_away'],
+  sleep_deficit_7d: ['stepped_away'],
   sleep_variance_high: ['stepped_away'],
 };

@@ -130,6 +130,34 @@ export function detectGlp1Active(args: {
 }
 
 // =====================
+// sleep_deficit_7d (C1 from the May 7 brain dump)
+// =====================
+
+// 7-day rolling average under 6.5h with at least 5 logged nights.
+// More urgent than sleep_variance_high — variance is recovery
+// noise, deficit is the floor failing. Severity tiers:
+//   severe: avg < 5.5h (red flag — strength + cardio recovery is
+//                       compromised, hunger / cravings spike)
+//   mild:   avg < 6.5h (recovery is being short-changed but not
+//                       collapsing)
+//
+// 6.5h is the threshold POV 42 anchors as "below this, downstream
+// effects start showing up reliably." 5.5h is where the deficit
+// turns into a substrate-level limit on every other journey.
+export function detectSleepDeficit7d(args: {
+  recentTotalHours: number[];
+}): { fires: boolean; avgHours: number; severity: 'mild' | 'severe' } {
+  if (args.recentTotalHours.length < 5) {
+    return { fires: false, avgHours: 0, severity: 'mild' };
+  }
+  const avg =
+    args.recentTotalHours.reduce((s, x) => s + x, 0) /
+    args.recentTotalHours.length;
+  const severity = avg < 5.5 ? 'severe' : 'mild';
+  return { fires: avg < 6.5, avgHours: avg, severity };
+}
+
+// =====================
 // sleep_variance_high
 // =====================
 

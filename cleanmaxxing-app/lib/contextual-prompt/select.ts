@@ -9,23 +9,27 @@
 // Priority order (commit):
 //   1. skipped_check_ins  (most urgent — disengagement signal)
 //   2. process_adherence_declining  (slow-burn signal — Phase F replacement for the legacy confidence-declining detector)
-//   3. glp1_hydration  (modifier-driven, gentle reminder)
-//   4. sleep_variance_high  (recovery context for active lifters)
+//   3. sleep_deficit_7d  (substrate-level — affects every other journey; C1 from May 7 brain dump)
+//   4. glp1_hydration  (modifier-driven, gentle reminder)
+//   5. sleep_variance_high  (recovery context for active lifters)
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getProtocolRollup } from '@/lib/interventions/service';
 import { getWeeklyReflectionState } from '@/lib/weekly-reflection/service';
 import type { PrimaryActionKind } from '@/lib/today/types';
+import { getSleepAssessment } from '@/lib/sleep/service';
 import {
   detectGlp1Active,
   detectProcessAdherenceDeclining,
   detectSkippedCheckIns,
+  detectSleepDeficit7d,
   detectSleepVarianceHigh,
 } from './prompts';
 import {
   copyGlp1Hydration,
   copyProcessAdherenceDeclining,
   copySkippedCheckIns,
+  copySleepDeficit7d,
   copySleepVarianceHigh,
 } from './copy';
 import {
@@ -55,6 +59,7 @@ export async function selectContextualPrompt(
     reflectionState,
     glp1Rollup,
     { data: sleepRows },
+    sleepAssessment,
   ] = await Promise.all([
     supabase
       .from('check_ins')
@@ -72,7 +77,18 @@ export async function selectContextualPrompt(
       .gte('on_date', sevenDaysAgoIso)
       .order('on_date', { ascending: false })
       .limit(7),
+    // Pulled so the sleep_deficit_7d copy can hint at the user's
+    // primary blocker. Null when the user hasn't completed the
+    // sleep assessment — the prompt still fires, just without the
+    // blocker-specific tail.
+    getSleepAssessment(supabase, userId),
   ]);
+
+  const recentSleepHours = ((sleepRows ?? []) as Array<{
+    total_hours: number | null;
+  }>)
+    .map((r) => r.total_hours)
+    .filter((h): h is number => h != null);
 
   // ===== Bucket 1 — skipped_check_ins =====
   if (canFire('skipped_check_ins', primaryActionKind)) {
@@ -97,7 +113,29 @@ export async function selectContextualPrompt(
     }
   }
 
-  // ===== Bucket 3 — glp1_hydration =====
+  // ===== Bucket 3 — sleep_deficit_7d (C1) =====
+  // Sleep deficit is substrate-level: it caps strength recovery,
+  // hunger control, mood. Fires above glp1_hydration and
+  // sleep_variance_high because the floor failing matters more than
+  // either modifier reminder or recovery noise.
+  if (canFire('sleep_deficit_7d', primaryActionKind)) {
+    const result = detectSleepDeficit7d({
+      recentTotalHours: recentSleepHours,
+    });
+    if (result.fires) {
+      // First entry in biggest_blockers is the primary; copy uses
+      // it for the inline blocker hint. Null when no assessment.
+      const primaryBlocker =
+        sleepAssessment?.biggest_blockers?.[0] ?? null;
+      return copySleepDeficit7d({
+        avgHours: result.avgHours,
+        severity: result.severity,
+        primaryBlocker,
+      });
+    }
+  }
+
+  // ===== Bucket 4 — glp1_hydration =====
   if (canFire('glp1_hydration', primaryActionKind)) {
     const result = detectGlp1Active({
       hasActiveGlp1: glp1Rollup === 'on_protocol',
@@ -107,14 +145,11 @@ export async function selectContextualPrompt(
     }
   }
 
-  // ===== Bucket 4 — sleep_variance_high =====
+  // ===== Bucket 5 — sleep_variance_high =====
   if (canFire('sleep_variance_high', primaryActionKind)) {
-    const totalHours = ((sleepRows ?? []) as Array<{
-      total_hours: number | null;
-    }>)
-      .map((r) => r.total_hours)
-      .filter((h): h is number => h != null);
-    const result = detectSleepVarianceHigh({ recentTotalHours: totalHours });
+    const result = detectSleepVarianceHigh({
+      recentTotalHours: recentSleepHours,
+    });
     if (result.fires) {
       return copySleepVarianceHigh(result.sdHours);
     }

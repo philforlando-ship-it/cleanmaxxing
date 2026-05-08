@@ -24,6 +24,8 @@ import {
 import { SleepWeeklyReviewPanel } from './weekly-review-panel';
 import { ConsiderOtcCard } from './consider-otc-card';
 import { ApneaScreeningCard } from './apnea-screening-card';
+import { SleepDeficitCard } from './sleep-deficit-card';
+import { detectSleepDeficit7d } from '@/lib/contextual-prompt/prompts';
 
 type Props = {
   searchParams: Promise<{ edit?: string }>;
@@ -49,6 +51,15 @@ export default async function SleepPlanPage({ searchParams }: Props) {
     ]);
   const hasReport = assessment?.report_text != null;
   const showForm = !assessment || !hasReport || editParam;
+
+  // C2 deficit-card gating. Reuse the same detector that drives
+  // /today's contextual prompt so the two surfaces agree on when
+  // the floor has dropped. sleepState.recent is the last 14 nights
+  // oldest-first; slice the most-recent 7 and feed the hours array.
+  const recentSeven = sleepState.recent.slice(-7);
+  const deficitResult = detectSleepDeficit7d({
+    recentTotalHours: recentSeven.map((r) => r.hours),
+  });
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -174,6 +185,20 @@ export default async function SleepPlanPage({ searchParams }: Props) {
           >
             {assessment.report_text!}
           </ReactMarkdown>
+
+          {/* C2: deficit diagnostic surface. Fires when the same
+              detector behind /today's sleep_deficit_7d prompt is
+              firing AND the user has selected blockers — gives a
+              single place to see all the per-blocker tailored moves
+              alongside the current avg. Quiet when sleep is fine. */}
+          {deficitResult.fires && (
+            <SleepDeficitCard
+              avgHours={deficitResult.avgHours}
+              severity={deficitResult.severity}
+              blockers={assessment.biggest_blockers}
+              loggedNights={recentSeven.length}
+            />
+          )}
 
           {/* Behavioral baseline → OTC supplements gate. Shows when
               4+ weeks since the report AND the rolling sleep avg is

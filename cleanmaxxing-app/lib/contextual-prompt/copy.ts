@@ -10,6 +10,8 @@
 // - No moralizing. The prompt observes; it doesn't lecture.
 // - Mister P's voice: dry, curious, willing to be wrong.
 
+import type { SleepBiggestBlocker } from '@/lib/sleep/types';
+import { BLOCKER_HINT } from '@/lib/sleep/blocker-hints';
 import type { ContextualPrompt } from './types';
 
 export function copySkippedCheckIns(daysSince: number): ContextualPrompt {
@@ -66,6 +68,29 @@ export function copyGlp1Hydration(): ContextualPrompt {
     kind: 'glp1_hydration',
     title: 'On a GLP-1 — water count.',
     body: 'Slowed gastric emptying makes it easy to drink less. Aim for steady fluid throughout the day, not a big load at meals. Quiet reminder.',
+  };
+}
+
+export function copySleepDeficit7d(args: {
+  avgHours: number;
+  severity: 'mild' | 'severe';
+  primaryBlocker: SleepBiggestBlocker | null;
+}): ContextualPrompt {
+  const avgStr = args.avgHours.toFixed(1);
+  const blockerHint = args.primaryBlocker
+    ? ` ${BLOCKER_HINT[args.primaryBlocker]}`
+    : '';
+  if (args.severity === 'severe') {
+    return {
+      kind: 'sleep_deficit_7d',
+      title: `Last seven nights averaged ${avgStr} hours — that's the floor.`,
+      body: `Below 5.5 isn't recovery debt, it's a substrate-level limit on everything else — strength, hunger control, mood. Most of what you're working on stalls until this moves.${blockerHint}`,
+    };
+  }
+  return {
+    kind: 'sleep_deficit_7d',
+    title: `Last seven nights averaged ${avgStr} hours.`,
+    body: `Under 6.5 is where downstream effects start showing — recovery between strength sessions, cravings on the cut, irritability without an obvious cause. Worth one specific move this week, not a sleep overhaul.${blockerHint}`,
   };
 }
 
