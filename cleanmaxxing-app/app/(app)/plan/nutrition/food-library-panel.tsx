@@ -16,6 +16,7 @@ import {
   type CookingCapacity,
   type DietaryPattern,
   type GoalDirection,
+  type GutSensitivity,
 } from '@/lib/nutrition/types';
 import { getRecommendedFoods } from '@/lib/nutrition/recommended-foods';
 
@@ -36,6 +37,9 @@ type Props = {
   dietaryPattern: DietaryPattern | null;
   cookingCapacity: CookingCapacity | null;
   goalDirection: GoalDirection;
+  // Migration 0087 — when 'sensitive', gut-unfriendly foods are
+  // hidden entirely from the picker.
+  gutSensitivity: GutSensitivity;
   initialPreferences: string[];
   initialExclusions: string[];
   initialFilterText: string | null;
@@ -47,6 +51,7 @@ export function FoodLibraryPanel({
   dietaryPattern,
   cookingCapacity,
   goalDirection,
+  gutSensitivity,
   initialPreferences,
   initialExclusions,
   initialFilterText,
@@ -73,8 +78,15 @@ export function FoodLibraryPanel({
         cooking_capacity: cookingCapacity,
         goal_direction: goalDirection,
         food_exclusions: initialExclusions,
+        gut_sensitivity: gutSensitivity,
       }),
-    [dietaryPattern, cookingCapacity, goalDirection, initialExclusions],
+    [
+      dietaryPattern,
+      cookingCapacity,
+      goalDirection,
+      initialExclusions,
+      gutSensitivity,
+    ],
   );
 
   // Auto-expand if user has preferences in the filteredOut set —

@@ -131,22 +131,25 @@ export default async function SystemPage() {
 
           return (
             <section key={tier}>
-              <div className="flex items-baseline justify-between gap-3 border-b-2 border-zinc-300 pb-2 dark:border-zinc-700">
+              {/* Tier header — visual weight intentionally light so
+                  journey-anchored items below dominate visually
+                  (per May 8 design call: journey > tier emphasis). */}
+              <div className="flex items-baseline justify-between gap-3 border-b border-zinc-200 pb-2 dark:border-zinc-800">
                 <div className="flex items-baseline gap-3">
-                  <h2 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                  <h2 className="text-base font-semibold tracking-tight text-zinc-700 dark:text-zinc-300">
                     {info.shortLabel}
                   </h2>
-                  <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                  <span className="text-xs text-zinc-500 dark:text-zinc-500">
                     {info.longLabel}
                   </span>
                 </div>
-                <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                <span className="text-xs text-zinc-500 dark:text-zinc-500">
                   {activeCount > 0
                     ? `${activeCount} active · ${items.length} total`
                     : `${items.length} topics`}
                 </span>
               </div>
-              <p className="mt-3 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+              <p className="mt-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
                 {info.description}
               </p>
               <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -158,27 +161,44 @@ export default async function SystemPage() {
                   // FOCUS_AREA_TO_POV_SLUG qualifies regardless of
                   // whether the user picked it.
                   const isJourneyAnchored = fa !== null;
+                  // Three visual tiers:
+                  //   1. isActive (journey-anchored AND user picked it):
+                  //      strongest treatment — emerald fill + accent
+                  //      bar + "Your journey" badge.
+                  //   2. isJourneyAnchored (journey available, not
+                  //      picked): mid treatment — bold left bar + raised
+                  //      surface so the available-journey signal still
+                  //      dominates non-journey POVs.
+                  //   3. Plain POV: muted card.
+                  const itemClass = isActive
+                    ? 'border-l-4 border-l-emerald-500 border-y border-r border-emerald-300 bg-emerald-50 shadow-sm dark:border-emerald-700 dark:border-l-emerald-500 dark:bg-emerald-950/40'
+                    : isJourneyAnchored
+                      ? 'border-l-4 border-l-zinc-900 border-y border-r border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:border-l-zinc-100 dark:bg-zinc-900'
+                      : 'border border-zinc-200 bg-zinc-50/40 dark:border-zinc-800 dark:bg-zinc-900/30';
                   return (
                     <li
                       key={d.slug}
-                      className={`rounded-lg border p-3 transition ${
-                        isActive
-                          ? 'border-emerald-500 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950/40'
-                          : isJourneyAnchored
-                            ? 'border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-900'
-                            : 'border-zinc-200 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/40'
-                      }`}
+                      className={`rounded-lg p-3 transition ${itemClass}`}
                     >
                       <div className="flex items-baseline justify-between gap-2">
                         <Link
                           href={`/povs/${d.slug}`}
-                          className="text-sm font-medium text-zinc-900 hover:underline dark:text-zinc-100"
+                          className={`text-sm hover:underline dark:text-zinc-100 ${
+                            isJourneyAnchored
+                              ? 'font-semibold text-zinc-900'
+                              : 'font-medium text-zinc-700 dark:text-zinc-300'
+                          }`}
                         >
                           {cleanTitle(d.title)}
                         </Link>
                         {isActive && (
                           <span className="shrink-0 rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white">
                             Your journey
+                          </span>
+                        )}
+                        {!isActive && isJourneyAnchored && (
+                          <span className="shrink-0 rounded-full bg-zinc-900 px-2 py-0.5 text-[10px] font-semibold text-white dark:bg-zinc-100 dark:text-zinc-900">
+                            Journey
                           </span>
                         )}
                       </div>
@@ -190,7 +210,7 @@ export default async function SystemPage() {
                           !isActive &&
                           fa &&
                           !focusSet.has(fa) &&
-                          ' · journey available'}
+                          ' · available to start'}
                       </p>
                     </li>
                   );
@@ -210,20 +230,6 @@ export default async function SystemPage() {
           underneath. Use this map to spot where you&rsquo;re overspending
           attention and where you&rsquo;ve gone quiet.
         </p>
-        <div className="mt-3 flex flex-wrap gap-3 text-xs">
-          <Link
-            href="/goals/library"
-            className="underline decoration-dotted underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100"
-          >
-            Browse goals by tier →
-          </Link>
-          <Link
-            href="/povs"
-            className="underline decoration-dotted underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100"
-          >
-            All relevant POVs →
-          </Link>
-        </div>
       </div>
     </main>
   );

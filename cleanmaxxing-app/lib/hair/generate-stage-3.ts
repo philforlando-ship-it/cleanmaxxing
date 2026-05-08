@@ -10,6 +10,7 @@
 import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { kindForAnthropicModel, logCostEvent } from '@/lib/cost-events/log';
 import { CUT_FAMILY_LABEL, type HairAssessment } from './types';
 import { buildStage3SystemPrompt } from './stage-3-prompt';
 import { saveHairStage3 } from './service';
@@ -41,11 +42,19 @@ export async function generateAndSaveHairStage3(
       : 'Style track — recommend 3 styling product classes matched to their hair type and density. The wash routine section covers shampoo frequency and conditioner usage tailored to their hair type.'
   } Both sections are required. Stay under 280 words across all sections.`;
 
-  const { text } = await generateText({
+  const { text, usage } = await generateText({
     model: anthropic(STAGE_3_MODEL),
     system,
     prompt: userPrompt,
     temperature: 0.4,
+  });
+
+  logCostEvent({
+    user_id: userId,
+    kind: kindForAnthropicModel(STAGE_3_MODEL),
+    tokens_input: usage?.inputTokens,
+    tokens_output: usage?.outputTokens,
+    feature: 'hair_stage_3',
   });
 
   const recommendation_text = text.trim();

@@ -11,6 +11,11 @@ import { ThemeToggle } from '@/components/theme-toggle';
 
 type Props = {
   userEmail: string;
+  // Server-resolved admin flag (lib/admin/is-admin.ts uses
+  // ADMIN_EMAILS env var — server-only). Layout computes once and
+  // passes through so the nav can show /admin/cost without leaking
+  // the allowlist to the client bundle.
+  isAdmin?: boolean;
 };
 
 const LINKS: Array<{ href: string; label: string; matchPrefix: string }> = [
@@ -28,18 +33,24 @@ const LINKS: Array<{ href: string; label: string; matchPrefix: string }> = [
   { href: '/profile', label: 'Profile', matchPrefix: '/profile' },
   { href: '/goals/library', label: 'Goal Library', matchPrefix: '/goals/library' },
   { href: '/system', label: 'The System', matchPrefix: '/system' },
-  { href: '/povs', label: 'Relevant POVs', matchPrefix: '/povs' },
   { href: '/other-info', label: 'Articles', matchPrefix: '/other-info' },
   { href: '/settings', label: 'Settings', matchPrefix: '/settings' },
+];
+
+const ADMIN_LINKS: Array<{ href: string; label: string; matchPrefix: string }> = [
+  { href: '/admin/cost', label: 'Cost', matchPrefix: '/admin/cost' },
 ];
 
 // isActive uses matchPrefix (not exact match) so /goals/[id] still
 // highlights "Goals". Library is listed after Goals and matches first
 // via a more specific prefix, so /goals/library highlights Library
 // rather than both — see the ordering logic below.
-function resolveActive(pathname: string): string | null {
+function resolveActive(
+  pathname: string,
+  links: ReadonlyArray<{ matchPrefix: string }>,
+): string | null {
   // Longest matchPrefix wins, so /goals/library takes precedence over /goals.
-  const sorted = [...LINKS].sort(
+  const sorted = [...links].sort(
     (a, b) => b.matchPrefix.length - a.matchPrefix.length,
   );
   for (const link of sorted) {
@@ -50,7 +61,7 @@ function resolveActive(pathname: string): string | null {
   return null;
 }
 
-export function AppNav({ userEmail }: Props) {
+export function AppNav({ userEmail, isAdmin = false }: Props) {
   const pathname = usePathname() ?? '';
 
   // Hide the nav on onboarding flows and the POV reader. Those are
@@ -59,7 +70,8 @@ export function AppNav({ userEmail }: Props) {
   if (pathname.startsWith('/onboarding')) return null;
   if (pathname.startsWith('/povs/')) return null;
 
-  const active = resolveActive(pathname);
+  const visibleLinks = isAdmin ? [...LINKS, ...ADMIN_LINKS] : LINKS;
+  const active = resolveActive(pathname, visibleLinks);
 
   return (
     <nav className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
@@ -71,7 +83,7 @@ export function AppNav({ userEmail }: Props) {
           >
             Cleanmaxxing
           </Link>
-          {LINKS.map((link) => {
+          {visibleLinks.map((link) => {
             const isActive = active === link.matchPrefix;
             return (
               <Link

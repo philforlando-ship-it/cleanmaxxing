@@ -6,7 +6,11 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getHairAssessment, startStage5 } from '@/lib/hair/service';
+import {
+  canStartStage5,
+  getHairAssessment,
+  startStage5,
+} from '@/lib/hair/service';
 import { computeStage5DefaultCadence } from '@/lib/hair/stage-5-content';
 import { getUserProfile } from '@/lib/profile/service';
 
@@ -26,9 +30,20 @@ export async function POST() {
       { status: 400 },
     );
   }
-  if (!assessment.stage_4_completed_at) {
+  // Loosened gate (2026-05-08): unlock when Stage 4 hits its target
+  // OR 14 calendar days have elapsed since Stage 4 start with at
+  // least one logged routine. Need the live log count for the
+  // calendar-gate branch.
+  const { count: logCount } = await supabase
+    .from('hair_daily_routine_logs')
+    .select('on_date', { count: 'exact', head: true })
+    .eq('user_id', user.id);
+  if (!canStartStage5(assessment, logCount ?? 0)) {
     return NextResponse.json(
-      { error: 'Complete Stage 4 (daily routine) before starting Stage 5.' },
+      {
+        error:
+          'Spend a couple of weeks on your daily routine before starting Stage 5.',
+      },
       { status: 400 },
     );
   }

@@ -286,7 +286,7 @@ export function SleepAssessmentForm({
         </button>
         {pending && (
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            Takes about five seconds.
+            Takes about ten seconds.
           </span>
         )}
       </div>

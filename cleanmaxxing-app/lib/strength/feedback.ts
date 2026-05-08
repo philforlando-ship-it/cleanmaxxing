@@ -46,7 +46,12 @@ export type StrengthFeedbackSummary = {
 
 const SoreSchema = z.union([z.literal(1), z.literal(2), z.literal(3)]);
 
-const MuscleSorenessRecord = z.record(
+// Zod 4: z.record(keyEnum, ...) is exhaustive — would require every
+// muscle group in the enum to be present. The recovery-check form
+// only writes entries for muscles the user actually marked sore (all
+// others are treated as 'fresh' by absence), so we want partial
+// coverage. partialRecord restores the v3 "any subset of keys" semantics.
+const MuscleSorenessRecord = z.partialRecord(
   z.enum([
     'chest',
     'back',

@@ -27,6 +27,12 @@ import {
   type StrengthPriorityMuscle,
   type StrengthSecondaryObjective,
 } from './types';
+import {
+  DEFAULT_OWNED_BY_ACCESS,
+  gearForExercise,
+  isValidGearItem,
+  type GearItem,
+} from './gear';
 
 const EQUIPMENT_VISIBILITY: Record<
   StrengthEquipmentAccess,
@@ -133,6 +139,13 @@ export type RecommendedExercisesArgs = {
   priority_muscles: StrengthPriorityMuscle[];
   secondary_objective: StrengthSecondaryObjective | null;
   bodyweight_preference: StrengthBodyweightPreference | null;
+  // Optional fine-grained gear list. When provided, exercises whose
+  // required gear isn't in this set are dropped (catches the case
+  // where an exercise tagged equipment='bodyweight' actually needs a
+  // pull-up bar — e.g. bodyweight_row, hanging_leg_raise). When null
+  // / undefined we fall back to DEFAULT_OWNED_BY_ACCESS so the
+  // coarse equipment_access tier still does the right thing.
+  equipment_owned?: string[] | null;
 };
 
 export type RecommendedExercisesResult = {
@@ -205,6 +218,19 @@ export function getRecommendedExercises(
     EQUIPMENT_VISIBILITY[args.equipment_access],
   );
 
+  // Fine-grained gear feasibility set. Tier filter alone is too coarse
+  // for bodyweight-tagged exercises that actually need a pull-up bar
+  // (bodyweight_row, hanging_leg_raise, etc.). Use the user's explicit
+  // equipment_owned when set, otherwise fall back to per-tier defaults.
+  // 'exercise_mat' is treated as universally available — every tier
+  // assumes a floor or mat.
+  const ownedSource =
+    args.equipment_owned ?? DEFAULT_OWNED_BY_ACCESS[args.equipment_access] ?? [];
+  const availableGear = new Set<GearItem>(['exercise_mat']);
+  for (const slug of ownedSource) {
+    if (isValidGearItem(slug)) availableGear.add(slug);
+  }
+
   // Build the per-injury exclusion set across all active constraints.
   const injuryExcludes = new Set<string>();
   for (const inj of args.injury_constraints) {
@@ -229,6 +255,16 @@ export function getRecommendedExercises(
 
   for (const ex of allExercises) {
     if (!allowedEquipment.has(ex.equipment)) {
+      hiddenByEquipment.push(ex);
+      continue;
+    }
+    // Gear feasibility: e.g. bodyweight_row passes the equipment-tier
+    // filter (it's tagged equipment='bodyweight') but requires a
+    // pull-up bar that bodyweight_only / minimal_dumbbells users don't
+    // own by default. Same for chin-up, hanging_leg_raise, etc.
+    const gear = gearForExercise(ex);
+    const gearOk = gear.every((g) => availableGear.has(g));
+    if (!gearOk) {
       hiddenByEquipment.push(ex);
       continue;
     }

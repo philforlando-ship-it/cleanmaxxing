@@ -20,16 +20,21 @@ type Props = {
   prior: QuarterlySurveyPrior;
 };
 
+// Mirrors the onboarding picker (lib/onboarding/questions.ts focus_areas
+// options) so quarterly refocus picks map 1:1 to shipped journeys.
+// Legacy values from earlier survey vocabulary (fitness, skin,
+// facial_aesthetics, posture, grooming, anti_aging) remain valid in
+// stored survey_responses for users who pre-date this update — only
+// the picker UI is updated.
 const FOCUS_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: 'fitness', label: 'Fitness' },
-  { value: 'body_composition', label: 'Body composition' },
-  { value: 'skin', label: 'Skin' },
   { value: 'hair', label: 'Hair' },
-  { value: 'facial_aesthetics', label: 'Facial aesthetics' },
   { value: 'style', label: 'Style' },
-  { value: 'posture', label: 'Posture' },
-  { value: 'grooming', label: 'Grooming' },
-  { value: 'anti_aging', label: 'Anti-aging' },
+  { value: 'body_composition', label: 'Body composition' },
+  { value: 'strength', label: 'Strength' },
+  { value: 'cardio', label: 'Cardio' },
+  { value: 'sleep', label: 'Sleep' },
+  { value: 'skincare', label: 'Skincare' },
+  { value: 'facial_hair', label: 'Facial hair' },
 ];
 
 const MOTIVATION_OPTIONS: Array<{ value: string; label: string }> = [

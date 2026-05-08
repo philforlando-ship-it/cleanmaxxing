@@ -238,6 +238,7 @@ export default async function StrengthPlanPage({ searchParams }: Props) {
             priorityMuscles={assessment.priority_muscles}
             secondaryObjective={assessment.secondary_objective}
             bodyweightPreference={assessment.bodyweight_preference}
+            equipmentOwned={assessment.equipment_owned}
             initialSelected={assessment.selected_exercise_slugs}
             initialExcluded={assessment.excluded_exercise_slugs}
             initialFilterText={assessment.exercise_filter_text}
@@ -261,6 +262,7 @@ export default async function StrengthPlanPage({ searchParams }: Props) {
                     priority_muscles: assessment.priority_muscles,
                     secondary_objective: assessment.secondary_objective,
                     bodyweight_preference: assessment.bodyweight_preference,
+                    equipment_owned: assessment.equipment_owned,
                   }).recommended;
             const required = gearRequiredForExercises(sourceExercises);
 
@@ -302,6 +304,7 @@ export default async function StrengthPlanPage({ searchParams }: Props) {
                     priority_muscles: assessment.priority_muscles,
                     secondary_objective: assessment.secondary_objective,
                     bodyweight_preference: assessment.bodyweight_preference,
+                    equipment_owned: assessment.equipment_owned,
                   }).recommended;
             const patterns = Array.from(
               new Set(sourceExercises.map((ex) => ex.movement_pattern)),

@@ -121,3 +121,16 @@ export async function logCostEvent(args: LogCostEventArgs): Promise<void> {
 }
 
 export const COST_EVENTS_PRICING_VERSION = PRICING_VERSION;
+
+// Helper: map an Anthropic model id (claude-sonnet-4-6, claude-opus-4-7,
+// claude-haiku-4-5, claude-haiku-4-5-20251001) to a cost-event kind
+// that lines up with the pricing table above. Falls back to a
+// generic 'anthropic_unknown' when the model id doesn't match — the
+// event still gets logged with 0 estimated cents so token counts
+// aren't lost.
+export function kindForAnthropicModel(modelId: string): CostEventKind {
+  if (modelId.includes('sonnet-4-6')) return 'anthropic_sonnet_4_6';
+  if (modelId.includes('opus-4-7')) return 'anthropic_opus_4_7';
+  if (modelId.includes('haiku-4-5')) return 'anthropic_haiku_4_5';
+  return 'anthropic_unknown';
+}

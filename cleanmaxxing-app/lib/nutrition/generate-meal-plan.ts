@@ -6,6 +6,7 @@
 import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { kindForAnthropicModel, logCostEvent } from '@/lib/cost-events/log';
 import { getUserProfile } from '@/lib/profile/service';
 import {
   ALCOHOL_USE_LABEL,
@@ -46,6 +47,7 @@ export type MealPlanInputsSnapshot = {
   diet_restrictions: string | null;
   current_interventions: string[];
   goal_direction: string;
+  gut_sensitivity: string;
 };
 
 // 7-day window — same convention as sleep weekly review. Inclusive
@@ -86,6 +88,7 @@ export async function generateAndSaveMealPlan(
     diet_restrictions: profile.diet_restrictions,
     current_interventions: profile.current_interventions,
     goal_direction: assessment.goal_direction,
+    gut_sensitivity: assessment.gut_sensitivity,
   };
 
   const labelFor = (slug: string) =>
@@ -124,6 +127,9 @@ current_interventions (esp. 'glp1' affects portion sizes): ${
       ? 'none'
       : profile.current_interventions.join(', ')
   }
+gut_sensitivity (HARD constraint when 'sensitive' — avoid citrus, tomatoes, raw onions, dark chocolate, legumes, cruciferous, fried/cream-heavy meals): ${
+    assessment.gut_sensitivity
+  }
 
 --- FOOD PREFERENCES (build the plan around these when non-empty) ---
 ${
@@ -134,11 +140,19 @@ ${
 
 Generate the plan now per the format in the system prompt. Honor the targets, fasting protocol, exclusions, and any GLP-1 portion adjustments. Aim for 7 days × 3 meals + snacks. Stay within ~700-1000 words.`;
 
-  const { text } = await generateText({
+  const { text, usage } = await generateText({
     model: anthropic(REPORT_MODEL),
     system: buildMealPlanSystemPrompt(),
     prompt: userPrompt,
     temperature: 0.6,
+  });
+
+  logCostEvent({
+    user_id: userId,
+    kind: kindForAnthropicModel(REPORT_MODEL),
+    tokens_input: usage?.inputTokens,
+    tokens_output: usage?.outputTokens,
+    feature: 'meal_plan_gen',
   });
 
   const planText = text.trim();

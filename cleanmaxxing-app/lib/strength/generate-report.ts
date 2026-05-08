@@ -7,6 +7,7 @@
 import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { kindForAnthropicModel, logCostEvent } from '@/lib/cost-events/log';
 import { povFor } from '@/lib/content/pov';
 import { getUserProfile } from '@/lib/profile/service';
 import { getNutritionAssessment } from '@/lib/nutrition/service';
@@ -19,6 +20,7 @@ import {
   PRIORITY_MUSCLE_LABEL,
   STRENGTH_EXERCISES,
   type StrengthAssessment,
+  type StrengthExercise,
   type StrengthReportInputModifiers,
 } from './types';
 import { buildStrengthReportSystemPrompt } from './report-prompt';
@@ -27,6 +29,7 @@ import {
   saveStrengthReport,
 } from './service';
 import { getStrengthFeedbackSummary } from './feedback';
+import { getRecommendedExercises } from './recommended-exercises';
 
 const REPORT_MODEL = 'claude-sonnet-4-6';
 const POV_SLUG = '19-strength-training';
@@ -94,11 +97,19 @@ export async function generateAndSaveStrengthReport(
 
   const userPrompt = formatAssessmentForPrompt(assessment, modifiers);
 
-  const { text } = await generateText({
+  const { text, usage } = await generateText({
     model: anthropic(REPORT_MODEL),
     system,
     prompt: userPrompt,
     temperature: 0.5,
+  });
+
+  logCostEvent({
+    user_id: userId,
+    kind: kindForAnthropicModel(REPORT_MODEL),
+    tokens_input: usage?.inputTokens,
+    tokens_output: usage?.outputTokens,
+    feature: 'strength_report',
   });
 
   const reportText = text.trim();
@@ -117,12 +128,31 @@ function formatAssessmentForPrompt(
   modifiers: StrengthReportInputModifiers,
 ): string {
   // Compact catalog summary for the prompt — slug + label + primary
-  // muscles. The full key_points stay in the codebase for the UI;
-  // the prompt only needs enough to recognize and recommend by name.
-  const catalogLines = STRENGTH_EXERCISES.map(
-    (e) =>
-      `  - ${e.label} (${e.equipment}, ${e.movement_pattern}): ${e.primary_muscles.join(', ')}`,
-  ).join('\n');
+  // muscles. Filtered to the user's feasible exercises so the LLM
+  // can't recommend a bodyweight_row to a user without a pull-up bar
+  // (the catalog flag equipment='bodyweight' isn't sufficient — gear
+  // feasibility is enforced by getRecommendedExercises).
+  //
+  // Vocabulary = recommended ∪ filteredOut. hiddenByEquipment is left
+  // out — the user can't physically do those.
+  const recResult = getRecommendedExercises({
+    equipment_access: assessment.equipment_access,
+    injury_constraints: assessment.injury_constraints,
+    priority_muscles: assessment.priority_muscles,
+    secondary_objective: assessment.secondary_objective,
+    bodyweight_preference: assessment.bodyweight_preference,
+    equipment_owned: assessment.equipment_owned,
+  });
+  const feasibleExercises: StrengthExercise[] = [
+    ...recResult.recommended,
+    ...recResult.filteredOut,
+  ];
+  const catalogLines = feasibleExercises
+    .map(
+      (e) =>
+        `  - ${e.label} (${e.equipment}, ${e.movement_pattern}): ${e.primary_muscles.join(', ')}`,
+    )
+    .join('\n');
 
   const modifierLines: string[] = [];
   modifierLines.push(`- age (users): ${modifiers.age ?? 'not set'}`);

@@ -67,7 +67,7 @@ export async function POST() {
   const buffer = Buffer.from(await photoData.arrayBuffer());
 
   try {
-    const result = await detectFaceShape(buffer);
+    const result = await detectFaceShape(buffer, user.id);
     return NextResponse.json(result);
   } catch (err) {
     console.error('face_shape_detection_failed', err);

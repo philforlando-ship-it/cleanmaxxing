@@ -36,7 +36,13 @@ export type FastingProtocol =
   | 'time_restricted_18_6'
   | 'omad'
   | 'five_two'
+  | 'extended_36_biweekly'
   | 'other';
+
+// Migration 0087 — gut sensitivity. Binary for v0; can subdivide
+// later (e.g. distinguish reflux from FODMAP) once we see how users
+// describe their pattern.
+export type GutSensitivity = 'none' | 'sensitive';
 
 export type AlcoholUse = 'none' | 'occasional' | 'moderate' | 'heavy';
 
@@ -87,6 +93,11 @@ export type NutritionAssessment = {
   dietary_pattern: DietaryPattern | null;
   meal_service_willingness: MealServiceWillingness | null;
   snacking_style: SnackingStyle | null;
+  // Gut sensitivity (migration 0087). When 'sensitive', the recommender
+  // hides foods tagged 'gut_unfriendly' (citrus, tomatoes, legumes,
+  // cruciferous, dark chocolate, etc.) and the meal-plan generator
+  // avoids them. Defaults to 'none' for legacy / unanswered rows.
+  gut_sensitivity: GutSensitivity;
   // v2 food picker
   food_preferences: string[];
   food_exclusions: string[];
@@ -147,6 +158,7 @@ export type NutritionReportInputModifiers = {
   dietary_pattern: DietaryPattern | null;
   meal_service_willingness: MealServiceWillingness | null;
   snacking_style: SnackingStyle | null;
+  gut_sensitivity: GutSensitivity;
   tdee_estimate: number | null;
   calorie_target: number | null;
   protein_target_g: number | null;
@@ -209,6 +221,7 @@ export const FASTING_PROTOCOL_LABEL: Record<FastingProtocol, string> = {
   time_restricted_18_6: '18:6 — eating window of 6 hours',
   omad: 'OMAD — one meal a day',
   five_two: '5:2 — 5 days normal, 2 days low calorie',
+  extended_36_biweekly: 'One 36-hour fast every two weeks',
   other: 'Other fasting protocol',
 };
 
@@ -235,11 +248,17 @@ export const COOKING_CAPACITY_LABEL: Record<CookingCapacity, string> = {
 };
 
 export const DIETARY_PATTERN_LABEL: Record<DietaryPattern, string> = {
-  omnivore: 'Omnivore — eat meat, fish, dairy, eggs',
+  omnivore: 'Omnivore — I eat everything (meat, fish, dairy, eggs, plants, grains)',
   pescatarian: 'Pescatarian — fish but no other meat',
   vegetarian: 'Vegetarian — no meat or fish, dairy/eggs OK',
   vegan: 'Vegan — no animal products',
   mixed_no_pattern: 'Mixed / no clear pattern',
+};
+
+export const GUT_SENSITIVITY_LABEL: Record<GutSensitivity, string> = {
+  none: 'No — my gut handles most foods fine',
+  sensitive:
+    'Yes — high-acid (citrus, tomatoes), high-fat, or FODMAP-heavy foods (legumes, cruciferous, onions) cause issues',
 };
 
 export const MEAL_SERVICE_WILLINGNESS_LABEL: Record<
@@ -307,6 +326,10 @@ export type Food = {
   category: FoodCategory;
   // Allergen / restriction tags. The meal plan generator filters
   // these against diet_restrictions and food_exclusions.
+  // 'gut_unfriendly' is a functional tag (not allergen): foods
+  // commonly trigger reflux / FODMAP-driven bloat / acidity. Filtered
+  // out for users who set gut_sensitivity='sensitive' on the
+  // assessment.
   tags: ReadonlyArray<
     | 'gluten'
     | 'dairy'
@@ -319,6 +342,7 @@ export type Food = {
     | 'shellfish'
     | 'vegan'
     | 'vegetarian'
+    | 'gut_unfriendly'
   >;
   // Approximate macros per typical serving. Educational only — the
   // food picker uses these to teach the user the SHAPE of their meal
@@ -353,8 +377,8 @@ export const FOODS: ReadonlyArray<Food> = [
   { slug: 'tofu', label: 'Tofu', category: 'protein', tags: ['soy', 'vegan', 'vegetarian'], serving_label: '4 oz firm', kcal_per_serving: 90, protein_g: 9, carb_g: 2, fat_g: 5 },
   { slug: 'tempeh', label: 'Tempeh', category: 'protein', tags: ['soy', 'vegan', 'vegetarian'], serving_label: '4 oz', kcal_per_serving: 220, protein_g: 22, carb_g: 9, fat_g: 13 },
   { slug: 'edamame', label: 'Edamame', category: 'protein', tags: ['soy', 'vegan', 'vegetarian'], serving_label: '1 cup shelled', kcal_per_serving: 190, protein_g: 18, carb_g: 14, fat_g: 8 },
-  { slug: 'lentils', label: 'Lentils', category: 'protein', tags: ['vegan', 'vegetarian'], serving_label: '1 cup cooked', kcal_per_serving: 230, protein_g: 18, carb_g: 40, fat_g: 1 },
-  { slug: 'black_beans', label: 'Black beans', category: 'protein', tags: ['vegan', 'vegetarian'], serving_label: '1 cup cooked', kcal_per_serving: 225, protein_g: 15, carb_g: 41, fat_g: 1 },
+  { slug: 'lentils', label: 'Lentils', category: 'protein', tags: ['vegan', 'vegetarian', 'gut_unfriendly'], serving_label: '1 cup cooked', kcal_per_serving: 230, protein_g: 18, carb_g: 40, fat_g: 1 },
+  { slug: 'black_beans', label: 'Black beans', category: 'protein', tags: ['vegan', 'vegetarian', 'gut_unfriendly'], serving_label: '1 cup cooked', kcal_per_serving: 225, protein_g: 15, carb_g: 41, fat_g: 1 },
   { slug: 'pea_protein', label: 'Pea protein powder', category: 'protein', tags: ['vegan', 'vegetarian'], serving_label: '1 scoop (~25 g)', kcal_per_serving: 100, protein_g: 22, carb_g: 1, fat_g: 1 },
 
   // ============ Complex carbs
@@ -369,35 +393,35 @@ export const FOODS: ReadonlyArray<Food> = [
   { slug: 'corn_tortillas', label: 'Corn tortillas', category: 'complex_carb', tags: [], serving_label: '2 small', kcal_per_serving: 120, protein_g: 3, carb_g: 24, fat_g: 2 },
   { slug: 'whole_wheat_tortillas', label: 'Whole wheat tortillas', category: 'complex_carb', tags: ['gluten'], serving_label: '1 large', kcal_per_serving: 130, protein_g: 4, carb_g: 22, fat_g: 4 },
   { slug: 'farro', label: 'Farro', category: 'complex_carb', tags: ['gluten'], serving_label: '1 cup cooked', kcal_per_serving: 220, protein_g: 8, carb_g: 47, fat_g: 1 },
-  { slug: 'chickpeas', label: 'Chickpeas', category: 'complex_carb', tags: ['vegan', 'vegetarian'], serving_label: '1 cup cooked', kcal_per_serving: 270, protein_g: 15, carb_g: 45, fat_g: 4 },
+  { slug: 'chickpeas', label: 'Chickpeas', category: 'complex_carb', tags: ['vegan', 'vegetarian', 'gut_unfriendly'], serving_label: '1 cup cooked', kcal_per_serving: 270, protein_g: 15, carb_g: 45, fat_g: 4 },
 
   // ============ Fruits
   { slug: 'banana', label: 'Banana', category: 'fruit', tags: [], serving_label: '1 medium', kcal_per_serving: 105, protein_g: 1, carb_g: 27, fat_g: 0 },
   { slug: 'apple', label: 'Apple', category: 'fruit', tags: [], serving_label: '1 medium', kcal_per_serving: 95, protein_g: 0, carb_g: 25, fat_g: 0 },
   { slug: 'berries', label: 'Berries (mixed)', category: 'fruit', tags: [], serving_label: '1 cup', kcal_per_serving: 70, protein_g: 1, carb_g: 17, fat_g: 0 },
-  { slug: 'orange', label: 'Orange', category: 'fruit', tags: [], serving_label: '1 medium', kcal_per_serving: 62, protein_g: 1, carb_g: 15, fat_g: 0 },
+  { slug: 'orange', label: 'Orange', category: 'fruit', tags: ['gut_unfriendly'], serving_label: '1 medium', kcal_per_serving: 62, protein_g: 1, carb_g: 15, fat_g: 0 },
   { slug: 'grapes', label: 'Grapes', category: 'fruit', tags: [], serving_label: '1 cup', kcal_per_serving: 104, protein_g: 1, carb_g: 27, fat_g: 0 },
   { slug: 'melon', label: 'Melon (cantaloupe / honeydew)', category: 'fruit', tags: [], serving_label: '1 cup cubed', kcal_per_serving: 55, protein_g: 1, carb_g: 13, fat_g: 0 },
-  { slug: 'pineapple', label: 'Pineapple', category: 'fruit', tags: [], serving_label: '1 cup chunks', kcal_per_serving: 82, protein_g: 1, carb_g: 22, fat_g: 0 },
+  { slug: 'pineapple', label: 'Pineapple', category: 'fruit', tags: ['gut_unfriendly'], serving_label: '1 cup chunks', kcal_per_serving: 82, protein_g: 1, carb_g: 22, fat_g: 0 },
   { slug: 'mango', label: 'Mango', category: 'fruit', tags: [], serving_label: '1 cup chunks', kcal_per_serving: 100, protein_g: 1, carb_g: 25, fat_g: 1 },
   { slug: 'kiwi', label: 'Kiwi', category: 'fruit', tags: [], serving_label: '1 medium', kcal_per_serving: 42, protein_g: 1, carb_g: 10, fat_g: 0 },
   { slug: 'dates', label: 'Dates', category: 'fruit', tags: [], serving_label: '3 medjool', kcal_per_serving: 200, protein_g: 2, carb_g: 54, fat_g: 0 },
 
   // ============ Veggies
-  { slug: 'broccoli', label: 'Broccoli', category: 'veggie', tags: [], serving_label: '1 cup chopped', kcal_per_serving: 30, protein_g: 3, carb_g: 6, fat_g: 0 },
-  { slug: 'cauliflower', label: 'Cauliflower', category: 'veggie', tags: [], serving_label: '1 cup', kcal_per_serving: 25, protein_g: 2, carb_g: 5, fat_g: 0 },
+  { slug: 'broccoli', label: 'Broccoli', category: 'veggie', tags: ['gut_unfriendly'], serving_label: '1 cup chopped', kcal_per_serving: 30, protein_g: 3, carb_g: 6, fat_g: 0 },
+  { slug: 'cauliflower', label: 'Cauliflower', category: 'veggie', tags: ['gut_unfriendly'], serving_label: '1 cup', kcal_per_serving: 25, protein_g: 2, carb_g: 5, fat_g: 0 },
   { slug: 'spinach', label: 'Spinach', category: 'veggie', tags: [], serving_label: '2 cups raw', kcal_per_serving: 14, protein_g: 2, carb_g: 2, fat_g: 0 },
   { slug: 'kale', label: 'Kale', category: 'veggie', tags: [], serving_label: '1 cup chopped', kcal_per_serving: 33, protein_g: 3, carb_g: 6, fat_g: 1 },
   { slug: 'mixed_greens', label: 'Mixed greens / arugula', category: 'veggie', tags: [], serving_label: '2 cups', kcal_per_serving: 15, protein_g: 2, carb_g: 3, fat_g: 0 },
   { slug: 'bell_peppers', label: 'Bell peppers', category: 'veggie', tags: [], serving_label: '1 cup chopped', kcal_per_serving: 30, protein_g: 1, carb_g: 7, fat_g: 0 },
-  { slug: 'onions', label: 'Onions', category: 'veggie', tags: [], serving_label: '1 cup chopped', kcal_per_serving: 64, protein_g: 2, carb_g: 15, fat_g: 0 },
+  { slug: 'onions', label: 'Onions', category: 'veggie', tags: ['gut_unfriendly'], serving_label: '1 cup chopped', kcal_per_serving: 64, protein_g: 2, carb_g: 15, fat_g: 0 },
   { slug: 'zucchini', label: 'Zucchini', category: 'veggie', tags: [], serving_label: '1 cup sliced', kcal_per_serving: 20, protein_g: 2, carb_g: 4, fat_g: 0 },
   { slug: 'asparagus', label: 'Asparagus', category: 'veggie', tags: [], serving_label: '1 cup', kcal_per_serving: 27, protein_g: 3, carb_g: 5, fat_g: 0 },
   { slug: 'mushrooms', label: 'Mushrooms', category: 'veggie', tags: [], serving_label: '1 cup chopped', kcal_per_serving: 15, protein_g: 2, carb_g: 2, fat_g: 0 },
   { slug: 'cucumber', label: 'Cucumber', category: 'veggie', tags: [], serving_label: '1 cup sliced', kcal_per_serving: 16, protein_g: 1, carb_g: 4, fat_g: 0 },
-  { slug: 'tomatoes', label: 'Tomatoes', category: 'veggie', tags: [], serving_label: '1 cup chopped', kcal_per_serving: 32, protein_g: 2, carb_g: 7, fat_g: 0 },
+  { slug: 'tomatoes', label: 'Tomatoes', category: 'veggie', tags: ['gut_unfriendly'], serving_label: '1 cup chopped', kcal_per_serving: 32, protein_g: 2, carb_g: 7, fat_g: 0 },
   { slug: 'green_beans', label: 'Green beans', category: 'veggie', tags: [], serving_label: '1 cup', kcal_per_serving: 31, protein_g: 2, carb_g: 7, fat_g: 0 },
-  { slug: 'brussels_sprouts', label: 'Brussels sprouts', category: 'veggie', tags: [], serving_label: '1 cup', kcal_per_serving: 38, protein_g: 3, carb_g: 8, fat_g: 0 },
+  { slug: 'brussels_sprouts', label: 'Brussels sprouts', category: 'veggie', tags: ['gut_unfriendly'], serving_label: '1 cup', kcal_per_serving: 38, protein_g: 3, carb_g: 8, fat_g: 0 },
   { slug: 'carrots', label: 'Carrots', category: 'veggie', tags: [], serving_label: '1 cup chopped', kcal_per_serving: 50, protein_g: 1, carb_g: 12, fat_g: 0 },
 
   // ============ Fats
@@ -411,7 +435,7 @@ export const FOODS: ReadonlyArray<Food> = [
   { slug: 'cheese', label: 'Cheese (cheddar / mozzarella / feta)', category: 'fat', tags: ['dairy'], serving_label: '1 oz', kcal_per_serving: 115, protein_g: 7, carb_g: 1, fat_g: 9 },
   { slug: 'butter', label: 'Butter or ghee', category: 'fat', tags: ['dairy'], serving_label: '1 tbsp', kcal_per_serving: 100, protein_g: 0, carb_g: 0, fat_g: 11 },
   { slug: 'tahini', label: 'Tahini', category: 'fat', tags: [], serving_label: '2 tbsp', kcal_per_serving: 180, protein_g: 5, carb_g: 6, fat_g: 16 },
-  { slug: 'dark_chocolate', label: 'Dark chocolate (85%+)', category: 'fat', tags: [], serving_label: '1 oz', kcal_per_serving: 170, protein_g: 3, carb_g: 12, fat_g: 13 },
+  { slug: 'dark_chocolate', label: 'Dark chocolate (85%+)', category: 'fat', tags: ['gut_unfriendly'], serving_label: '1 oz', kcal_per_serving: 170, protein_g: 3, carb_g: 12, fat_g: 13 },
 
   // ============ Snacks (some overlap with above categories)
   { slug: 'snack_greek_yogurt', label: 'Greek yogurt cup', category: 'snack', tags: ['dairy'], serving_label: '1 cup', kcal_per_serving: 130, protein_g: 22, carb_g: 9, fat_g: 0 },
@@ -465,6 +489,7 @@ export const NutritionAssessmentInputSchema = z.object({
     'time_restricted_18_6',
     'omad',
     'five_two',
+    'extended_36_biweekly',
     'other',
   ]),
   alcohol_use: z.enum(['none', 'occasional', 'moderate', 'heavy']),
@@ -500,6 +525,10 @@ export const NutritionAssessmentInputSchema = z.object({
       'inconsistent',
     ])
     .nullable(),
+  // Migration 0087 — gut sensitivity. Defaults handled at the column
+  // level ('none'); the form sends an explicit value once the user
+  // answers.
+  gut_sensitivity: z.enum(['none', 'sensitive']),
   // Migration 0079 — weight-loss goal layer. All optional in the
   // schema; the form enforces conditional rules (goal_weight_lbs +
   // goal_target_weeks only when goal_direction is 'lose_fat'; goal

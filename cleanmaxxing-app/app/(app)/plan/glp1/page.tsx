@@ -26,6 +26,9 @@ import { GLP1_TOPIC } from '@/lib/pattern-d/topics/glp1';
 import { ConsideringSection } from '@/components/pattern-d/considering-section';
 import { OnProtocolSection } from '@/components/pattern-d/on-protocol-section';
 import { OffRampSection } from '@/components/pattern-d/off-ramp-section';
+import { Glp1ScreeningGate } from './screening-gate';
+
+const GLP1_SCREENING_KEY = 'glp1_screening_v1';
 
 const GLP1_API_BASE = '/api/plan/pattern-d/glp1';
 
@@ -41,10 +44,17 @@ export default async function Glp1PlanPage({ searchParams }: Props) {
   if (!user) redirect('/login');
   const supabase = await createClient();
 
-  const [allInterventions, profile] = await Promise.all([
+  const [allInterventions, profile, { data: screeningRow }] = await Promise.all([
     listInterventions(supabase, user.id),
     getUserProfile(supabase, user.id),
+    supabase
+      .from('survey_responses')
+      .select('response_value')
+      .eq('user_id', user.id)
+      .eq('question_key', GLP1_SCREENING_KEY)
+      .maybeSingle(),
   ]);
+  const hasCompletedScreening = screeningRow?.response_value != null;
 
   const glp1Rows = allInterventions.filter((i) => i.type === 'glp1');
   const activeRows = glp1Rows.filter(
@@ -118,7 +128,11 @@ export default async function Glp1PlanPage({ searchParams }: Props) {
         />
       )}
 
-      {phase === 'considering' && (
+      {phase === 'considering' && !hasCompletedScreening && (
+        <Glp1ScreeningGate />
+      )}
+
+      {phase === 'considering' && hasCompletedScreening && (
         <ConsideringSection
           content={GLP1_TOPIC.considering}
           prescriberOptions={GLP1_TOPIC.startFormPrescriberStatuses}

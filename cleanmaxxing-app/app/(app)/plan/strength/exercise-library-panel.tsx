@@ -41,6 +41,11 @@ type Props = {
   priorityMuscles: StrengthPriorityMuscle[];
   secondaryObjective: StrengthSecondaryObjective | null;
   bodyweightPreference: StrengthBodyweightPreference | null;
+  // The user's fine-grained gear list. Threaded through to the
+  // recommender so bodyweight-tagged exercises that need a pull-up
+  // bar (bodyweight_row, hanging_leg_raise) get hidden when the user
+  // doesn't own one.
+  equipmentOwned: string[] | null;
   initialSelected: string[];
   initialExcluded: string[];
   initialFilterText: string | null;
@@ -54,6 +59,7 @@ export function ExerciseLibraryPanel({
   priorityMuscles,
   secondaryObjective,
   bodyweightPreference,
+  equipmentOwned,
   initialSelected,
   initialExcluded,
   initialFilterText,
@@ -74,6 +80,7 @@ export function ExerciseLibraryPanel({
         priority_muscles: priorityMuscles,
         secondary_objective: secondaryObjective,
         bodyweight_preference: bodyweightPreference,
+        equipment_owned: equipmentOwned,
       }),
     [
       equipmentAccess,
@@ -81,6 +88,7 @@ export function ExerciseLibraryPanel({
       priorityMuscles,
       secondaryObjective,
       bodyweightPreference,
+      equipmentOwned,
     ],
   );
 

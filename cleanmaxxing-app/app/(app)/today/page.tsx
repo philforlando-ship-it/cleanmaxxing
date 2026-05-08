@@ -39,6 +39,10 @@ import { ContextualPromptCard } from './contextual-prompt-card';
 import { hasSleepAssessment } from '@/lib/sleep/service';
 import { hasStrengthAssessment } from '@/lib/strength/service';
 import { hasSkincareAssessment } from '@/lib/skincare/service';
+import { hasNutritionAssessment } from '@/lib/nutrition/service';
+import { hasCardioAssessment } from '@/lib/cardio/service';
+import { getStyleAssessment } from '@/lib/style/service';
+import { JourneysGrid } from './journeys-grid';
 import { getSkincareLogState } from '@/lib/skincare/log-service';
 import { getFacialHairAssessment } from '@/lib/facial-hair/service';
 import { getFacialHairGroomState } from '@/lib/facial-hair/groom-service';
@@ -211,6 +215,12 @@ export default async function TodayPage({ searchParams }: Props) {
     strengthAssessmentState,
     skincareAssessmentState,
     facialHairAssessment,
+    // Added for the JourneysGrid (May 8 — all-journeys-on-/today).
+    // Style + nutrition + cardio weren't fetched here previously
+    // because their plan tiles came off /today in Phase B.
+    styleAssessment,
+    nutritionAssessmentState,
+    cardioAssessmentState,
   ] = await Promise.all([
     supabase
       .from('survey_responses')
@@ -223,50 +233,49 @@ export default async function TodayPage({ searchParams }: Props) {
     hasStrengthAssessment(supabase, user.id),
     hasSkincareAssessment(supabase, user.id),
     getFacialHairAssessment(supabase, user.id),
+    getStyleAssessment(supabase, user.id),
+    hasNutritionAssessment(supabase, user.id),
+    hasCardioAssessment(supabase, user.id),
   ]);
   // Focus-area flags remaining after Phase B cleanup. Style /
   // grooming / skin / body_composition flags were dropped because
   // their plan cards moved to the PrimaryActionCard's picker — those
   // focus areas are still honored, just by lib/today/primary-action-picker
   // rather than by per-card gates here.
-  let hairIsFocus = false;
-  let sleepIsFocus = false;
-  // The picker now writes 'strength' / 'cardio' as distinct values;
-  // legacy users have 'fitness' which expands to both. The strength
-  // recovery-feedback gate downstream only needs "did the user opt
-  // into strength?" so collapse both signals into one flag.
-  let fitnessIsFocus = false;
-  // Skincare picker value is 'skincare' (current) or 'skin' (legacy).
-  let skincareIsFocus = false;
-  // Facial hair picker value is 'facial_hair' (current) or 'grooming' (legacy).
-  let facialHairIsFocus = false;
+  // Parse focus_areas once. Used both for the per-tile *IsFocus flags
+  // (which gate event-driven daily tiles below) and the JourneysGrid
+  // (which uses the full array for ordering — picked first, tier
+  // tie-break).
+  let focusAreasArray: string[] = [];
   if (focusRow?.response_value) {
     try {
       const parsed = JSON.parse(focusRow.response_value as string);
       if (Array.isArray(parsed)) {
-        if (parsed.includes('hair')) hairIsFocus = true;
-        if (parsed.includes('sleep')) sleepIsFocus = true;
-        if (
-          parsed.includes('fitness') ||
-          parsed.includes('strength') ||
-          parsed.includes('cardio')
-        ) {
-          fitnessIsFocus = true;
-        }
-        if (parsed.includes('skincare') || parsed.includes('skin')) {
-          skincareIsFocus = true;
-        }
-        if (
-          parsed.includes('facial_hair') ||
-          parsed.includes('grooming')
-        ) {
-          facialHairIsFocus = true;
-        }
+        focusAreasArray = parsed.filter(
+          (v): v is string => typeof v === 'string',
+        );
       }
     } catch {
-      // malformed survey value — leave all flags false
+      // malformed survey value — leave focusAreasArray empty
     }
   }
+  const hairIsFocus = focusAreasArray.includes('hair');
+  const sleepIsFocus = focusAreasArray.includes('sleep');
+  // The picker now writes 'strength' / 'cardio' as distinct values;
+  // legacy users have 'fitness' which expands to both. The strength
+  // recovery-feedback gate downstream only needs "did the user opt
+  // into strength?" so collapse both signals into one flag.
+  const fitnessIsFocus =
+    focusAreasArray.includes('fitness') ||
+    focusAreasArray.includes('strength') ||
+    focusAreasArray.includes('cardio');
+  // Skincare picker value is 'skincare' (current) or 'skin' (legacy).
+  const skincareIsFocus =
+    focusAreasArray.includes('skincare') || focusAreasArray.includes('skin');
+  // Facial hair picker value is 'facial_hair' (current) or 'grooming' (legacy).
+  const facialHairIsFocus =
+    focusAreasArray.includes('facial_hair') ||
+    focusAreasArray.includes('grooming');
   // Stage 4 state — only fetched when the user has an assessment AND
   // Stage 4 is started (so we don't run the daily-log count query for
   // every user every render). When in progress, drives the new daily
@@ -742,6 +751,34 @@ export default async function TodayPage({ searchParams }: Props) {
             1 and the rest so it stays in the natural reading flow
             without competing with Area 1 for attention. */}
         <ContextualPromptCard prompt={contextualPrompt} />
+
+        {/* All-journeys grid (May 8 redesign). Surfaces every journey
+            regardless of focus_areas; ordering is picked-first, with
+            the Cleanmaxxing pyramid tier breaking ties. */}
+        {!steppedAway && (
+          <JourneysGrid
+            focusAreas={focusAreasArray}
+            assessments={{
+              hair: {
+                hasAssessment: hairAssessment !== null,
+                hasReport: hairAssessment?.report_text != null,
+              },
+              style: {
+                hasAssessment: styleAssessment !== null,
+                hasReport: styleAssessment?.report_text != null,
+              },
+              body_composition: nutritionAssessmentState,
+              strength: strengthAssessmentState,
+              cardio: cardioAssessmentState,
+              sleep: sleepAssessmentState,
+              skincare: skincareAssessmentState,
+              facial_hair: {
+                hasAssessment: facialHairAssessment !== null,
+                hasReport: facialHairAssessment?.report_text != null,
+              },
+            }}
+          />
+        )}
 
         {isFirstRun && !steppedAway && <FirstRunCard />}
 

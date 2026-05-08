@@ -148,6 +148,7 @@ export async function saveNutritionAssessment(
     dietary_pattern: input.dietary_pattern,
     meal_service_willingness: input.meal_service_willingness,
     snacking_style: input.snacking_style,
+    gut_sensitivity: input.gut_sensitivity,
     goal_weight_lbs: isCutting ? input.goal_weight_lbs : null,
     goal_target_weeks: isCutting ? input.goal_target_weeks : null,
     bf_pct_assessment: input.bf_pct_assessment,
@@ -323,6 +324,8 @@ function rowToAssessment(row: unknown): NutritionAssessment {
       null,
     snacking_style:
       (r.snacking_style as NutritionAssessment['snacking_style']) ?? null,
+    gut_sensitivity:
+      (r.gut_sensitivity as NutritionAssessment['gut_sensitivity']) ?? 'none',
     food_preferences: (r.food_preferences as string[] | null) ?? [],
     food_exclusions: (r.food_exclusions as string[] | null) ?? [],
     food_filter_text: (r.food_filter_text as string | null) ?? null,

@@ -16,21 +16,37 @@
 //      for low-capacity users
 
 import { FOODS, type Food, type GoalDirection } from './types';
-import type { CookingCapacity, DietaryPattern } from './types';
+import type {
+  CookingCapacity,
+  DietaryPattern,
+  GutSensitivity,
+} from './types';
 
 export type RecommendedFoodsArgs = {
   dietary_pattern: DietaryPattern | null;
   cooking_capacity: CookingCapacity | null;
   goal_direction: GoalDirection;
   food_exclusions: string[];
+  // Migration 0087 — when 'sensitive', foods tagged 'gut_unfriendly'
+  // (citrus, tomatoes, legumes, cruciferous, dark chocolate, etc.)
+  // are routed to the dietaryIncompatible bucket so the picker never
+  // shows them. Same hard-hide treatment as a vegan with beef.
+  gut_sensitivity?: GutSensitivity | null;
 };
 
 export type RecommendedFoodsResult = {
   recommended: Food[];
-  // Foods filtered out by an explicit exclusion (dietary pattern
-  // mismatch or explicit food_exclusions). Surfaced in the
-  // expanded view dimmed — the user can still pick them.
+  // Foods the user explicitly excluded via food_exclusions. Surfaced
+  // in the "Show all" expanded view dimmed — the user can still
+  // un-exclude and pick them.
   filteredOut: Food[];
+  // Foods incompatible with the user's dietary_pattern (vegan can't
+  // eat dairy; pescatarian can't eat sirloin) OR with their gut
+  // sensitivity (when 'sensitive', anything tagged 'gut_unfriendly').
+  // NEVER surfaced in the picker — a pescatarian shouldn't see beef
+  // photos at all, and a gut-sensitive user shouldn't see fried
+  // tomatoes. Returned only so callers that need totals can see them.
+  dietaryIncompatible: Food[];
 };
 
 // Tags that disqualify a food per dietary pattern.
@@ -83,15 +99,28 @@ export function getRecommendedFoods(
 
   const recommended: Array<{ food: Food; rank: number }> = [];
   const filteredOut: Food[] = [];
+  const dietaryIncompatible: Food[] = [];
+
+  const gutSensitive = args.gut_sensitivity === 'sensitive';
 
   for (const food of allFoods) {
-    // Dietary hard filter — incompatible tag → filtered out
+    // Dietary hard filter — pescatarians don't see beef, vegans don't
+    // see dairy. These foods are hidden completely from the picker
+    // (they don't exist for this user); they go to dietaryIncompatible
+    // so we can still report counts.
     const incompatibleTag = food.tags.some((t) => excludedTags.has(t));
     if (incompatibleTag) {
-      filteredOut.push(food);
+      dietaryIncompatible.push(food);
       continue;
     }
-    // Explicit exclusion → filtered out
+    // Gut-sensitivity hard filter — same hide-completely treatment as
+    // dietary mismatch. Routes citrus/tomato/legume/cruciferous/etc.
+    // out of view for users who flagged sensitivity.
+    if (gutSensitive && food.tags.includes('gut_unfriendly')) {
+      dietaryIncompatible.push(food);
+      continue;
+    }
+    // Explicit exclusion → filtered out (user can un-exclude)
     if (explicitlyExcluded.has(food.slug)) {
       filteredOut.push(food);
       continue;
@@ -136,5 +165,6 @@ export function getRecommendedFoods(
   return {
     recommended: recommended.map((r) => r.food),
     filteredOut,
+    dietaryIncompatible,
   };
 }

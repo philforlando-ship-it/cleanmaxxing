@@ -488,7 +488,7 @@ export function StrengthAssessmentForm({
         </button>
         {pending && (
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            Takes about ten seconds.
+            Takes about twenty seconds.
           </span>
         )}
       </div>

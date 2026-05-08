@@ -20,7 +20,11 @@ import {
 } from '@/lib/weekly-reflection/service';
 
 const PostSchema = z.object({
-  process_adherence: z.record(
+  // Zod 4: z.record(keyEnum, ...) is exhaustive — would require every
+  // topic in the enum to be present. The form only sends entries for
+  // the user's active journeys, so we want partial coverage. partialRecord
+  // restores the v3 "any subset of keys is fine" semantics.
+  process_adherence: z.partialRecord(
     z.enum([
       'hair',
       'style',
@@ -85,8 +89,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const parsed = PostSchema.safeParse(await req.json().catch(() => ({})));
+  const rawBody = await req.json().catch(() => ({}));
+  const parsed = PostSchema.safeParse(rawBody);
   if (!parsed.success) {
+    console.error(
+      'weekly_reflection_validation_failed',
+      JSON.stringify(
+        {
+          process_adherence: rawBody?.process_adherence ?? null,
+          issues: parsed.error.issues,
+        },
+        null,
+        2,
+      ),
+    );
     return NextResponse.json(
       { error: 'Invalid request', issues: parsed.error.issues },
       { status: 400 },

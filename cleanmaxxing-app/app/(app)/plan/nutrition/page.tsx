@@ -293,6 +293,7 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
             dietaryPattern={assessment.dietary_pattern}
             cookingCapacity={assessment.cooking_capacity}
             goalDirection={assessment.goal_direction}
+            gutSensitivity={assessment.gut_sensitivity}
             initialPreferences={assessment.food_preferences}
             initialExclusions={assessment.food_exclusions}
             initialFilterText={assessment.food_filter_text}
@@ -391,6 +392,7 @@ function assessmentToInitialValues(
     dietary_pattern: a.dietary_pattern,
     meal_service_willingness: a.meal_service_willingness,
     snacking_style: a.snacking_style,
+    gut_sensitivity: a.gut_sensitivity,
     goal_weight_lbs: a.goal_weight_lbs,
     goal_target_weeks: a.goal_target_weeks,
     bf_pct_assessment: a.bf_pct_assessment,

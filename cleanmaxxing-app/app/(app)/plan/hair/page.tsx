@@ -40,6 +40,7 @@ import { HairStage4Card } from './stage-4-card';
 import { HairStage5Card } from './stage-5-card';
 import { HairStage6Card } from './stage-6-card';
 import { PatternDConsideringCard } from './pattern-d-considering-card';
+import { RemediesConsideringCard } from './remedies-considering-card';
 
 type Props = {
   searchParams: Promise<{ edit?: string }>;
@@ -321,7 +322,7 @@ export default async function HairPlanPage({ searchParams }: Props) {
           )}
 
           <HairStage5Card
-            stage4Complete={assessment.stage_4_completed_at !== null}
+            stage4Complete={stage4?.isComplete ?? false}
             startedAt={assessment.stage_5_started_at}
             cadenceDays={assessment.stage_5_cadence_days}
             lastSessionAt={assessment.stage_5_last_session_at}
@@ -336,6 +337,19 @@ export default async function HairPlanPage({ searchParams }: Props) {
             cutCadenceWeeks={assessment.stage_6_cut_cadence_weeks}
             cutFamily={assessment.stage_1_cut_family}
           />
+
+          {/* Considering remedies (transplant / SMP / hair system).
+              Surfaces under the bald-track or advanced-thinning
+              density paths — these are users for whom medication
+              alone often isn't sufficient and external/surgical
+              options are worth seeing in the same posture-consistent
+              format the rest of the app uses. */}
+          {(assessment.density_state === 'advanced_thinning' ||
+            assessment.density_state === 'shaved_or_buzzed' ||
+            assessment.stage_1_cut_family === 'bald_track' ||
+            assessment.stage_1_cut_family === 'clean_shave') && (
+            <RemediesConsideringCard />
+          )}
         </article>
       )}
     </main>

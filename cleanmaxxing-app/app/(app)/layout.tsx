@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { AppNav } from '@/components/app-nav';
 import { TimezoneSync } from '@/components/timezone-sync';
+import { isAdmin } from '@/lib/admin/is-admin';
 
 export default async function AppLayout({
   children,
@@ -34,7 +35,10 @@ export default async function AppLayout({
 
   return (
     <>
-      <AppNav userEmail={user.email ?? ''} />
+      <AppNav
+        userEmail={user.email ?? ''}
+        isAdmin={isAdmin(user.email)}
+      />
       <TimezoneSync current={currentTimezone} />
       {children}
     </>

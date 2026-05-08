@@ -285,6 +285,28 @@ export type Stage4State = {
   completedAt: string | null;
 };
 
+// Stage 5 unlock gate. Loosened on 2026-05-08 — the original gate was
+// "Stage 4 completed (14 daily logs hit target)" which forced ~3 weeks
+// of constant logging to unlock photo monitoring. The new gate also
+// unlocks after 14 calendar days from Stage 4 start, provided the user
+// has logged at least once. Counts as "engaged enough to be ready for
+// the next stage" without requiring perfect consistency.
+const STAGE_5_CALENDAR_DAYS = 14;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+export function canStartStage5(
+  assessment: HairAssessment,
+  stage4Count: number,
+): boolean {
+  if (!assessment.stage_4_started_at) return false;
+  // Original gate — count threshold met (target_check_ins logged).
+  if (assessment.stage_4_completed_at) return true;
+  // Loosened gate — 2 calendar weeks elapsed AND at least one log.
+  const startedMs = new Date(assessment.stage_4_started_at).getTime();
+  const elapsedDays = (Date.now() - startedMs) / MS_PER_DAY;
+  return elapsedDays >= STAGE_5_CALENDAR_DAYS && stage4Count >= 1;
+}
+
 export async function getStage4State(
   supabase: SupabaseClient,
   userId: string,
@@ -319,9 +341,14 @@ export async function getStage4State(
     .maybeSingle();
 
   const totalCount = count ?? 0;
+  // isComplete now reflects the loosened Stage 5 unlock gate (count
+  // threshold OR 14 calendar days + ≥1 log). The DB column
+  // stage_4_completed_at remains the source of truth for the count
+  // threshold; the calendar-gate side is computed at read time.
+  const isComplete = canStartStage5(assessment, totalCount);
   return {
     isStarted: true,
-    isComplete: assessment.stage_4_completed_at !== null,
+    isComplete,
     target: assessment.stage_4_target_check_ins,
     count: totalCount,
     hasLoggedToday: todayRow !== null,

@@ -11,6 +11,7 @@
 import { generateObject } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
+import { kindForAnthropicModel, logCostEvent } from '@/lib/cost-events/log';
 
 export const DETECT_FACE_SHAPE_MODEL = 'claude-sonnet-4-6';
 
@@ -52,6 +53,7 @@ export type DetectFaceShapeOutput = z.infer<
 
 export async function detectFaceShape(
   photoBuffer: Buffer,
+  userId: string,
 ): Promise<DetectFaceShapeOutput> {
   const result = await generateObject({
     model: anthropic(DETECT_FACE_SHAPE_MODEL),
@@ -77,5 +79,14 @@ export async function detectFaceShape(
     ],
     temperature: 0.2,
   });
+
+  logCostEvent({
+    user_id: userId,
+    kind: kindForAnthropicModel(DETECT_FACE_SHAPE_MODEL),
+    tokens_input: result.usage?.inputTokens,
+    tokens_output: result.usage?.outputTokens,
+    feature: 'hair_face_shape_detect',
+  });
+
   return result.object;
 }

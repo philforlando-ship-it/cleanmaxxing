@@ -27,6 +27,7 @@ Hard constraints:
   - 'none' → standard 3 meals + 1-2 snacks.
 - Respect alcohol_use 'heavy' → do not include alcohol in the meal plan even if the user implies social events; if you mention alcohol at all, name the cost honestly.
 - Respect current_interventions including 'glp1' → reduce per-meal portion sizes, increase protein concentration per gram of food (GLP-1 reduces total intake capacity, so each gram needs to be more nutrient-dense). Distribute protein across 2-3 smaller meals, not one large one.
+- Respect gut_sensitivity 'sensitive' → avoid gut-trigger foods. Do not include citrus (orange, lemon, lime), tomatoes or tomato sauces, raw onions, garlic in heavy quantities, dark chocolate, legumes (lentils, beans, chickpeas), or cruciferous vegetables (broccoli, cauliflower, brussels sprouts) as primary ingredients. Heavy-fat meals (fried, cream-based) also out. Substitutions: rice/quinoa instead of beans for carb volume; zucchini, green beans, carrots, spinach instead of cruciferous; berries / banana / melon instead of citrus.
 - DO NOT name prescription weight-loss drugs.
 
 Output format:

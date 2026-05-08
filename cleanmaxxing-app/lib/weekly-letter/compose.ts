@@ -10,6 +10,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
+import { kindForAnthropicModel, logCostEvent } from '@/lib/cost-events/log';
 import { getMisterPUserState, type MisterPUserState } from '@/lib/mister-p/user-state';
 import { ageFeelLabelFor } from '@/lib/confidence/context';
 
@@ -224,11 +225,19 @@ ${contextBlock}
 
 Write the letter now. 150–250 words, plain prose, no lists, no headers.`;
 
-  const { text } = await generateText({
+  const { text, usage } = await generateText({
     model: anthropic('claude-sonnet-4-6'),
     system: LETTER_SYSTEM_PROMPT,
     prompt,
     temperature: 0.6,
+  });
+
+  logCostEvent({
+    user_id: userId,
+    kind: kindForAnthropicModel('claude-sonnet-4-6'),
+    tokens_input: usage?.inputTokens,
+    tokens_output: usage?.outputTokens,
+    feature: 'weekly_letter',
   });
 
   return text.trim();

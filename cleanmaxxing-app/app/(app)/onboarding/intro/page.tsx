@@ -42,7 +42,7 @@ export default async function OnboardingIntroPage() {
         <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
           Before we ask anything, here&rsquo;s what the product asks of you.
           About fifteen seconds to read — then a short survey to tune your
-          starting goals.
+          starting plan.
         </p>
 
         <ul className="mt-8 space-y-5">
@@ -62,8 +62,11 @@ export default async function OnboardingIntroPage() {
               <span className="shrink-0 text-xs text-zinc-500">~2 minutes, Sunday</span>
             </div>
             <p className="mt-1.5 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-              Four sliders on how the week felt — social, work, physical, age
-              — plus a short note. This is the snapshot. Not a daily dial.
+              For each journey you&rsquo;re running, you mark whether you
+              stuck to the process — most days, some days, or hardly. A few
+              questions on how the week landed, one on whether you feel more
+              or less on track, and a short note. You name what happened; the
+              app doesn&rsquo;t ask you to rate yourself.
             </p>
           </li>
           <li className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
@@ -79,8 +82,7 @@ export default async function OnboardingIntroPage() {
         </ul>
 
         <p className="mt-8 text-xs text-zinc-500 dark:text-zinc-400">
-          You can pause tracking any time. There&rsquo;s no streak to break and
-          no AI looking at your photos.
+          You can pause tracking any time. There&rsquo;s no streak to break.
         </p>
 
         <div className="mt-8 flex items-center justify-between gap-3">

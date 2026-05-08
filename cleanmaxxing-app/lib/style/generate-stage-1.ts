@@ -5,6 +5,7 @@
 import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { kindForAnthropicModel, logCostEvent } from '@/lib/cost-events/log';
 import { getUserProfile } from '@/lib/profile/service';
 import {
   ARCHETYPE_LABEL,
@@ -43,11 +44,19 @@ export async function generateAndSaveStyleStage1(
     },
   );
 
-  const { text } = await generateText({
+  const { text, usage } = await generateText({
     model: anthropic(STAGE_1_MODEL),
     system,
     prompt: userPrompt,
     temperature: 0.5,
+  });
+
+  logCostEvent({
+    user_id: userId,
+    kind: kindForAnthropicModel(STAGE_1_MODEL),
+    tokens_input: usage?.inputTokens,
+    tokens_output: usage?.outputTokens,
+    feature: 'style_stage_1',
   });
 
   const auditText = text.trim();

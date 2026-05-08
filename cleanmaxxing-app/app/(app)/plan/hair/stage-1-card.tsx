@@ -490,7 +490,12 @@ function TryOnSection({
 // pick from here — Mister P already picked one. This is transparency:
 // the user sees the curated subset for their density AND age cohort
 // (so a 42-year-old never sees broccoli alongside their slick-back).
-// Collapsed by default; expand reveals thumbnails.
+// Capped at 4 alternates so the user sees a curated 5-cut set (1
+// recommended + up to 4 alternates) without scrolling. Each alternate
+// has a "Use this cut" button that POSTs to the override endpoint and
+// re-generates the barber instructions for the chosen cut.
+const MAX_ALTERNATES = 4;
+
 function OtherCutsForDensity({
   densityState,
   recommended,
@@ -502,50 +507,83 @@ function OtherCutsForDensity({
   cohort: 'young' | 'mature';
   age: number | null;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const router = useRouter();
+  const [overriding, setOverriding] = useState<CutFamily | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   const densityCuts = cutsForDensity(densityState);
   const ageFiltered = cutsForAge(age, densityCuts);
-  const others = ageFiltered.filter((c) => c !== recommended);
+  const others = ageFiltered
+    .filter((c) => c !== recommended)
+    .slice(0, MAX_ALTERNATES);
   if (others.length === 0) return null;
+
+  async function chooseCut(cutFamily: CutFamily) {
+    setError(null);
+    setOverriding(cutFamily);
+    try {
+      const res = await fetch('/api/plan/hair/stage-1/override', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ cut_family: cutFamily }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(body.error ?? `Override failed (${res.status})`);
+      }
+      router.refresh();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setOverriding(null);
+    }
+  }
+
   return (
     <div className="mt-6 border-t border-zinc-200 pt-5 dark:border-zinc-800">
-      <button
-        type="button"
-        onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-baseline justify-between text-left"
-      >
-        <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          Other cuts that work for your density
-        </span>
-        <span className="text-xs text-zinc-500 dark:text-zinc-400">
-          {expanded ? 'Hide' : `Show ${others.length}`}
-        </span>
-      </button>
-      {expanded && (
-        <>
-          <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-            Mister P picked the one above. These are the others that
-            also fit your density — for context, not for picking.
-          </p>
-          <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {others.map((slug) => (
-              <li
-                key={slug}
-                className="rounded-md border border-zinc-200 bg-zinc-50 p-2 dark:border-zinc-800 dark:bg-zinc-950"
+      <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+        Other cuts that work for you
+      </p>
+      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+        Mister P picked the one above. Pick a different one if it
+        suits you better — the barber instructions will rewrite for
+        whatever you choose.
+      </p>
+      <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-2">
+        {others.map((slug) => {
+          const isOverriding = overriding === slug;
+          return (
+            <li
+              key={slug}
+              className="rounded-md border border-zinc-200 bg-zinc-50 p-2 dark:border-zinc-800 dark:bg-zinc-950"
+            >
+              <CutFamilyImage
+                cutFamily={slug}
+                cohort={cohort}
+                density={densityState}
+                className="h-32 w-full rounded object-cover object-top"
+              />
+              <p className="mt-2 text-[12px] font-medium leading-tight text-zinc-800 dark:text-zinc-200">
+                {CUT_FAMILY_LABEL[slug]}
+              </p>
+              <button
+                type="button"
+                onClick={() => chooseCut(slug)}
+                disabled={overriding !== null}
+                className="mt-2 w-full rounded border border-zinc-300 bg-white px-2 py-1 text-[11px] font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
               >
-                <CutFamilyImage
-                  cutFamily={slug}
-                  cohort={cohort}
-                  density={densityState}
-                  className="h-32 w-full rounded object-cover object-top"
-                />
-                <p className="mt-2 text-[12px] font-medium leading-tight text-zinc-800 dark:text-zinc-200">
-                  {CUT_FAMILY_LABEL[slug]}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </>
+                {isOverriding ? 'Updating…' : 'Use this cut'}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {error && (
+        <p className="mt-3 text-[12px] text-red-600 dark:text-red-400">
+          {error}
+        </p>
       )}
     </div>
   );

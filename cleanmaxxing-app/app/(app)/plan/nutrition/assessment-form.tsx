@@ -13,6 +13,7 @@ import {
   EATING_CONTEXT_LABEL,
   FASTING_PROTOCOL_LABEL,
   GOAL_DIRECTION_LABEL,
+  GUT_SENSITIVITY_LABEL,
   MEAL_SERVICE_WILLINGNESS_LABEL,
   NUTRITION_WHAT_TRIED_LABEL,
   SNACKING_STYLE_LABEL,
@@ -24,6 +25,7 @@ import {
   type EatingContext,
   type FastingProtocol,
   type GoalDirection,
+  type GutSensitivity,
   type MealServiceWillingness,
   type NutritionWhatTried,
   type SnackingStyle,
@@ -115,6 +117,7 @@ export type NutritionAssessmentInitialValues = {
   dietary_pattern: DietaryPattern | null;
   meal_service_willingness: MealServiceWillingness | null;
   snacking_style: SnackingStyle | null;
+  gut_sensitivity: GutSensitivity;
   goal_weight_lbs: number | null;
   goal_target_weeks: number | null;
   bf_pct_assessment: number | null;
@@ -172,6 +175,9 @@ export function NutritionAssessmentForm({
     );
   const [snackingStyle, setSnackingStyle] = useState<SnackingStyle | null>(
     initialValues?.snacking_style ?? null,
+  );
+  const [gutSensitivity, setGutSensitivity] = useState<GutSensitivity>(
+    initialValues?.gut_sensitivity ?? 'none',
   );
   const [goalWeight, setGoalWeight] = useState<string>(
     initialValues?.goal_weight_lbs != null
@@ -280,6 +286,7 @@ export function NutritionAssessmentForm({
       dietary_pattern: dietaryPattern,
       meal_service_willingness: mealServiceWillingness,
       snacking_style: snackingStyle,
+      gut_sensitivity: gutSensitivity,
       goal_weight_lbs: goalWeightVal,
       goal_target_weeks: goalWeeksVal,
       bf_pct_assessment: bfPctVal,
@@ -518,9 +525,32 @@ export function NutritionAssessmentForm({
         </div>
       </Question>
 
+      <Question
+        number={12}
+        title="Sensitive gut?"
+        helper="If high-acid (citrus, tomatoes), high-fat, or FODMAP-heavy foods (legumes, cruciferous, onions) consistently cause issues, picking 'sensitive' filters the worst offenders out of your food picker AND the meal plan. You'll still see the rest of the catalog."
+      >
+        <div className="space-y-2">
+          <RadioRow
+            checked={gutSensitivity === 'none'}
+            onChange={() => setGutSensitivity('none')}
+            disabled={pending}
+            label={GUT_SENSITIVITY_LABEL.none}
+            name="gut_sensitivity"
+          />
+          <RadioRow
+            checked={gutSensitivity === 'sensitive'}
+            onChange={() => setGutSensitivity('sensitive')}
+            disabled={pending}
+            label={GUT_SENSITIVITY_LABEL.sensitive}
+            name="gut_sensitivity"
+          />
+        </div>
+      </Question>
+
       {goal === 'lose_fat' && (
         <Question
-          number={12}
+          number={13}
           title="Set a weight target? (optional)"
           helper={
             goalWeightFloor != null
@@ -635,7 +665,7 @@ export function NutritionAssessmentForm({
         </button>
         {pending && (
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            Takes about five seconds.
+            Takes about ten seconds.
           </span>
         )}
       </div>

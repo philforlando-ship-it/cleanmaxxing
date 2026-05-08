@@ -469,7 +469,7 @@ export function HairAssessmentForm({
         </button>
         {pending && (
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            Takes about five seconds.
+            Takes about fifteen seconds.
           </span>
         )}
       </div>

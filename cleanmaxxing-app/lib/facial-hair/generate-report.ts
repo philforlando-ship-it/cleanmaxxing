@@ -9,6 +9,7 @@
 import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { kindForAnthropicModel, logCostEvent } from '@/lib/cost-events/log';
 import { povFor } from '@/lib/content/pov';
 import { getUserProfile } from '@/lib/profile/service';
 import {
@@ -68,11 +69,19 @@ export async function generateAndSaveFacialHairReport(
 
   const userPrompt = formatAssessmentForPrompt(assessment, modifiers);
 
-  const { text } = await generateText({
+  const { text, usage } = await generateText({
     model: anthropic(REPORT_MODEL),
     system,
     prompt: userPrompt,
     temperature: 0.5,
+  });
+
+  logCostEvent({
+    user_id: userId,
+    kind: kindForAnthropicModel(REPORT_MODEL),
+    tokens_input: usage?.inputTokens,
+    tokens_output: usage?.outputTokens,
+    feature: 'facial_hair_report',
   });
 
   const reportText = text.trim();

@@ -11,6 +11,7 @@
 import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { kindForAnthropicModel, logCostEvent } from '@/lib/cost-events/log';
 import {
   CUT_FAMILIES,
   type CutFamily,
@@ -28,6 +29,11 @@ export async function generateAndSaveHairStage1(
   userId: string,
   assessment: HairAssessment,
   age: number | null,
+  // User-override path (May 8 — 5-cut alternates). When provided, the
+  // model is constrained to this cut and only writes the barber
+  // instructions. The cut still has to be inside the density+age
+  // allowed set; the API layer validates that before getting here.
+  forcedCut: CutFamily | null = null,
 ): Promise<{ cut_family: CutFamily; barber_text: string }> {
   if (!assessment.report_text) {
     // Stage 1 reads the report as primary input; without it we'd be
@@ -45,13 +51,28 @@ export async function generateAndSaveHairStage1(
   const allowedCuts = cutsForAge(age, densityCuts);
   const system = buildStage1SystemPrompt(assessment.report_text, allowedCuts);
   const ageLine = age != null ? `Age: ${age}.` : 'Age: not on file.';
-  const userPrompt = `Generate Stage 1 for this user. The report above is the diagnosis. Your job is to translate it into one cut family and a short barber-instructions block. Density state on file: ${assessment.density_state}. Face shape: ${assessment.face_shape}. ${ageLine} Pick exactly one cut family from the ALLOWED list in the system prompt — that list has already been filtered for the user's density and age cohort. Stay under 180 words across both sections.`;
+  const baseLines = [
+    `Density state on file: ${assessment.density_state}.`,
+    `Face shape: ${assessment.face_shape}.`,
+    ageLine,
+  ];
+  const userPrompt = forcedCut
+    ? `Generate Stage 1 for this user. The user has explicitly chosen the ${forcedCut} cut family — DO NOT pick a different one. ${baseLines.join(' ')} Output: CUT_FAMILY: ${forcedCut} on the first line, then BARBER_INSTRUCTIONS: with the barber text below. Write the barber-instructions block calibrated to this exact cut and the user's diagnosis. Stay under 180 words.`
+    : `Generate Stage 1 for this user. The report above is the diagnosis. Your job is to translate it into one cut family and a short barber-instructions block. ${baseLines.join(' ')} Pick exactly one cut family from the ALLOWED list in the system prompt — that list has already been filtered for the user's density and age cohort. Stay under 180 words across both sections.`;
 
-  const { text } = await generateText({
+  const { text, usage } = await generateText({
     model: anthropic(STAGE_1_MODEL),
     system,
     prompt: userPrompt,
     temperature: 0.4,
+  });
+
+  logCostEvent({
+    user_id: userId,
+    kind: kindForAnthropicModel(STAGE_1_MODEL),
+    tokens_input: usage?.inputTokens,
+    tokens_output: usage?.outputTokens,
+    feature: 'hair_stage_1',
   });
 
   const parsed = parseStage1Output(text);
