@@ -388,6 +388,15 @@ const IMG_22 = `${IMG_DIR}/a0e1884d-037f-45b6-aec1-55207daed96d.png`;
 const IMG_23 = `${IMG_DIR}/a105e721-a16b-42d1-a0ae-38e141c9c62f.png`;
 const IMG_24 = `${IMG_DIR}/a4a07b74-51f6-4c82-805c-b920f3e8bfdb.png`;
 const IMG_25 = `${IMG_DIR}/b4ad1cb6-b3e0-4c87-a68a-ea42c1d070ed.png`;
+// Catalog round-up + gap-fill batch infographics (May 7 2026).
+// IMG_26: kettlebell swing / box jump / landmine press / copenhagen plank
+// IMG_27: nordic curl / tibialis raise / incline push-up / assisted pull-up
+// IMG_28: farmer's carry / step-up / lateral lunge / rear delt fly
+// IMG_29: standing cable crunch / cable curl (rows 1-2; rows 3-4 empty)
+const IMG_26 = `${IMG_DIR}/484d0cf9-54e8-4d08-8cf6-b69ca594c600.png`;
+const IMG_27 = `${IMG_DIR}/120a8fd3-8b4a-497d-9a02-771c7a2d4cea.png`;
+const IMG_28 = `${IMG_DIR}/28a7d492-6f95-40e2-98be-1e7958ea3ca7.png`;
+const IMG_29 = `${IMG_DIR}/94ff74e5-af2b-41bd-bc33-e130d649f6f4.png`;
 
 export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
   // ============ Image 1
@@ -1992,7 +2001,7 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
     image_row: 3,
   },
 
-  // ============ Catalog round-up to 100 (no reference image)
+  // ============ Image 29 — Standing cable crunch + cable curl
   {
     slug: 'cable_curl',
     label: 'Cable Curl',
@@ -2006,7 +2015,12 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Squeeze at the top',
       'Lower under tension',
     ],
+    image_path: IMG_29,
+    image_row: 2,
   },
+  // Tibialis raise lives on Image 27 with the Nordic / push-up /
+  // pull-up regression family; placed here for catalog ordering
+  // alongside the other round-up additions.
   {
     slug: 'tibialis_raise',
     label: 'Tibialis Raise',
@@ -2020,6 +2034,8 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Hold the squeeze briefly',
       'Lower with control',
     ],
+    image_path: IMG_27,
+    image_row: 2,
   },
   {
     slug: 'standing_cable_crunch',
@@ -2034,9 +2050,11 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Crunch by flexing the spine',
       'Resist the return',
     ],
+    image_path: IMG_29,
+    image_row: 1,
   },
 
-  // ============ Catalog gap-fill batch (no reference image)
+  // ============ Image 28 — Carries + unilateral legs + rear delts
   {
     slug: 'farmers_carry',
     label: "Farmer's Carry",
@@ -2050,6 +2068,8 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Walk in a straight line',
       'Keep shoulders packed',
     ],
+    image_path: IMG_28,
+    image_row: 1,
   },
   {
     slug: 'dumbbell_step_up',
@@ -2064,6 +2084,8 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Stand fully tall on top',
       'Lower under control',
     ],
+    image_path: IMG_28,
+    image_row: 2,
   },
   {
     slug: 'lateral_lunge',
@@ -2078,6 +2100,8 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Trail leg stays straight',
       'Push off to return',
     ],
+    image_path: IMG_28,
+    image_row: 3,
   },
   {
     slug: 'rear_delt_fly',
@@ -2092,7 +2116,11 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Raise arms to the sides',
       'Squeeze shoulder blades back',
     ],
+    image_path: IMG_28,
+    image_row: 4,
   },
+
+  // ============ Image 27 — Posterior-chain BW + push/pull regressions
   {
     slug: 'nordic_curl',
     label: 'Nordic Curl',
@@ -2106,6 +2134,8 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower forward as slowly as possible',
       'Catch with hands at the bottom',
     ],
+    image_path: IMG_27,
+    image_row: 1,
   },
   {
     slug: 'incline_push_up',
@@ -2120,6 +2150,8 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower chest to surface',
       'Press up without flaring elbows',
     ],
+    image_path: IMG_27,
+    image_row: 3,
   },
   {
     slug: 'assisted_pull_up',
@@ -2134,7 +2166,11 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Pull elbows down and back',
       'Control the descent',
     ],
+    image_path: IMG_27,
+    image_row: 4,
   },
+
+  // ============ Image 26 — Plyo + landmine + adductor core
   {
     slug: 'kettlebell_swing',
     label: 'Kettlebell Swing',
@@ -2148,6 +2184,8 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Snap hips to drive bell up',
       'Bell floats to chest height, no higher',
     ],
+    image_path: IMG_26,
+    image_row: 1,
   },
   {
     slug: 'box_jump',
@@ -2162,6 +2200,8 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Land in athletic stance',
       'Step down — never jump down',
     ],
+    image_path: IMG_26,
+    image_row: 2,
   },
   {
     slug: 'landmine_press',
@@ -2176,6 +2216,8 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Press out and up along the bar arc',
       'Lower under control',
     ],
+    image_path: IMG_26,
+    image_row: 3,
   },
   {
     slug: 'copenhagen_plank',
@@ -2190,6 +2232,8 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Drive top leg down into bench',
       'Keep hips stacked and high',
     ],
+    image_path: IMG_26,
+    image_row: 4,
   },
 ];
 
