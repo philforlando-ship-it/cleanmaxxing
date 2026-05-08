@@ -21,12 +21,27 @@ import { getWorkoutState } from '@/lib/workout/service';
 import { getNutritionState } from '@/lib/nutrition/service';
 import { getTodayCheckInState } from '@/lib/check-in/service';
 import { getStage4State, getHairAssessment } from '@/lib/hair/service';
+import { getStrengthAssessment } from '@/lib/strength/service';
+import { getRecommendedExercises } from '@/lib/strength/recommended-exercises';
+import {
+  STRENGTH_EXERCISES,
+  type StrengthExercise,
+} from '@/lib/strength/types';
+import { defaultSetsRepsFor } from '@/lib/strength/log-defaults';
 import { appDayFor } from '@/lib/date/app-day';
 import { SleepLogCard } from '@/app/(app)/today/sleep-log-card';
 import { NutritionLogCard } from '@/app/(app)/today/nutrition-log-card';
-import { WorkoutLogCard } from '@/app/(app)/today/workout-log-card';
+import {
+  WorkoutLogCard,
+  type PlanExerciseDefault,
+} from '@/app/(app)/today/workout-log-card';
 import { DailyCheckInCard } from '@/app/(app)/today/daily-check-in-card';
 import { HairRoutineCard } from '@/app/(app)/today/hair-routine-card';
+
+// "Insert from plan" dropdown cap. The selected/recommended list can run
+// long; capping keeps the dropdown scannable. Users who need beyond this
+// can still type the exercise name freely.
+const PLAN_DROPDOWN_LIMIT = 16;
 
 export default async function LogPage() {
   const user = await getUser();
@@ -55,13 +70,57 @@ export default async function LogPage() {
         )
       : null;
 
-  const [sleepState, workoutState, nutritionState, checkInState] =
-    await Promise.all([
-      getSleepState(supabase, user.id),
-      getWorkoutState(supabase, user.id),
-      getNutritionState(supabase, user.id, timezone),
-      getTodayCheckInState(supabase, user.id, timezone),
-    ]);
+  const [
+    sleepState,
+    workoutState,
+    nutritionState,
+    checkInState,
+    strengthAssessment,
+  ] = await Promise.all([
+    getSleepState(supabase, user.id),
+    getWorkoutState(supabase, user.id),
+    getNutritionState(supabase, user.id, timezone),
+    getTodayCheckInState(supabase, user.id, timezone),
+    getStrengthAssessment(supabase, user.id),
+  ]);
+
+  // Plan exercises drive the "Insert from plan" dropdown on the
+  // workout-log card. Mirrors the precedence used inside /plan/strength:
+  // user's explicit selected_exercise_slugs first; if empty, fall back
+  // to the recommender's top recommendations using the same args.
+  // When there's no strength assessment at all (user hasn't started the
+  // strength journey yet), the dropdown stays hidden and the form keeps
+  // the legacy free-text entry behavior.
+  let planExercises: PlanExerciseDefault[] = [];
+  if (strengthAssessment) {
+    const selectedSlugs = strengthAssessment.selected_exercise_slugs ?? [];
+    let sourceExercises: StrengthExercise[];
+    if (selectedSlugs.length > 0) {
+      sourceExercises = STRENGTH_EXERCISES.filter((ex) =>
+        selectedSlugs.includes(ex.slug),
+      );
+    } else {
+      sourceExercises = getRecommendedExercises({
+        equipment_access: strengthAssessment.equipment_access,
+        injury_constraints: strengthAssessment.injury_constraints,
+        priority_muscles: strengthAssessment.priority_muscles,
+        secondary_objective: strengthAssessment.secondary_objective,
+        bodyweight_preference: strengthAssessment.bodyweight_preference,
+        equipment_owned: strengthAssessment.equipment_owned,
+      }).recommended;
+    }
+    planExercises = sourceExercises
+      .slice(0, PLAN_DROPDOWN_LIMIT)
+      .map((ex) => {
+        const defaults = defaultSetsRepsFor(ex);
+        return {
+          slug: ex.slug,
+          label: ex.label,
+          default_sets: defaults.sets,
+          default_reps: defaults.reps,
+        };
+      });
+  }
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -111,7 +170,11 @@ export default async function LogPage() {
           </div>
 
           <div id="workout-log" className="scroll-mt-16">
-            <WorkoutLogCard recent={workoutState.recent} timezone={timezone} />
+            <WorkoutLogCard
+              recent={workoutState.recent}
+              timezone={timezone}
+              planExercises={planExercises}
+            />
           </div>
 
           <div id="nutrition-log" className="scroll-mt-16">

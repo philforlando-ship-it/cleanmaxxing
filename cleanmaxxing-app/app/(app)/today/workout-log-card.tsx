@@ -17,9 +17,22 @@ import { useRouter } from 'next/navigation';
 import type { WorkoutLog, WorkoutType } from '@/lib/workout/service';
 import { appDayFor } from '@/lib/date/app-day';
 
+// One entry in the "Insert from plan" dropdown. Computed server-side
+// on /log from the user's strength assessment (selected exercises if
+// any; recommender output otherwise). When planExercises is empty or
+// undefined, the dropdown is hidden — users without a strength plan
+// fall back to the legacy free-text entry behavior.
+export type PlanExerciseDefault = {
+  slug: string;
+  label: string;
+  default_sets: number;
+  default_reps: number;
+};
+
 type Props = {
   recent: WorkoutLog[];
   timezone: string;
+  planExercises?: PlanExerciseDefault[];
 };
 
 const TYPE_LABEL: Record<WorkoutType, string> = {
@@ -40,7 +53,11 @@ type LiftDraft = {
 
 const EMPTY_LIFT: LiftDraft = { name: '', sets: '', reps: '', weight: '' };
 
-export function WorkoutLogCard({ recent, timezone }: Props) {
+export function WorkoutLogCard({
+  recent,
+  timezone,
+  planExercises = [],
+}: Props) {
   const router = useRouter();
   const today = appDayFor(timezone);
   const todaysLogs = useMemo(
@@ -70,6 +87,32 @@ export function WorkoutLogCard({ recent, timezone }: Props) {
 
   function addLift() {
     setLifts((prev) => [...prev, { ...EMPTY_LIFT }]);
+  }
+
+  // Insert a row pre-filled from the user's plan. If the only existing
+  // row is empty (the default state), overwrite it instead of stacking
+  // a second blank-then-filled row — small UX nicety so the first
+  // pick from the dropdown lands on row 1 rather than row 2.
+  function insertFromPlan(slug: string) {
+    const pick = planExercises.find((p) => p.slug === slug);
+    if (!pick) return;
+    const filled: LiftDraft = {
+      name: pick.label,
+      sets: String(pick.default_sets),
+      reps: String(pick.default_reps),
+      weight: '',
+    };
+    setLifts((prev) => {
+      // If the user hasn't typed anything yet, replace the seed row.
+      const onlyOneEmpty =
+        prev.length === 1 &&
+        prev[0].name.trim() === '' &&
+        prev[0].sets.trim() === '' &&
+        prev[0].reps.trim() === '' &&
+        prev[0].weight.trim() === '';
+      if (onlyOneEmpty) return [filled];
+      return [...prev, filled];
+    });
   }
 
   function removeLift(i: number) {
@@ -267,6 +310,37 @@ export function WorkoutLogCard({ recent, timezone }: Props) {
               Leave any field blank if you don&rsquo;t want to log it. Empty
               rows are dropped.
             </p>
+            {planExercises.length > 0 && (
+              <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <label
+                  htmlFor="workout-plan-pick"
+                  className="text-[11px] text-zinc-500 dark:text-zinc-400"
+                >
+                  Insert from plan:
+                </label>
+                <select
+                  id="workout-plan-pick"
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      insertFromPlan(e.target.value);
+                      // Reset the select so picking the same exercise
+                      // again still fires onChange.
+                      e.target.value = '';
+                    }
+                  }}
+                  disabled={pending}
+                  className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-[12px] dark:border-zinc-700 dark:bg-zinc-900"
+                >
+                  <option value="">Pick an exercise…</option>
+                  {planExercises.map((p) => (
+                    <option key={p.slug} value={p.slug}>
+                      {p.label} (suggest {p.default_sets}×{p.default_reps})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="mt-2 space-y-2">
               {lifts.map((lift, i) => (
                 <div
