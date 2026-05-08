@@ -35,6 +35,14 @@ import { BmrCalculatorPanel } from './bmr-calculator-panel';
 import { FoodLibraryPanel } from './food-library-panel';
 import { MealPlanPanel } from './meal-plan-panel';
 import { NutritionReEvalCard } from './re-eval-card';
+import { WhyThisNumber } from './why-this-number';
+import {
+  explainCalories,
+  explainCarbs,
+  explainFat,
+  explainProtein,
+  explainTdee,
+} from '@/lib/nutrition/explainers';
 
 type Props = {
   searchParams: Promise<{ edit?: string }>;
@@ -194,14 +202,62 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
             Your daily targets
           </h2>
           <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 text-[13px] sm:grid-cols-5">
-            <TargetCell label="Calories" value={`${assessment.calorie_target}`} unit="kcal" />
-            <TargetCell label="Protein" value={`${assessment.protein_target_g}`} unit="g" />
-            <TargetCell label="Carbs" value={`${assessment.carb_target_g}`} unit="g" />
-            <TargetCell label="Fat" value={`${assessment.fat_target_g}`} unit="g" />
+            <TargetCell
+              label="Calories"
+              value={`${assessment.calorie_target}`}
+              unit="kcal"
+              whyLines={explainCalories({
+                goal_direction: assessment.goal_direction,
+                training_experience: profile.training_experience,
+                tdee_estimate: assessment.tdee_estimate,
+                calorie_target: assessment.calorie_target,
+                safe_max_weekly_pct: assessment.safe_max_weekly_pct,
+                realistic_target_weeks: assessment.realistic_target_weeks,
+              })}
+            />
+            <TargetCell
+              label="Protein"
+              value={`${assessment.protein_target_g}`}
+              unit="g"
+              whyLines={explainProtein({
+                goal_direction: assessment.goal_direction,
+                weight_lbs: profile.current_weight_lbs,
+                age,
+                current_interventions: profile.current_interventions,
+                protein_target_g: assessment.protein_target_g,
+              })}
+            />
+            <TargetCell
+              label="Carbs"
+              value={`${assessment.carb_target_g}`}
+              unit="g"
+              whyLines={explainCarbs({
+                calorie_target: assessment.calorie_target,
+                protein_target_g: assessment.protein_target_g,
+                fat_target_g: assessment.fat_target_g,
+                carb_target_g: assessment.carb_target_g,
+              })}
+            />
+            <TargetCell
+              label="Fat"
+              value={`${assessment.fat_target_g}`}
+              unit="g"
+              whyLines={explainFat({
+                weight_lbs: profile.current_weight_lbs,
+                fat_target_g: assessment.fat_target_g,
+              })}
+            />
             <TargetCell
               label="TDEE estimate"
               value={`${assessment.tdee_estimate}`}
               unit="kcal"
+              whyLines={explainTdee({
+                weight_lbs: profile.current_weight_lbs,
+                height_inches: profile.height_inches,
+                age,
+                activity_level: profile.activity_level,
+                tdee_estimate: assessment.tdee_estimate,
+              })}
             />
           </dl>
           {(() => {
@@ -341,10 +397,15 @@ function TargetCell({
   label,
   value,
   unit,
+  whyLines,
 }: {
   label: string;
   value: string;
   unit: string;
+  // Optional "Why this number?" expansion lines. When provided, the
+  // cell renders a small native <details> below the value showing the
+  // math. Server-rendered; no client JS needed.
+  whyLines?: string[] | null;
 }) {
   return (
     <div>
@@ -357,6 +418,7 @@ function TargetCell({
           {unit}
         </span>
       </dd>
+      <WhyThisNumber lines={whyLines ?? null} />
     </div>
   );
 }
