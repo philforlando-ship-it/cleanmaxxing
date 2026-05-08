@@ -16,9 +16,12 @@ import {
   CUT_FAMILY_LABEL,
   type CutFamily,
   type DensityState,
+  type FaceShape,
 } from '@/lib/hair/types';
 import { cutsForDensity } from '@/lib/hair/cut-by-density';
 import { cutsForAge } from '@/lib/hair/cut-by-age';
+import { explainCutFamily } from '@/lib/hair/explainers';
+import { WhyThis } from '@/components/why-this';
 
 // Density states where we prefer the `_balding` image variant when
 // one exists. `mature_hairline` is intentionally excluded — that
@@ -122,6 +125,10 @@ type Props = {
   // in active recession / thinning).
   densityState: DensityState;
   age: number | null;
+  // Face shape from the assessment — used by the "Why this cut?"
+  // explainer to name the face-geometry input that drove the LLM's
+  // pick within the density × age allowed set.
+  faceShape: FaceShape;
   // Self-perceived age delta from confidence_appearance (2-10 scale,
   // 6 = "about my age"). Combined with actual age to compute the
   // image cohort: a 47yo who reads as much younger gets young
@@ -157,6 +164,7 @@ export function HairStage1Card({
   existingTryOnUrl,
   densityState,
   age,
+  faceShape,
   ageFeelValue,
 }: Props) {
   const effectiveAge = effectiveAgeForImageCohort(age, ageFeelValue);
@@ -298,6 +306,15 @@ export function HairStage1Card({
         <p className="mt-1 text-base font-semibold text-zinc-900 dark:text-zinc-100">
           {CUT_FAMILY_LABEL[cutFamily]}
         </p>
+        <WhyThis
+          lines={explainCutFamily({
+            cut_family: cutFamily,
+            density_state: densityState,
+            face_shape: faceShape,
+            age,
+          })}
+          label="Why this cut?"
+        />
         <CutFamilyImage
           cutFamily={cutFamily}
           cohort={cohort}

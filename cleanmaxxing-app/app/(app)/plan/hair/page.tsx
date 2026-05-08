@@ -272,6 +272,7 @@ export default async function HairPlanPage({ searchParams }: Props) {
             existingTryOnUrl={existingTryOn?.signed_url ?? null}
             densityState={assessment.density_state}
             age={(userRow as { age: number | null } | null)?.age ?? null}
+            faceShape={assessment.face_shape}
             ageFeelValue={ageFeelClean}
           />
 
