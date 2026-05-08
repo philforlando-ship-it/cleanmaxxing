@@ -28,6 +28,7 @@ import {
   type StrengthExercise,
 } from '@/lib/strength/types';
 import { defaultSetsRepsFor } from '@/lib/strength/log-defaults';
+import { buildRecentWeightLookup } from '@/lib/workout/recent-weights';
 import { appDayFor } from '@/lib/date/app-day';
 import { SleepLogCard } from '@/app/(app)/today/sleep-log-card';
 import { NutritionLogCard } from '@/app/(app)/today/nutrition-log-card';
@@ -109,15 +110,24 @@ export default async function LogPage() {
         equipment_owned: strengthAssessment.equipment_owned,
       }).recommended;
     }
+    // Past-session weight lookup — case-insensitive match on the
+    // catalog label. When the user picked an exercise from the
+    // dropdown last time and entered a weight, we'll pre-fill it
+    // again. Strict match only — no fuzzy lookup; misses don't
+    // block the rest of the row from pre-filling.
+    const recentWeights = buildRecentWeightLookup(workoutState.recent);
+
     planExercises = sourceExercises
       .slice(0, PLAN_DROPDOWN_LIMIT)
       .map((ex) => {
         const defaults = defaultSetsRepsFor(ex);
+        const lastWeight = recentWeights.get(ex.label.trim().toLowerCase());
         return {
           slug: ex.slug,
           label: ex.label,
           default_sets: defaults.sets,
           default_reps: defaults.reps,
+          default_weight_lbs: lastWeight ?? null,
         };
       });
   }

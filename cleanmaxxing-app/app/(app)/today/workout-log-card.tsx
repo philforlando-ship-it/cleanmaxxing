@@ -22,11 +22,17 @@ import { appDayFor } from '@/lib/date/app-day';
 // any; recommender output otherwise). When planExercises is empty or
 // undefined, the dropdown is hidden — users without a strength plan
 // fall back to the legacy free-text entry behavior.
+//
+// default_weight_lbs is the weight the user logged on this exercise
+// most recently (case-insensitive label match against the recent
+// workout_logs window). Null when no prior session exists or the
+// labels don't match — weight stays blank and the user fills it in.
 export type PlanExerciseDefault = {
   slug: string;
   label: string;
   default_sets: number;
   default_reps: number;
+  default_weight_lbs?: number | null;
 };
 
 type Props = {
@@ -100,7 +106,13 @@ export function WorkoutLogCard({
       name: pick.label,
       sets: String(pick.default_sets),
       reps: String(pick.default_reps),
-      weight: '',
+      // Pre-fill weight with what the user did most recently on this
+      // exact exercise — strict label-match on past workout_logs.
+      // When no prior session exists the weight stays blank.
+      weight:
+        pick.default_weight_lbs != null
+          ? String(pick.default_weight_lbs)
+          : '',
     };
     setLifts((prev) => {
       // If the user hasn't typed anything yet, replace the seed row.
@@ -333,11 +345,18 @@ export function WorkoutLogCard({
                   className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-[12px] dark:border-zinc-700 dark:bg-zinc-900"
                 >
                   <option value="">Pick an exercise…</option>
-                  {planExercises.map((p) => (
-                    <option key={p.slug} value={p.slug}>
-                      {p.label} (suggest {p.default_sets}×{p.default_reps})
-                    </option>
-                  ))}
+                  {planExercises.map((p) => {
+                    const weightHint =
+                      p.default_weight_lbs != null
+                        ? ` @ ${p.default_weight_lbs} lb last`
+                        : '';
+                    return (
+                      <option key={p.slug} value={p.slug}>
+                        {p.label} ({p.default_sets}×{p.default_reps}
+                        {weightHint})
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
             )}
