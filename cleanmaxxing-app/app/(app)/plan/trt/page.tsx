@@ -26,8 +26,10 @@ import { TRT_TOPIC } from '@/lib/pattern-d/topics/trt';
 import { ConsideringSection } from '@/components/pattern-d/considering-section';
 import { OnProtocolSection } from '@/components/pattern-d/on-protocol-section';
 import { OffRampSection } from '@/components/pattern-d/off-ramp-section';
+import { TrtScreeningGate } from './screening-gate';
 
 const TRT_API_BASE = '/api/plan/pattern-d/trt';
+const TRT_SCREENING_KEY = 'trt_screening_v1';
 
 type Props = {
   searchParams: Promise<{ phase?: string }>;
@@ -41,10 +43,17 @@ export default async function TrtPlanPage({ searchParams }: Props) {
   if (!user) redirect('/login');
   const supabase = await createClient();
 
-  const [allInterventions, profile] = await Promise.all([
+  const [allInterventions, profile, { data: screeningRow }] = await Promise.all([
     listInterventions(supabase, user.id),
     getUserProfile(supabase, user.id),
+    supabase
+      .from('survey_responses')
+      .select('response_value')
+      .eq('user_id', user.id)
+      .eq('question_key', TRT_SCREENING_KEY)
+      .maybeSingle(),
   ]);
+  const hasCompletedScreening = screeningRow?.response_value != null;
 
   const trtRows = allInterventions.filter((i) => i.type === 'trt');
   const activeRows = trtRows.filter(
@@ -111,7 +120,11 @@ export default async function TrtPlanPage({ searchParams }: Props) {
         />
       )}
 
-      {phase === 'considering' && (
+      {phase === 'considering' && !hasCompletedScreening && (
+        <TrtScreeningGate />
+      )}
+
+      {phase === 'considering' && hasCompletedScreening && (
         <ConsideringSection
           content={TRT_TOPIC.considering}
           prescriberOptions={TRT_TOPIC.startFormPrescriberStatuses}
