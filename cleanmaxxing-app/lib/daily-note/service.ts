@@ -38,9 +38,14 @@ export async function getTodayNote(
 
 // Look up today's note; if absent, run the selector and write a
 // new row. Concurrent calls from the same user on the same day
-// could race the insert — the unique (user_id, day) constraint
-// catches the duplicate, and we re-select to return the winning
-// row. Cheap to do because both branches are bounded queries.
+// could race — handled via upsert with ignoreDuplicates so Postgres
+// does ON CONFLICT DO NOTHING (no 23505 error raised). The lost-race
+// branch re-fetches the winning row.
+//
+// Refactored 2026-05-08 from .insert() + try/catch on 23505 to
+// .upsert(... ignoreDuplicates) — functionally identical, but the
+// supabase client no longer logs the unique-constraint violation
+// when two parallel /today renders both reach the write step.
 export async function getOrCreateTodayNote(
   supabase: SupabaseClient,
   userId: string,
@@ -53,26 +58,32 @@ export async function getOrCreateTodayNote(
   const note = selectDailyNote(state);
   const { data, error } = await supabase
     .from('daily_notes')
-    .insert({
-      user_id: userId,
-      day,
-      template_key: note.key,
-      observation: note.observation,
-      question: note.question,
-    })
+    .upsert(
+      {
+        user_id: userId,
+        day,
+        template_key: note.key,
+        observation: note.observation,
+        question: note.question,
+      },
+      { onConflict: 'user_id,day', ignoreDuplicates: true },
+    )
     .select(
       'id, day, template_key, observation, question, response, responded_at',
     )
-    .single();
+    .maybeSingle();
 
-  if (error) {
-    // Race: another tab inserted the same (user_id, day) row.
-    // Re-fetch and return that one.
-    const winner = await getTodayNote(supabase, userId, day);
-    if (winner) return winner;
-    throw error;
-  }
-  return data as DailyNoteRow;
+  if (error) throw error;
+  if (data) return data as DailyNoteRow;
+
+  // Lost the race — another concurrent call inserted first. Re-fetch
+  // and return that row. ignoreDuplicates=true means our upsert was a
+  // silent no-op when the row already existed.
+  const winner = await getTodayNote(supabase, userId, day);
+  if (winner) return winner;
+  throw new Error(
+    'getOrCreateTodayNote: upsert returned no row AND re-fetch found nothing — should be impossible',
+  );
 }
 
 export async function getRecentResponses(
