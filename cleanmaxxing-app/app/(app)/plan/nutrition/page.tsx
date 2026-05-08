@@ -35,7 +35,7 @@ import { BmrCalculatorPanel } from './bmr-calculator-panel';
 import { FoodLibraryPanel } from './food-library-panel';
 import { MealPlanPanel } from './meal-plan-panel';
 import { NutritionReEvalCard } from './re-eval-card';
-import { WhyThisNumber } from './why-this-number';
+import { WhyThis } from '@/components/why-this';
 import {
   explainCalories,
   explainCarbs,
@@ -430,7 +430,7 @@ function TargetCell({
           {unit}
         </span>
       </dd>
-      <WhyThisNumber lines={whyLines ?? null} />
+      <WhyThis lines={whyLines ?? null} label="Why this number?" />
     </div>
   );
 }

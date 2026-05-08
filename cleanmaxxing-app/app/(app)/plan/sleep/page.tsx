@@ -15,7 +15,9 @@ import remarkGfm from 'remark-gfm';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { getSleepAssessment, getSleepState } from '@/lib/sleep/service';
 import { listActiveCommitments } from '@/lib/sleep/commitments';
+import { explainCommitment } from '@/lib/sleep/explainers';
 import { getMostRecentWeeklyReview } from '@/lib/sleep/weekly-review';
+import { WhyThis } from '@/components/why-this';
 import type { SleepAssessment } from '@/lib/sleep/types';
 import {
   SleepAssessmentForm,
@@ -255,9 +257,15 @@ export default async function SleepPlanPage({ searchParams }: Props) {
                 tried. The /today tile checks them off each day. Edit your
                 answers to change the list.
               </p>
-              <ul className="mt-3 ml-5 list-disc space-y-1.5 text-[14px] leading-relaxed text-zinc-800 dark:text-zinc-200">
+              <ul className="mt-3 ml-5 list-disc space-y-2 text-[14px] leading-relaxed text-zinc-800 dark:text-zinc-200">
                 {commitments.map((c) => (
-                  <li key={c.id}>{c.text}</li>
+                  <li key={c.id}>
+                    {c.text}
+                    <WhyThis
+                      lines={explainCommitment(c.source_key)}
+                      label="Why this commitment?"
+                    />
+                  </li>
                 ))}
               </ul>
             </section>
