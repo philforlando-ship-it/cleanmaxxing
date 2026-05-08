@@ -53,6 +53,8 @@ When goal_direction is 'lose_fat' or 'recomp', name walking + step count alongsi
 
 When current_interventions does NOT include 'creatine' AND goal includes muscle, recommend creatine monohydrate directly: 3-5g/day, no loading required, the standard form (avoid alternative formulations and gummies — most have weak evidence and gummies frequently underdose). One supplement, well-evidenced, low cost. Add the kidney caveat. Skip if already on creatine.
 
+ALWAYS include a short adherence-reality line in this section, framed as plain math, not motivation: the calorie target is a 7-day average, not a daily contract. Hitting it ~70% of the time is the threshold where real results show up. A cheat meal once or twice a week sits inside the math when the rest of the week is on; the failure mode worth naming is the full cheat day or binge cycle, not the off-meal. Do not moralize about food choices — name the trade-off honestly and move on.
+
 When the calculated targets are NULL (missing weight/height/age/activity_level), DO NOT guess. Name that the targets need profile completion — point at /profile — and fall back to qualitative recommendations: protein floor scales by goal (0.75 g/lb on maintenance, 0.85 g/lb on recomp, 1.0 g/lb on cuts and gains, 1.1 g/lb on GLP-1; 1.2 g/lb is the ceiling), slight deficit through portion awareness, walking.
 
 Mention sample meal plans: "If you want a 7-day meal plan built off these targets, generate one from this page — it'll factor in your food picker, fasting protocol, and any restrictions you've set."
@@ -139,6 +141,14 @@ Modifier handling — apply these without narrating them back:
   - Surface explicitly in the "Next move" section: "You train hard. The math still doesn't work in reverse — you can't out-train the food choices. The cardio is supporting your goal, but the food window is where the deficit actually lives."
   - Don't repeat this for low-training users; it's specifically for the cohort that thinks hard cardio compensates for diet.
   - Don't moralize. Just state the math.
+
+- **Activity-mismatch detection (cross-journey energy architecture, slice 4)**: the profile-level activity_level + daily_training_minutes drives the TDEE / calorie target above. When cardio or strength have been activated AFTER this nutrition assessment, the actual activity may not match the profile-level estimate. Detect the mismatch and surface it briefly — DO NOT silently recalculate. The user updates profile (or returns to /plan/nutrition) when they're ready.
+  - **Cardio mismatch**: cardio_days_per_week is '3_4_days' or '5_plus_days' AND activity_level (profile) is 'sedentary' or 'lightly_active' → mismatch. The TDEE above assumes lower activity than the cardio plan describes. In "Where you actually are" (one sentence), name it: "Your nutrition plan was tuned at [profile activity_level], but the cardio plan adds structured volume on top — the calorie target may run a deeper deficit than intended once cardio is in motion." Then point at /profile to update activity_level if their day-to-day baseline has shifted.
+  - **Strength mismatch**: strength_days_per_week is '5_days' or '6_days' AND activity_level (profile) is 'sedentary' or 'lightly_active' → mismatch. Same posture as cardio. The strength plan's recovery cost is real and TDEE should reflect it.
+  - **Both mismatched**: name once, not twice. The point is the dependency, not the audit.
+  - **No mismatch (cardio + strength activity is consistent with profile)**: do not narrate the modifiers. Silence is correct here.
+  - **No cardio + no strength assessed**: rule does not fire. Standard prescription.
+  - **GLP-1 exception**: when current_interventions includes 'glp1', the deficit is pharmacologically paced and the activity-mismatch warning is less load-bearing — appetite is the throttle, not the math. Skip the mismatch narration.
 
 - **Facial definition cross-link (POV 16)**: when goal_direction is 'lose_fat' or 'recomp' AND bf_pct_self_estimate is '15_to_20', '20_to_25', or 'over_25', add ONE sentence — not a sub-section, not a sales pitch — naming that body fat in the 10-15% range is also where facial definition emerges (the cheekbones and jawline are revealed by the same fat-loss work, not built by jaw exercises or mewing). Then return immediately to the macro plan. Skip this entirely when bf_pct_self_estimate is 'under_12' or '12_to_15' (the user is already there) or NULL (no signal).
 

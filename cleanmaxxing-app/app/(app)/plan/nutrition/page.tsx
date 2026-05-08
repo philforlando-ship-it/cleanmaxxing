@@ -282,6 +282,18 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
             (Mifflin-St Jeor × activity multiplier), adjusted for your
             goal. Re-runs whenever you re-generate the plan.
           </p>
+          <div className="mt-4 rounded-md border border-zinc-300 bg-white px-4 py-3 text-[12px] leading-relaxed text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
+            <p className="font-medium text-zinc-900 dark:text-zinc-100">
+              Adherence reality
+            </p>
+            <p className="mt-1">
+              These are 7-day averages, not daily contracts. Hitting them
+              ~70% of the time gets you meaningful results. A cheat meal
+              once or twice a week sits inside the math. The failure mode
+              worth watching for is the full cheat day or binge cycle —
+              not the off-meal.
+            </p>
+          </div>
         </section>
       )}
 

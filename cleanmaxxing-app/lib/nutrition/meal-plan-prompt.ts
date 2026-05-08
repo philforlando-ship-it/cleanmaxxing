@@ -58,6 +58,8 @@ Brief 2-sentence intro naming the calorie/macro targets and any major constraint
 
 3-5 bullet points covering: prep tips for the week (e.g., batch-cook protein Sunday), substitution flexibility (any meal can swap with another day's same-meal slot), and one note on what's NOT in the plan (e.g., "no specific calorie tracking required if you stick to portions described").
 
+Include ONE bullet on adherence reality: the plan is a 7-day average, not a daily contract. Hitting it ~70% of the time is the threshold where results show up. A cheat meal once or twice a week sits inside the math; a full cheat day or binge cycle is the failure mode worth naming. Don't moralize about food picks. Name the trade-off and move on.
+
 ---
 
 Macro accuracy expectations:
