@@ -51,8 +51,15 @@ import { daysUntilNext } from '@/lib/hair/stage-5-content';
 import { getSleepState } from '@/lib/sleep/service';
 import { onrampFor, currentState, isBaselineStage } from '@/lib/content/onramp';
 import { getMisterPUserState } from '@/lib/mister-p/user-state';
-import { FirstConversationCard } from './first-conversation-card';
-import { getFirstConvoState } from '@/lib/first-convo/service';
+// FirstConversationCard removed 2026-05-08 — the two open-ended
+// questions ("what's been getting in the way" / "what didn't stick")
+// produced low-quality prose intel that competed with the new
+// PrimaryActionCard for user attention on /today, and the signal was
+// largely redundant with structured onboarding fields. The card
+// component, the /api/first-convo route, and lib/first-convo/service
+// remain unrendered — kept around for ease of revert + so existing
+// completed answers stay readable. Future cleanup ticket: delete the
+// orphaned files once the change has settled.
 import { DailyNoteCard } from './daily-note-card';
 import { getOrCreateTodayNote } from '@/lib/daily-note/service';
 import { getWeeklyCheckInSummary, getStalestGoal } from '@/lib/check-in/service';
@@ -141,7 +148,6 @@ export default async function TodayPage({ searchParams }: Props) {
     profileCompletion,
     sleepState,
     misterPUserState,
-    firstConvoState,
     reflectionState,
     recentMilestones,
     { data: goalsRaw },
@@ -156,7 +162,6 @@ export default async function TodayPage({ searchParams }: Props) {
     getProfileCompletion(supabase, user.id),
     getSleepState(supabase, user.id),
     getMisterPUserState(supabase, user.id),
-    getFirstConvoState(supabase, user.id),
     getWeeklyReflectionState(supabase, user.id),
     listRecentMilestones(supabase, user.id),
     supabase
@@ -674,18 +679,20 @@ export default async function TodayPage({ searchParams }: Props) {
     daysSinceOnboarding >= LATE_WINDOW_DAYS;
 
   // Mister P daily note — rules-based selection of one observation +
-  // one question, cached per user per day. Only fires when the user
-  // is past the first conversation (so the two surfaces don't compete
-  // for slot 1) and not stepped away. The day key uses the user's
+  // one question, cached per user per day. The day key uses the user's
   // app-day in their stored timezone (3am-local cutoff) so the same
   // boundary applies as the rest of /today.
   //
+  // 2026-05-08: previously gated on firstConvoState.completed so the
+  // two surfaces didn't compete for slot 1. With FirstConversationCard
+  // removed, the gate is just !steppedAway — daily note fires every
+  // day post-onboarding for any active user.
+  //
   // Phase C note: the Sunday-suppression-when-weekly-letter-exists
   // dance was dropped here. The weekly letter moved to /reflection,
-  // so there's no /today stack-up problem to defend against. The
-  // daily note still surfaces every day post-onboarding.
+  // so there's no /today stack-up problem to defend against.
   let todayNote = null;
-  if (!steppedAway && firstConvoState.completed) {
+  if (!steppedAway) {
     const { count: priorNotesCount } = await supabase
       .from('daily_notes')
       .select('id', { count: 'exact', head: true })
@@ -782,12 +789,9 @@ export default async function TodayPage({ searchParams }: Props) {
 
         {isFirstRun && !steppedAway && <FirstRunCard />}
 
-        {!steppedAway && !firstConvoState.completed && (
-          <FirstConversationCard initial={firstConvoState} />
-        )}
-
-        {/* WeeklyLetterCard / SelfAcceptanceNudgeCard moved to
-            /reflection in Phase C of the /today redesign. */}
+        {/* FirstConversationCard removed 2026-05-08 — see import-block
+            comment up top. WeeklyLetterCard / SelfAcceptanceNudgeCard
+            moved to /reflection in Phase C of the /today redesign. */}
 
         {!steppedAway && todayNote && (
           <div id="daily-note" className="scroll-mt-16">
