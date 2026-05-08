@@ -14,6 +14,10 @@ import { categoryForTriggerKey } from './types';
 export type MilestoneCopy = {
   title: string;
   body: string;
+  // Optional cross-link to a journey or surface most relevant to the
+  // milestone. Used by wardrobe_reeval_due to point at /plan/style;
+  // most milestones don't need one (the body copy stands alone).
+  cta?: { href: string; label: string };
 };
 
 const STATIC_COPY: Record<string, MilestoneCopy> = {
@@ -60,6 +64,11 @@ const STATIC_COPY: Record<string, MilestoneCopy> = {
   sleep_consistency_4_weeks: {
     title: 'Four weeks of consistent sleep.',
     body: 'Standard deviation under an hour over the last four weeks. That stability — going to bed and waking at consistent times — is the highest-ROI sleep variable in the framework. The hours are downstream of the rhythm.',
+  },
+  wardrobe_reeval_due: {
+    title: 'Your body has shifted — your wardrobe probably hasn\'t.',
+    body: 'You\'re 5% off where you started. Whether you lost fat or added muscle, your fits are reading differently now than they did in the mirror three months ago. Worth a tailoring pass on what you wear most — sleeves, waist, shoulders — and an honest look at what\'s in regular rotation.',
+    cta: { href: '/plan/style', label: 'Open style plan →' },
   },
 };
 

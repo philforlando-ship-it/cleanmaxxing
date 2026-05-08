@@ -66,6 +66,7 @@ export default async function ReflectionPage() {
     selfAcceptanceNudge,
     staleGoal,
     activeJourneys,
+    profileRow,
   ] = await Promise.all([
     getWeeklyReflectionState(supabase, user.id),
     getCheckpointState(supabase, user.id),
@@ -74,7 +75,15 @@ export default async function ReflectionPage() {
     pickSelfAcceptanceNudge(supabase, user.id),
     getStalestGoal(supabase, user.id, timezone),
     getActiveJourneysForReflection(supabase, user.id),
+    supabase
+      .from('user_profile')
+      .select('current_weight_lbs')
+      .eq('user_id', user.id)
+      .maybeSingle(),
   ]);
+
+  const currentWeightLbs =
+    (profileRow.data?.current_weight_lbs as number | null | undefined) ?? null;
 
   // Track whether anything pending surfaces. The weekly-reflection
   // card itself always renders (it shows history even when no
@@ -160,6 +169,7 @@ export default async function ReflectionPage() {
             <WeeklyReflectionCard
               initialState={reflectionState}
               activeJourneys={activeJourneys}
+              currentWeightLbs={currentWeightLbs}
             />
           </div>
 

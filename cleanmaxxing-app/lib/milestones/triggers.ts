@@ -172,6 +172,29 @@ export function detectSleepConsistency4Weeks(args: {
 }
 
 // =====================
+// A3: wardrobe re-evaluation due
+// =====================
+
+// Fires when the user's current weight has shifted ≥5% from the
+// start snapshot in either direction. Bidirectional because gaining
+// muscle through strength training is just as wardrobe-affecting as
+// losing fat — shoulders, chest, and waist all move. The 5% threshold
+// is calibrated to "clothes actually fit differently now" rather than
+// "scale moved" (5lb on a 200-lb frame is barely noticeable in
+// clothing; 10lb is). Not gated on goal_direction.
+export function detectWardrobeReevalDue(args: {
+  current_weight_lbs: number | null;
+  start_weight_lbs: number | null;
+}): boolean {
+  if (args.current_weight_lbs == null || args.start_weight_lbs == null) {
+    return false;
+  }
+  if (args.start_weight_lbs <= 0) return false;
+  const delta = Math.abs(args.start_weight_lbs - args.current_weight_lbs);
+  return delta / args.start_weight_lbs >= 0.05;
+}
+
+// =====================
 // Tier 2 deferred: resting heart rate trained-band entered
 // =====================
 // The "trained band" for adult men is conventionally 50-60 bpm —

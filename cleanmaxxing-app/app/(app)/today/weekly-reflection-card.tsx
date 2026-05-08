@@ -44,6 +44,12 @@ import {
 type Props = {
   initialState: WeeklyReflectionState;
   activeJourneys: ActiveJourney[];
+  // Current weight from user_profile, surfaced as the default value for
+  // the optional weekly weigh-in. Null when the user hasn't recorded a
+  // weight yet (e.g. early-onboarding nutrition assessment skipped).
+  // The weigh-in section still renders when null — the user can enter
+  // a starting value the same way.
+  currentWeightLbs: number | null;
 };
 
 const DIRECTIONAL_FLAGS: DirectionalFlag[] = [
@@ -65,7 +71,11 @@ const OUTCOME_PHYSICAL_FEEL_OPTIONS: OutcomePhysicalFeel[] = [
   'mixed',
 ];
 
-export function WeeklyReflectionCard({ initialState, activeJourneys }: Props) {
+export function WeeklyReflectionCard({
+  initialState,
+  activeJourneys,
+  currentWeightLbs,
+}: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -96,6 +106,12 @@ export function WeeklyReflectionCard({ initialState, activeJourneys }: Props) {
     current?.directional_flag ?? null,
   );
   const [notes, setNotes] = useState(current?.notes ?? '');
+  // Optional weekly weigh-in. The string state lets users clear the
+  // field without committing the prior value. Empty string = "skip
+  // this week"; a parsed numeric value writes through to user_profile.
+  const [weightInput, setWeightInput] = useState<string>(
+    currentWeightLbs != null ? String(currentWeightLbs) : '',
+  );
 
   const requiredAdherenceMissing = useMemo(
     () => activeJourneys.some((j) => adherence[j.topic] == null),
@@ -118,6 +134,20 @@ export function WeeklyReflectionCard({ initialState, activeJourneys }: Props) {
     if (!physicalFeel) return setError('Answer the physical-feel question.');
     if (!directionalFlag) return setError('Pick a directional flag.');
 
+    // Parse the optional weight. Empty string = skipped; otherwise we
+    // require a sane numeric in the same range user_profile enforces
+    // (80–500 lbs). On parse failure, surface an inline error rather
+    // than silently dropping the entry.
+    let weightLbs: number | null = null;
+    const trimmedWeight = weightInput.trim();
+    if (trimmedWeight.length > 0) {
+      const n = Number(trimmedWeight);
+      if (!Number.isFinite(n) || n < 80 || n > 500) {
+        return setError('Weight should be a number between 80 and 500 lbs.');
+      }
+      weightLbs = Math.round(n * 10) / 10;
+    }
+
     const payload = {
       process_adherence: adherence,
       outcome_appearance_comment: appearanceComment,
@@ -130,6 +160,7 @@ export function WeeklyReflectionCard({ initialState, activeJourneys }: Props) {
       directional_flag: directionalFlag,
       prompt_used: promptKey,
       notes: notes.trim() || null,
+      weight_lbs: weightLbs,
     };
 
     startTransition(async () => {
@@ -297,6 +328,38 @@ export function WeeklyReflectionCard({ initialState, activeJourneys }: Props) {
               />
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Optional weekly weigh-in. Sits between Outcomes and
+          Direction because it pairs with the "did anything physical
+          feel different" question. Empty input = skip; a numeric
+          value writes through to user_profile.current_weight_lbs and
+          downstream surfaces (nutrition deficit, milestone triggers,
+          /plan/nutrition rate cap) read from there automatically. */}
+      <div className="mt-8 space-y-2 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+        <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          Weekly weigh-in (optional)
+        </p>
+        <p className="text-[13px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+          Same conditions as last time — morning, after the bathroom,
+          before food or water. One number a week beats stepping on a
+          scale every day. Skip the box to skip the week.
+        </p>
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            type="number"
+            inputMode="decimal"
+            step="0.1"
+            min={80}
+            max={500}
+            value={weightInput}
+            onChange={(e) => setWeightInput(e.target.value)}
+            disabled={pending}
+            placeholder={currentWeightLbs != null ? String(currentWeightLbs) : 'Weight'}
+            className="w-32 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          />
+          <span className="text-xs text-zinc-500 dark:text-zinc-400">lbs</span>
         </div>
       </div>
 

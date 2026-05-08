@@ -16,6 +16,7 @@ import {
   detectProteinFloorAutopilot,
   detectSleepConsistency4Weeks,
   detectStrengthConsistency8Weeks,
+  detectWardrobeReevalDue,
   detectWeight5lbBelowStart,
 } from './triggers';
 import { recordMilestoneIfNew } from './service';
@@ -277,6 +278,35 @@ export async function detectAndRecordMilestones(
         current_weight_lbs: profile.current_weight_lbs,
         start_weight_lbs: startWeight,
         goal_direction: nutritionForWeight.goal_direction,
+      },
+    );
+  }
+
+  // ===== A3: wardrobe re-evaluation due (5% body-mass shift) =====
+  // Reuses the same start-weight snapshot as WEIGHT_5LB_BELOW_START
+  // (nutrition assessment's report_input_modifiers). Bidirectional
+  // and not gated on goal_direction — gain or loss both shift fits.
+  if (
+    detectWardrobeReevalDue({
+      current_weight_lbs: profile.current_weight_lbs,
+      start_weight_lbs: startWeight,
+    })
+  ) {
+    await recordMilestoneIfNew(
+      supabase,
+      userId,
+      STATIC_TRIGGER_KEYS.WARDROBE_REEVAL_DUE,
+      {
+        current_weight_lbs: profile.current_weight_lbs,
+        start_weight_lbs: startWeight,
+        delta_pct:
+          startWeight && profile.current_weight_lbs
+            ? Math.round(
+                (Math.abs(startWeight - profile.current_weight_lbs) /
+                  startWeight) *
+                  10000,
+              ) / 100
+            : null,
       },
     );
   }

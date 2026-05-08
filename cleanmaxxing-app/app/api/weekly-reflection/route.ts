@@ -56,6 +56,11 @@ const PostSchema = z.object({
     ])
     .nullable(),
   notes: z.string().max(2000).nullable(),
+  // D2: optional weekly weigh-in. When non-null, the route also
+  // updates user_profile.current_weight_lbs so downstream consumers
+  // (nutrition rate cap, milestone triggers, BMR calculator, /plan
+  // pages) see the fresh value without a separate save round-trip.
+  weight_lbs: z.number().min(80).max(500).nullable().optional(),
 });
 
 export async function GET() {
@@ -88,6 +93,25 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const state = await saveWeeklyReflectionV2(supabase, user.id, parsed.data);
+  const { weight_lbs, ...reflectionInput } = parsed.data;
+
+  const state = await saveWeeklyReflectionV2(
+    supabase,
+    user.id,
+    reflectionInput,
+  );
+
+  // Side-effect: update the user's current weight when they entered
+  // one. This is non-fatal — the reflection is the primary write and
+  // already succeeded; if the profile patch fails we still return the
+  // saved reflection so the user doesn't lose their entry.
+  if (weight_lbs != null) {
+    const rounded = Math.round(weight_lbs * 10) / 10;
+    await supabase
+      .from('user_profile')
+      .update({ current_weight_lbs: rounded })
+      .eq('user_id', user.id);
+  }
+
   return NextResponse.json(state);
 }

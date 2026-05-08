@@ -27,6 +27,7 @@ const LINKS: Array<{ href: string; label: string; matchPrefix: string }> = [
   { href: '/photos', label: 'Photos', matchPrefix: '/photos' },
   { href: '/profile', label: 'Profile', matchPrefix: '/profile' },
   { href: '/goals/library', label: 'Goal Library', matchPrefix: '/goals/library' },
+  { href: '/system', label: 'The System', matchPrefix: '/system' },
   { href: '/povs', label: 'Relevant POVs', matchPrefix: '/povs' },
   { href: '/other-info', label: 'Articles', matchPrefix: '/other-info' },
   { href: '/settings', label: 'Settings', matchPrefix: '/settings' },

@@ -80,6 +80,16 @@ function MilestoneFire({ milestone }: { milestone: MilestoneRow }) {
       <p className="mt-2 text-[14px] leading-relaxed text-emerald-900/90 dark:text-emerald-100/90">
         {copy.body}
       </p>
+      {copy.cta && (
+        <p className="mt-3">
+          <a
+            href={copy.cta.href}
+            className="text-[13px] font-medium text-emerald-800 underline decoration-dotted underline-offset-2 hover:text-emerald-950 dark:text-emerald-200 dark:hover:text-emerald-50"
+          >
+            {copy.cta.label}
+          </a>
+        </p>
+      )}
       <p className="mt-3 text-[11px] uppercase tracking-wider text-emerald-700/70 dark:text-emerald-300/70">
         {new Date(milestone.triggered_at).toLocaleDateString(undefined, {
           month: 'short',

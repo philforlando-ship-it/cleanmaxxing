@@ -35,6 +35,12 @@ export const STATIC_TRIGGER_KEYS = {
   BODY_FAT_BELOW_12: 'body_fat_below_12',
   WEIGHT_5LB_BELOW_START: 'weight_5lb_below_start',
   SLEEP_CONSISTENCY_4_WEEKS: 'sleep_consistency_4_weeks',
+  // A3 — bidirectional 5% body-mass shift from the start snapshot.
+  // Fires whether the user is gaining or losing because clothes that
+  // fit at 180 don't fit at 170 OR 190. Distinct from
+  // WEIGHT_5LB_BELOW_START (cut-only celebration of weight loss);
+  // this one cross-links into the style journey.
+  WARDROBE_REEVAL_DUE: 'wardrobe_reeval_due',
 } as const;
 
 export type StaticTriggerKey =
