@@ -159,6 +159,16 @@ export type NutritionReportInputModifiers = {
   meal_service_willingness: MealServiceWillingness | null;
   snacking_style: SnackingStyle | null;
   gut_sensitivity: GutSensitivity;
+  // Cross-modifiers from the cardio + strength plans (when assessed).
+  // Cross-journey energy + fatigue architecture, slice 4 (2026-05-08).
+  // Activity captured at nutrition time may not match what the user
+  // is doing now if cardio or strength was activated later — these
+  // fields let the prompt detect the mismatch and surface it. See
+  // memory: project_cross_journey_energy_fatigue_architecture.md.
+  cardio_days_per_week: string | null;
+  cardio_zone_2_layer_active: boolean;
+  cardio_hiit_layer_active: boolean;
+  strength_days_per_week: string | null;
   tdee_estimate: number | null;
   calorie_target: number | null;
   protein_target_g: number | null;
@@ -381,6 +391,15 @@ export const FOODS: ReadonlyArray<Food> = [
   { slug: 'black_beans', label: 'Black beans', category: 'protein', tags: ['vegan', 'vegetarian', 'gut_unfriendly'], serving_label: '1 cup cooked', kcal_per_serving: 225, protein_g: 15, carb_g: 41, fat_g: 1 },
   { slug: 'pea_protein', label: 'Pea protein powder', category: 'protein', tags: ['vegan', 'vegetarian'], serving_label: '1 scoop (~25 g)', kcal_per_serving: 100, protein_g: 22, carb_g: 1, fat_g: 1 },
 
+  // 2026-05-08 catalog expansion (gap fill)
+  { slug: 'pork_chop', label: 'Pork chop (lean center-cut)', category: 'protein', tags: ['pork'], serving_label: '4 oz cooked', kcal_per_serving: 230, protein_g: 32, carb_g: 0, fat_g: 11 },
+  { slug: 'filet_mignon', label: 'Filet mignon', category: 'protein', tags: ['red_meat'], serving_label: '4 oz cooked', kcal_per_serving: 230, protein_g: 30, carb_g: 0, fat_g: 11 },
+  { slug: 'ribeye_steak', label: 'Ribeye steak', category: 'protein', tags: ['red_meat'], serving_label: '4 oz cooked', kcal_per_serving: 290, protein_g: 28, carb_g: 0, fat_g: 19 },
+  { slug: 'ground_chicken', label: 'Lean ground chicken (93/7)', category: 'protein', tags: [], serving_label: '4 oz cooked', kcal_per_serving: 165, protein_g: 23, carb_g: 0, fat_g: 8 },
+  { slug: 'canned_chicken', label: 'Canned chicken (in water)', category: 'protein', tags: [], serving_label: '3 oz drained', kcal_per_serving: 90, protein_g: 19, carb_g: 0, fat_g: 1 },
+  { slug: 'sardines', label: 'Sardines (canned)', category: 'protein', tags: ['seafood'], serving_label: '1 can (~3.75 oz)', kcal_per_serving: 190, protein_g: 22, carb_g: 0, fat_g: 11 },
+  { slug: 'scallops', label: 'Scallops', category: 'protein', tags: ['seafood', 'shellfish'], serving_label: '4 oz cooked', kcal_per_serving: 95, protein_g: 18, carb_g: 5, fat_g: 1 },
+
   // ============ Complex carbs
   { slug: 'white_rice', label: 'White rice (jasmine / basmati)', category: 'complex_carb', tags: [], serving_label: '1 cup cooked', kcal_per_serving: 205, protein_g: 4, carb_g: 45, fat_g: 0 },
   { slug: 'brown_rice', label: 'Brown rice', category: 'complex_carb', tags: [], serving_label: '1 cup cooked', kcal_per_serving: 215, protein_g: 5, carb_g: 45, fat_g: 2 },
@@ -395,6 +414,12 @@ export const FOODS: ReadonlyArray<Food> = [
   { slug: 'farro', label: 'Farro', category: 'complex_carb', tags: ['gluten'], serving_label: '1 cup cooked', kcal_per_serving: 220, protein_g: 8, carb_g: 47, fat_g: 1 },
   { slug: 'chickpeas', label: 'Chickpeas', category: 'complex_carb', tags: ['vegan', 'vegetarian', 'gut_unfriendly'], serving_label: '1 cup cooked', kcal_per_serving: 270, protein_g: 15, carb_g: 45, fat_g: 4 },
 
+  // 2026-05-08 catalog expansion
+  { slug: 'ezekiel_bread', label: 'Ezekiel / sprouted-grain bread', category: 'complex_carb', tags: ['gluten'], serving_label: '2 slices', kcal_per_serving: 160, protein_g: 8, carb_g: 30, fat_g: 1 },
+  { slug: 'whole_wheat_couscous', label: 'Whole-wheat couscous', category: 'complex_carb', tags: ['gluten'], serving_label: '1 cup cooked', kcal_per_serving: 175, protein_g: 6, carb_g: 36, fat_g: 0 },
+  { slug: 'whole_grain_bagel', label: 'Whole-grain bagel', category: 'complex_carb', tags: ['gluten'], serving_label: '1 medium', kcal_per_serving: 245, protein_g: 10, carb_g: 48, fat_g: 1 },
+  { slug: 'butternut_squash', label: 'Butternut squash', category: 'complex_carb', tags: [], serving_label: '1 cup cubed cooked', kcal_per_serving: 80, protein_g: 2, carb_g: 22, fat_g: 0 },
+
   // ============ Fruits
   { slug: 'banana', label: 'Banana', category: 'fruit', tags: [], serving_label: '1 medium', kcal_per_serving: 105, protein_g: 1, carb_g: 27, fat_g: 0 },
   { slug: 'apple', label: 'Apple', category: 'fruit', tags: [], serving_label: '1 medium', kcal_per_serving: 95, protein_g: 0, carb_g: 25, fat_g: 0 },
@@ -406,6 +431,11 @@ export const FOODS: ReadonlyArray<Food> = [
   { slug: 'mango', label: 'Mango', category: 'fruit', tags: [], serving_label: '1 cup chunks', kcal_per_serving: 100, protein_g: 1, carb_g: 25, fat_g: 1 },
   { slug: 'kiwi', label: 'Kiwi', category: 'fruit', tags: [], serving_label: '1 medium', kcal_per_serving: 42, protein_g: 1, carb_g: 10, fat_g: 0 },
   { slug: 'dates', label: 'Dates', category: 'fruit', tags: [], serving_label: '3 medjool', kcal_per_serving: 200, protein_g: 2, carb_g: 54, fat_g: 0 },
+
+  // 2026-05-08 catalog expansion
+  { slug: 'peach', label: 'Peach', category: 'fruit', tags: [], serving_label: '1 medium', kcal_per_serving: 60, protein_g: 1, carb_g: 14, fat_g: 0 },
+  { slug: 'pear', label: 'Pear', category: 'fruit', tags: [], serving_label: '1 medium', kcal_per_serving: 100, protein_g: 1, carb_g: 27, fat_g: 0 },
+  { slug: 'watermelon', label: 'Watermelon', category: 'fruit', tags: [], serving_label: '1 cup cubed', kcal_per_serving: 46, protein_g: 1, carb_g: 12, fat_g: 0 },
 
   // ============ Veggies
   { slug: 'broccoli', label: 'Broccoli', category: 'veggie', tags: ['gut_unfriendly'], serving_label: '1 cup chopped', kcal_per_serving: 30, protein_g: 3, carb_g: 6, fat_g: 0 },
@@ -424,6 +454,13 @@ export const FOODS: ReadonlyArray<Food> = [
   { slug: 'brussels_sprouts', label: 'Brussels sprouts', category: 'veggie', tags: ['gut_unfriendly'], serving_label: '1 cup', kcal_per_serving: 38, protein_g: 3, carb_g: 8, fat_g: 0 },
   { slug: 'carrots', label: 'Carrots', category: 'veggie', tags: [], serving_label: '1 cup chopped', kcal_per_serving: 50, protein_g: 1, carb_g: 12, fat_g: 0 },
 
+  // 2026-05-08 catalog expansion. Cabbage tagged gut_unfriendly to
+  // match the cruciferous group (broccoli/cauliflower/brussels) — same
+  // FODMAP profile.
+  { slug: 'cabbage', label: 'Cabbage', category: 'veggie', tags: ['gut_unfriendly'], serving_label: '1 cup shredded', kcal_per_serving: 22, protein_g: 1, carb_g: 5, fat_g: 0 },
+  { slug: 'snap_peas', label: 'Snap peas / snow peas', category: 'veggie', tags: [], serving_label: '1 cup', kcal_per_serving: 35, protein_g: 3, carb_g: 7, fat_g: 0 },
+  { slug: 'celery', label: 'Celery', category: 'veggie', tags: [], serving_label: '1 cup chopped', kcal_per_serving: 16, protein_g: 1, carb_g: 3, fat_g: 0 },
+
   // ============ Fats
   { slug: 'olive_oil', label: 'Extra-virgin olive oil', category: 'fat', tags: [], serving_label: '1 tbsp', kcal_per_serving: 120, protein_g: 0, carb_g: 0, fat_g: 14 },
   { slug: 'avocado_oil', label: 'Avocado oil', category: 'fat', tags: [], serving_label: '1 tbsp', kcal_per_serving: 120, protein_g: 0, carb_g: 0, fat_g: 14 },
@@ -436,6 +473,13 @@ export const FOODS: ReadonlyArray<Food> = [
   { slug: 'butter', label: 'Butter or ghee', category: 'fat', tags: ['dairy'], serving_label: '1 tbsp', kcal_per_serving: 100, protein_g: 0, carb_g: 0, fat_g: 11 },
   { slug: 'tahini', label: 'Tahini', category: 'fat', tags: [], serving_label: '2 tbsp', kcal_per_serving: 180, protein_g: 5, carb_g: 6, fat_g: 16 },
   { slug: 'dark_chocolate', label: 'Dark chocolate (85%+)', category: 'fat', tags: ['gut_unfriendly'], serving_label: '1 oz', kcal_per_serving: 170, protein_g: 3, carb_g: 12, fat_g: 13 },
+
+  // 2026-05-08 catalog expansion. Pumpkin seeds + chia seeds left
+  // un-tagged — they're seeds (not tree nuts), low common-allergen
+  // profile.
+  { slug: 'cashews', label: 'Cashews', category: 'fat', tags: ['nuts'], serving_label: '1 oz (~18 nuts)', kcal_per_serving: 155, protein_g: 5, carb_g: 9, fat_g: 12 },
+  { slug: 'pumpkin_seeds', label: 'Pumpkin seeds (pepitas)', category: 'fat', tags: [], serving_label: '1 oz hulled', kcal_per_serving: 170, protein_g: 9, carb_g: 4, fat_g: 14 },
+  { slug: 'chia_seeds', label: 'Chia seeds', category: 'fat', tags: [], serving_label: '2 tbsp', kcal_per_serving: 140, protein_g: 5, carb_g: 12, fat_g: 9 },
 
   // ============ Snacks (some overlap with above categories)
   { slug: 'snack_greek_yogurt', label: 'Greek yogurt cup', category: 'snack', tags: ['dairy'], serving_label: '1 cup', kcal_per_serving: 130, protein_g: 22, carb_g: 9, fat_g: 0 },
@@ -450,6 +494,18 @@ export const FOODS: ReadonlyArray<Food> = [
   { slug: 'snack_protein_shake', label: 'Protein shake', category: 'snack', tags: ['dairy'], serving_label: '1 scoop + water', kcal_per_serving: 120, protein_g: 24, carb_g: 3, fat_g: 1 },
   { slug: 'snack_smoothie', label: 'Smoothie (protein + fruit + greens)', category: 'snack', tags: [], serving_label: '~16 oz', kcal_per_serving: 250, protein_g: 20, carb_g: 30, fat_g: 5 },
   { slug: 'snack_edamame', label: 'Edamame', category: 'snack', tags: ['soy', 'vegan', 'vegetarian'], serving_label: '1 cup shelled', kcal_per_serving: 190, protein_g: 18, carb_g: 14, fat_g: 8 },
+
+  // 2026-05-08 catalog expansion. Five new snack formats:
+  // - rice cakes: light carb base, often paired with nut butter
+  // - string cheese: shelf-stable assembly protein
+  // - yogurt + berries: pre-formatted protein-fruit combo
+  // - tuna pouch: single-serve high-protein, no can opener required
+  // - protein oatmeal: oats + scoop combo (common breakfast/snack)
+  { slug: 'snack_rice_cakes', label: 'Rice cakes', category: 'snack', tags: [], serving_label: '2 plain', kcal_per_serving: 70, protein_g: 2, carb_g: 14, fat_g: 0 },
+  { slug: 'snack_string_cheese', label: 'String cheese stick', category: 'snack', tags: ['dairy'], serving_label: '1 stick', kcal_per_serving: 80, protein_g: 7, carb_g: 1, fat_g: 6 },
+  { slug: 'snack_yogurt_berries', label: 'Greek yogurt + berries', category: 'snack', tags: ['dairy'], serving_label: '1 cup yogurt + 1/2 cup berries', kcal_per_serving: 165, protein_g: 23, carb_g: 18, fat_g: 0 },
+  { slug: 'snack_tuna_pouch', label: 'Tuna pouch (single-serve)', category: 'snack', tags: ['seafood'], serving_label: '1 pouch (~2.6 oz)', kcal_per_serving: 90, protein_g: 18, carb_g: 0, fat_g: 1 },
+  { slug: 'snack_protein_oatmeal', label: 'Protein oatmeal', category: 'snack', tags: ['gluten', 'dairy'], serving_label: '1/2 cup oats + 1 scoop whey', kcal_per_serving: 270, protein_g: 28, carb_g: 27, fat_g: 4 },
 ];
 
 // =====================

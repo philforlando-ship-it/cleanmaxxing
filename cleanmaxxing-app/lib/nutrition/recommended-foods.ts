@@ -62,28 +62,53 @@ const DIETARY_EXCLUDED_TAGS: Record<DietaryPattern, ReadonlyArray<string>> = {
 // open or scoop). Up-ranked when cooking_capacity is dont_cook /
 // cook_rarely. Hand-curated subset of the catalog — not exhaustive,
 // but the most obvious wins.
+//
+// Refreshed 2026-05-08: aligned all entries with real catalog slugs
+// (the previous list had several orphaned references — 'protein_bar',
+// 'beef_jerky', 'string_cheese', 'hummus' don't exist as base slugs;
+// the catalog has snack_-prefixed variants). Also added the five new
+// snack entries from the catalog expansion that fit the assembly
+// criterion.
 const ASSEMBLY_FRIENDLY_SLUGS = new Set<string>([
+  // Proteins (no-cook)
   'greek_yogurt_nonfat',
   'cottage_cheese',
   'whey_protein',
   'pea_protein',
   'tuna',
+  'canned_chicken',
+  'sardines',
   'whole_eggs',
   'egg_whites',
+  // Fruits (no-prep)
   'banana',
   'apple',
   'berries',
   'orange',
   'grapes',
+  'pear',
+  'peach',
+  'watermelon',
+  // Fats (open / pour)
   'avocado',
-  'mixed_nuts',
   'almond_butter',
   'peanut_butter',
   'olive_oil',
-  'protein_bar',
-  'beef_jerky',
-  'string_cheese',
-  'hummus',
+  'cashews',
+  'pumpkin_seeds',
+  'chia_seeds',
+  // Snacks (pre-packaged or quick-assembly)
+  'snack_protein_bar',
+  'snack_jerky',
+  'snack_mixed_nuts',
+  'snack_trail_mix',
+  'snack_hard_boiled_eggs',
+  'snack_protein_shake',
+  'snack_rice_cakes',
+  'snack_string_cheese',
+  'snack_yogurt_berries',
+  'snack_tuna_pouch',
+  'snack_hummus_veggies',
 ]);
 
 export function getRecommendedFoods(
