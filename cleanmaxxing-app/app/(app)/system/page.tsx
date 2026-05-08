@@ -14,8 +14,12 @@ import { createClient } from '@/lib/supabase/server';
 import {
   TIER_INFO,
   TIER_ORDER,
+  FOCUS_AREA_LABEL,
+  FOCUS_AREA_TO_PLAN_PATH,
   FOCUS_AREA_TO_POV_SLUG,
   focusAreaForPovSlug,
+  isJourneyAnchor,
+  parentFocusAreaForPovSlug,
   type TierKey,
 } from '@/lib/hierarchy/tiers';
 
@@ -155,26 +159,38 @@ export default async function SystemPage() {
               <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {items.map((d) => {
                   const isActive = activePovSlugs.has(d.slug);
-                  const fa = focusAreaForPovSlug(d.slug);
-                  // A POV is journey-anchored if the focus_area for it
-                  // exists in the focus area roster — every entry in
-                  // FOCUS_AREA_TO_POV_SLUG qualifies regardless of
-                  // whether the user picked it.
-                  const isJourneyAnchored = fa !== null;
-                  // Three visual tiers:
-                  //   1. isActive (journey-anchored AND user picked it):
-                  //      strongest treatment — emerald fill + accent
-                  //      bar + "Your journey" badge.
-                  //   2. isJourneyAnchored (journey available, not
-                  //      picked): mid treatment — bold left bar + raised
-                  //      surface so the available-journey signal still
-                  //      dominates non-journey POVs.
-                  //   3. Plain POV: muted card.
+                  const isAnchor = isJourneyAnchor(d.slug);
+                  // Parent journey for non-anchor POVs (e.g.
+                  // 31-calorie-macro-framework → body_composition).
+                  // Null for cross-cutting / meta / safety POVs that
+                  // don't belong to a journey at all.
+                  const anchorFa = focusAreaForPovSlug(d.slug);
+                  const parentFa = parentFocusAreaForPovSlug(d.slug);
+                  const isChapterOfJourney = !isAnchor && parentFa !== null;
+                  const journeyFa = anchorFa ?? parentFa;
+                  // Where the title links. Anchors and chapters route
+                  // to the journey's plan surface (where the user
+                  // actually does the work). Orphan POVs fall back to
+                  // the standalone reader.
+                  const titleHref = journeyFa
+                    ? FOCUS_AREA_TO_PLAN_PATH[journeyFa]
+                    : `/povs/${d.slug}`;
+                  // Four visual tiers:
+                  //   1. isActive (anchor + user picked it): strongest —
+                  //      emerald fill + accent bar + "Your journey".
+                  //   2. isAnchor (journey, not picked): mid — bold
+                  //      left bar + raised surface.
+                  //   3. isChapterOfJourney (chapter of someone's
+                  //      journey): subtle left bar (zinc-400) + plain
+                  //      bg + "Part of: <Journey>" chip.
+                  //   4. Plain POV (no journey home): muted card.
                   const itemClass = isActive
                     ? 'border-l-4 border-l-emerald-500 border-y border-r border-emerald-300 bg-emerald-50 shadow-sm dark:border-emerald-700 dark:border-l-emerald-500 dark:bg-emerald-950/40'
-                    : isJourneyAnchored
+                    : isAnchor
                       ? 'border-l-4 border-l-zinc-900 border-y border-r border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:border-l-zinc-100 dark:bg-zinc-900'
-                      : 'border border-zinc-200 bg-zinc-50/40 dark:border-zinc-800 dark:bg-zinc-900/30';
+                      : isChapterOfJourney
+                        ? 'border-l-2 border-l-zinc-400 border-y border-r border-zinc-200 bg-white dark:border-zinc-800 dark:border-l-zinc-600 dark:bg-zinc-900'
+                        : 'border border-zinc-200 bg-zinc-50/40 dark:border-zinc-800 dark:bg-zinc-900/30';
                   return (
                     <li
                       key={d.slug}
@@ -182,9 +198,9 @@ export default async function SystemPage() {
                     >
                       <div className="flex items-baseline justify-between gap-2">
                         <Link
-                          href={`/povs/${d.slug}`}
+                          href={titleHref}
                           className={`text-sm hover:underline dark:text-zinc-100 ${
-                            isJourneyAnchored
+                            isAnchor
                               ? 'font-semibold text-zinc-900'
                               : 'font-medium text-zinc-700 dark:text-zinc-300'
                           }`}
@@ -196,9 +212,14 @@ export default async function SystemPage() {
                             Your journey
                           </span>
                         )}
-                        {!isActive && isJourneyAnchored && (
+                        {!isActive && isAnchor && (
                           <span className="shrink-0 rounded-full bg-zinc-900 px-2 py-0.5 text-[10px] font-semibold text-white dark:bg-zinc-100 dark:text-zinc-900">
                             Journey
+                          </span>
+                        )}
+                        {isChapterOfJourney && parentFa && (
+                          <span className="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                            Part of: {FOCUS_AREA_LABEL[parentFa]}
                           </span>
                         )}
                       </div>
@@ -206,11 +227,22 @@ export default async function SystemPage() {
                         {d.category && CATEGORY_LABEL[d.category]
                           ? CATEGORY_LABEL[d.category]
                           : d.category}
-                        {isJourneyAnchored &&
+                        {isAnchor &&
                           !isActive &&
-                          fa &&
-                          !focusSet.has(fa) &&
+                          anchorFa &&
+                          !focusSet.has(anchorFa) &&
                           ' · available to start'}
+                        {isChapterOfJourney && (
+                          <>
+                            {' · '}
+                            <Link
+                              href={`/povs/${d.slug}`}
+                              className="underline decoration-dotted underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-300"
+                            >
+                              read the POV
+                            </Link>
+                          </>
+                        )}
                       </p>
                     </li>
                   );
