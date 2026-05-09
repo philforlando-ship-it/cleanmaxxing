@@ -11,6 +11,7 @@
 // archetype option so users see the realistic feasibility floor
 // before committing (per POV 12's per-archetype % framing).
 
+import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -84,6 +85,7 @@ export type StyleAssessmentInitialValues = {
 export function StyleAssessmentForm({
   initialValues,
   feasibility,
+  cancelHref,
 }: {
   initialValues?: StyleAssessmentInitialValues;
   // Style v2 Phase 2b — per-user feasibility map computed server-side
@@ -91,6 +93,9 @@ export function StyleAssessmentForm({
   // is 'fights_your_frame', the form surfaces an inline warning with
   // the per-user rationale (not the static hint).
   feasibility?: FeasibilityMap;
+  // When set (only on edit-flow with an existing report), renders a
+  // "Cancel — keep current plan" link next to the submit button.
+  cancelHref?: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -391,9 +396,17 @@ export function StyleAssessmentForm({
               ? 'Save changes and re-generate'
               : 'Get my style plan'}
         </button>
+        {cancelHref && !pending && (
+          <Link
+            href={cancelHref}
+            className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            Cancel — keep current plan
+          </Link>
+        )}
         {pending && (
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            Takes about ten seconds.
+            Takes about fifteen seconds.
           </span>
         )}
       </div>

@@ -91,6 +91,7 @@ export default async function SkincarePlanPage({ searchParams }: Props) {
             initialValues={
               assessment ? assessmentToInitialValues(assessment) : undefined
             }
+            cancelHref={editParam && hasReport ? '/plan/skincare' : undefined}
           />
         </section>
       )}

@@ -8,6 +8,7 @@
 // answer. Stage 1 (later) will turn this into a real picker.
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -60,8 +61,13 @@ export type FacialHairAssessmentInitialValues = {
 
 export function FacialHairAssessmentForm({
   initialValues,
+  cancelHref,
 }: {
   initialValues?: FacialHairAssessmentInitialValues;
+  // When set (only on edit-flow with an existing report), renders a
+  // "Cancel — keep current plan" link so the user can back out
+  // without re-generating.
+  cancelHref?: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -255,9 +261,17 @@ export function FacialHairAssessmentForm({
               ? 'Save changes and re-generate'
               : 'Get my facial hair plan'}
         </button>
+        {cancelHref && !pending && (
+          <Link
+            href={cancelHref}
+            className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            Cancel — keep current plan
+          </Link>
+        )}
         {pending && (
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            Takes about ten seconds.
+            Takes about fifteen seconds.
           </span>
         )}
       </div>

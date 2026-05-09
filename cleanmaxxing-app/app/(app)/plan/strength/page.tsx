@@ -166,6 +166,7 @@ export default async function StrengthPlanPage({ searchParams }: Props) {
                 : undefined
             }
             initialTrainingExperience={profile.training_experience}
+            cancelHref={editParam && hasReport ? '/plan/strength' : undefined}
           />
         </section>
       )}

@@ -134,6 +134,9 @@ export default async function StylePlanPage({ searchParams }: Props) {
                 assessment ? assessmentToInitialValues(assessment) : undefined
               }
               feasibility={feasibility}
+              cancelHref={
+                editParam && hasReport ? '/plan/style' : undefined
+              }
             />
           </section>
         );
@@ -286,6 +289,45 @@ export default async function StylePlanPage({ searchParams }: Props) {
               acknowledgedAt={assessment.stage_3_acknowledged_at}
             />
           )}
+
+          {/* Persistent companion: route the user to the Mister P
+              chat for verbal fit feedback on a specific photo. The
+              structured assessment intentionally does NOT score
+              photos (per project_style_journey_body_reality_reframe
+              memory — AI fit scoring deferred for reliability), but
+              chat IS the right surface for verbal troubleshooting
+              grounded in the dimensions the user already entered.
+              Mister P chat already has photo access via
+              lib/mister-p/user-state.ts (baseline + recent face/
+              progress photos); the user just needs to know to ask. */}
+          <aside className="mt-10 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+            <h2 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
+              Want feedback on a specific fit?
+            </h2>
+            <p className="mt-2 text-[14px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+              The plan above is body-data driven — it doesn&rsquo;t
+              score photos, by design. But Mister P can. Take a fit
+              photo, save it under{' '}
+              <Link
+                href="/photos"
+                className="underline decoration-dotted underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100"
+              >
+                /photos
+              </Link>
+              , then ask him about it in chat. He&rsquo;ll troubleshoot
+              fit verbally — sleeves, shoulders, taper, proportions —
+              grounded in the dimensions you entered above. He&rsquo;s
+              not scoring you; he&rsquo;s telling you what works.
+            </p>
+            <div className="mt-3">
+              <Link
+                href="/today#mister-p"
+                className="text-[13px] font-medium text-zinc-700 underline decoration-dotted underline-offset-2 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+              >
+                Ask Mister P →
+              </Link>
+            </div>
+          </aside>
         </>
       )}
     </main>

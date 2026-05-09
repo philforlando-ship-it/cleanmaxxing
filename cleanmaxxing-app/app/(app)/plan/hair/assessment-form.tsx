@@ -12,6 +12,7 @@
 // endpoint — submitting unchanged values regenerates the report; changed
 // values overwrite the assessment row first. One feature, two reasons.
 
+import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -67,12 +68,16 @@ const WHO_CUTS_OPTIONS: WhoCuts[] = ['self', 'chain', 'dedicated_barber'];
 export function HairAssessmentForm({
   initialValues,
   hasBaselinePhoto = false,
+  cancelHref,
 }: {
   initialValues?: HairAssessmentInitialValues;
   /** When true, the face shape question shows a "Use my photo to detect"
    *  button that classifies the user's baseline photo via the LLM and
    *  pre-fills the radio. Manual selection still works either way. */
   hasBaselinePhoto?: boolean;
+  // When set (only on edit-flow with an existing report), renders a
+  // "Cancel — keep current plan" link next to the submit button.
+  cancelHref?: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -467,6 +472,14 @@ export function HairAssessmentForm({
               ? 'Save changes and re-generate'
               : 'Get my hair plan'}
         </button>
+        {cancelHref && !pending && (
+          <Link
+            href={cancelHref}
+            className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            Cancel — keep current plan
+          </Link>
+        )}
         {pending && (
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
             Takes about fifteen seconds.

@@ -157,6 +157,7 @@ export default async function CardioPlanPage({ searchParams }: Props) {
             initialValues={
               assessment ? assessmentToInitialValues(assessment) : undefined
             }
+            cancelHref={editParam && hasReport ? '/plan/cardio' : undefined}
           />
         </section>
       )}

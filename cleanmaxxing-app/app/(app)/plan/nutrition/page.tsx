@@ -192,6 +192,7 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
             }
             currentWeightLbs={profile.current_weight_lbs}
             heightInches={profile.height_inches}
+            cancelHref={editParam && hasReport ? '/plan/nutrition' : undefined}
           />
         </section>
       )}

@@ -143,6 +143,7 @@ export default async function SleepPlanPage({ searchParams }: Props) {
             initialValues={
               assessment ? assessmentToInitialValues(assessment) : undefined
             }
+            cancelHref={editParam && hasReport ? '/plan/sleep' : undefined}
           />
         </section>
       )}

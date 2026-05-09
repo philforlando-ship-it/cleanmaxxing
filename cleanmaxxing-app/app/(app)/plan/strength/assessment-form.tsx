@@ -3,6 +3,7 @@
 // Strength training assessment form. Mirrors the other Pattern A v0
 // forms: four required questions + optional free text.
 
+import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -124,9 +125,13 @@ export function StrengthAssessmentForm({
   // so they don't re-answer. Ignored when initialValues is provided
   // (edit case) — that path already carries the value.
   initialTrainingExperience,
+  cancelHref,
 }: {
   initialValues?: StrengthAssessmentInitialValues;
   initialTrainingExperience?: TrainingExperience | null;
+  // When set (only on edit-flow with an existing report), renders a
+  // "Cancel — keep current plan" link next to the submit button.
+  cancelHref?: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -576,6 +581,14 @@ export function StrengthAssessmentForm({
               ? 'Save changes and re-generate'
               : 'Get my strength plan'}
         </button>
+        {cancelHref && !pending && (
+          <Link
+            href={cancelHref}
+            className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            Cancel — keep current plan
+          </Link>
+        )}
         {pending && (
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
             Takes about twenty seconds.

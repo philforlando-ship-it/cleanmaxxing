@@ -200,6 +200,7 @@ export default async function HairPlanPage({ searchParams }: Props) {
               assessment ? assessmentToInitialValues(assessment) : undefined
             }
             hasBaselinePhoto={hasBaselinePhoto}
+            cancelHref={editParam && hasReport ? '/plan/hair' : undefined}
           />
         </section>
       )}

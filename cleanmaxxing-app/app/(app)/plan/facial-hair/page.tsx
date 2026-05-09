@@ -166,6 +166,9 @@ export default async function FacialHairPlanPage({ searchParams }: Props) {
             initialValues={
               assessment ? assessmentToInitialValues(assessment) : undefined
             }
+            cancelHref={
+              editParam && hasReport ? '/plan/facial-hair' : undefined
+            }
           />
         </section>
       )}
