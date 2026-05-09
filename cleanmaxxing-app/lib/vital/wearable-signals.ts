@@ -1,10 +1,11 @@
 // Wearable signal helpers shared across cardio / strength / nutrition
-// report generators. These convert raw rows in sleep_logs +
-// daily_activity into directional categorical signals the prompts can
-// reason about without leaking absolute numbers (HRV especially —
-// per-user baselines vary 2x and any cross-user comparison is noise).
+// report generators + the milestone orchestrator. These convert raw
+// rows in sleep_logs + daily_activity into directional categorical
+// signals the prompts can reason about without leaking absolute
+// numbers (HRV especially — per-user baselines vary 2x and any
+// cross-user comparison is noise).
 //
-// Two signals exposed today:
+// Three signals exposed today:
 //
 //   getHrvTrend — 7-day rolling avg vs 28-day baseline. 'declining'
 //     when the recent avg is more than 10% below baseline; 'elevated'
@@ -17,6 +18,10 @@
 //     VO2max changes slowly so we tolerate a wide trend window. Unlike
 //     HRV the absolute number is appropriate to surface — it's a
 //     single physiological quantity, not an HR-derived approximation.
+//
+//   getRhrSignals — rolling 14-day avg + baseline (earliest 14-day
+//     window). Feeds the RHR_TRAINED_BAND_ENTERED milestone trigger.
+//     Both windows require >= 7 nights of RHR data to be meaningful.
 
 import 'server-only';
 
@@ -160,4 +165,63 @@ export async function getVo2MaxSignal(
   }
 
   return { latest_value, latest_date, trend };
+}
+
+export type RhrSignals = {
+  // Rolling 14-day avg from the most recent 14 days of recorded RHR.
+  // Null when fewer than 7 nights of RHR data in the window.
+  rolling_avg_rhr_14d: number | null;
+  // Earliest 14-day window of RHR data — the user's "starting point"
+  // baseline. Null when fewer than 7 nights of RHR ever recorded, OR
+  // when the available data is too thin for the early window to be
+  // distinguishable from the recent window.
+  baseline_rhr: number | null;
+};
+
+export async function getRhrSignals(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<RhrSignals> {
+  const { data: rows, error } = await supabase
+    .from('sleep_logs')
+    .select('night_of, resting_heart_rate')
+    .eq('user_id', userId)
+    .not('resting_heart_rate', 'is', null)
+    .order('night_of', { ascending: true });
+  if (error || !rows || rows.length === 0) {
+    return { rolling_avg_rhr_14d: null, baseline_rhr: null };
+  }
+
+  type Row = { night_of: string; resting_heart_rate: number };
+  const sorted = rows as Row[];
+
+  // Rolling: last 14 days from today.
+  const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  const recent = sorted.filter((r) => r.night_of >= fourteenDaysAgo);
+  const rolling_avg_rhr_14d =
+    recent.length >= 7
+      ? Math.round(
+          recent.reduce((a, r) => a + r.resting_heart_rate, 0) / recent.length,
+        )
+      : null;
+
+  // Baseline: 14 days starting from the earliest recorded RHR night.
+  // This is the user's starting point — what their RHR was when the
+  // wearable connection was first producing data.
+  const baselineStart = new Date(sorted[0].night_of);
+  const baselineEnd = new Date(baselineStart);
+  baselineEnd.setDate(baselineEnd.getDate() + 14);
+  const baselineEndIso = baselineEnd.toISOString().slice(0, 10);
+  const baselineRows = sorted.filter((r) => r.night_of < baselineEndIso);
+  const baseline_rhr =
+    baselineRows.length >= 7
+      ? Math.round(
+          baselineRows.reduce((a, r) => a + r.resting_heart_rate, 0) /
+            baselineRows.length,
+        )
+      : null;
+
+  return { rolling_avg_rhr_14d, baseline_rhr };
 }

@@ -70,6 +70,10 @@ const STATIC_COPY: Record<string, MilestoneCopy> = {
     body: 'You\'re 5% off where you started. Whether you lost fat or added muscle, your fits are reading differently now than they did in the mirror three months ago. Worth a tailoring pass on what you wear most — sleeves, waist, shoulders — and an honest look at what\'s in regular rotation.',
     cta: { href: '/plan/style', label: 'Open style plan →' },
   },
+  rhr_trained_band_entered: {
+    title: 'Resting heart rate — in the trained band.',
+    body: 'Your 14-day rolling resting HR has dropped below 60. That\'s the aerobic engine getting more efficient — heart pushing more blood per beat, so it can beat fewer times for the same work. The Zone 2 base is paying out in the place it\'s supposed to.',
+  },
 };
 
 const GLP1_THREE_MONTHS_COPY: MilestoneCopy = {

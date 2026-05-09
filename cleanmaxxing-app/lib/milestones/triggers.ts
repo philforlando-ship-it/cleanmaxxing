@@ -195,18 +195,15 @@ export function detectWardrobeReevalDue(args: {
 }
 
 // =====================
-// Tier 2 deferred: resting heart rate trained-band entered
+// Tier 2: resting heart rate trained-band entered
 // =====================
 // The "trained band" for adult men is conventionally 50-60 bpm —
-// reflects established aerobic adaptation. The trigger should fire
-// when a 14-day rolling RHR average drops below 60 for the first
-// time (and the user wasn't there at baseline).
-//
-// Detector lives here so when wearable RHR data lands the
-// orchestrator wiring is one fetch + one detector call. NOT yet
-// active — daily_activity has steps only, sleep_logs has hours/quality
-// only. When Vital starts persisting RHR (per the premium roadmap),
-// add a `health_metrics` table with rolling RHR and wire this in.
+// reflects established aerobic adaptation. Fires when the 14-day
+// rolling RHR avg drops below 60 for the first time AND the user
+// wasn't already there at baseline. Sourced from
+// sleep_logs.resting_heart_rate (mig 0095) via getRhrSignals in
+// lib/vital/wearable-signals.ts. Wired into the milestone
+// orchestrator on 2026-05-09.
 export function detectRhrTrainedBandEntered(args: {
   rolling_avg_rhr_14d: number | null;
   baseline_rhr: number | null;

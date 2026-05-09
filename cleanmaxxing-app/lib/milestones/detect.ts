@@ -14,6 +14,7 @@ import {
   detectHairStage4Completed,
   detectPlanThreeMonthsOld,
   detectProteinFloorAutopilot,
+  detectRhrTrainedBandEntered,
   detectSleepConsistency4Weeks,
   detectStrengthConsistency8Weeks,
   detectWardrobeReevalDue,
@@ -21,6 +22,7 @@ import {
 } from './triggers';
 import { recordMilestoneIfNew } from './service';
 import { STATIC_TRIGGER_KEYS, glp1ThreeMonthsKey } from './types';
+import { getRhrSignals } from '@/lib/vital/wearable-signals';
 
 const DAYS_MS = 24 * 60 * 60 * 1000;
 
@@ -72,6 +74,7 @@ export async function detectAndRecordMilestones(
     { data: strengthRow },
     profile,
     { data: sleepRows },
+    rhrSignals,
   ] = await Promise.all([
     getRecentProteinSignal(supabase, userId),
     listInterventions(supabase, userId),
@@ -105,6 +108,7 @@ export async function detectAndRecordMilestones(
       .select('hours')
       .eq('user_id', userId)
       .gte('night_of', fourWeeksAgo),
+    getRhrSignals(supabase, userId),
   ]);
 
   // ===== Behavioral: protein floor autopilot =====
@@ -321,6 +325,31 @@ export async function detectAndRecordMilestones(
       userId,
       STATIC_TRIGGER_KEYS.SLEEP_CONSISTENCY_4_WEEKS,
       { logged_nights: sleepHours.length },
+    );
+  }
+
+  // ===== Tier 2: RHR trained-band entered =====
+  // Fires once when the rolling 14d RHR avg drops below 60, AND the
+  // user wasn't already there at baseline (their earliest 14-day
+  // window of recorded RHR). Sourced from sleep_logs.resting_heart_rate
+  // (mig 0095). Detector returns false when either the rolling avg
+  // is null (insufficient data) or baseline was already < 60 (the
+  // user was already in the trained band when they connected the
+  // wearable — celebrating an unchanged state would be wrong).
+  if (
+    detectRhrTrainedBandEntered({
+      rolling_avg_rhr_14d: rhrSignals.rolling_avg_rhr_14d,
+      baseline_rhr: rhrSignals.baseline_rhr,
+    })
+  ) {
+    await recordMilestoneIfNew(
+      supabase,
+      userId,
+      STATIC_TRIGGER_KEYS.RHR_TRAINED_BAND_ENTERED,
+      {
+        rolling_avg_rhr_14d: rhrSignals.rolling_avg_rhr_14d,
+        baseline_rhr: rhrSignals.baseline_rhr,
+      },
     );
   }
 }

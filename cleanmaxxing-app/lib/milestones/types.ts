@@ -41,6 +41,11 @@ export const STATIC_TRIGGER_KEYS = {
   // WEIGHT_5LB_BELOW_START (cut-only celebration of weight loss);
   // this one cross-links into the style journey.
   WARDROBE_REEVAL_DUE: 'wardrobe_reeval_due',
+  // Resting heart rate dropped below 60 bpm (rolling 14d avg) AND
+  // the user wasn't already there at baseline. "Trained band" is
+  // the conventional 50-60 bpm range for aerobically-conditioned
+  // adults. Sourced from sleep_logs.resting_heart_rate (mig 0095).
+  RHR_TRAINED_BAND_ENTERED: 'rhr_trained_band_entered',
 } as const;
 
 export type StaticTriggerKey =
