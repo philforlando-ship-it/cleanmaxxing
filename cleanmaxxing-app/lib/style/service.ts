@@ -159,12 +159,18 @@ export async function saveStyleStage1Audit(
     audit_text: string;
   },
 ): Promise<void> {
+  // 2026-05-09 — re-running the audit clears stage_1_completed_at so
+  // the user reads the new audit text in State 2 and re-acknowledges.
+  // Stage 2 + Stage 3 progress is preserved (they have their own
+  // completed_at fields). The "Edit closet audit" affordance on the
+  // stage-1 card depends on this reset.
   const { error } = await supabase
     .from('style_assessments')
     .update({
       stage_1_chip_selections: args.chip_selections,
       stage_1_audit_text: args.audit_text,
       stage_1_generated_at: new Date().toISOString(),
+      stage_1_completed_at: null,
       updated_at: new Date().toISOString(),
     })
     .eq('user_id', userId);

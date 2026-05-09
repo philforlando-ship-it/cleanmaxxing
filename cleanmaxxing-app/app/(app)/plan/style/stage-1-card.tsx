@@ -96,6 +96,11 @@ export function StyleStage1Card({
   const [selections, setSelections] = useState<ClosetAuditSelections>(
     existingSelections ?? {},
   );
+  // Edit mode for the completed state. When true, the form re-opens
+  // pre-populated with prior selections; submit re-runs the audit and
+  // clears completed_at server-side so the user re-reads the new
+  // audit text and re-taps "I've done this".
+  const [editingFromComplete, setEditingFromComplete] = useState(false);
 
   const isGenerated = generatedAt !== null && auditText !== null;
   const isComplete = completedAt !== null;
@@ -171,8 +176,13 @@ export function StyleStage1Card({
     });
   }
 
-  // State 3 — completed.
-  if (isComplete) {
+  // State 3 — completed. Collapsed summary + an "Edit closet audit"
+  // affordance for users who've done a closet purge / acquired new
+  // pieces / shifted archetype since they last ran the audit.
+  // Tapping "Edit" flips into the chip form pre-populated; resubmit
+  // clears completed_at server-side so the user reads the new audit
+  // and re-taps "I've done this".
+  if (isComplete && !editingFromComplete) {
     return (
       <section className="mt-10 rounded-xl border border-zinc-200 bg-white px-5 py-3 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
@@ -180,19 +190,30 @@ export function StyleStage1Card({
             <span className="font-medium">Stage 1 — Closet audit</span>
             <span className="text-zinc-500"> · done</span>
           </span>
-          <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            {new Date(completedAt!).toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-            })}
-          </span>
+          <div className="flex items-baseline gap-3">
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+              {new Date(completedAt!).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+              })}
+            </span>
+            <button
+              type="button"
+              onClick={() => setEditingFromComplete(true)}
+              className="text-xs text-zinc-500 underline decoration-dotted underline-offset-2 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+            >
+              Edit closet audit
+            </button>
+          </div>
         </div>
       </section>
     );
   }
 
-  // State 2 — audit generated, awaiting completion.
-  if (isGenerated && auditText) {
+  // State 2 — audit generated, awaiting completion. Skip when the
+  // user has tapped "Edit closet audit" from the completed state —
+  // they want the chip form, not the existing audit text.
+  if (isGenerated && auditText && !editingFromComplete) {
     return (
       <section className="mt-10 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
         <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
@@ -362,8 +383,26 @@ export function StyleStage1Card({
           disabled={pending || counts.total === 0}
           className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
         >
-          {pending ? 'Mister P is reading your audit…' : 'Submit audit'}
+          {pending
+            ? 'Mister P is reading your audit…'
+            : editingFromComplete
+              ? 'Re-run audit'
+              : 'Submit audit'}
         </button>
+        {editingFromComplete && (
+          <button
+            type="button"
+            onClick={() => {
+              setSelections(existingSelections ?? {});
+              setError(null);
+              setEditingFromComplete(false);
+            }}
+            disabled={pending}
+            className="text-xs text-zinc-500 underline decoration-dotted underline-offset-2 hover:text-zinc-700 disabled:opacity-50 dark:text-zinc-400 dark:hover:text-zinc-200"
+          >
+            Cancel
+          </button>
+        )}
         <span className="text-xs text-zinc-500 dark:text-zinc-400">
           {counts.total === 0
             ? 'Tap at least one item to enable submit.'

@@ -50,6 +50,7 @@ export async function generateAndSaveFacialHairReport(
     age: (userRow as { age: number | null } | null)?.age ?? null,
     face_shape:
       (hairRow as { face_shape: string | null } | null)?.face_shape ?? null,
+    bf_pct_self_estimate: profile.bf_pct_self_estimate,
     density_cheeks: assessment.density_cheeks,
     density_chin: assessment.density_chin,
     density_mustache: assessment.density_mustache,
@@ -110,6 +111,11 @@ function formatAssessmentForPrompt(
   modifierLines.push(`- age (users): ${modifiers.age ?? 'not set'}`);
   modifierLines.push(
     `- face_shape (hair_assessments): ${modifiers.face_shape ?? 'not set'}`,
+  );
+  modifierLines.push(
+    `- bf_pct_self_estimate (profile — jaw-definition proxy): ${
+      modifiers.bf_pct_self_estimate ?? 'not set'
+    }`,
   );
   modifierLines.push(
     `- density_cheeks (assessment): ${modifiers.density_cheeks ?? 'not screened (legacy assessment, use growth_quality below)'}`,

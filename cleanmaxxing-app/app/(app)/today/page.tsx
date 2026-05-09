@@ -943,7 +943,9 @@ export default async function TodayPage({ searchParams }: Props) {
           weeklyPossibleCount={weeklySummary.possible}
         />
 
-        <MisterPChatCard goals={chatGoals} initialThreads={initialThreads} />
+        <div id="mister-p" className="scroll-mt-16">
+          <MisterPChatCard goals={chatGoals} initialThreads={initialThreads} />
+        </div>
 
         <EscapeHatch />
       </div>

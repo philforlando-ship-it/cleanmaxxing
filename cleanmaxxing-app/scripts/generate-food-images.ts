@@ -78,6 +78,15 @@ const FOOD_SUFFIX: Record<string, string> = {
   black_beans: 'A small bowl of plain cooked black beans, no sauce or seasoning visible.',
   pea_protein: 'A clear glass mixing shaker with off-white pea protein shake, no labeled bottle in frame.',
 
+  // 2026-05-08 catalog expansion
+  pork_chop: 'A grilled lean center-cut pork chop on a plain white plate, golden sear marks visible, no sauce or garnish.',
+  filet_mignon: 'A grilled filet mignon medallion, medium-rare, deep red center visible, plain on a white plate, no sauce.',
+  ribeye_steak: 'A grilled ribeye steak, medium-rare, marbled and seared, sliced into three pieces, on a plain white plate, no sauce.',
+  ground_chicken: 'Cooked lean ground chicken, browned and crumbled, served plain in a small white bowl.',
+  canned_chicken: 'A small mound of plain canned chicken chunks in a small white bowl, no mayo or seasoning visible.',
+  sardines: 'Five canned sardines arranged in a row on a plain white plate, no sauce, no lemon, no garnish.',
+  scallops: 'Four pan-seared sea scallops, golden crust visible, plain on a white plate, no sauce or garnish.',
+
   // ============ Complex carbs
   white_rice: 'A small bowl of plain cooked white jasmine rice, fluffy and separate grains.',
   brown_rice: 'A small bowl of plain cooked brown rice, distinct grains visible.',
@@ -92,6 +101,12 @@ const FOOD_SUFFIX: Record<string, string> = {
   farro: 'A small bowl of plain cooked farro, distinct chewy grains visible, no garnish.',
   chickpeas: 'A small bowl of plain cooked chickpeas, no sauce or seasoning.',
 
+  // 2026-05-08 catalog expansion
+  ezekiel_bread: 'Two slices of dense brown sprouted-grain Ezekiel bread on a plain white plate, no butter or topping.',
+  whole_wheat_couscous: 'A small bowl of plain cooked whole-wheat couscous, light brown granules, no garnish.',
+  whole_grain_bagel: 'A single whole-grain bagel cut in half, both halves on a plain white plate, no cream cheese or topping.',
+  butternut_squash: 'A small bowl of plain roasted butternut squash cubes, vivid orange, no spices or sauce visible.',
+
   // ============ Fruits
   banana: 'A single ripe yellow banana, slightly curved, on a plain light-gray surface.',
   apple: 'A single red apple, stem visible, on a plain light-gray surface.',
@@ -103,6 +118,11 @@ const FOOD_SUFFIX: Record<string, string> = {
   mango: 'Several fresh mango cubes in a small white bowl, vivid orange color.',
   kiwi: 'A single kiwi cut in half showing green flesh, on a plain light-gray surface.',
   dates: 'Six whole medjool dates in a small cluster, dark brown and slightly wrinkled.',
+
+  // 2026-05-08 catalog expansion
+  peach: 'A single ripe peach, fuzzy skin visible with red-orange blush, on a plain light-gray surface.',
+  pear: 'A single ripe green-yellow pear, stem visible, on a plain light-gray surface.',
+  watermelon: 'Several fresh watermelon cubes in a small white bowl, vivid red flesh with black seeds visible.',
 
   // ============ Veggies
   broccoli: 'Several florets of plain steamed broccoli on a plain white plate, vivid green, no sauce.',
@@ -121,6 +141,11 @@ const FOOD_SUFFIX: Record<string, string> = {
   brussels_sprouts: 'A small mound of plain roasted Brussels sprouts on a plain white plate, no sauce.',
   carrots: 'Three whole orange carrots with green tops trimmed short, on a plain light-gray surface.',
 
+  // 2026-05-08 catalog expansion
+  cabbage: 'A small mound of shredded green cabbage on a plain white plate, plain, no dressing.',
+  snap_peas: 'A small handful of fresh snap peas in their pods, vivid green, on a plain light-gray surface.',
+  celery: 'Three fresh celery stalks with light pale-green color, on a plain light-gray surface, no leaves visible.',
+
   // ============ Fats
   olive_oil: 'A small clear glass cruet of golden-green extra-virgin olive oil, no label, on a plain light-gray surface.',
   avocado_oil: 'A small clear glass cruet of pale yellow-green avocado oil, no label, on a plain light-gray surface.',
@@ -133,6 +158,11 @@ const FOOD_SUFFIX: Record<string, string> = {
   butter: 'A small white ramekin with a pat of golden butter inside, no bread or knife in frame.',
   tahini: 'A small bowl of pale beige tahini paste, smooth surface, no garnish.',
   dark_chocolate: 'Three squares of dark chocolate (85% cacao), on a plain light-gray surface, no wrapper.',
+
+  // 2026-05-08 catalog expansion
+  cashews: 'A small bowl of whole raw cashews, pale beige curved nuts.',
+  pumpkin_seeds: 'A small bowl of hulled pumpkin seeds (pepitas), vivid green color.',
+  chia_seeds: 'A small bowl of dry chia seeds, mostly black with some white seeds visible, no liquid.',
 
   // ============ Snacks
   snack_greek_yogurt: 'A small white ceramic cup of plain thick Greek yogurt with a sprinkle of fresh berries on top.',
@@ -147,6 +177,13 @@ const FOOD_SUFFIX: Record<string, string> = {
   snack_protein_shake: 'A clear glass with chocolate-colored protein shake, no labeled bottle in frame.',
   snack_smoothie: 'A clear glass with a thick mixed-berry smoothie, vivid pink-purple color, no straw, no garnish.',
   snack_edamame: 'A small white bowl of steamed edamame pods, lightly salted.',
+
+  // 2026-05-08 catalog expansion
+  snack_rice_cakes: 'Three plain rice cakes stacked on a plain white plate, no toppings, light beige color.',
+  snack_string_cheese: 'Two plain mozzarella string cheese sticks, partially peeled to show stringy texture, on a plain light-gray surface, no packaging.',
+  snack_yogurt_berries: 'A small white ceramic cup of plain Greek yogurt topped with fresh blueberries and raspberries.',
+  snack_tuna_pouch: 'A small mound of plain canned tuna chunks on a plain white plate, no mayo or pouch visible, no dressing.',
+  snack_protein_oatmeal: 'A small bowl of cooked oatmeal with a sprinkle of berries on top, no other toppings, plain creamy texture visible.',
 };
 
 // ==========================================

@@ -70,6 +70,14 @@ export type FacialHairReportInputModifiers = {
   current_interventions: string[];
   age: number | null;
   face_shape: string | null;
+  // Body fat as a jaw-definition proxy (2026-05-09). Body fat masks
+  // the underlying jaw and cheekbone structure; a high-bf face has
+  // its bone structure hidden by adipose regardless of how strong
+  // it actually is. The facial-hair prompt uses this to bias toward
+  // beard shapes that create the visible jaw line that body fat is
+  // currently hiding (high bf) vs honoring the visible bone
+  // structure that's already doing the work (low bf).
+  bf_pct_self_estimate: string | null;
   // Per-area density (migration 0074). Null on legacy rows; the
   // prompt falls back to growth_quality when these are unset.
   density_cheeks: DensityArea | null;

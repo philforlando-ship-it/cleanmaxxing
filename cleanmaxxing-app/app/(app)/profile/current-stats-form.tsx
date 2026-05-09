@@ -252,6 +252,66 @@ export function CurrentStatsForm({ initial }: Props) {
           allowNull
           disabled={pending}
         />
+        <details className="mt-3 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/40">
+          <summary className="cursor-pointer text-[12px] font-medium text-zinc-700 dark:text-zinc-300">
+            What does each band actually look like?
+          </summary>
+          <p className="mt-2 text-[12px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+            Felt-sense estimate, not a precise measurement. Mirror in
+            decent light, fitted shirt off, honest read.
+          </p>
+          <ul className="mt-2 space-y-1.5 text-[12px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+            <li>
+              <strong className="font-semibold text-zinc-900 dark:text-zinc-100">
+                Under 12%
+              </strong>
+              {' — '}
+              Visible six-pack, vascularity in arms and shoulders, sharp
+              obliques, no soft layer anywhere. Bodybuilder-stage-prep
+              lean. Most men aren&rsquo;t here and don&rsquo;t need to
+              be.
+            </li>
+            <li>
+              <strong className="font-semibold text-zinc-900 dark:text-zinc-100">
+                12–15%
+              </strong>
+              {' — '}
+              Abs visible faintly under good light, jawline sharp,
+              athletic look. The &ldquo;in shape&rdquo; most men actually
+              want.
+            </li>
+            <li>
+              <strong className="font-semibold text-zinc-900 dark:text-zinc-100">
+                15–20%
+              </strong>
+              {' — '}
+              Athletic build with no visible abs, some softness allowed
+              but no dad-bod yet. Where most lifters sit in maintenance.
+            </li>
+            <li>
+              <strong className="font-semibold text-zinc-900 dark:text-zinc-100">
+                20–25%
+              </strong>
+              {' — '}
+              Mild softness throughout, abs not visible, dad-bod
+              territory. Most men over 30 sit here without intentional
+              work.
+            </li>
+            <li>
+              <strong className="font-semibold text-zinc-900 dark:text-zinc-100">
+                Over 25%
+              </strong>
+              {' — '}
+              Meaningful body fat, soft layer visible across torso,
+              jawline less defined. Body composition work is the
+              highest-leverage move available from here.
+            </li>
+          </ul>
+          <p className="mt-2 text-[11px] leading-relaxed text-zinc-500 dark:text-zinc-500">
+            If you&rsquo;re between two bands, pick the higher one — under-
+            counting body fat is the more common direction of error.
+          </p>
+        </details>
       </Field>
 
       <Field
