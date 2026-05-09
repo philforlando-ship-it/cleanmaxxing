@@ -13,6 +13,10 @@ import { getNutritionAssessment } from '@/lib/nutrition/service';
 import { getStrengthAssessment } from '@/lib/strength/service';
 import { getCurrentFatigueState } from '@/lib/weekly-reflection/service';
 import {
+  getHrvTrend,
+  getVo2MaxSignal,
+} from '@/lib/vital/wearable-signals';
+import {
   CARDIO_DAYS_PER_WEEK_LABEL,
   CURRENT_MOVEMENT_LABEL,
   MODALITY_PREFERENCE_LABEL,
@@ -45,6 +49,8 @@ export async function generateAndSaveCardioReport(
     strengthAssessment,
     fatigueState,
     wearableActiveDays,
+    hrvSignal,
+    vo2MaxSignal,
   ] = await Promise.all([
     supabase
       .from('users')
@@ -56,6 +62,8 @@ export async function generateAndSaveCardioReport(
     getStrengthAssessment(supabase, userId),
     getCurrentFatigueState(supabase, userId),
     getWearableActiveDaysLast7(supabase, userId),
+    getHrvTrend(supabase, userId),
+    getVo2MaxSignal(supabase, userId),
   ]);
 
   // Seasonal awareness — pass the current month + user's timezone so
@@ -93,6 +101,9 @@ export async function generateAndSaveCardioReport(
     fatigue_level: fatigueState?.level ?? null,
     fatigue_source: fatigueState?.source ?? null,
     wearable_active_days_last_7: wearableActiveDays,
+    hrv_trend: hrvSignal.trend,
+    vo2_max_latest: vo2MaxSignal.latest_value,
+    vo2_max_trend: vo2MaxSignal.trend,
   };
 
   const pov = await povFor(POV_SLUG);
@@ -244,6 +255,23 @@ function formatAssessmentForPrompt(
       modifiers.wearable_active_days_last_7 == null
         ? 'no wearable connected — ignore this signal'
         : String(modifiers.wearable_active_days_last_7)
+    }`,
+  );
+  modifierLines.push(
+    `- hrv_trend (sleep_logs.hrv_rmssd 7-day vs 28-day baseline; directional only, NEVER cite the number): ${
+      modifiers.hrv_trend ?? 'no signal — insufficient data or no wearable'
+    }`,
+  );
+  modifierLines.push(
+    `- vo2_max_latest (mL/kg/min, last reading within 60 days; appropriate to cite for age 45+): ${
+      modifiers.vo2_max_latest == null
+        ? 'no recent reading'
+        : String(modifiers.vo2_max_latest)
+    }`,
+  );
+  modifierLines.push(
+    `- vo2_max_trend (vs ~90 days prior; null when no comparison value): ${
+      modifiers.vo2_max_trend ?? 'no trend signal'
     }`,
   );
 

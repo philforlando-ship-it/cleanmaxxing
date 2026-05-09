@@ -40,6 +40,7 @@ import {
 import { getCardioAssessment } from '@/lib/cardio/service';
 import { getStrengthAssessment } from '@/lib/strength/service';
 import { getCurrentFatigueState } from '@/lib/weekly-reflection/service';
+import { getHrvTrend } from '@/lib/vital/wearable-signals';
 
 const REPORT_MODEL = 'claude-sonnet-4-6';
 const POV_SLUG = '13-body-physical-foundation';
@@ -64,12 +65,14 @@ export async function generateAndSaveNutritionReport(
     strengthAssessment,
     cardioAssessment,
     fatigueState,
+    hrvSignal,
   ] = await Promise.all([
     supabase.from('users').select('age').eq('id', userId).maybeSingle(),
     getRecentProteinSignal(supabase, userId),
     getStrengthAssessment(supabase, userId),
     getCardioAssessment(supabase, userId),
     getCurrentFatigueState(supabase, userId),
+    getHrvTrend(supabase, userId),
   ]);
 
   const age = (userRow as { age: number | null } | null)?.age ?? null;
@@ -172,6 +175,7 @@ export async function generateAndSaveNutritionReport(
     strength_days_per_week: strengthAssessment?.days_per_week ?? null,
     fatigue_level: fatigueState?.level ?? null,
     fatigue_source: fatigueState?.source ?? null,
+    hrv_trend: hrvSignal.trend,
     tdee_estimate: weightLossPlan?.tdee ?? targets.tdee_estimate,
     calorie_target:
       weightLossPlan?.daily_calorie_target ?? targets.calorie_target,
@@ -320,6 +324,11 @@ function formatAssessmentForPrompt(
   modifierLines.push(
     `- fatigue_source (only load-bearing when fatigue_level = 'struggling' and source is cardio or strength): ${
       modifiers.fatigue_source ?? 'not attributed'
+    }`,
+  );
+  modifierLines.push(
+    `- hrv_trend (sleep_logs.hrv_rmssd 7-day vs 28-day baseline; load-bearing when goal_direction is 'lose_fat' or 'cut'; directional only, NEVER cite the number): ${
+      modifiers.hrv_trend ?? 'no signal — insufficient data or no wearable'
     }`,
   );
 

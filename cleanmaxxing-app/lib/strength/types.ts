@@ -235,6 +235,11 @@ export type StrengthReportInputModifiers = {
   // source attributions inform but don't change the prescription.
   fatigue_level: string | null;
   fatigue_source: string | null;
+  // HRV trend (2026-05-09). 7-day rolling avg vs 28-day baseline,
+  // sourced from sleep_logs.hrv_rmssd. Passive evidence layer
+  // alongside the self-reported fatigue. NEVER cite the absolute
+  // number — direction only.
+  hrv_trend: 'declining' | 'stable' | 'elevated' | null;
   // User's exercise picker preferences (snapshotted at gen time so
   // the report's reasoning is reproducible)
   selected_exercise_slugs: string[];

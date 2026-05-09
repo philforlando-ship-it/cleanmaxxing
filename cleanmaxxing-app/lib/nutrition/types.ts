@@ -175,6 +175,11 @@ export type NutritionReportInputModifiers = {
   // inform but don't change the prescription.
   fatigue_level: string | null;
   fatigue_source: string | null;
+  // HRV trend (2026-05-09). 7-day rolling avg vs 28-day baseline,
+  // sourced from sleep_logs.hrv_rmssd. In nutrition context, HRV
+  // declining + lose_fat goal is a signal the deficit may be too
+  // aggressive. NEVER cite the absolute number.
+  hrv_trend: 'declining' | 'stable' | 'elevated' | null;
   tdee_estimate: number | null;
   calorie_target: number | null;
   protein_target_g: number | null;

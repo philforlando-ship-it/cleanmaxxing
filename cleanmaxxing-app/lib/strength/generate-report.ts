@@ -14,6 +14,7 @@ import { getCardioAssessment } from '@/lib/cardio/service';
 import { getNutritionAssessment } from '@/lib/nutrition/service';
 import { getSleepState } from '@/lib/sleep/service';
 import { getCurrentFatigueState } from '@/lib/weekly-reflection/service';
+import { getHrvTrend } from '@/lib/vital/wearable-signals';
 import {
   CURRENT_SPLIT_LABEL,
   DAYS_PER_WEEK_LABEL,
@@ -51,6 +52,7 @@ export async function generateAndSaveStrengthReport(
     sleepState,
     feedbackSummary,
     fatigueState,
+    hrvSignal,
   ] = await Promise.all([
     supabase.from('users').select('age').eq('id', userId).maybeSingle(),
     getRecentStrengthSessionCount(supabase, userId, 7),
@@ -59,6 +61,7 @@ export async function generateAndSaveStrengthReport(
     getSleepState(supabase, userId),
     getStrengthFeedbackSummary(supabase, userId, 7),
     getCurrentFatigueState(supabase, userId),
+    getHrvTrend(supabase, userId),
   ]);
 
   const modifiers: StrengthReportInputModifiers = {
@@ -81,6 +84,7 @@ export async function generateAndSaveStrengthReport(
       cardioAssessment?.programming_priority ?? null,
     fatigue_level: fatigueState?.level ?? null,
     fatigue_source: fatigueState?.source ?? null,
+    hrv_trend: hrvSignal.trend,
     sleep_rolling_avg_hours: sleepState.rollingAvgHours,
     sleep_rolling_count: sleepState.rollingCount,
     selected_exercise_slugs: assessment.selected_exercise_slugs,
@@ -245,6 +249,11 @@ function formatAssessmentForPrompt(
   modifierLines.push(
     `- fatigue_source (only load-bearing when fatigue_level = 'struggling'): ${
       modifiers.fatigue_source ?? 'not attributed'
+    }`,
+  );
+  modifierLines.push(
+    `- hrv_trend (sleep_logs.hrv_rmssd 7-day vs 28-day baseline; passive evidence layer; directional only, NEVER cite the number): ${
+      modifiers.hrv_trend ?? 'no signal — insufficient data or no wearable'
     }`,
   );
 

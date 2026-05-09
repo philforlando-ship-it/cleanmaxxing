@@ -214,6 +214,19 @@ export type CardioReportInputModifiers = {
   // 0..7 otherwise. Drives the "wearable shows you've been moving /
   // quieter than the plan calls for" coaching note.
   wearable_active_days_last_7: number | null;
+  // HRV trend (2026-05-09). 7-day rolling avg vs 28-day baseline,
+  // sourced from sleep_logs.hrv_rmssd. 'declining' / 'stable' /
+  // 'elevated' / null when insufficient data. Prompt cites the
+  // direction, never the absolute number (per-user baselines vary
+  // 2x and any cross-user comparison is noise).
+  hrv_trend: 'declining' | 'stable' | 'elevated' | null;
+  // VO2max signal (2026-05-09). Latest mL/kg/min from
+  // daily_activity.vo2_max within last 60 days; trend is direction
+  // vs ~90 days prior when present. Unlike HRV the absolute number
+  // IS appropriate to surface for age 45+ (single physiological
+  // quantity, not an HR-derived approximation).
+  vo2_max_latest: number | null;
+  vo2_max_trend: 'improving' | 'stable' | 'declining' | null;
 };
 
 export const PRIMARY_ROLE_LABEL: Record<CardioPrimaryRole, string> = {
