@@ -22,6 +22,8 @@ import {
   BUILD_LABEL,
   BUILDS,
   CLOSET_STATE_LABEL,
+  FRAME_DENSITIES,
+  FRAME_DENSITY_LABEL,
   LEG_LENGTH_LABEL,
   LEG_LENGTHS,
   SHOULDER_WIDTH_LABEL,
@@ -32,6 +34,7 @@ import {
   type Build,
   type ClosetState,
   type CurrentArchetype,
+  type FrameDensity,
   type LegLength,
   type ShoulderWidth,
   type SkinUndertone,
@@ -70,6 +73,7 @@ export type StyleAssessmentInitialValues = {
   arm_length: ArmLength | null;
   leg_length: LegLength | null;
   build: Build | null;
+  frame_density: FrameDensity | null;
   skin_undertone: SkinUndertone | null;
   current_archetype: CurrentArchetype;
   target_archetype: StyleArchetype;
@@ -96,6 +100,9 @@ export function StyleAssessmentForm({
     initialValues?.shoulder_width ?? null,
   );
   const [build, setBuild] = useState<Build | null>(initialValues?.build ?? null);
+  const [frameDensity, setFrameDensity] = useState<FrameDensity | null>(
+    initialValues?.frame_density ?? null,
+  );
   const [armLength, setArmLength] = useState<ArmLength | null>(
     initialValues?.arm_length ?? null,
   );
@@ -124,6 +131,7 @@ export function StyleAssessmentForm({
     setError(null);
     if (!shoulderWidth) return setError('Pick a shoulder width.');
     if (!build) return setError('Pick a build.');
+    if (!frameDensity) return setError('Pick a frame density.');
     if (!armLength) return setError('Pick an arm length.');
     if (!legLength) return setError('Pick a leg length.');
     if (!skinUndertone) return setError('Pick a skin undertone.');
@@ -134,6 +142,7 @@ export function StyleAssessmentForm({
     const payload = {
       shoulder_width: shoulderWidth,
       build,
+      frame_density: frameDensity,
       arm_length: armLength,
       leg_length: legLength,
       skin_undertone: skinUndertone,
@@ -206,6 +215,25 @@ export function StyleAssessmentForm({
 
       <Question
         number={3}
+        title="How does your weight read?"
+        helper="Orthogonal to build — this is whether your current weight reads as muscle, lean lines, or a soft layer. Two athletic builds can look very different depending on this: one is V-tapered and sharp, the other is athletic with a softer cover."
+      >
+        <div className="space-y-2">
+          {FRAME_DENSITIES.map((d) => (
+            <RadioRow
+              key={d}
+              checked={frameDensity === d}
+              onChange={() => setFrameDensity(d)}
+              disabled={pending}
+              label={FRAME_DENSITY_LABEL[d]}
+              name="frame_density"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={4}
         title="Arm length — relative to torso"
         helper="Drives sleeve and cuff visibility rules. Honest read: when arms hang relaxed, where do off-the-rack sleeves usually land?"
       >
@@ -224,7 +252,7 @@ export function StyleAssessmentForm({
       </Question>
 
       <Question
-        number={4}
+        number={5}
         title="Leg length — relative to torso"
         helper="The single highest-leverage proportion lever. Long-torso/short-legs benefits massively from high-rise trousers; short-torso/long-legs runs different rules."
       >
@@ -243,7 +271,7 @@ export function StyleAssessmentForm({
       </Question>
 
       <Question
-        number={5}
+        number={6}
         title="Skin undertone — the jewelry test"
         helper="Look at silver/platinum vs. gold jewelry held against your wrist or jawline. One usually flatters more than the other. If both look fine, you’re neutral."
       >
@@ -262,7 +290,7 @@ export function StyleAssessmentForm({
       </Question>
 
       <Question
-        number={6}
+        number={7}
         title="What are you dressing as today?"
         helper="The honest current read — what your wardrobe actually looks like, not what you'd like it to be. 'No clear archetype yet' is a fine answer."
       >
@@ -282,7 +310,7 @@ export function StyleAssessmentForm({
       </Question>
 
       <Question
-        number={7}
+        number={8}
         title="What are you moving toward?"
         helper="Pick the one closest to who you want to look like in a year. Each option is tagged with the honest per-user read — strong fit, workable, or fights your frame — based on the body data you just entered. Not a hard gate, but worth weighing before you commit."
       >
@@ -312,7 +340,7 @@ export function StyleAssessmentForm({
       </Question>
 
       <Question
-        number={8}
+        number={9}
         title="What's the state of your closet?"
         helper="Drives whether the plan focuses on auditing what you have or building from scratch."
       >
@@ -331,7 +359,7 @@ export function StyleAssessmentForm({
       </Question>
 
       <Question
-        number={9}
+        number={10}
         title="Anything you want Mister P to know? (optional)"
         helper="One line. Specific situation, a stuck point, a budget reality."
       >

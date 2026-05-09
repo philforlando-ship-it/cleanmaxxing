@@ -16,6 +16,7 @@ import {
   ARM_LENGTH_LABEL,
   BUILD_LABEL,
   CLOSET_STATE_LABEL,
+  FRAME_DENSITY_LABEL,
   FRAME_ESTIMATE_LABEL,
   LEG_LENGTH_LABEL,
   SHOULDER_WIDTH_LABEL,
@@ -67,6 +68,7 @@ export async function generateAndSaveStyleReport(
     arm_length: assessment.arm_length,
     leg_length: assessment.leg_length,
     build: assessment.build,
+    frame_density: assessment.frame_density,
     skin_undertone: assessment.skin_undertone,
     target_archetype_feasibility_tier:
       // Only snapshot a tier when the body data was sufficient to
@@ -147,6 +149,9 @@ function formatAssessmentForPrompt(
     `- build (v2 granular axis): ${modifiers.build ?? 'null'}`,
   );
   modifierLines.push(
+    `- frame_density (v2 orthogonal axis — lean / dense / soft; combine with build for combo-specific rules): ${modifiers.frame_density ?? 'null'}`,
+  );
+  modifierLines.push(
     `- skin_undertone (v2 color framework axis): ${modifiers.skin_undertone ?? 'null'}`,
   );
   modifierLines.push(
@@ -182,6 +187,11 @@ function formatAssessmentForPrompt(
   }
   if (assessment.build) {
     granularLines.push(`- Build: ${BUILD_LABEL[assessment.build]}`);
+  }
+  if (assessment.frame_density) {
+    granularLines.push(
+      `- Frame density: ${FRAME_DENSITY_LABEL[assessment.frame_density]}`,
+    );
   }
   if (assessment.skin_undertone) {
     granularLines.push(

@@ -22,6 +22,11 @@ export type ShoulderWidth = 'narrow' | 'medium' | 'broad';
 export type ArmLength = 'short' | 'proportional' | 'long';
 export type LegLength = 'short' | 'proportional' | 'long';
 export type Build = 'slight' | 'athletic' | 'stocky' | 'heavyset';
+// Migration 0097 (2026-05-09) — orthogonal density axis. Resolves
+// the missing "broad athletic" / mesomorph bucket between athletic
+// and stocky, plus the athletic-with-a-layer / dad-bod-with-history
+// case, without exploding the Build enum.
+export type FrameDensity = 'lean' | 'dense' | 'soft';
 export type SkinUndertone = 'cool' | 'warm' | 'neutral';
 
 export const SHOULDER_WIDTHS: ReadonlyArray<ShoulderWidth> = [
@@ -47,6 +52,12 @@ export const BUILDS: ReadonlyArray<Build> = [
   'athletic',
   'stocky',
   'heavyset',
+];
+
+export const FRAME_DENSITIES: ReadonlyArray<FrameDensity> = [
+  'lean',
+  'dense',
+  'soft',
 ];
 
 export const SKIN_UNDERTONES: ReadonlyArray<SkinUndertone> = [
@@ -84,6 +95,15 @@ export const BUILD_LABEL: Record<Build, string> = {
   stocky:
     'Stocky — broader-and-shorter (different from "muscular and tall")',
   heavyset: 'Heavyset — carrying meaningful body fat throughout',
+};
+
+export const FRAME_DENSITY_LABEL: Record<FrameDensity, string> = {
+  lean:
+    'Lean — low body fat, lines visible, no soft layer over the frame',
+  dense:
+    'Dense — visible muscle, tight skin, weight reads as muscle not fat',
+  soft:
+    'Soft — has a layer over the underlying frame; not heavyset, just not lean',
 };
 
 export const SKIN_UNDERTONE_LABEL: Record<SkinUndertone, string> = {
@@ -156,6 +176,8 @@ export type StyleAssessment = {
   arm_length: ArmLength | null;
   leg_length: LegLength | null;
   build: Build | null;
+  // Migration 0097 (2026-05-09) — orthogonal density axis.
+  frame_density: FrameDensity | null;
   skin_undertone: SkinUndertone | null;
   // Legacy v1 frame_estimate — derived from build + shoulder_width
   // when the v2 form is submitted. Retained so existing call sites
@@ -200,6 +222,12 @@ export type StyleReportInputModifiers = {
   arm_length: ArmLength | null;
   leg_length: LegLength | null;
   build: Build | null;
+  // Migration 0097 — orthogonal density axis (lean / dense / soft).
+  // Combined with build, the prompt branches on combos like
+  // athletic+dense (broad-athletic / mesomorph) and athletic+soft
+  // (dad-bod-with-history) that the build axis alone couldn't
+  // distinguish.
+  frame_density: FrameDensity | null;
   skin_undertone: SkinUndertone | null;
   // Phase 2b — per-user feasibility of the PICKED target archetype.
   // Computed from body data + age via lib/style/aesthetic-feasibility.
@@ -288,6 +316,7 @@ export const StyleAssessmentInputSchema = z.object({
   arm_length: z.enum(['short', 'proportional', 'long']),
   leg_length: z.enum(['short', 'proportional', 'long']),
   build: z.enum(['slight', 'athletic', 'stocky', 'heavyset']),
+  frame_density: z.enum(['lean', 'dense', 'soft']),
   skin_undertone: z.enum(['cool', 'warm', 'neutral']),
   current_archetype: z.enum([
     'clean_minimalist',

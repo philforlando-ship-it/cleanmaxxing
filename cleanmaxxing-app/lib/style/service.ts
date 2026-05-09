@@ -7,6 +7,7 @@ import type {
   ArmLength,
   Build,
   ClosetAuditSelections,
+  FrameDensity,
   LegLength,
   ShoulderWidth,
   SkinUndertone,
@@ -107,6 +108,7 @@ export async function saveStyleAssessment(
     arm_length: input.arm_length,
     leg_length: input.leg_length,
     build: input.build,
+    frame_density: input.frame_density,
     skin_undertone: input.skin_undertone,
     frame_estimate,
     current_archetype: input.current_archetype,
@@ -359,6 +361,7 @@ function rowToAssessment(row: unknown): StyleAssessment {
     arm_length: (r.arm_length as ArmLength | null) ?? null,
     leg_length: (r.leg_length as LegLength | null) ?? null,
     build: (r.build as Build | null) ?? null,
+    frame_density: (r.frame_density as FrameDensity | null) ?? null,
     skin_undertone: (r.skin_undertone as SkinUndertone | null) ?? null,
     frame_estimate: r.frame_estimate as StyleAssessment['frame_estimate'],
     current_archetype:

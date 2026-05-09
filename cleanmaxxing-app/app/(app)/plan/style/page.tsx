@@ -300,6 +300,7 @@ function assessmentToInitialValues(
     arm_length: a.arm_length,
     leg_length: a.leg_length,
     build: a.build,
+    frame_density: a.frame_density,
     skin_undertone: a.skin_undertone,
     current_archetype: a.current_archetype,
     target_archetype: a.target_archetype,
