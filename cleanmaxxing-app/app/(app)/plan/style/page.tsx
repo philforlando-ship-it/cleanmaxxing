@@ -27,6 +27,7 @@ import {
   StyleAssessmentForm,
   type StyleAssessmentInitialValues,
 } from './assessment-form';
+import { BodyAxesPanel } from './body-axes-panel';
 import { StyleStage1Card } from './stage-1-card';
 import { StyleStage2Card } from './stage-2-card';
 import { StyleStage3Card } from './stage-3-card';
@@ -201,6 +202,12 @@ export default async function StylePlanPage({ searchParams }: Props) {
 
       {!showForm && assessment && hasReport && (
         <>
+          <BodyAxesPanel
+            legLength={assessment.leg_length}
+            armLength={assessment.arm_length}
+            skinUndertone={assessment.skin_undertone}
+          />
+
           <StyleStage1Card
             targetArchetype={assessment.target_archetype}
             ageCohort={ageCohort}
@@ -219,6 +226,9 @@ export default async function StylePlanPage({ searchParams }: Props) {
                 budget: profile.budget_tier,
                 bf_pct: profile.bf_pct_self_estimate,
                 age,
+                leg_length: assessment.leg_length,
+                arm_length: assessment.arm_length,
+                skin_undertone: assessment.skin_undertone,
               })}
               initialAcquired={assessment.stage_2_pieces_acquired}
               completedAt={assessment.stage_2_completed_at}
@@ -232,6 +242,9 @@ export default async function StylePlanPage({ searchParams }: Props) {
                 frame: assessment.frame_estimate,
                 bf_pct: profile.bf_pct_self_estimate,
                 age,
+                leg_length: assessment.leg_length,
+                arm_length: assessment.arm_length,
+                skin_undertone: assessment.skin_undertone,
               })}
               acknowledgedAt={assessment.stage_3_acknowledged_at}
             />
@@ -246,7 +259,11 @@ function assessmentToInitialValues(
   a: StyleAssessment,
 ): StyleAssessmentInitialValues {
   return {
-    frame_estimate: a.frame_estimate,
+    shoulder_width: a.shoulder_width,
+    arm_length: a.arm_length,
+    leg_length: a.leg_length,
+    build: a.build,
+    skin_undertone: a.skin_undertone,
     current_archetype: a.current_archetype,
     target_archetype: a.target_archetype,
     closet_state: a.closet_state,

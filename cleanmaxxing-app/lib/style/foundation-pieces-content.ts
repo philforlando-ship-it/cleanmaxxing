@@ -1,8 +1,11 @@
 // Stage 2 foundation pieces — authored, archetype-specific. The user's
 // 5-piece capsule depends on (target_archetype, frame_estimate,
-// budget_tier). The function returns five pieces with archetype-tuned
-// notes; frame and budget shift the inline guidance, not the slug
-// list, so the user's progress survives a budget tier change.
+// budget_tier) for the slug list, plus the v2 granular axes for the
+// per-piece modifier notes. Frame and budget shift the inline guidance,
+// not the slug list, so the user's progress survives a budget tier
+// change. v2 axes (leg_length, arm_length, skin_undertone — added
+// 2026-05-09) layer additional notes onto the relevant piece categories
+// without altering the capsule itself.
 //
 // No LLM call here — these are stable POV-12 derived recommendations
 // and re-rolling them per user wastes tokens and varies the
@@ -13,7 +16,13 @@ import type {
   BodyFatEstimate,
   BudgetTier,
 } from '@/lib/profile/service';
-import type { FrameEstimate, StyleArchetype } from './types';
+import type {
+  ArmLength,
+  FrameEstimate,
+  LegLength,
+  SkinUndertone,
+  StyleArchetype,
+} from './types';
 
 export type FoundationPiece = {
   // Stable slug used in stage_2_pieces_acquired array. Globally unique
@@ -35,6 +44,12 @@ type Inputs = {
   budget: BudgetTier | null;
   bf_pct: BodyFatEstimate | null;
   age: number | null;
+  // v2 granular axes (migration 0093). Nullable for pre-migration rows
+  // — when null, the v2-axis modifier notes simply don't fire and the
+  // legacy frame-based guidance still works.
+  leg_length: LegLength | null;
+  arm_length: ArmLength | null;
+  skin_undertone: SkinUndertone | null;
 };
 
 // Helper — frame-aware fit description suffix.
@@ -297,24 +312,15 @@ export function foundationPiecesFor(inputs: Inputs): FoundationPiece[] {
   return base.map((piece) => {
     const guidance = `${fitFor(inputs.frame, piece.guidance_base)}. ${budgetFor(inputs.budget)}`;
 
-    let modifier_note: string | undefined;
-
-    // GLP-1 modifier — bridge pieces, not full rebuilds, until body
-    // stabilizes. The /plan/style report already names this; we
-    // surface the same posture here so the shopping list stays
-    // consistent.
-    // Imported lazily via lib/profile/service Intervention type at the
-    // call site; here we treat current_interventions as a string list.
-    // (No import to keep this module's imports tight.)
+    const notes: string[] = [];
 
     // Style Past 45 — fit calibration tweak applied to T-shirts and
     // sweaters specifically. Tops a half-size up from "slim fit" at
     // this age; recalibrated cuts described in POV 12.
-    if (inputs.age != null && inputs.age >= 45) {
-      if (piece.category === 'tee') {
-        modifier_note =
-          'At 45+, take a half-size up from your usual slim fit. The cut should drape rather than cling.';
-      }
+    if (inputs.age != null && inputs.age >= 45 && piece.category === 'tee') {
+      notes.push(
+        'At 45+, take a half-size up from your usual slim fit. The cut should drape rather than cling.',
+      );
     }
 
     // Heavier frame + bottoms → vertical line emphasis.
@@ -322,9 +328,61 @@ export function foundationPiecesFor(inputs: Inputs): FoundationPiece[] {
       (inputs.frame === 'heavier' || inputs.bf_pct === 'over_25') &&
       piece.category === 'pants'
     ) {
-      modifier_note =
-        'Vertical lines work for you here — straight cut, dark wash, no contrast cuffs.';
+      notes.push(
+        'Vertical lines work for you here — straight cut, dark wash, no contrast cuffs.',
+      );
     }
+
+    // v2 — leg_length on bottoms. Highest-leverage proportion lever
+    // per Gentleman's Gazette: trouser rise + shoe-color matching for
+    // short legs; rise/hem latitude for long legs.
+    if (piece.category === 'pants') {
+      if (inputs.leg_length === 'short') {
+        notes.push(
+          'Long-torso/short-legs: pick the highest rise the cut allows, no break or slight break, and match shoe color to pant color for a continuous visual line.',
+        );
+      } else if (inputs.leg_length === 'long') {
+        notes.push(
+          'Short-torso/long-legs: lower rises are tolerable here, and a contrasting belt or shoe color works as a deliberate horizontal break.',
+        );
+      }
+    }
+
+    // v2 — arm_length on tops + jackets. Off-the-rack sleeve issues +
+    // tailor expectations.
+    if (piece.category === 'tee' || piece.category === 'jacket') {
+      if (inputs.arm_length === 'short') {
+        notes.push(
+          'Sleeves likely run long off the rack. Shop "slim/short" sizes when available, or budget ~1-1.5" sleeve shortening at the tailor.',
+        );
+      } else if (inputs.arm_length === 'long') {
+        notes.push(
+          'Sleeves likely run short off the rack. Shop "long" sizes when available; under jackets, show only ~1/4" of cuff (less than the standard half-inch) to make the arms read shorter.',
+        );
+      }
+    }
+
+    // v2 — skin_undertone palette anchor. Fires on the categories
+    // where color near the face matters most.
+    if (
+      piece.category === 'tee' ||
+      piece.category === 'jacket' ||
+      piece.category === 'extra'
+    ) {
+      if (inputs.skin_undertone === 'cool') {
+        notes.push(
+          'Anchor the color in the cool family — charcoal, navy, true white, jewel tones. Warm reds, oranges, and yellows fight the undertone near the face.',
+        );
+      } else if (inputs.skin_undertone === 'warm') {
+        notes.push(
+          'Anchor the color in the warm family — olive, rust, warm browns, cream, ochre. Icy blues and cool greys fight the undertone near the face.',
+        );
+      }
+      // 'neutral' intentionally not noted — the report explains it; on
+      // the shopping list it would be noise on every piece.
+    }
+
+    const modifier_note = notes.length > 0 ? notes.join(' · ') : undefined;
 
     return {
       slug: piece.slug,

@@ -8,7 +8,13 @@
 // every future purchase should pass these rules.
 
 import type { BodyFatEstimate } from '@/lib/profile/service';
-import type { FrameEstimate, StyleArchetype } from './types';
+import type {
+  ArmLength,
+  FrameEstimate,
+  LegLength,
+  SkinUndertone,
+  StyleArchetype,
+} from './types';
 
 export type FitPrinciple = {
   slug: string;
@@ -21,6 +27,12 @@ type Inputs = {
   frame: FrameEstimate;
   bf_pct: BodyFatEstimate | null;
   age: number | null;
+  // v2 granular axes (migration 0093). Nullable for pre-migration
+  // assessments; when null, the v2 principles don't fire and the
+  // legacy frame-based principles still cover the user.
+  leg_length: LegLength | null;
+  arm_length: ArmLength | null;
+  skin_undertone: SkinUndertone | null;
 };
 
 // Universal principles — always present regardless of modifiers.
@@ -108,6 +120,68 @@ const GLASSES_PRINCIPLE: FitPrinciple = {
 // (This is intentionally cut from Stage 3 — it's a planning principle,
 // not a fit principle.)
 
+// v2 granular axes — exported individually so the BodyAxesPanel
+// (always-visible, renders before Stage 1) can show the same principle
+// text without duplication. Stage 3 also includes the relevant ones in
+// its principles list once the user reaches it.
+
+export const LEG_LENGTH_PRINCIPLES: Record<
+  Exclude<LegLength, 'proportional'>,
+  FitPrinciple
+> = {
+  short: {
+    slug: 'leg_length_short',
+    title: 'High-rise trousers are the highest-leverage proportion lever',
+    body:
+      'Long-torso/short-legs is one of the most common men\'s proportions and the easiest to dress around. Trousers at the natural waist (or higher) lengthen the leg line visually. Match shoe color to pant color whenever possible — it extends the line uninterrupted from waist to floor. Shorter shirt and jacket hems help; no break or slight break on pants. This rule fires regardless of build.',
+  },
+  long: {
+    slug: 'leg_length_long',
+    title: 'Lower rises are tolerable; use horizontal breaks deliberately',
+    body:
+      'Short-torso/long-legs gives you the latitude most other proportions don\'t — lower-rise pants work, contrasting belt or shoe color is a tool rather than a mistake (it creates the missing horizontal break), and longer shirt hems and jacket lengths help re-balance the silhouette. The trap is treating this as "easy mode" — the proportions still need intention, just from the opposite direction.',
+  },
+};
+
+export const ARM_LENGTH_PRINCIPLES: Record<
+  Exclude<ArmLength, 'proportional'>,
+  FitPrinciple
+> = {
+  short: {
+    slug: 'arm_length_short',
+    title: 'Sleeves run long off the rack — name the recurring problem',
+    body:
+      'If sleeves regularly drape over your wrist bone or hand, the off-the-rack assumption is wrong for your build. Two paths: shop "slim/short" sized when available (most brand size grids include them), or budget for sleeve shortening at the tailor — usually 1 to 1.5" of fabric is inside the cuff for adjustment, and the work is cheap and quick on most shirts and tees.',
+  },
+  long: {
+    slug: 'arm_length_long',
+    title: 'Sleeves run short — adjust visible cuff length deliberately',
+    body:
+      'Wrist bone exposure under jackets reads as growing-out-of-the-suit unless deliberate. Show only about 1/4" of shirt cuff under jackets — half the standard half-inch — and the deliberate compression makes the arms appear less long. Buy "long" sizes when offered. Most tailors can let out 0.5-1" via the inside-cuff allowance on shirts that look short.',
+  },
+};
+
+export const SKIN_UNDERTONE_PRINCIPLES: Record<SkinUndertone, FitPrinciple> = {
+  cool: {
+    slug: 'undertone_cool',
+    title: 'Cool undertone — anchor the palette in the cool family',
+    body:
+      'Charcoal, navy, true white, slate grey, and jewel tones (sapphire, emerald, deep purple) flatter you near the face. Warm reds, oranges, mustard yellows, and warm browns fight the undertone — keep them away from the collarline (a warm-toned belt or shoe is fine). The jewelry test holds up: silver and platinum suit you more than gold and brass.',
+  },
+  warm: {
+    slug: 'undertone_warm',
+    title: 'Warm undertone — anchor the palette in the warm family',
+    body:
+      'Olive, rust, ochre, warm browns, cream, and earth tones flatter you near the face. Icy blues, cool greys, and stark whites fight the undertone — soften toward off-white or ecru when possible. The jewelry test holds up: gold and brass suit you more than silver. This is the default warm-archetype palette (rugged, creative_eclectic) by coincidence — they line up.',
+  },
+  neutral: {
+    slug: 'undertone_neutral',
+    title: 'Neutral undertone — most colors work, lean toward your hair',
+    body:
+      'You can wear most palettes credibly, which is the easy mode of color. The tiebreak when in doubt: lean toward whichever direction your hair and beard color naturally lean. Warm beard or auburn hair → warm tones near the face. Cool/silver/grey → cool tones. The flexibility is real but pick a direction per outfit so the look doesn\'t feel undecided.',
+  },
+};
+
 export function fitPrinciplesFor(inputs: Inputs): FitPrinciple[] {
   const principles: FitPrinciple[] = [];
 
@@ -116,6 +190,25 @@ export function fitPrinciplesFor(inputs: Inputs): FitPrinciple[] {
 
   // Frame-specific principle.
   principles.push(FRAME_PRINCIPLES[inputs.frame]);
+
+  // v2 — leg_length proportion principle. Highest-leverage proportion
+  // lever per Gentleman's Gazette; surface above age principles since
+  // it applies all ages.
+  if (inputs.leg_length === 'short' || inputs.leg_length === 'long') {
+    principles.push(LEG_LENGTH_PRINCIPLES[inputs.leg_length]);
+  }
+
+  // v2 — arm_length tailoring principle. Same reasoning — applies
+  // every age, fires only on the off-rack-mismatch ends of the axis.
+  if (inputs.arm_length === 'short' || inputs.arm_length === 'long') {
+    principles.push(ARM_LENGTH_PRINCIPLES[inputs.arm_length]);
+  }
+
+  // v2 — skin_undertone palette principle. Always fires when set
+  // (including 'neutral', since the lean-toward-hair note is useful).
+  if (inputs.skin_undertone) {
+    principles.push(SKIN_UNDERTONE_PRINCIPLES[inputs.skin_undertone]);
+  }
 
   // Age-conditional layers.
   if (inputs.age != null && inputs.age >= 45) {
