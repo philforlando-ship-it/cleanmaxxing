@@ -1,0 +1,36 @@
+-- ==========================================
+-- Cleanmaxxing — drop daily_notes (system retired 2026-05-09)
+-- ==========================================
+-- The daily-note system produced one Mister P observation+question
+-- per day at the top of /today, persisted with the user's response.
+-- Retired because:
+--
+--   1. Phase E contextual prompts handle signal-based observations
+--      better — they fire only when a specific detector matches
+--      (skipped_check_ins / process_adherence_declining /
+--      glp1_hydration / sleep_variance_high), with the right gate
+--      already wired in lib/contextual-prompt/select.
+--
+--   2. Mister P chat handles open-ended touchpoints organically.
+--      A daily forced observation/question competes with chat-led
+--      reflection without unique value.
+--
+--   3. The rules engine in lib/daily-note/templates.ts had heavy
+--      fallback-template dilution: when no specific signal was
+--      available, it produced generic tenure-based prompts ("First
+--      day or two in. Don't try to optimize yet — just see what
+--      the rhythm feels like.") that diluted the surface for new
+--      users.
+--
+-- All consumers cleaned up in the same commit:
+--   - app/(app)/today/page.tsx — render block + state fetch removed
+--   - app/(app)/today/daily-note-card.tsx — deleted
+--   - lib/daily-note/{service,templates}.ts — deleted
+--   - app/api/daily-note/respond/route.ts — deleted
+--   - lib/today/hero.ts — rest-state CTA repointed at Mister P chat
+--   - lib/weekly-letter/compose.ts — daily_responses field + read
+--     dropped from the Sunday-letter context
+--
+-- Run in Supabase SQL Editor.
+
+drop table if exists public.daily_notes;

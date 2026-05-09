@@ -20,7 +20,6 @@ type LetterContext = {
   reflectionDimsAvg: number | null;
   recentQuestions: string[];
   daysCheckedInLast7: number;
-  dailyResponses: Array<{ question: string; response: string }>;
 };
 
 export async function gatherLetterContext(
@@ -79,28 +78,12 @@ export async function gatherLetterContext(
     .filter((q): q is string => Boolean(q))
     .slice(0, 5);
 
-  const { data: dailyRows } = await supabase
-    .from('daily_notes')
-    .select('question, response')
-    .eq('user_id', userId)
-    .not('response', 'is', null)
-    .gte('day', sinceIso)
-    .order('responded_at', { ascending: false })
-    .limit(4);
-  const dailyResponses = ((dailyRows ?? []) as Array<{
-    question: string;
-    response: string | null;
-  }>)
-    .filter((r): r is { question: string; response: string } => Boolean(r.response))
-    .map((r) => ({ question: r.question, response: r.response }));
-
   return {
     state,
     reflectionNotes,
     reflectionDimsAvg,
     recentQuestions,
     daysCheckedInLast7,
-    dailyResponses,
   };
 }
 
@@ -168,15 +151,6 @@ function formatContextBlock(ctx: LetterContext): string {
       lines.push(`  - ${q.length > 200 ? q.slice(0, 200) + '…' : q}`);
     }
   }
-  if (ctx.dailyResponses.length > 0) {
-    lines.push('recent_daily_responses:');
-    for (const r of ctx.dailyResponses) {
-      const resp = r.response.length > 200 ? r.response.slice(0, 200) + '…' : r.response;
-      lines.push(`  Q: ${r.question}`);
-      lines.push(`  A: ${resp}`);
-    }
-  }
-
   if (state.firstConvoBlockers) {
     lines.push(`onboarding_blockers: ${state.firstConvoBlockers}`);
   }

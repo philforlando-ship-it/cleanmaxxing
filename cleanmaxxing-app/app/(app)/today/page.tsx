@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { DevResetButton } from './dev-reset-button';
 import { MisterPChatCard, type ChatMessage } from './mister-p-chat-card';
-import { WeeklyFocusCard } from './weekly-focus-card';
 import { FirstRunCard } from './first-run-card';
 import { ProgressPhotoCard } from './progress-photo-card';
 import { ProfileCompletionCard } from './profile-completion-card';
@@ -11,11 +10,13 @@ import { ProfileCompletionCard } from './profile-completion-card';
 // covered by the PrimaryActionCard. Phase C: log cards moved to
 // /log; Pattern C cards (weekly letter, weekly reflection, monthly
 // checkpoint, quarterly survey, self-acceptance nudge, stale goal,
-// stuck confidence) moved to /reflection. Imports below are the
-// post-Phase-C residual set: event-driven daily-action tiles
-// (hair routine / photo / sleep commitments / recovery check),
-// onboarding cards, profile completion, weekly focus, Mister P
-// chat surface, and the still-on-/today daily note.
+// stuck confidence) moved to /reflection. Daily-note system
+// retired 2026-05-09 — Phase E contextual prompts handle
+// signal-based observations and Mister P chat handles open-ended
+// touchpoints. Imports below are the residual set: event-driven
+// daily-action tiles (hair routine / photo / sleep commitments /
+// recovery check), onboarding cards, profile completion, weekly
+// focus, Mister P chat surface.
 import { HairRoutineCard } from './hair-routine-card';
 import { HairPhotoDueCard } from './hair-photo-due-card';
 import { SleepCommitmentsCard } from './sleep-commitments-card';
@@ -60,8 +61,6 @@ import { getMisterPUserState } from '@/lib/mister-p/user-state';
 // remain unrendered — kept around for ease of revert + so existing
 // completed answers stay readable. Future cleanup ticket: delete the
 // orphaned files once the change has settled.
-import { DailyNoteCard } from './daily-note-card';
-import { getOrCreateTodayNote } from '@/lib/daily-note/service';
 import { getWeeklyCheckInSummary, getStalestGoal } from '@/lib/check-in/service';
 import { appDayFor, daysBetweenAppDays, previousAppDayFor } from '@/lib/date/app-day';
 import { getProfileCompletion } from '@/lib/profile/completion';
@@ -682,38 +681,11 @@ export default async function TodayPage({ searchParams }: Props) {
   // one question, cached per user per day. The day key uses the user's
   // app-day in their stored timezone (3am-local cutoff) so the same
   // boundary applies as the rest of /today.
-  //
-  // 2026-05-08: previously gated on firstConvoState.completed so the
-  // two surfaces didn't compete for slot 1. With FirstConversationCard
-  // removed, the gate is just !steppedAway — daily note fires every
-  // day post-onboarding for any active user.
-  //
-  // Phase C note: the Sunday-suppression-when-weekly-letter-exists
-  // dance was dropped here. The weekly letter moved to /reflection,
-  // so there's no /today stack-up problem to defend against.
-  let todayNote = null;
-  if (!steppedAway) {
-    const { count: priorNotesCount } = await supabase
-      .from('daily_notes')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-    const todayDate = appDayFor(timezone);
-    const completionRate =
-      weeklySummary.possible > 0
-        ? weeklySummary.ticked / weeklySummary.possible
-        : null;
-    todayNote = await getOrCreateTodayNote(supabase, user.id, todayDate, {
-      daysSinceOnboarding: Math.max(0, daysSinceOnboarding),
-      weekday: new Date().getDay(),
-      sleepRecentAvgHours: sleepState.rollingAvgHours,
-      sleepRecentCount: sleepState.rollingCount,
-      weeklyCompletionRate: completionRate,
-      staleGoalTitle: staleGoal?.title ?? null,
-      staleGoalDaysIdle: staleGoal?.daysSinceLastTick ?? null,
-      stuckDimensions: stuckSignal ? [stuckSignal.dimensionLabel] : [],
-      isFirstDailyNote: (priorNotesCount ?? 0) === 0,
-    });
-  }
+  // Daily-note system retired 2026-05-09. Phase E contextual prompts
+  // do the signal-based observation work that the daily-note rules
+  // engine duplicated; Mister P chat handles open-ended touchpoints
+  // organically. Forcing a daily observation when there was no real
+  // signal produced fallback templates that diluted /today.
 
   // Hero priority resolver. Picks one surface to pin at the top so
   // hero / milestone / showUpStat / nutritionLoggedToday / pickHero
@@ -792,16 +764,6 @@ export default async function TodayPage({ searchParams }: Props) {
         {/* FirstConversationCard removed 2026-05-08 — see import-block
             comment up top. WeeklyLetterCard / SelfAcceptanceNudgeCard
             moved to /reflection in Phase C of the /today redesign. */}
-
-        {!steppedAway && todayNote && (
-          <div id="daily-note" className="scroll-mt-16">
-            {/* Key on note.id so the card unmounts/remounts when the
-                day rolls over. Without this, a tab left open across
-                the 3am app-day boundary keeps stale client state from
-                yesterday's response and hides today's fresh input. */}
-            <DailyNoteCard key={todayNote.id} note={todayNote} />
-          </div>
-        )}
 
         {!steppedAway && (
           <ProfileCompletionCard completion={profileCompletion} />
@@ -959,18 +921,14 @@ export default async function TodayPage({ searchParams }: Props) {
             )}
           </div>
         )}
-        {/* WeeklyFocusCard stays here — it's the goal-tracking
-            companion to the daily check-in. WeeklyReflectionCard +
-            ConfidenceTrendChart moved to /reflection in Phase C.
-            MisterPChatCard stays for now; will be reconsidered in
-            Phase E. */}
-        {!steppedAway && (
-          <WeeklyFocusCard
-            goals={activeGoals}
-            weeklySummary={weeklySummary}
-            userState={misterPUserState}
-          />
-        )}
+        {/* WeeklyFocusCard retired (2026-05-09). Pre-redesign goal
+            dashboard surface; per-goal walkthrough phase content now
+            lives on the journey's /plan/* surface and on /system,
+            and the weekly X/Y check-in summary it carried is
+            substantially overlapped by the Weekly Reflection v2
+            process_adherence capture on /reflection. The card was
+            self-hiding most of the time anyway via the dismiss-then-
+            reappear-on-phase-cross pattern. */}
 
         {/* Phase D — Area 3 progress visual. Renders milestone fires
             (when active in their 7-day window) above a confidence
