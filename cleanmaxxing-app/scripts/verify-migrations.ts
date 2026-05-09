@@ -217,6 +217,180 @@ async function check0087() {
   };
 }
 
+// =====================
+// 0088–0092 — independent migrations Phil shipped after the verifier
+// landed. Same behavioral pattern: sentinel insert against synthetic
+// user_id, expect FK rejection. Anything else (column missing, check
+// violation, type mismatch) means the migration didn't apply.
+// =====================
+
+const SENTINEL_USER_ID = '00000000-0000-0000-0000-000000000000';
+
+async function check0088() {
+  // cardio_assessments.programming_priority — single text column.
+  // Note that 0090 converted primary_role / modality_preference /
+  // equipment_access on this same table to text[], so the sentinel
+  // row passes ARRAYs for those (proves both 0088 + 0090 in one
+  // insert if both have applied).
+  await supabase
+    .from('cardio_assessments')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  const { error } = await supabase.from('cardio_assessments').insert({
+    user_id: SENTINEL_USER_ID,
+    primary_role: ['cardiovascular_health'],
+    current_movement: 'mostly_sedentary',
+    modality_preference: ['brisk_walking_hiking'],
+    days_per_week: '3_4_days',
+    programming_priority: 'strength',
+  });
+  await supabase
+    .from('cardio_assessments')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  return classifyError(error, 'programming_priority + array columns accepted');
+}
+
+async function check0089() {
+  // weekly_reflections.activity_change — single nullable text column.
+  await supabase
+    .from('weekly_reflections')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  const { error } = await supabase.from('weekly_reflections').insert({
+    user_id: SENTINEL_USER_ID,
+    week_start: '2099-01-05', // fixed Monday far in the future
+    activity_change: 'no_change',
+  });
+  await supabase
+    .from('weekly_reflections')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  return classifyError(error, 'activity_change accepted');
+}
+
+async function check0090() {
+  // 0090 converted three cardio_assessments columns to text[]. Already
+  // exercised by check0088's array values — if that passed, this did
+  // too. Kept as a labeled entry so the dashboard reads cleanly.
+  return {
+    ok: true,
+    detail: 'covered by check0088 (array values in primary_role / modality_preference)',
+  };
+}
+
+async function check0091() {
+  // hair_try_ons.cut_family check expanded to include bro_flow +
+  // classic_sweep_back. Smaller table than hair_assessments, easier
+  // to construct a valid sentinel.
+  await supabase
+    .from('hair_try_ons')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  const { error } = await supabase.from('hair_try_ons').insert({
+    user_id: SENTINEL_USER_ID,
+    cut_family: 'bro_flow',
+    storage_path: 'sentinel/never-used.png',
+    model: 'verify-migrations-script',
+  });
+  await supabase
+    .from('hair_try_ons')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  return classifyError(error, 'bro_flow accepted in cut_family check');
+}
+
+async function check0092() {
+  // weekly_reflections.fatigue_level + fatigue_source — both nullable
+  // text columns with check constraints on allowed enums.
+  await supabase
+    .from('weekly_reflections')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  const { error } = await supabase.from('weekly_reflections').insert({
+    user_id: SENTINEL_USER_ID,
+    week_start: '2099-01-05',
+    fatigue_level: 'struggling',
+    fatigue_source: 'cardio',
+  });
+  await supabase
+    .from('weekly_reflections')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  return classifyError(error, 'fatigue_level + fatigue_source accepted');
+}
+
+async function check0093() {
+  // style_assessments adds 5 granular body-dimension columns
+  // (shoulder_width, arm_length, leg_length, build, skin_undertone),
+  // all nullable. Sentinel sets all five + the existing required
+  // columns (frame_estimate / current_archetype / target_archetype /
+  // closet_state); FK rejects on user_id.
+  await supabase
+    .from('style_assessments')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  const { error } = await supabase.from('style_assessments').insert({
+    user_id: SENTINEL_USER_ID,
+    frame_estimate: 'athletic',
+    current_archetype: 'clean_minimalist',
+    target_archetype: 'clean_minimalist',
+    closet_state: 'functional',
+    shoulder_width: 'broad',
+    arm_length: 'proportional',
+    leg_length: 'long',
+    build: 'athletic',
+    skin_undertone: 'cool',
+  });
+  await supabase
+    .from('style_assessments')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  return classifyError(
+    error,
+    'shoulder_width + arm_length + leg_length + build + skin_undertone accepted',
+  );
+}
+
+// Shared helper: classify a Supabase error into pass / fail with
+// detail. FK rejection = pass (column accepted, only the sentinel
+// user_id was wrong). Anything else = fail with the postgres reason.
+function classifyError(
+  error: { code?: string; message?: string } | null,
+  okDetail: string,
+): { ok: boolean; detail: string } {
+  if (!error) return { ok: true, detail: `${okDetail} (sentinel insert succeeded)` };
+  if (
+    error.code === '23503' ||
+    /foreign key/i.test(error.message ?? '')
+  ) {
+    return {
+      ok: true,
+      detail: `${okDetail} (FK rejected sentinel user, expected)`,
+    };
+  }
+  if (
+    error.code === '23514' ||
+    /check constraint/i.test(error.message ?? '') ||
+    /violates check/i.test(error.message ?? '')
+  ) {
+    return {
+      ok: false,
+      detail: `check constraint rejected: ${error.message}`,
+    };
+  }
+  if (/column .* does not exist/i.test(error.message ?? '')) {
+    return { ok: false, detail: `column missing: ${error.message}` };
+  }
+  if (/invalid input syntax for type/i.test(error.message ?? '')) {
+    return { ok: false, detail: `type mismatch: ${error.message}` };
+  }
+  return {
+    ok: false,
+    detail: `unexpected error (${error.code ?? 'no code'}): ${error.message}`,
+  };
+}
+
 async function main() {
   const checks = [
     {
@@ -230,6 +404,30 @@ async function main() {
     {
       label: '0087 — nutrition_assessments.gut_sensitivity column exists',
       run: check0087,
+    },
+    {
+      label: '0088 — cardio_assessments.programming_priority',
+      run: check0088,
+    },
+    {
+      label: '0089 — weekly_reflections.activity_change',
+      run: check0089,
+    },
+    {
+      label: '0090 — cardio_assessments multi-select arrays',
+      run: check0090,
+    },
+    {
+      label: '0091 — hair cut_family adds bro_flow + classic_sweep_back',
+      run: check0091,
+    },
+    {
+      label: '0092 — weekly_reflections.fatigue_level + fatigue_source',
+      run: check0092,
+    },
+    {
+      label: '0093 — style_assessments granular body dimensions',
+      run: check0093,
     },
   ];
 
