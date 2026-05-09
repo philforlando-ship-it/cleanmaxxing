@@ -6,6 +6,8 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  ASYMMETRY_CONCERN_LABEL,
+  ASYMMETRY_CONCERNS,
   BODYWEIGHT_PREFERENCE_LABEL,
   BODYWEIGHT_PREFERENCES,
   CURRENT_SPLIT_LABEL,
@@ -18,6 +20,7 @@ import {
   PRIORITY_MUSCLE_MAX,
   SECONDARY_OBJECTIVE_LABEL,
   SECONDARY_OBJECTIVES,
+  type StrengthAsymmetryConcern,
   type StrengthBodyweightPreference,
   type StrengthCurrentSplit,
   type StrengthDaysPerWeek,
@@ -110,6 +113,7 @@ export type StrengthAssessmentInitialValues = {
   secondary_objective: StrengthSecondaryObjective | null;
   injury_constraints: StrengthInjuryConstraint[];
   bodyweight_preference: StrengthBodyweightPreference | null;
+  asymmetry_concern: StrengthAsymmetryConcern | null;
 };
 
 export function StrengthAssessmentForm({
@@ -185,6 +189,10 @@ export function StrengthAssessmentForm({
     useState<StrengthBodyweightPreference | null>(
       initialValues?.bodyweight_preference ?? null,
     );
+  const [asymmetryConcern, setAsymmetryConcern] =
+    useState<StrengthAsymmetryConcern | null>(
+      initialValues?.asymmetry_concern ?? null,
+    );
 
   const isEditing = initialValues !== undefined;
 
@@ -221,6 +229,10 @@ export function StrengthAssessmentForm({
       return setError('Pick a secondary objective (or "None").');
     if (!bodyweightPreference)
       return setError('Pick how you want bodyweight exercises handled.');
+    if (!asymmetryConcern)
+      return setError(
+        'Answer the asymmetry question (none / mild / noticeable).',
+      );
 
     const payload = {
       primary_goal: primaryGoal,
@@ -234,6 +246,7 @@ export function StrengthAssessmentForm({
       secondary_objective: secondaryObjective,
       injury_constraints: injuryConstraints,
       bodyweight_preference: bodyweightPreference,
+      asymmetry_concern: asymmetryConcern,
     };
 
     startTransition(async () => {
@@ -513,6 +526,25 @@ export function StrengthAssessmentForm({
 
       <Question
         number={11}
+        title="Left/right asymmetry — anything visible?"
+        helper="Most men carry 5–10% asymmetry that's normal and invisible. 'Noticeable' triggers a unilateral-bias programming layer (lead with the weak side, +1–2 weekly sets on the weaker side, six to twelve months minimum to close the gap). Visible atrophy or sudden weakness is PT territory, not a programming question."
+      >
+        <div className="space-y-2">
+          {ASYMMETRY_CONCERNS.map((a) => (
+            <RadioRow
+              key={a}
+              checked={asymmetryConcern === a}
+              onChange={() => setAsymmetryConcern(a)}
+              disabled={pending}
+              label={ASYMMETRY_CONCERN_LABEL[a]}
+              name="asymmetry_concern"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={12}
         title="Anything you want Mister P to know? (optional)"
         helper="One line. A specific situation, a constraint, a pattern. Bad shoulder, kid on the way, training before work, etc."
       >

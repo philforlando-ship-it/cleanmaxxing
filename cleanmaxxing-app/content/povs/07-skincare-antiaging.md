@@ -25,6 +25,30 @@ __The Correct Order of Operations__
 
 Most people chase glow and anti\-aging while ignoring basic dysfunction\. The right sequence is to reduce chaos first\. Control acne, irritation, redness, excessive oil, dryness, and barrier damage\. Only once the skin is calm does it make sense to pursue texture, brightness, pigmentation fading, or long\-term aging prevention\. Applying expensive actives to inflamed skin is an expensive way to stay inflamed\.
 
+__The Baseline\-Floor Gate — Foundation Must Hold Before Actives__
+
+The most common failure mode in male skincare is starting retinoids on a face that does not yet have a working moisturizer routine\. Retinoids are powerful — they accelerate cell turnover, increase sensitivity, and stress the barrier through the first four to eight weeks of use\. If the barrier is already compromised \(persistent dryness, redness, irritation, sensitivity\), introducing a retinoid almost guarantees the user will quit within a month, blame "tret didn't work for me," and either give up or default to weaker products that don't deliver the result they're chasing\.
+
+The fix is a hard gate: cleanser plus moisturizer must be consistent and the skin must read calm before retinoids enter the picture\. This is not a soft preference, it is a sequence rule\. Two weeks of stable, non\-irritated skin on the basic AM/PM routine \(cleanser → moisturizer → SPF in the morning, cleanser → moisturizer at night\) is the threshold\. If the skin is calm at week two, retinoid introduction begins at low frequency — two to three nights per week — with the moisturizer\-sandwich technique\. If the skin is not calm at week two, the foundation needs more time before adding stress\.
+
+This gate matters more for some users than others\. Men with a history of eczema, rosacea, perioral dermatitis, or post\-inflammatory hyperpigmentation need a longer foundation phase before retinoids\. Men with no sensitivity history and an intact barrier can move faster\. The gate is not a default delay; it is calibrated to the resilience the user actually has\.
+
+__Skin Sensitivity History and Current Barrier State — Two Personalized Inputs__
+
+Two variables determine how aggressively the protocol can advance, both of which are individual rather than age\-based\.
+
+__Sensitivity history__ is the user's lifetime track record\. A man who has had eczema as a child, rosacea flares in his twenties, or perioral dermatitis around his mouth is operating from a fundamentally different starting point than a man who has never had a reactive episode\. Sensitivity history doesn't disappear — it shapes how the skin responds to anything new\. The protocol for a high\-sensitivity\-history user is slower introduction, lower starting strengths, and a longer foundation phase before adding actives\. The protocol for a low\-history user can compress the timeline meaningfully\.
+
+__Current barrier state__ is what the skin reads as right now, regardless of history\. A user with no sensitivity history can still arrive with a compromised barrier from over\-exfoliating, harsh actives, or a recent dermatology stack that didn't work\. The visible markers are persistent dryness or flakiness, redness that doesn't resolve, stinging from products that should be neutral, and acne that comes with inflammation around it rather than the simple kind\. When barrier state reads "compromised," the only correct first move is reduction — strip back to cleanser and a barrier\-repair moisturizer, give it four to six weeks to restore, then re\-evaluate\. Adding more product to a damaged barrier is the most common reason men's skincare gets worse instead of better\.
+
+These two variables compose\. A low\-history user with intact barrier moves through the protocol fastest\. A high\-history user with compromised barrier moves slowest and benefits most from the foundation phase the gate enforces\. The right starting strength of retinoid, the right cadence of exfoliation, and the right speed of layering all derive from where the user sits across these two dimensions — not from age alone\.
+
+__Daily SPF — the Daily Anchor Habit__
+
+Sunscreen is treated separately from the actives because it operates on a different cadence\. Retinoids accumulate slow gains over months\. Cleanser removes the day's load\. SPF is the single highest\-frequency lever — used or not used 365 times per year, with cumulative damage compounding visibly over decades\. The behavioral question SPF presents is not "what product" but "did I apply it today\." That makes it the natural daily anchor: a single yes/no check that the user can mark on a routine logger or daily home view, framed as the habit that compounds\.
+
+The pattern most men miss is that SPF on overcast days is non\-optional\. UVA penetrates clouds and glass at near\-full intensity; the daily exposure during a cloudy commute is effectively the same as a clear one\. The behavioral target is "applied SPF 30\+ to face and neck before leaving the house, every day" — not "applied on sunny days," not "remembered most days\." The reason daily check\-ins work for this habit specifically is that the behavior is identical day to day, the friction is low, and the consequences of skipping accumulate over decades rather than days, meaning the user can't self\-correct from feedback\. The check\-in IS the feedback\.
+
 __The Core Routine — What Actually Works__
 
 __Sunscreen \(SPF\)__

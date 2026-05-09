@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   CUT_FAMILY_LABEL,
+  CUT_FAMILY_REFERENCES,
   type CutFamily,
   type DensityState,
   type FaceShape,
@@ -306,6 +307,11 @@ export function HairStage1Card({
         <p className="mt-1 text-base font-semibold text-zinc-900 dark:text-zinc-100">
           {CUT_FAMILY_LABEL[cutFamily]}
         </p>
+        {CUT_FAMILY_REFERENCES[cutFamily].length > 0 && (
+          <p className="mt-1 text-[12px] text-zinc-500 dark:text-zinc-400">
+            Variants: {CUT_FAMILY_REFERENCES[cutFamily].join(' · ')}
+          </p>
+        )}
         <WhyThis
           lines={explainCutFamily({
             cut_family: cutFamily,
@@ -585,6 +591,12 @@ function OtherCutsForDensity({
               <p className="mt-2 text-[12px] font-medium leading-tight text-zinc-800 dark:text-zinc-200">
                 {CUT_FAMILY_LABEL[slug]}
               </p>
+              {CUT_FAMILY_REFERENCES[slug].length > 0 && (
+                <p className="mt-0.5 text-[10.5px] leading-snug text-zinc-500 dark:text-zinc-400">
+                  {CUT_FAMILY_REFERENCES[slug].slice(0, 3).join(' · ')}
+                  {CUT_FAMILY_REFERENCES[slug].length > 3 && ' …'}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={() => chooseCut(slug)}

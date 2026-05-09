@@ -114,6 +114,29 @@ export const BODYWEIGHT_PREFERENCES: ReadonlyArray<StrengthBodyweightPreference>
   'fallback_only',
 ];
 
+// Asymmetric-development capture (migration 0094, 2026-05-09). POV 19
+// has the framework — most men carry 5-10% asymmetry that's normal
+// and invisible; visible asymmetry (>~15%) is worth programming
+// around. This field tells the prompt whether to apply the unilateral
+// bias from POV 19's asymmetry block.
+export type StrengthAsymmetryConcern = 'none' | 'mild' | 'noticeable';
+
+export const ASYMMETRY_CONCERNS: ReadonlyArray<StrengthAsymmetryConcern> = [
+  'none',
+  'mild',
+  'noticeable',
+];
+
+export const ASYMMETRY_CONCERN_LABEL: Record<
+  StrengthAsymmetryConcern,
+  string
+> = {
+  none: "None — left and right look and feel balanced",
+  mild: 'Mild — slight difference but not visible to others (within normal range)',
+  noticeable:
+    'Noticeable — visible left/right size or strength asymmetry I want programming around',
+};
+
 export type StrengthAssessment = {
   user_id: string;
   primary_goal: StrengthPrimaryGoal;
@@ -138,6 +161,10 @@ export type StrengthAssessment = {
   // pre-migration rows; treated as 'mixed' (existing behavior) by
   // recommended-exercises and report-prompt.
   bodyweight_preference: StrengthBodyweightPreference | null;
+  // Migration 0094 (2026-05-09) — asymmetric-development concern.
+  // Drives the unilateral-bias programming from POV 19's asymmetry
+  // block when set to 'noticeable'. Null on pre-migration rows.
+  asymmetry_concern: StrengthAsymmetryConcern | null;
   // Migration 0081 — buying-list state. Slugs from lib/strength/gear.ts
   // (validated at the service layer). Null = user hasn't answered;
   // first-render UI seeds defaults from equipment_access. Empty
@@ -202,6 +229,12 @@ export type StrengthReportInputModifiers = {
   // chronic poor sleep means programming has to soften.
   sleep_rolling_avg_hours: number | null;
   sleep_rolling_count: number;
+  // Bidirectional fatigue signal (slice 6, 2026-05-09). Pulled from
+  // weekly_reflections within the last 14 days. When level =
+  // 'struggling' AND source = 'strength', strength softens. Other
+  // source attributions inform but don't change the prescription.
+  fatigue_level: string | null;
+  fatigue_source: string | null;
   // User's exercise picker preferences (snapshotted at gen time so
   // the report's reasoning is reproducible)
   selected_exercise_slugs: string[];
@@ -218,6 +251,9 @@ export type StrengthReportInputModifiers = {
   // Q8 (migration 0080) — BW preference snapshot. Null = legacy row;
   // prompt treats null as 'mixed'.
   bodyweight_preference: StrengthBodyweightPreference | null;
+  // Migration 0094 (2026-05-09) — asymmetry concern snapshot. Null =
+  // legacy row; prompt treats null as 'none' (no programming bias).
+  asymmetry_concern: StrengthAsymmetryConcern | null;
   // Stage milestone — beginner ramp graduation. When non-null the
   // prompt treats the user as past the ramp regardless of
   // training_experience.
@@ -2347,6 +2383,12 @@ export const StrengthAssessmentInputSchema = z.object({
   // report-prompt treat null as 'mixed' (existing behavior).
   bodyweight_preference: z
     .enum(['primary', 'mixed', 'fallback_only'])
+    .nullable(),
+  // Migration 0094 — asymmetry concern. Nullable to support pre-
+  // migration assessments; the form requires it on next submit. The
+  // prompt treats null as 'none' (no programming bias).
+  asymmetry_concern: z
+    .enum(['none', 'mild', 'noticeable'])
     .nullable(),
 });
 

@@ -13,6 +13,7 @@ import { getUserProfile } from '@/lib/profile/service';
 import { getCardioAssessment } from '@/lib/cardio/service';
 import { getNutritionAssessment } from '@/lib/nutrition/service';
 import { getSleepState } from '@/lib/sleep/service';
+import { getCurrentFatigueState } from '@/lib/weekly-reflection/service';
 import {
   CURRENT_SPLIT_LABEL,
   DAYS_PER_WEEK_LABEL,
@@ -49,6 +50,7 @@ export async function generateAndSaveStrengthReport(
     cardioAssessment,
     sleepState,
     feedbackSummary,
+    fatigueState,
   ] = await Promise.all([
     supabase.from('users').select('age').eq('id', userId).maybeSingle(),
     getRecentStrengthSessionCount(supabase, userId, 7),
@@ -56,6 +58,7 @@ export async function generateAndSaveStrengthReport(
     getCardioAssessment(supabase, userId),
     getSleepState(supabase, userId),
     getStrengthFeedbackSummary(supabase, userId, 7),
+    getCurrentFatigueState(supabase, userId),
   ]);
 
   const modifiers: StrengthReportInputModifiers = {
@@ -76,6 +79,8 @@ export async function generateAndSaveStrengthReport(
       cardioAssessment?.hiit_layer_started_at != null,
     cardio_programming_priority:
       cardioAssessment?.programming_priority ?? null,
+    fatigue_level: fatigueState?.level ?? null,
+    fatigue_source: fatigueState?.source ?? null,
     sleep_rolling_avg_hours: sleepState.rollingAvgHours,
     sleep_rolling_count: sleepState.rollingCount,
     selected_exercise_slugs: assessment.selected_exercise_slugs,
@@ -86,6 +91,7 @@ export async function generateAndSaveStrengthReport(
     secondary_objective: assessment.secondary_objective,
     injury_constraints: assessment.injury_constraints,
     bodyweight_preference: assessment.bodyweight_preference,
+    asymmetry_concern: assessment.asymmetry_concern,
     beginner_ramp_completed_at: assessment.beginner_ramp_completed_at,
     last_plateau_intervention_at: assessment.last_plateau_intervention_at,
     feedback_rows_last_7: feedbackSummary.rows_last_7_days,
@@ -231,6 +237,16 @@ function formatAssessmentForPrompt(
       modifiers.sleep_rolling_avg_hours ?? 'no sleep data logged'
     }`,
   );
+  modifierLines.push(
+    `- fatigue_level (weekly_reflections, last 14 days): ${
+      modifiers.fatigue_level ?? 'no recent signal'
+    }`,
+  );
+  modifierLines.push(
+    `- fatigue_source (only load-bearing when fatigue_level = 'struggling'): ${
+      modifiers.fatigue_source ?? 'not attributed'
+    }`,
+  );
 
   // Exercise picker signals — translate slugs to labels in the prompt
   // so the model recognizes them by the same name it uses in the
@@ -287,6 +303,11 @@ function formatAssessmentForPrompt(
   modifierLines.push(
     `- bodyweight_preference (Q9 — push BW exercises as primary, mix, or only as fallback): ${
       modifiers.bodyweight_preference ?? 'not set — treat as mixed'
+    }`,
+  );
+  modifierLines.push(
+    `- asymmetry_concern (Q10 — drives unilateral-bias programming when set to 'noticeable'): ${
+      modifiers.asymmetry_concern ?? 'not set — treat as none'
     }`,
   );
   modifierLines.push(

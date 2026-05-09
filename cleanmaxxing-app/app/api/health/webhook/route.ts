@@ -317,12 +317,21 @@ export async function POST(req: NextRequest) {
         const mapped = vitalProviderToInternal(sourceSlug);
         const source = mapped?.source ?? sourceSlug;
 
+        // Resting HR is delivered inline on the sleep payload
+        // (ClientFacingSleep.hrResting). Providers that don't report
+        // it leave it undefined; we store NULL in that case.
+        const restingHeartRate =
+          row.hrResting != null && Number.isFinite(row.hrResting)
+            ? Math.round(row.hrResting)
+            : null;
+
         const { error } = await service.from('sleep_logs').upsert(
           {
             user_id: cleanmaxxingUserId,
             night_of: nightOf,
             hours,
             quality_1_5: quality,
+            resting_heart_rate: restingHeartRate,
             source,
             updated_at: new Date().toISOString(),
           },

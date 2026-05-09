@@ -11,6 +11,113 @@ export type FrameEstimate =
   | 'broader'
   | 'heavier';
 
+// Style v2 granular body dimensions (migration 0093, 2026-05-09).
+// Replace the single coarse frame_estimate input with the five axes
+// POV 12's Guzy + RMRS framework actually uses to drive silhouette
+// rules. frame_estimate is retained as a derived legacy field for
+// backwards-compat with downstream consumers (cut-menu density,
+// foundation-pieces content, prompt rules already branched on it).
+
+export type ShoulderWidth = 'narrow' | 'medium' | 'broad';
+export type ArmLength = 'short' | 'proportional' | 'long';
+export type LegLength = 'short' | 'proportional' | 'long';
+export type Build = 'slight' | 'athletic' | 'stocky' | 'heavyset';
+export type SkinUndertone = 'cool' | 'warm' | 'neutral';
+
+export const SHOULDER_WIDTHS: ReadonlyArray<ShoulderWidth> = [
+  'narrow',
+  'medium',
+  'broad',
+];
+
+export const ARM_LENGTHS: ReadonlyArray<ArmLength> = [
+  'short',
+  'proportional',
+  'long',
+];
+
+export const LEG_LENGTHS: ReadonlyArray<LegLength> = [
+  'short',
+  'proportional',
+  'long',
+];
+
+export const BUILDS: ReadonlyArray<Build> = [
+  'slight',
+  'athletic',
+  'stocky',
+  'heavyset',
+];
+
+export const SKIN_UNDERTONES: ReadonlyArray<SkinUndertone> = [
+  'cool',
+  'warm',
+  'neutral',
+];
+
+export const SHOULDER_WIDTH_LABEL: Record<ShoulderWidth, string> = {
+  narrow: 'Narrow — shoulders read narrower than waist or about even',
+  medium: 'Medium — shoulders sit roughly proportional to waist',
+  broad:
+    'Broad — shoulders visibly wider than waist (inverted triangle / V-taper)',
+};
+
+export const ARM_LENGTH_LABEL: Record<ArmLength, string> = {
+  short:
+    'Short — sleeves run long off the rack, cuffs cover wrist bone',
+  proportional:
+    'Proportional — sleeves usually fit at the right length',
+  long:
+    'Long — sleeves run short off the rack, wrist bone visible',
+};
+
+export const LEG_LENGTH_LABEL: Record<LegLength, string> = {
+  short:
+    'Short — long-torso/short-legs (pants run long; the highest-leverage proportion lever)',
+  proportional: 'Proportional — torso-to-leg ratio is balanced',
+  long: 'Long — short-torso/long-legs (pants often need hemming up)',
+};
+
+export const BUILD_LABEL: Record<Build, string> = {
+  slight: 'Slight — lean / lighter frame',
+  athletic: 'Athletic — visible muscle, lean-to-medium body fat',
+  stocky:
+    'Stocky — broader-and-shorter (different from "muscular and tall")',
+  heavyset: 'Heavyset — carrying meaningful body fat throughout',
+};
+
+export const SKIN_UNDERTONE_LABEL: Record<SkinUndertone, string> = {
+  cool: 'Cool — silver/platinum jewelry flatters more than gold',
+  warm: 'Warm — gold/brass jewelry flatters more than silver',
+  neutral:
+    'Neutral — both jewelry tones look fine; you can wear most colors',
+};
+
+// Derive the legacy frame_estimate from the v2 granular fields.
+// Used in the API route on submit so existing downstream consumers
+// (cut-menu density gate, foundation-pieces content, prompt rules
+// branched on frame_estimate) keep working with v1 semantics. The
+// mapping deliberately collapses the five-bucket label onto the v2
+// (shoulder_width × build) axes:
+//   heavyset build         → 'heavier'
+//   stocky build           → 'broader'
+//   athletic + broad       → 'athletic'
+//   athletic + narrow|med  → 'athletic'
+//   slight                 → 'slim'
+//   anything else          → 'regular'
+export function deriveFrameEstimate(
+  shoulder_width: ShoulderWidth,
+  build: Build,
+): FrameEstimate {
+  if (build === 'heavyset') return 'heavier';
+  if (build === 'stocky') return 'broader';
+  if (build === 'athletic') return 'athletic';
+  if (build === 'slight') return 'slim';
+  // Defensive: should be unreachable since Build is a closed union,
+  // but TypeScript can't prove that without the explicit return.
+  return 'regular';
+}
+
 export type StyleArchetype =
   | 'clean_minimalist'
   | 'athletic_casual'
@@ -43,6 +150,17 @@ export type ClosetAuditSelections = Record<string, ClosetAuditDirection>;
 
 export type StyleAssessment = {
   user_id: string;
+  // Migration 0093 (2026-05-09) — v2 granular body dimensions.
+  // Nullable on pre-migration rows; v2 form requires them on submit.
+  shoulder_width: ShoulderWidth | null;
+  arm_length: ArmLength | null;
+  leg_length: LegLength | null;
+  build: Build | null;
+  skin_undertone: SkinUndertone | null;
+  // Legacy v1 frame_estimate — derived from build + shoulder_width
+  // when the v2 form is submitted. Retained so existing call sites
+  // don't churn (cut-menu density gate, foundation-pieces content,
+  // prompt rules).
   frame_estimate: FrameEstimate;
   current_archetype: CurrentArchetype;
   target_archetype: StyleArchetype;
@@ -74,6 +192,26 @@ export type StyleReportInputModifiers = {
   // blazer as default layer, glasses as face-frame variable). The
   // mid-30s+ branch also tilts on this.
   age: number | null;
+  // V2 granular body dimensions (migration 0093, 2026-05-09).
+  // Snapshotted at gen time so the report's silhouette reasoning is
+  // reproducible. Null when the user has a v1-era assessment that
+  // hasn't been re-submitted on the v2 form.
+  shoulder_width: ShoulderWidth | null;
+  arm_length: ArmLength | null;
+  leg_length: LegLength | null;
+  build: Build | null;
+  skin_undertone: SkinUndertone | null;
+  // Phase 2b — per-user feasibility of the PICKED target archetype.
+  // Computed from body data + age via lib/style/aesthetic-feasibility.
+  // Snapshotted so the prompt can branch on whether the user picked
+  // an aesthetic that fits / works / fights their frame. Null when
+  // body data is insufficient to compute (legacy v1 assessments).
+  target_archetype_feasibility_tier:
+    | 'strong_fit'
+    | 'workable'
+    | 'fights_your_frame'
+    | null;
+  target_archetype_feasibility_rationale: string | null;
 };
 
 export const FRAME_ESTIMATE_LABEL: Record<FrameEstimate, string> = {
@@ -110,6 +248,27 @@ export const ARCHETYPE_HINT: Record<CurrentArchetype, string> = {
     "You're not dressing as anything in particular yet. That's fine — it's the starting point.",
 };
 
+// V2 aesthetic-feasibility hints (style v2 reframe, 2026-05-09).
+// Surfaced under each target_archetype option so users see the
+// realistic feasibility floor per POV 12's Guzy + RMRS framework
+// before committing. These are static rule-of-thumb hints — not
+// per-user computed. Per-user feasibility (e.g. "rugged fights your
+// frame because you picked slight build") could layer on top later.
+export const ARCHETYPE_FEASIBILITY_HINT: Record<StyleArchetype, string> = {
+  clean_minimalist:
+    'Works best on lean-to-athletic builds. The silhouette is unforgiving — no decorative cover for fit problems. Beards conflict with the visual cleanness. ~50% of men execute it well.',
+  athletic_casual:
+    'Most body-agnostic of the archetypes. Polo or button-down + chinos + clean leather sneakers works on virtually every body if fit is right. ~85%+ feasibility — the safest default.',
+  rugged_masculine:
+    'Works best on broader builds (athletic to stocky), 5’9"+, with at least heavy stubble (a beard helps). Slight + clean-shaven men in workwear read costume-y. ~40% of men can credibly execute it.',
+  mature_professional:
+    'Most universally accessible — tailoring fixes most fit issues. Works on slight, athletic, stocky, and heavyset alike given budget + tailoring. ~75%+ feasibility. Failure modes: poorly-fitted suits, cheap shoes.',
+  streetwear:
+    'Body-flexible BUT age-coded — full streetwear past ~38 reads try-too-hard. Streetwear-adjacent (sneakers + clean tee + relaxed pants) ages up better and is what most 32–45 men should aim for.',
+  creative_eclectic:
+    'Requires personality coherence. Standalone Rakish elements (visible jewelry, statement pieces) need either a body/face that anchors them OR coherent eclectic styling throughout the outfit, otherwise they read incongruent.',
+};
+
 export const CLOSET_STATE_LABEL: Record<ClosetState, string> = {
   well_curated:
     'Well curated — most pieces fit, the wardrobe holds together',
@@ -121,13 +280,15 @@ export const CLOSET_STATE_LABEL: Record<ClosetState, string> = {
 };
 
 export const StyleAssessmentInputSchema = z.object({
-  frame_estimate: z.enum([
-    'slim',
-    'athletic',
-    'regular',
-    'broader',
-    'heavier',
-  ]),
+  // V2 granular body dimensions (migration 0093). frame_estimate is
+  // derived server-side from build + shoulder_width; clients submit
+  // the granular fields, the API derives the legacy field for
+  // downstream consumers that still read it.
+  shoulder_width: z.enum(['narrow', 'medium', 'broad']),
+  arm_length: z.enum(['short', 'proportional', 'long']),
+  leg_length: z.enum(['short', 'proportional', 'long']),
+  build: z.enum(['slight', 'athletic', 'stocky', 'heavyset']),
+  skin_undertone: z.enum(['cool', 'warm', 'neutral']),
   current_archetype: z.enum([
     'clean_minimalist',
     'athletic_casual',

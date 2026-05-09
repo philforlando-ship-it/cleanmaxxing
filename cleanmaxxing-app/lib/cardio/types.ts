@@ -17,11 +17,17 @@ export type CardioCurrentMovement =
   | 'regular_cardio'
   | 'inconsistent';
 
+// Migration 0090 (2026-05-08) — split 'walking_hiking' into
+// 'slow_walking' and 'brisk_walking_hiking'. Slow walking (under-
+// conversational pace) has different Zone 2 calibration than brisk
+// walking + hiking, and surfacing them separately lets the prompt
+// recommend the right one.
 export type CardioModalityPreference =
   | 'running_jogging'
   | 'cycling'
   | 'rowing'
-  | 'walking_hiking'
+  | 'slow_walking'
+  | 'brisk_walking_hiking'
   | 'classes_group'
   | 'swimming'
   | 'hate_all_cardio';
@@ -121,14 +127,17 @@ export const CARDIO_PROGRAMMING_PRIORITIES: ReadonlyArray<CardioProgrammingPrior
 
 export type CardioAssessment = {
   user_id: string;
-  primary_role: CardioPrimaryRole;
+  // Migration 0090 (2026-05-08) — multi-select for primary_role,
+  // modality_preference, equipment_access. Most users had multiple
+  // valid answers; single-select was forcing artificial choices.
+  primary_role: CardioPrimaryRole[];
   current_movement: CardioCurrentMovement;
-  modality_preference: CardioModalityPreference;
+  modality_preference: CardioModalityPreference[];
   days_per_week: CardioDaysPerWeek;
   cardio_goal_text: string | null;
   // Migration 0070 — screening expansion. Null on pre-migration rows.
   injury_constraints: CardioInjuryConstraint[];
-  equipment_access: CardioEquipmentAccess | null;
+  equipment_access: CardioEquipmentAccess[];
   outdoor_access: CardioOutdoorAccess | null;
   time_per_session: CardioTimePerSession | null;
   occupation_activity: CardioOccupationActivity | null;
@@ -178,12 +187,33 @@ export type CardioReportInputModifiers = {
   hiit_layer_started_at: string | null;
   // Migration 0070 — screening expansion (snapshot at gen time).
   injury_constraints: CardioInjuryConstraint[];
-  equipment_access: CardioEquipmentAccess | null;
+  // Migration 0090 — equipment_access is now an array (snapshot of
+  // multi-selected options at gen time).
+  equipment_access: CardioEquipmentAccess[];
   outdoor_access: CardioOutdoorAccess | null;
   time_per_session: CardioTimePerSession | null;
   occupation_activity: CardioOccupationActivity | null;
   // Migration 0088 — programming priority (cross-journey arbiter).
   programming_priority: CardioProgrammingPriority | null;
+  // Seasonal awareness (2026-05-08). The prompt's outdoor_access rule
+  // for 'seasonal' was previously assuming "currently off-season"
+  // regardless of when the report was generated — fix is to surface
+  // the current month + the user's timezone so the prompt can reason
+  // about hemisphere + season-specific availability.
+  current_month_name: string;
+  user_timezone: string | null;
+  // Bidirectional fatigue signal (slice 6, 2026-05-09). Pulled from
+  // weekly_reflections within the last 14 days. When level =
+  // 'struggling' AND source = 'cardio', cardio softens. Other source
+  // attributions inform but don't change the cardio prescription.
+  fatigue_level: string | null;
+  fatigue_source: string | null;
+  // Wearable adherence signal (2026-05-09). Days in last 7 with
+  // medium+high intensity minutes >= 20 from daily_activity. NULL
+  // when no health_integration row exists (no wearable connected).
+  // 0..7 otherwise. Drives the "wearable shows you've been moving /
+  // quieter than the plan calls for" coaching note.
+  wearable_active_days_last_7: number | null;
 };
 
 export const PRIMARY_ROLE_LABEL: Record<CardioPrimaryRole, string> = {
@@ -213,9 +243,12 @@ export const MODALITY_PREFERENCE_LABEL: Record<
   string
 > = {
   running_jogging: 'Running or jogging',
-  cycling: 'Cycling — indoor or outdoor',
+  cycling: 'Cycling — indoor or outdoor (Peloton counts)',
   rowing: 'Rowing',
-  walking_hiking: 'Walking or hiking',
+  slow_walking:
+    'Slow walking — relaxed pace, under conversational effort (steps + recovery, not Zone 2)',
+  brisk_walking_hiking:
+    'Brisk walking or hiking — Zone 2 effort, full sentences with mild breathlessness',
   classes_group: 'Classes / group settings (spin, rowing classes, hiking groups)',
   swimming: 'Swimming',
   hate_all_cardio:
@@ -294,13 +327,19 @@ export const CARDIO_PROGRAMMING_PRIORITY_LABEL: Record<
 };
 
 export const CardioAssessmentInputSchema = z.object({
-  primary_role: z.enum([
-    'support_fat_loss',
-    'cardiovascular_health',
-    'conditioning_for_lifting',
-    'general_movement',
-    'not_sure',
-  ]),
+  // Migration 0090 — primary_role is now an array. Form must send at
+  // least one value.
+  primary_role: z
+    .array(
+      z.enum([
+        'support_fat_loss',
+        'cardiovascular_health',
+        'conditioning_for_lifting',
+        'general_movement',
+        'not_sure',
+      ]),
+    )
+    .min(1),
   current_movement: z.enum([
     'mostly_sedentary',
     'light_movement',
@@ -308,15 +347,23 @@ export const CardioAssessmentInputSchema = z.object({
     'regular_cardio',
     'inconsistent',
   ]),
-  modality_preference: z.enum([
-    'running_jogging',
-    'cycling',
-    'rowing',
-    'walking_hiking',
-    'classes_group',
-    'swimming',
-    'hate_all_cardio',
-  ]),
+  // Migration 0090 — modality_preference is now an array. 'walking_hiking'
+  // split into 'slow_walking' and 'brisk_walking_hiking'. Form must send
+  // at least one value.
+  modality_preference: z
+    .array(
+      z.enum([
+        'running_jogging',
+        'cycling',
+        'rowing',
+        'slow_walking',
+        'brisk_walking_hiking',
+        'classes_group',
+        'swimming',
+        'hate_all_cardio',
+      ]),
+    )
+    .min(1),
   days_per_week: z.enum(['0_days', '1_2_days', '3_4_days', '5_plus_days']),
   cardio_goal_text: z.string().max(280).nullable(),
   // Migration 0070 — screening expansion. All nullable to support
@@ -331,16 +378,19 @@ export const CardioAssessmentInputSchema = z.object({
       ]),
     )
     .max(4),
-  equipment_access: z
-    .enum([
+  // Migration 0090 — equipment_access is now an array. Empty array =
+  // user hasn't filled it in yet (legacy pre-migration row that got
+  // converted from null); form requires at least one on next submit.
+  equipment_access: z.array(
+    z.enum([
       'full_gym',
       'home_treadmill',
       'home_bike',
       'outdoor_only',
       'classes_studio',
       'none_minimal',
-    ])
-    .nullable(),
+    ]),
+  ),
   outdoor_access: z
     .enum(['year_round', 'seasonal', 'rare', 'never'])
     .nullable(),

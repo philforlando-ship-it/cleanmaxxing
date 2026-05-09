@@ -17,6 +17,30 @@ Fit determines how your body is perceived and whether you look sharp or sloppy\.
 
 People do not consciously evaluate each item\. They see your overall shape\. Fit determines that shape\.
 
+__The Hierarchy — Body First, Archetype Second__
+
+Style decisions have an order, and getting the order wrong is the most common failure mode in men's style. Tanner Guzy's framework names it directly: the hierarchy starts with your body, then archetype, then tribe, then personal taste and location. Aesthetics rules apply everywhere, and the body is upstream of everything else. A man who picks a target archetype that fights his frame ends up looking miscast no matter how committed he is to the aesthetic.
+
+The practical implication is that the most important inputs to a style decision are not "what do you like" or "what's trendy" — they are honest reads on the body. Specifically: shoulder width relative to waist and hips (broad inverted triangle, even rectangle, narrower triangle); shoulder type (square, sloped, or forward-rotated); torso-to-leg ratio (long torso with shorter legs, balanced, or shorter torso with longer legs); build (slight, athletic, stocky, heavyset); midsection state at current body fat; head size and neck length relative to shoulders; height bucket; and the color trio of skin undertone, hair color, and contrast level. These are the inputs that tell you what works on this body. Aesthetic preference is downstream of all of them.
+
+__Frame-Specific Silhouette Rules__
+
+The body axes above produce concrete clothing rules. The rules are declarative, not aesthetic — they apply regardless of which archetype the man is leaning toward.
+
+For broad shoulders and an inverted-triangle frame, the instinct is to add visual width to the upper body, but the actual move is the opposite. V-necks and open-collar shirts create a longer vertical line and balance the upper body downward. Straight-cut or moderately-tapered pants — not skinny — add visible volume to the lower half. Avoid epaulettes, heavy shoulder padding, horizontal stripes across the chest, large chest logos, and tight crew necks; they all exaggerate width that is already there. The fit problem to plan for: ready-to-wear shirts that fit broad shoulders are loose at the waist; the solution is to buy for shoulders and tailor the waist down.
+
+For narrow shoulders and a slight rectangle frame, the move is to add upper-body volume — layering with cardigans plus shirts plus sport jackets, shoulder-padded blazers, structured overcoats. Horizontal stripes across the chest are the one body type they consistently flatter. Pants stay slim and tapered to amplify the shoulder-to-leg contrast. Avoid baggy or oversized tops, which fall off the shoulders and emphasize slightness rather than concealing it; avoid deep V-necks, which extend the chest line and read narrower still.
+
+For a soft midsection — the dad-bod silhouette where weight is at the waist — the right tools are single-breasted, V-front, two-button jackets. The deep V lengthens and narrows the visible torso. Avoid double-breasted jackets (the closed cross-front squares off the silhouette and adds visual bulk), polos and roll-necks that cling at the waist while narrowing the shoulders, and pleats or cuffs on pants. Stick with classic-fit pants and structured upper layers that draw the eye up.
+
+For stocky and barrel-chested builds — broad and shorter — the rule is to fit to the largest area and tailor everything else down. Wider tie knots (Half Windsor, Full Windsor) match a thicker neck; skinny ties read disconnected. Vertical-line everything: pinstripes, vertical-rib knits, tonal monochrome. Avoid skinny anything; avoid wide-spread collars on already-thick necks; avoid bulky horizontal patterns.
+
+For long-torso/short-legs — the most under-discussed proportion lever in menswear — high-rise trousers are the single highest-leverage move. Pants that sit at the natural waist make the legs read longer; pants at the hip make the legs read shorter and the torso longer. Match shoe color to pant color (low contrast = continuous visual line); shorter shirt and jacket lengths; no break or slight break on pants. The reverse — short torso with longer legs — flips all of these: lower-rise pants are tolerable, longer shirt and jacket lengths help re-balance, and contrasting belts or shoes create the missing horizontal break.
+
+For shorter stature (under 5'8"), high-rise trousers are again the lever. Slim-fit but never skinny. Hip-length jackets, never below; single-breasted, not double. Monochrome or tonal outfits and vertical stripes. Smaller-scale accessories — 38-40mm watches max, slim belts, narrow ties. The rule of thumb when forced to choose: legs take precedence over torso for visual elongation.
+
+These rules compose. A short broad-shouldered man with a long torso runs the broad-shoulder rules and the long-torso rules and the short-stature rules together — high-rise trousers, fitted upper layers, vertical lines, monochrome low-contrast tone. Three rules pulling in the same direction makes the silhouette work. Trying to fight the body — tight tops on a soft middle, low-rise jeans on a long torso, baggy layers on narrow shoulders — produces the miscast look that no archetype choice can rescue.
+
 __Building the V\-Taper Illusion__
 
 Even without an ideal physique, clothing can create the impression of broader shoulders and a narrower waist — which is the V\-taper that reads as athletic and masculine\. Structured jackets contribute to shoulder width\. Slightly tapered pants emphasize the difference between the upper and lower body\. Avoiding long, shapeless tops prevents the eye from reading the torso as flat or undefined\. This alone can shift perceived attractiveness significantly\.
@@ -64,6 +88,28 @@ __Rugged and masculine__
 Denim, boots, and heavier textures\. Reads as grounded and confident\. Works well when the face and build support it\.
 
 Consistency within an archetype creates identity\. People begin to associate that visual with your presence\.
+
+__Archetype Is a Vector, Not a Category__
+
+A practical correction to the section above. Guzy's framework explicitly rejects the categorical reading of archetypes — no real-world man is purely Rugged or purely Refined or purely Rakish. The best styles are the ones that integrate all three in coherent proportions. The "pick one base" framing earlier is the on-ramp; the goal is a coherent blend where one archetype leads at fifty to sixty percent and the other two contribute the remaining detail. A pure-Rugged silhouette on a slight man reads as costume; a pure-Refined silhouette on a man whose life and personality run rugged reads as performative. Neither blend nor purity is automatically correct — what matters is that the blend matches the body, the life, and the personality coherently.
+
+__Aesthetic Feasibility — Which Looks Actually Work on Which Bodies__
+
+The hard truth about men's style is that not every aesthetic is available to every body. The earlier framing — "consistency within an archetype creates identity" — assumes the archetype was a feasible pick to begin with. It is honest to say up front that picking an aesthetic that fights the body produces the miscast look that even perfect execution cannot rescue. The percentages below are estimates of how many men in the 32-45 cohort can credibly execute each aesthetic without modification; they should be read as rough credibility floors, not precise statistics.
+
+Rugged and masculine works best on broader builds (athletic to stocky), 5'9" or taller, with the capacity to grow at least a heavy stubble, ideally a full beard. Heavyset is fine — rugged is one of the few aesthetics that accommodates volume gracefully. Slight men or men who are clean-shaven by necessity in workwear read costume-y; the aesthetic was developed for and around men who do physical labor, and the body and grooming markers signal that history. Realistic feasibility for the cohort: roughly forty percent.
+
+Classic and refined — old-money, traditional menswear, business-elegant — is the most universally accessible aesthetic because tailoring fixes most fit issues. Slight, athletic, and stocky builds work equally well; short and tall men can both execute it with proportion adjustments. Heavyset is harder but doable with proper alteration. Realistic feasibility: roughly seventy-five percent or higher given budget and willingness to tailor. The failure modes are poorly-fitted suits, cheap shoes, mismatched contrast levels, and visible logos; the aesthetic itself is rarely the problem.
+
+Clean minimalist works best on lean-to-athletic builds because the silhouette is unforgiving — clothes follow the body line closely without disguise. Heavyset and stocky men can run minimalist, but it requires looser cuts and structured pieces, which loses some of the crispness the aesthetic depends on. Beards conflict with the visual cleanness; clean-shaven or short stubble is the fit. Realistic feasibility: roughly fifty percent executed well; the rest reads either overdressed or hospital-clean.
+
+Streetwear is the most body-flexible aesthetic in the source set — skinny benefits from oversized tops, muscular from relaxed fits, larger from structured-loose silhouettes. Where it fails for the 32-45 cohort is age coding. Heavy streetwear past about age thirty-eight reads as trying too hard. The recommendation for this cohort is streetwear-adjacent — sneakers plus clean tee plus relaxed pants — without the full commitment to the aesthetic. Full-commitment streetwear feasibility for 32-45: roughly thirty percent. Streetwear-adjacent: high.
+
+Smart casual is the most body-agnostic of all aesthetics. Polo or button-down plus chinos plus clean leather sneakers or loafers works on virtually every body if the fit is right. Realistic feasibility: roughly eighty-five percent or higher. This is the safe default when archetype indicators are not strong, and the right register for most professional 32-45 contexts.
+
+Athletic-casual / athleisure-adjacent works on lean-to-athletic builds primarily — the aesthetic visually rewards visible musculature, and clingy fabrics expose soft midsections more harshly than structured tailoring does. Stocky-muscular works. The right register for the cohort is tailored athleisure rather than gym-rat-baggy: technical fabrics in fitted cuts, performance polos, leather sneakers. Realistic feasibility: roughly forty percent for full commitment, broader for the office-adjacent version.
+
+Standalone Rakish elements — visible jewelry, longer hair, statement pieces, earrings — require either a body and face that anchor them (strong jaw, defined features, height) or coherent Rakish styling throughout the rest of the outfit. The standalone Rakish element on an otherwise-Refined or otherwise-Rugged man reads incongruent — the most common form is a single piece (a necklace, an earring, a bold patterned shirt) that does not match the rest of the presentation. Picking a Rakish element means committing to a Rakish vector across the whole outfit, not adding it as a flourish.
 
 __Match Style to Your Face and Physique__
 
@@ -147,6 +193,20 @@ A three\-quarter angle rather than straight\-on adds visual depth and naturally 
 Photos set the online ceiling for your appearance\. Improving how you photograph directly affects perception on dating apps, professional profiles, and any social presence\. The skill gap between knowing nothing about photography and applying these principles is large — and entirely closeable with practice\.
 
 *Photos are a skill, not a reflection of your true looks\. Depth, angles, lighting, and controlled tension are what separate a good photo from a flat one — not just genetics\.*
+
+__The Investment Hierarchy — Where to Spend, Where to Save__
+
+Not every garment category returns the same on a dollar spent. The four-tier structure below is the consensus across men's-style sources, and matching budget to tier is the difference between a wardrobe that compounds value over a decade and one that constantly needs replacement.
+
+Tier one — splurge, ten-year-plus investments. Shoes are first. As the menswear adage runs: "you cannot look wealthy in cheap shoes, and if you're going to spend money on one thing apart from tailoring, shoes should be it." A quality pair of leather shoes with Goodyear-welt or Blake-stitch construction lasts ten years or more; the spend amortizes to under fifty dollars a year on a four-hundred-dollar pair. Outerwear is second — overcoats, leather jackets, technical shells — because they are worn over many outfits, daily-visible in cold weather, and the gap between cheap and quality is dramatic. A watch is third — daily-worn, frame-the-wrist, signals attention. The reason these three are tier one is that they hit on all three ROI dimensions: visibility (every outfit), durability (decade-plus), and the gap-between-cheap-and-quality (large and visible).
+
+Tier two — quality matters, but tailoring saves you. Suits and blazers belong here. A four-hundred-dollar suit with two hundred dollars of tailoring beats a twelve-hundred-dollar off-the-rack suit. Budget for tailoring at fifteen to twenty percent of purchase price minimum. Sunglasses are second — daily-worn, frame the face, easy to get wrong. Mid-tier (Persol/Ray-Ban-and-up) is sufficient; ultra-luxury frames are not ROI-positive over the mid-tier.
+
+Tier three — fit-over-price. Trousers, chinos, jeans, shirts, polos, and sweaters all sit here. Fit at the shoulder, sleeve, and chest is everything in this tier; brand and price contribute almost nothing on top. A ninety-dollar well-tailored pair of chinos beats a three-hundred-dollar pair off-the-rack. Replace every two to four years; the goal is consistent fit, not lifetime durability.
+
+Tier four — replaceable. T-shirts, undershirts, socks, underwear. High-rotation, replaced every one to two years. Mid-tier is the sweet spot; ultra-cheap fabric reads careless after wash cycles, and luxury basics rarely outlast their mid-tier equivalents.
+
+The structural insight underneath the tiers is that ROI is a function of three multiplicative variables: visibility (how often the garment is seen), durability (how long the garment lasts at quality), and the gap between cheap and quality (how visible the difference between a twenty-dollar and an eighty-dollar version is). Shoes win on all three; t-shirts lose on all three. Investment should follow that math, not aesthetic preference. Most men over-invest in tier three (designer shirts, premium chinos) and under-invest in tier one (cheap shoes, no real outerwear) — and it shows.
 
 __Tier Placement__
 

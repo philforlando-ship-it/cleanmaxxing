@@ -65,6 +65,18 @@ const PostSchema = z.object({
   // (nutrition rate cap, milestone triggers, BMR calculator, /plan
   // pages) see the fresh value without a separate save round-trip.
   weight_lbs: z.number().min(80).max(500).nullable().optional(),
+  // Slice 5 (migration 0089) — optional activity-change capture.
+  activity_change: z
+    .enum(['no_change', 'increased', 'decreased'])
+    .nullable()
+    .optional(),
+  // Slice 6 (migration 0092) — bidirectional fatigue signal. Both
+  // optional. Source is only load-bearing when level = 'struggling'.
+  fatigue_level: z.enum(['good', 'okay', 'struggling']).nullable().optional(),
+  fatigue_source: z
+    .enum(['cardio', 'strength', 'sleep', 'stress', 'unknown'])
+    .nullable()
+    .optional(),
 });
 
 export async function GET() {
@@ -109,7 +121,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { weight_lbs, ...reflectionInput } = parsed.data;
+  const {
+    weight_lbs,
+    activity_change,
+    fatigue_level,
+    fatigue_source,
+    ...reflectionRest
+  } = parsed.data;
+  const reflectionInput = {
+    ...reflectionRest,
+    activity_change: activity_change ?? null,
+    fatigue_level: fatigue_level ?? null,
+    fatigue_source: fatigue_source ?? null,
+  };
 
   const state = await saveWeeklyReflectionV2(
     supabase,

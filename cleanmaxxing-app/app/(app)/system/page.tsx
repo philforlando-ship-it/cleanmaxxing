@@ -77,7 +77,9 @@ export default async function SystemPage() {
   const focusSet = new Set(focusAreas);
   const activePovSlugs = new Set(
     focusAreas
-      .map((fa) => FOCUS_AREA_TO_POV_SLUG[fa])
+      .map((fa) =>
+        (FOCUS_AREA_TO_POV_SLUG as Record<string, string | undefined>)[fa],
+      )
       .filter((slug): slug is string => Boolean(slug)),
   );
 

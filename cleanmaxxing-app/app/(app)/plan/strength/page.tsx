@@ -399,5 +399,6 @@ function assessmentToInitialValues(
     secondary_objective: a.secondary_objective,
     injury_constraints: a.injury_constraints,
     bodyweight_preference: a.bodyweight_preference,
+    asymmetry_concern: a.asymmetry_concern,
   };
 }

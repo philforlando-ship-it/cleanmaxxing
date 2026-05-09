@@ -36,6 +36,9 @@ export const CUTS_FOR_DENSITY: Record<DensityState, ReadonlyArray<CutFamily>> = 
     'modern_mullet',
     'pompadour',
     'high_taper_crop',
+    // Migration 0091 — both new families require density to carry.
+    'bro_flow',
+    'classic_sweep_back',
   ],
 
   // Mature hairline — hairline has receded to its natural adult
@@ -62,6 +65,11 @@ export const CUTS_FOR_DENSITY: Record<DensityState, ReadonlyArray<CutFamily>> = 
     'pompadour',
     'caesar',
     'high_taper_crop',
+    // Migration 0091 — classic_sweep_back is the executive-flow
+    // silhouette explicitly designed to carry mature hairline. bro_flow
+    // works here too when the salt-and-pepper variant is in scope.
+    'classic_sweep_back',
+    'bro_flow',
   ],
 
   // Receding hairline — active recession. The balding-friendly cuts

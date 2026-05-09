@@ -68,6 +68,15 @@ export function computeCutCadenceWeeks(cutFamily: CutFamily): number {
       // Wolf is shaggy by design — holds its shape longer because the
       // intended look IS the grown-out feel. Same cadence as curtains.
       return 7;
+    case 'bro_flow':
+      // Medium-length flow holds shape similarly to mid_length_textured —
+      // longer top means the grown-out look IS the look. Migration 0091.
+      return 7;
+    case 'classic_sweep_back':
+      // Short-to-medium sweep — shape holds longer than ivy_league
+      // because there's no part line to blur, but shorter than full
+      // medium flows. Migration 0091.
+      return 6;
   }
 }
 

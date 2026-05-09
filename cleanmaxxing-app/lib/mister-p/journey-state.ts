@@ -86,7 +86,9 @@ type StrengthJourneySnapshot = {
 
 type CardioJourneySnapshot = {
   has_report: boolean;
-  modality_preference: string | null;
+  // Migration 0090 (2026-05-08) — modality_preference is now an array
+  // (multi-select). Empty array = user hasn't filled it in.
+  modality_preference: string[];
 };
 
 type SkincareJourneySnapshot = {
@@ -281,12 +283,12 @@ export async function getMisterPJourneyState(
   let cardio: CardioJourneySnapshot | null = null;
   if (cardioRow) {
     const r = cardioRow as {
-      modality_preference: string | null;
+      modality_preference: string[] | null;
       report_text: string | null;
     };
     cardio = {
       has_report: r.report_text !== null,
-      modality_preference: r.modality_preference,
+      modality_preference: r.modality_preference ?? [],
     };
   }
 

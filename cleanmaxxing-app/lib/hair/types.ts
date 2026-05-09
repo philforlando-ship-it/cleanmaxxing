@@ -69,7 +69,13 @@ export type CutFamily =
   | 'bald_fade'
   | 'short_fade'
   | 'bald_track'
-  | 'clean_shave';
+  | 'clean_shave'
+  // Migration 0091 (2026-05-08) — two families added per catalog
+  // audit. bro_flow = medium-length clean flow (cross-age, density-
+  // required). classic_sweep_back = short-medium executive sweep
+  // (mature-friendly).
+  | 'bro_flow'
+  | 'classic_sweep_back';
 
 export const CUT_FAMILIES: ReadonlyArray<CutFamily> = [
   'caesar',
@@ -94,6 +100,8 @@ export const CUT_FAMILIES: ReadonlyArray<CutFamily> = [
   'short_fade',
   'bald_track',
   'clean_shave',
+  'bro_flow',
+  'classic_sweep_back',
 ] as const;
 
 // Stage 2 — density action. Three paths, the user owns the call.
@@ -129,6 +137,83 @@ export const CUT_FAMILY_LABEL: Record<CutFamily, string> = {
   short_fade: 'Short Fade (balding-friendly very-short top)',
   bald_track: 'Bald track (transitioning / buzz maintenance)',
   clean_shave: 'Clean Shave (Bic’d, razor-smooth)',
+  bro_flow: 'Bro Flow / Medium-Length Flow',
+  classic_sweep_back: 'Classic Sweep Back / Executive Flow',
+};
+
+// Migration 0091 (2026-05-08) — cultural-reference variant names per
+// family. Each family has 0+ named variants the user can recognize
+// (celebrity references, era references, descriptive sub-styles).
+// Surfaced in the menu inline below the family label so users see
+// "Pompadour — Classic / Modern / Hard Part / Salt-and-Pepper" and
+// pick the family that includes their reference.
+//
+// These are NOT separate selectable rows — they're tags on the
+// family entry. The IMAGE catalog (public/images/cut-families/)
+// already supports cohort + density variants; references add a
+// cultural-language layer on top.
+//
+// Empty array = no notable named variants for that family. Don't
+// pad — silence is correct when nothing distinct comes to mind.
+export const CUT_FAMILY_REFERENCES: Record<CutFamily, ReadonlyArray<string>> = {
+  caesar: ['Classic', 'Short Curly Caesar', 'Modern Caesar'],
+  high_taper_crop: ['High Taper', 'Modern Skin Fade'],
+  textured_crop: ['Textured Crop', 'French Crop', 'Forward Crop'],
+  ivy_league: [
+    'Classic Ivy League',
+    'Textured Ivy League',
+    'Modern Textured Ivy',
+    'Short Side Sweep',
+  ],
+  textured_quiff: ['Modern Quiff', 'Loose Quiff', 'Short Quiff'],
+  mid_length_textured: [
+    'Joe Goldberg Flow',
+    'Textured Flow',
+    'Modern Loose Side Sweep',
+    'Salt-and-Pepper Sweep',
+  ],
+  crew_cut: ['Crew Cut', 'Short Taper'],
+  buzz_cut: ['Classic Buzz', 'Number-2 Buzz'],
+  slick_back: [
+    'Classic Slick Back',
+    'Slick Back Side Part',
+    'Business Flow',
+    'Modern Slick',
+  ],
+  slick_back_undercut: ['Darmody', 'Shelby (Peaky Blinders)'],
+  curtains: ['Middle Part Flow', '90s Curtains', 'Modern Curtains'],
+  textured_fringe: ['Shelby Fringe', 'Modern Textured Fringe'],
+  overgrown_buzz: ['Overgrown Buzz'],
+  broccoli: ['Curly Taper', 'Curly Textured Top with Taper'],
+  wolf_cut: ['Wolf Cut', 'Shaggy Flow'],
+  modern_mullet: ['Modern Mullet', 'Low-Taper Mullet'],
+  side_part_combover: [
+    'Classic Side Part',
+    'George Clooney Side Part',
+    'Executive Side Part',
+    'Tapered Side Part',
+    'Hard-Part Side Part',
+  ],
+  pompadour: [
+    'Classic Pompadour',
+    'Modern Pompadour',
+    'Hard-Part Pompadour',
+    'Salt-and-Pepper Pompadour',
+  ],
+  bald_fade: ['Bald Fade'],
+  short_fade: ['Short Fade'],
+  bald_track: ['Bald Track'],
+  clean_shave: ['Clean Shave (Bic’d)'],
+  bro_flow: [
+    'Classic Bro Flow',
+    'Modern Loose Flow',
+    'Surfer-style Flow',
+  ],
+  classic_sweep_back: [
+    'Medium-Length Classic Sweep Back',
+    'Executive Sweep',
+    'Salt-and-Pepper Sweep Back',
+  ],
 };
 
 export type CurrentRoutine = {

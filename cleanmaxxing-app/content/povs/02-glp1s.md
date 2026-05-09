@@ -144,10 +144,22 @@ Ozempic Face shows up worse. The structural face changes covered in doc 38 are a
 
 The decision frame for this cohort. Three questions in order: have I genuinely worked the lifestyle case for at least twelve months and seen it stall, do I have a doctor who will manage this against my full health picture rather than just write a script, and am I committed to the strategy-2 protocol of training, protein, and habit installation rather than passive medication-only use? Most men in this window who would benefit from GLP-1s have answered yes to the first question and not yet thought hard about the second and third.
 
+__The Three Phases of GLP\-1 Use — Considering, On Protocol, Off\-Ramp__
+
+The strategies above describe three different overall approaches\. The phases below describe the sequential states a single user moves through during their use of the medication, regardless of which strategy they're running\. The journey treats GLP\-1s as a Pattern D topic — a multi\-phase decision arc that gets revisited rather than a single yes/no\.
+
+__Considering__ — pre\-decision\. The user is weighing whether to start, gathering information, having the doctor conversation\. The work here is informational: understand the mechanism, the real numbers, what stopping actually looks like, who's a strong vs\. poor candidate, what the strategic protocol requires\. The most common failure in this phase is starting before the candidate test has been honest — already lean, no training plan, no protein plan, no exit plan — which lands the user in Strategy 3 by default\. The right output of Considering is a decision: start with a clear protocol, or don't\.
+
+__On Protocol__ — actively on the medication\. The work is execution: the strategic protocol below \(lift, protein, controlled pace, habit installation, exit plan\)\. The phase\-specific risks are muscle loss, Ozempic face, and the dietary habits not getting installed by the time the medication ends\. Titration cadence, side\-effect monitoring, and protein adherence are the daily fitness questions\; cost, refill cadence, and labs are the slower\-cadence questions\. The phase ends when the user begins planning to come off — which most users do not plan early enough\.
+
+__Off\-ramp__ — tapering or stopping\. The biology that makes regain dramatic \(rebound ghrelin, lower metabolism\) is at its strongest in this window\. The work is preserving what the medication helped install: the dietary habits practiced during On Protocol, the resistance training, the protein floor\. The mistake men make in this phase is treating it as the end of the work when it's actually the start of the harder version — the next twelve months without the medication's help\. Many users underestimate how much support the medication was providing until it's gone\.
+
+The journey treats this as Pattern D specifically because the phases get revisited\. Many men cycle Considering → On Protocol → Off\-ramp → Considering again because of side effects, cost, life changes, or because Strategy 3 happened the first time and they're planning a more disciplined second attempt\. The framework is designed to make the second attempt better than the first by surfacing what didn't get installed last time\.
+
 __The Strategic Protocol__
 
 - Lift three to five times per week — non\-negotiable for muscle preservation
-- Protein at 0\.7 to 1 gram per pound of bodyweight — active management required, not passive
+- Protein at 1\.0 to 1\.1 grams per pound of bodyweight — actively higher than the general lifter floor of 0\.75\-0\.85 g/lb, because appetite suppression makes incidental protein intake unreliable\. Hitting protein on a GLP\-1 typically requires deliberate planning around two anchor meals \(shake or whey at one, lean protein at the other\) rather than counting on a third meal that the user may not finish or may skip entirely\. Active management required, not passive\.
 - Lose weight at a controlled pace — aggressive restriction accelerates muscle loss and facial volume loss
 - Use the medication window to build dietary habits, not just to benefit from them
 - Have a clear exit plan and transition strategy before starting

@@ -11,6 +11,7 @@ import { povFor } from '@/lib/content/pov';
 import { getUserProfile } from '@/lib/profile/service';
 import { getNutritionAssessment } from '@/lib/nutrition/service';
 import { getStrengthAssessment } from '@/lib/strength/service';
+import { getCurrentFatigueState } from '@/lib/weekly-reflection/service';
 import {
   CARDIO_DAYS_PER_WEEK_LABEL,
   CURRENT_MOVEMENT_LABEL,
@@ -22,6 +23,7 @@ import {
 import { buildCardioReportSystemPrompt } from './report-prompt';
 import {
   getRecentCardioSessionCount,
+  getWearableActiveDaysLast7,
   saveCardioReport,
 } from './service';
 
@@ -35,18 +37,37 @@ export async function generateAndSaveCardioReport(
 ): Promise<{ report_text: string }> {
   const profile = await getUserProfile(supabase, userId);
 
-  // Pull cross-modifier reads + age + live signal in parallel.
+  // Pull cross-modifier reads + age + timezone + live signal in parallel.
   const [
     { data: userRow },
     sessionCount,
     nutritionAssessment,
     strengthAssessment,
+    fatigueState,
+    wearableActiveDays,
   ] = await Promise.all([
-    supabase.from('users').select('age').eq('id', userId).maybeSingle(),
+    supabase
+      .from('users')
+      .select('age, timezone')
+      .eq('id', userId)
+      .maybeSingle(),
     getRecentCardioSessionCount(supabase, userId, 7),
     getNutritionAssessment(supabase, userId),
     getStrengthAssessment(supabase, userId),
+    getCurrentFatigueState(supabase, userId),
+    getWearableActiveDaysLast7(supabase, userId),
   ]);
+
+  // Seasonal awareness — pass the current month + user's timezone so
+  // the prompt can reason about hemisphere + outdoor-cardio
+  // availability instead of treating 'seasonal' outdoor_access as
+  // always off-season.
+  const userTimezone =
+    (userRow as { timezone: string | null } | null)?.timezone ?? null;
+  const currentMonthName = new Date().toLocaleString('en-US', {
+    month: 'long',
+    timeZone: userTimezone ?? 'UTC',
+  });
 
   const modifiers: CardioReportInputModifiers = {
     bf_pct_self_estimate: profile.bf_pct_self_estimate,
@@ -67,6 +88,11 @@ export async function generateAndSaveCardioReport(
     time_per_session: assessment.time_per_session,
     occupation_activity: assessment.occupation_activity,
     programming_priority: assessment.programming_priority,
+    current_month_name: currentMonthName,
+    user_timezone: userTimezone,
+    fatigue_level: fatigueState?.level ?? null,
+    fatigue_source: fatigueState?.source ?? null,
+    wearable_active_days_last_7: wearableActiveDays,
   };
 
   const pov = await povFor(POV_SLUG);
@@ -169,8 +195,10 @@ function formatAssessmentForPrompt(
     }`,
   );
   modifierLines.push(
-    `- equipment_access (Q6 — what the user can actually use): ${
-      modifiers.equipment_access ?? 'not set'
+    `- equipment_access (Q6 — multi-select, what the user can actually use; recommend across their full equipment context): ${
+      modifiers.equipment_access.length === 0
+        ? 'not set'
+        : modifiers.equipment_access.join(', ')
     }`,
   );
   modifierLines.push(
@@ -193,13 +221,49 @@ function formatAssessmentForPrompt(
       modifiers.programming_priority ?? 'not set'
     }`,
   );
+  modifierLines.push(
+    `- current_month_name (server clock, user-localized): ${modifiers.current_month_name}`,
+  );
+  modifierLines.push(
+    `- user_timezone (users.timezone — use to infer hemisphere for season-aware outdoor recs): ${
+      modifiers.user_timezone ?? 'not set (assume northern hemisphere US default)'
+    }`,
+  );
+  modifierLines.push(
+    `- fatigue_level (weekly_reflections, last 14 days): ${
+      modifiers.fatigue_level ?? 'no recent signal'
+    }`,
+  );
+  modifierLines.push(
+    `- fatigue_source (only load-bearing when fatigue_level = 'struggling'): ${
+      modifiers.fatigue_source ?? 'not attributed'
+    }`,
+  );
+  modifierLines.push(
+    `- wearable_active_days_last_7 (Junction-connected wearable; days in last 7 with >=20 min medium+high intensity; NULL = no wearable connected): ${
+      modifiers.wearable_active_days_last_7 == null
+        ? 'no wearable connected — ignore this signal'
+        : String(modifiers.wearable_active_days_last_7)
+    }`,
+  );
+
+  const primaryRolesLabel =
+    assessment.primary_role.length === 0
+      ? '(not specified)'
+      : assessment.primary_role.map((r) => PRIMARY_ROLE_LABEL[r]).join('; ');
+  const modalityPreferenceLabel =
+    assessment.modality_preference.length === 0
+      ? '(not specified)'
+      : assessment.modality_preference
+          .map((m) => MODALITY_PREFERENCE_LABEL[m])
+          .join('; ');
 
   return `Here is the user's cardio assessment.
 
 --- ASSESSMENT ---
-- Primary role: ${PRIMARY_ROLE_LABEL[assessment.primary_role]}
+- Primary roles (multi-select — recommend across them): ${primaryRolesLabel}
 - Current movement: ${CURRENT_MOVEMENT_LABEL[assessment.current_movement]}
-- Modality preference: ${MODALITY_PREFERENCE_LABEL[assessment.modality_preference]}
+- Modality preferences (multi-select — the user will actually run more than one; alternate or stack across them): ${modalityPreferenceLabel}
 - Days per week available for structured cardio: ${CARDIO_DAYS_PER_WEEK_LABEL[assessment.days_per_week]}
 
 What the user said they want:

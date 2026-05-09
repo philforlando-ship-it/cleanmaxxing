@@ -183,6 +183,22 @@ const CUT_FAMILIES: ReadonlyArray<{ filename: string; suffix: string }> = [
     suffix:
       'Razor-smooth shaved head, scalp completely smooth and reflective with no visible stubble or hair length, well-groomed beard or short stubble for face-frame contrast, decisive committed bald aesthetic, sharp and intentional rather than transitional.',
   },
+  {
+    // Migration 0091 (2026-05-08) — medium-length flow with no part,
+    // hair pushed back and up with hands-only styling. Distinct from
+    // slick_back (no product weight) and wolf_cut (no shag attitude).
+    filename: 'bro_flow.png',
+    suffix:
+      'Medium length top approximately 3 to 4 inches, hair pushed up and back with hands-only natural styling and no product weight, no part visible, slight wave or natural texture, low taper or no taper on the sides keeping the silhouette long. Casual confident energy distinct from a pomaded slick back. Matte finish with natural body, NOT shiny or wet-looking, NOT shaggy or unkempt. Salt-and-pepper or solid medium-brown coloring acceptable. Clean jawline and subtle short stubble.',
+  },
+  {
+    // Migration 0091 (2026-05-08) — short-to-medium executive sweep,
+    // no part, less product than slick_back. The "executive flow"
+    // silhouette explicitly designed to carry mature hairline.
+    filename: 'classic_sweep_back.png',
+    suffix:
+      'Short-to-medium top approximately 2 to 3 inches, hair swept cleanly back with light hold and visible natural texture, no defined part anywhere on the head, sides kept short with a soft classic taper. Executive and mature register — distinct from slick_back (lighter hold, more natural body) and from ivy_league (no part). Mature hairline visibly carried by the silhouette without exposing temple recession aggressively. Salt-and-pepper graying preferred for the mature variant. Clean shave or very short groomed beard. Professional matte finish, not shiny.',
+  },
 ];
 
 // ==========================================
@@ -228,18 +244,23 @@ function parseArgs(argv: readonly string[]): Args {
   return args;
 }
 
-// The mature cohort renders only the balding-friendly subset, since
-// users 45+ are most likely to land on these cuts via the
-// density-filtered menu in lib/hair/cut-by-density.ts. The other
-// young-only cuts (quiff, slick back, curtains, ivy league,
-// mid-length, bald_track, clean_shave) stay un-paired in the mature
-// directory until proven needed.
+// The mature cohort renders only the balding-friendly subset PLUS
+// the families explicitly designed to carry a mature hairline.
+// classic_sweep_back is the executive-flow silhouette built for this
+// cohort; bro_flow's salt-and-pepper variant is the mature
+// medium-flow look. Other young-only cuts (quiff, slick back,
+// curtains, ivy league, mid-length, bald_track, clean_shave) stay
+// un-paired in the mature directory until proven needed.
 const MATURE_CUT_SLUGS: ReadonlyArray<string> = [
   'caesar',
   'high_taper_crop',
   'textured_crop',
   'crew_cut',
   'buzz_cut',
+  // Migration 0091 — both new families have explicit mature variants
+  // (salt-and-pepper sweep, salt-and-pepper bro flow).
+  'bro_flow',
+  'classic_sweep_back',
 ];
 
 // ==========================================

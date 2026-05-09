@@ -4,11 +4,17 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getUserProfile } from '@/lib/profile/service';
 import type {
+  ArmLength,
+  Build,
   ClosetAuditSelections,
+  LegLength,
+  ShoulderWidth,
+  SkinUndertone,
   StyleAssessment,
   StyleAssessmentInput,
   StyleReportInputModifiers,
 } from './types';
+import { deriveFrameEstimate } from './types';
 
 export async function getStyleAssessment(
   supabase: SupabaseClient,
@@ -89,9 +95,20 @@ export async function saveStyleAssessment(
   userId: string,
   input: StyleAssessmentInput,
 ): Promise<StyleAssessment> {
+  // Migration 0093 (2026-05-09) — derive the legacy frame_estimate
+  // from the v2 granular fields server-side. Downstream consumers
+  // (cut-menu density, foundation-pieces, prompt rules branched on
+  // frame_estimate) keep working unchanged.
+  const frame_estimate = deriveFrameEstimate(input.shoulder_width, input.build);
+
   const row = {
     user_id: userId,
-    frame_estimate: input.frame_estimate,
+    shoulder_width: input.shoulder_width,
+    arm_length: input.arm_length,
+    leg_length: input.leg_length,
+    build: input.build,
+    skin_undertone: input.skin_undertone,
+    frame_estimate,
     current_archetype: input.current_archetype,
     target_archetype: input.target_archetype,
     closet_state: input.closet_state,
@@ -241,8 +258,41 @@ function ageBand(age: number | null | undefined): AgeBand {
   return 'under_35';
 }
 
+// Style v2 Phase 4 (2026-05-09) — bucket bf_pct_self_estimate into
+// silhouette-relevant tiers so the staleness check fires the
+// SPECIFIC bf-drift signal (not just any bf_pct change) when the
+// body has drifted enough that silhouette / archetype-feasibility
+// rules would actually change. The five enum bands collapse onto
+// four silhouette tiers per POV 12's framework (lean / athletic /
+// soft / heavy).
+type BfSilhouetteTier =
+  | 'lean'
+  | 'athletic'
+  | 'soft'
+  | 'heavy'
+  | 'unknown';
+function bfSilhouetteTier(
+  bf_pct: string | null | undefined,
+): BfSilhouetteTier {
+  if (!bf_pct) return 'unknown';
+  switch (bf_pct) {
+    case 'under_12':
+    case '12_to_15':
+      return 'lean';
+    case '15_to_20':
+      return 'athletic';
+    case '20_to_25':
+      return 'soft';
+    case 'over_25':
+      return 'heavy';
+    default:
+      return 'unknown';
+  }
+}
+
 export type StyleStalenessReason =
   | 'bf_pct_changed'
+  | 'bf_drift_silhouette'
   | 'budget_tier_changed'
   | 'interventions_changed'
   | 'age_band_changed';
@@ -269,6 +319,22 @@ export function isStyleReportStale(
 
   if (modifiers.bf_pct_self_estimate !== current.bf_pct_self_estimate) {
     reasons.push('bf_pct_changed');
+    // Phase 4 — fire the silhouette-specific drift reason when the
+    // bf change is big enough to cross a silhouette tier (lean →
+    // athletic → soft → heavy). This is the signal that POV 12's
+    // silhouette rules + the Phase 2b archetype-feasibility tier
+    // would actually recommend differently. A one-band move within
+    // the same tier (e.g., 'under_12' ↔ '12_to_15') keeps the
+    // generic bf_pct_changed only.
+    const prevTier = bfSilhouetteTier(modifiers.bf_pct_self_estimate);
+    const nowTier = bfSilhouetteTier(current.bf_pct_self_estimate);
+    if (
+      prevTier !== nowTier &&
+      prevTier !== 'unknown' &&
+      nowTier !== 'unknown'
+    ) {
+      reasons.push('bf_drift_silhouette');
+    }
   }
   if (modifiers.budget_tier !== current.budget_tier) {
     reasons.push('budget_tier_changed');
@@ -289,6 +355,11 @@ function rowToAssessment(row: unknown): StyleAssessment {
   const r = row as Record<string, unknown>;
   return {
     user_id: r.user_id as string,
+    shoulder_width: (r.shoulder_width as ShoulderWidth | null) ?? null,
+    arm_length: (r.arm_length as ArmLength | null) ?? null,
+    leg_length: (r.leg_length as LegLength | null) ?? null,
+    build: (r.build as Build | null) ?? null,
+    skin_undertone: (r.skin_undertone as SkinUndertone | null) ?? null,
     frame_estimate: r.frame_estimate as StyleAssessment['frame_estimate'],
     current_archetype:
       r.current_archetype as StyleAssessment['current_archetype'],

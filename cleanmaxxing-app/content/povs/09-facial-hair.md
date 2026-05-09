@@ -61,6 +61,37 @@ __Long beard__
 
 High risk\. Needs strong, even density and significant ongoing maintenance\. The reward is real when it works, but most people overestimate their growth quality for this style\.
 
+__Trim Cadence — How Often to Cut, by Target Length__
+
+Different target lengths run on different cadences, and the most common failure mode for self-managed facial hair is using the wrong cadence — over-trimming a beard that needs to settle, or under-trimming stubble that has overgrown into a patchy half-beard. Two distinct cadences matter for any non-shaved style: cleanup (the maintenance pass that keeps the lines and length sharp) and reshape (the periodic full reset that re-establishes the boundaries). Cleanup runs frequently and shallow; reshape runs infrequently and deep.
+
+Cadence by target length, for average growth rates:
+
+- **Stubble (3-day pattern):** trim every 3 to 4 days. The look depends on uniform short length across the face — letting it grow past 4 days starts shifting the read into "early beard" territory, which is a different look. No reshape cycle separately; the cleanup IS the reshape at this length.
+- **Heavy stubble / 5-o'clock-shadow as a sustained look:** trim every 5 to 7 days. The cleanup pass keeps the cheekline and neckline defined; the length itself self-maintains within the window.
+- **Short beard:** cleanup every 7 to 10 days for cheekline + neckline + length consistency. Full reshape monthly — taking the beard back to its intended outline + length to undo the gradual drift that cleanup alone doesn't fully reverse.
+- **Medium beard:** cleanup every 10 to 14 days. Reshape every 4 to 6 weeks.
+- **Long beard:** cleanup every 4 to 6 weeks (mostly tidying flyaways, neckline, and any uneven sections). Reshape infrequently — every 2 to 4 months at most. Long beards reward leaving them alone.
+
+Two modifiers shift the base cadences:
+
+- **Growth rate.** Fast growers (visible new growth in 2 to 3 days) halve every cadence in the table. Slow growers (5+ days for visible growth) extend everything by 30 to 50 percent. Most men are average; if you're consistently surprised by how long or how slowly your facial hair has changed since the last trim, you're at one of the extremes.
+- **Greying.** Greys grow slightly differently from pigmented hair — often coarser, sometimes wirier, occasionally at a different rate. The trim cycle is what keeps greys blending naturally into the rest of the beard rather than reading as stray. For an intentional salt-and-pepper look (sustained, not transitional), the beard length itself usually needs to be longer than the man would otherwise prefer — short stubble doesn't hold greys long enough to read as deliberate. If salt-and-pepper is the goal, lean toward heavy stubble or short beard, not 3-day stubble. The trim cadence stays in the same band; what changes is the target length.
+
+Cleanup vs reshape mechanics: the cleanup pass is short — five minutes with a trimmer at the chosen guard length, plus razor or precision trimmer for the neckline and cheekline. The reshape pass is longer — fifteen to thirty minutes — and is where most of the styling decisions get re-made (do the cheekline and neckline still sit where I want them, has the overall length crept up or down, are there asymmetries that need correction).
+
+The single most common error this section addresses: using the cleanup cadence for what should be a reshape pass, then wondering why the beard "keeps drifting." Cleanup alone doesn't reset the lines; reshape does. Schedule both.
+
+__Beard Lines — Where the Neckline and Cheekline Actually Belong__
+
+The other most common error is the neckline. The wrong line for almost everyone is the chin-strap line that follows the underside of the jaw all the way around — it reads as artificial and ages the face. The wrong line in the other direction is shaving the neckline up to the jawline itself, which removes the visual separation between beard and chin and loses jaw definition entirely.
+
+The right line is a U-curve that sits about 1.5 inches above the Adam's apple, sweeping from one side of the jaw to the other. Two-finger rule: place two fingers above the Adam's apple, the line goes there. The beard fills the area between the chin tip and the U; the U is distinct from the jawline, and that distinctness is what produces the jaw-defined read.
+
+For the cheekline: follow the natural growth pattern, light cleanup at the very top edges only. The aggressive shaved-low cheekline is the patchy-uneven look most men accidentally produce when they over-trim — it pulls the visual weight of the beard down and away from where the face actually wants definition. Leaving 1 to 2 days of growth on the upper cheekline reads as intentional rather than as neglect, and works better than precise lines for most men.
+
+These are geometric rules, not aesthetic preferences. The right line works on almost every face shape; the wrong lines fail on almost every face shape. AI-based beard-line analysis (face-landmark detection of the jaw + Adam's apple + current beard boundary, with a recommended-overlay or text feedback) is technically tractable for a future feature given how clear the geometric rules are, but the rules themselves are simple enough to apply with two fingers and a mirror.
+
 __Facial Hair and Age Perception__
 
 - Clean shave reads younger and cleaner

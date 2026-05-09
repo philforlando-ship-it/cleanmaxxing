@@ -26,7 +26,10 @@ import {
   type WeeklyReflectionState,
 } from '@/lib/weekly-reflection/service';
 import {
+  ACTIVITY_CHANGE_LABEL,
   DIRECTIONAL_FLAG_LABEL,
+  FATIGUE_LEVEL_LABEL,
+  FATIGUE_SOURCE_LABEL,
   FREE_TEXT_PROMPTS,
   OUTCOME_INITIATED_LABEL,
   OUTCOME_PHYSICAL_FEEL_LABEL,
@@ -34,7 +37,10 @@ import {
   PROCESS_ADHERENCE_TIERS,
   pickFreeTextPrompt,
   type ActiveJourney,
+  type ActivityChange,
   type DirectionalFlag,
+  type FatigueLevel,
+  type FatigueSource,
   type OutcomeInitiated,
   type OutcomePhysicalFeel,
   type ProcessAdherence,
@@ -71,6 +77,22 @@ const OUTCOME_PHYSICAL_FEEL_OPTIONS: OutcomePhysicalFeel[] = [
   'mixed',
 ];
 
+const ACTIVITY_CHANGE_OPTIONS: ActivityChange[] = [
+  'no_change',
+  'increased',
+  'decreased',
+];
+
+const FATIGUE_LEVEL_OPTIONS: FatigueLevel[] = ['good', 'okay', 'struggling'];
+
+const FATIGUE_SOURCE_OPTIONS: FatigueSource[] = [
+  'cardio',
+  'strength',
+  'sleep',
+  'stress',
+  'unknown',
+];
+
 export function WeeklyReflectionCard({
   initialState,
   activeJourneys,
@@ -104,6 +126,15 @@ export function WeeklyReflectionCard({
   );
   const [directionalFlag, setDirectionalFlag] = useState<DirectionalFlag | null>(
     current?.directional_flag ?? null,
+  );
+  const [activityChange, setActivityChange] = useState<ActivityChange | null>(
+    current?.activity_change ?? null,
+  );
+  const [fatigueLevel, setFatigueLevel] = useState<FatigueLevel | null>(
+    current?.fatigue_level ?? null,
+  );
+  const [fatigueSource, setFatigueSource] = useState<FatigueSource | null>(
+    current?.fatigue_source ?? null,
   );
   const [notes, setNotes] = useState(current?.notes ?? '');
   // Optional weekly weigh-in. The string state lets users clear the
@@ -161,6 +192,12 @@ export function WeeklyReflectionCard({
       prompt_used: promptKey,
       notes: notes.trim() || null,
       weight_lbs: weightLbs,
+      activity_change: activityChange,
+      fatigue_level: fatigueLevel,
+      // Source is only meaningful when level is 'struggling'. The
+      // form clears source when level is set to anything else, but
+      // double-guard the payload here too.
+      fatigue_source: fatigueLevel === 'struggling' ? fatigueSource : null,
     };
 
     startTransition(async () => {
@@ -331,7 +368,103 @@ export function WeeklyReflectionCard({
         </div>
       </div>
 
-      {/* Optional weekly weigh-in. Sits between Outcomes and
+      {/* Optional activity-change capture (slice 5). Sits between
+          Outcomes and weight because it surfaces a downstream
+          dependency: when activity changes meaningfully, the
+          nutrition plan's caloric target may not match the new
+          baseline. Inline nudge points back at /plan/nutrition. */}
+      <div className="mt-8 space-y-3 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+        <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          Activity level (optional)
+        </p>
+        <p className="text-[14px] text-zinc-800 dark:text-zinc-200">
+          Compared to last week, did your overall activity meaningfully
+          change?
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {ACTIVITY_CHANGE_OPTIONS.map((opt) => (
+            <ToggleButton
+              key={opt}
+              active={activityChange === opt}
+              onClick={() =>
+                setActivityChange(activityChange === opt ? null : opt)
+              }
+              disabled={pending}
+              label={ACTIVITY_CHANGE_LABEL[opt]}
+            />
+          ))}
+        </div>
+        {(activityChange === 'increased' ||
+          activityChange === 'decreased') && (
+          <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] leading-relaxed text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+            Heads up — your nutrition plan was tuned at a different
+            activity baseline. Worth a quick revisit at{' '}
+            <a
+              href="/plan/nutrition?edit=1"
+              className="font-medium underline decoration-dotted underline-offset-2"
+            >
+              /plan/nutrition
+            </a>{' '}
+            once this is saved.
+          </p>
+        )}
+      </div>
+
+      {/* Optional fatigue signal (slice 6). Three-point self-report
+          with conditional source picker that fires only when level
+          is 'struggling'. Cross-modifier read by cardio + strength
+          + nutrition report builders — when struggling AND source
+          attributes to a journey, that journey's prescription
+          softens. Two-week staleness window in the reader. */}
+      <div className="mt-8 space-y-3 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+        <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          Energy &amp; recovery (optional)
+        </p>
+        <p className="text-[14px] text-zinc-800 dark:text-zinc-200">
+          How has your energy and recovery been this week?
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {FATIGUE_LEVEL_OPTIONS.map((opt) => (
+            <ToggleButton
+              key={opt}
+              active={fatigueLevel === opt}
+              onClick={() => {
+                if (fatigueLevel === opt) {
+                  setFatigueLevel(null);
+                  setFatigueSource(null);
+                } else {
+                  setFatigueLevel(opt);
+                  if (opt !== 'struggling') setFatigueSource(null);
+                }
+              }}
+              disabled={pending}
+              label={FATIGUE_LEVEL_LABEL[opt]}
+            />
+          ))}
+        </div>
+        {fatigueLevel === 'struggling' && (
+          <>
+            <p className="mt-2 text-[14px] text-zinc-800 dark:text-zinc-200">
+              What&rsquo;s the source? (load-bearing — Mister P uses it to soften the right plan)
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {FATIGUE_SOURCE_OPTIONS.map((opt) => (
+                <ToggleButton
+                  key={opt}
+                  active={fatigueSource === opt}
+                  onClick={() =>
+                    setFatigueSource(fatigueSource === opt ? null : opt)
+                  }
+                  disabled={pending}
+                  label={FATIGUE_SOURCE_LABEL[opt]}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Optional weekly weigh-in. Sits between Energy/recovery and
           Direction because it pairs with the "did anything physical
           feel different" question. Empty input = skip; a numeric
           value writes through to user_profile.current_weight_lbs and

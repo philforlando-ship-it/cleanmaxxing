@@ -20,13 +20,16 @@ import type {
 } from '@/lib/cardio/types';
 
 type Props = {
-  equipment_access: CardioEquipmentAccess | null;
+  // Migration 0090 — equipment_access is now an array; can hold
+  // multiple selections (full gym AND home treadmill, etc.).
+  equipment_access: CardioEquipmentAccess[];
   outdoor_access: CardioOutdoorAccess | null;
   time_per_session: CardioTimePerSession | null;
   injury_constraints: CardioInjuryConstraint[];
-  // Highlight the user's current modality_preference if it appears
-  // in the top 3. Quiet visual marker, not a CTA.
-  current_preference: CardioModalityPreference;
+  // Highlight the user's current modality_preference picks if any
+  // appear in the top 3. Quiet visual marker, not a CTA. Now an
+  // array under migration 0090.
+  current_preferences: CardioModalityPreference[];
 };
 
 export function RecommendedModalitiesPanel({
@@ -34,14 +37,14 @@ export function RecommendedModalitiesPanel({
   outdoor_access,
   time_per_session,
   injury_constraints,
-  current_preference,
+  current_preferences,
 }: Props) {
-  // Need all four screening fields to produce a meaningful ranking.
-  // If any are missing (pre-migration assessment), don't render the
-  // panel at all — the user should fill those out via Edit answers
-  // first.
+  // Need at least one equipment_access entry plus outdoor_access +
+  // time_per_session to produce a meaningful ranking. Pre-migration
+  // assessments leave these unset; don't render until the user
+  // updates them via Edit answers.
   if (
-    !equipment_access ||
+    equipment_access.length === 0 ||
     !outdoor_access ||
     !time_per_session
   ) {
@@ -71,7 +74,7 @@ export function RecommendedModalitiesPanel({
 
       <ol className="mt-4 space-y-3">
         {ranked.map((r, i) => {
-          const isCurrent = r.modality === current_preference;
+          const isCurrent = current_preferences.includes(r.modality);
           return (
             <li
               key={r.modality}

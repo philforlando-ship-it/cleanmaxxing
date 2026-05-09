@@ -44,6 +44,22 @@ The risk profile is substantially higher than TRT\. Steroid cycles stress the ca
 
 *"TRT helps you become what you should have been naturally\. Steroids help you become something you could never be naturally\."*
 
+__The Three Phases of Hormonal Use — Considering, On Protocol, Off\-Ramp__
+
+Like GLP\-1s in Doc 02, testosterone and steroids are Pattern D in the journey: a multi\-phase decision arc that gets revisited rather than a single yes/no\. The phases are sequential states a single user moves through during their use of these compounds\.
+
+__Considering__ — pre\-decision\. The user is weighing whether natural optimization has been genuinely exhausted, whether bloodwork supports the case, whether they have a physician who will manage them honestly, and whether they understand what stopping looks like\. The work in this phase is information and self\-honesty: the natural\-optimization checklist above must be true before exogenous support is the right next move, and the candidate has to be willing to sit with the long\-term commitment before agreeing to start\. Most failures here are starting too early — running a cycle in the twenties because friends are doing it, or accepting a TRT script for symptoms that respond to sleep and body fat\.
+
+__On Protocol__ — actively on hormones\. The work is risk management: bloodwork cadence, estrogen management, body acne, hair loss acceleration, joint and tendon load, cardiovascular monitoring\. The phase\-specific question is whether the user is staying within the goal range \(physiologic for TRT, controlled and bounded for cycles\) rather than drifting into "while we're here, more must be better\." The phase ends when the user begins planning to come off — for cycles, this means the post\-cycle phase begins\; for TRT, this is rarely a true ending and is much more often an indefinite continuation\.
+
+__Off\-ramp__ — for cycles, the post\-cycle / PCT window covered later in this document\. For TRT, off\-ramp is rarely undertaken and is rarely successful when it is\. Coming off TRT after sustained use frequently leaves the user with a lower baseline than before they started, which is why the decision to start TRT is functionally a lifelong commitment\. The Off\-ramp phase for cycle users is where most of the worst outcomes happen — incomplete recovery, dependency, the slide toward "cycles → blast and cruise → permanent TRT" that many men are surprised to find themselves on\. The journey treats Off\-ramp as a discrete phase requiring its own planning and content rather than collapsing it into "the cycle is done\."
+
+__Why This Topic Is Higher\-Stakes Than the Other Pattern D Topics__
+
+Hair loss treatment, GLP\-1s, and TRT/steroids all share the Pattern D shell, but TRT and steroids sit at the high\-stakes end of the spectrum and the journey treats them differently as a result\. Hair loss meds are largely reversible — stop fin/min and most users return to their pre\-treatment trajectory\. GLP\-1s are biologically reversible — stop the medication and appetite returns; the regain is real but not endocrine\-permanent\. Hormonal interventions are fundamentally different: starting TRT shuts down endogenous production, sustained cycles risk permanent suppression, and the post\-cycle outcome spectrum genuinely includes "you now require lifelong medical management you didn't anticipate\." Mistakes in this category are less recoverable than in the others\.
+
+That asymmetry is why the journey does not auto\-surface this topic on the daily home view the way other journeys do\. Hair loss treatment can be raised proactively in a daily prompt because the cost of considering it lightly is low\. Hormonal intervention is a decision that should be brought to the journey deliberately, not nudged into\. Mister P will engage seriously with users who arrive here with their own intent, but the journey is structurally cautious — fewer prompts, more information, and an explicit floor that natural optimization must be genuinely tried before exogenous support is the next move\.
+
 __The Aesthetic Benefits — What They Actually Deliver__
 
 __TRT__

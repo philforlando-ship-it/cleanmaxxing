@@ -129,6 +129,18 @@ For most men dealing with male pattern baldness, the correct long\-term strategy
 - Step 4 — SMP: as a support tool for specific use cases — scar concealment, diffuse thinning under a short style — not as a primary solution
 - Gadgets and unproven treatments: last and only with realistic expectations
 
+__How Treatment Urgency Maps to the Hair Journey Path__
+
+The treatment stack above is the medical content\; the hair journey from Doc 08 is the sequenced product that turns it into a decision the user actually makes\. The mapping between density state and treatment path is direct, and getting it wrong is the most common failure mode\.
+
+__Treat path__ — finasteride and \(usually\) minoxidil, started consistently\. Correct response when density is full or recently mature with active recession or visible thinning underway\. Earlier is better: follicles that have been miniaturized for years respond worse than follicles that were caught at the first sign of change\. The Pattern D "Considering" surface in the journey lays out what the medications do, side effects honestly, panic timeline, and how to prep the doctor conversation\. The "On Protocol" surface is where ongoing titration, side\-effect monitoring, and labs cadence live once the user has actually started\.
+
+__Monitor path__ — establish a baseline photo, watch the trajectory at 90\-day cadence\. Correct response when the user is uncertain whether loss is actually occurring \(early hairline maturation can read as recession when it's still within the normal adult adjustment\)\. The photo is doing the diagnostic work the eye cannot — hair changes too slowly for direct comparison without timestamps\. If 90\-day comparisons show loss, the monitor path converts to treat\. If 90\-day comparisons show stability, the monitor cadence stretches to 180 days\.
+
+__Transition path__ — accept and plan toward the bald system in Doc 08\. Correct response when density loss has progressed past the point where medical therapy and cosmetic adjuncts produce a result better than a deliberate buzz / shave / fade\. The cuts that work \(bald track, bald fade, clean shave\) and the bald\-specific upgrade stack \(scalp care, beard design, physique emphasis, face leanness, color strategy\) are the core content\. SMP is an option here, not a primary intervention\.
+
+__The match matters\.__ Treat too late and there's not enough follicle viability left to recover\. Monitor too long when loss is clearly underway and the same window closes\. Push transplants on a man whose donor density doesn't support them \(the 50\+ section below covers this\) and the procedure burns donor supply for an inferior result\. The hierarchy below is the long\-arc treatment progression; the journey path is how one user moves through their slice of it without skipping steps or chasing the wrong intervention for their density state\.
+
 __Late-Stage Decisions at 50+__
 
 The treatment stack and the hierarchy above are written for the man making first-treatment decisions, typically in his late 20s through early 40s. The decision territory at 50+ is meaningfully different and deserves its own treatment. Many of the men in this cohort have either been on finasteride and minoxidil for 15-25 years, or never started, or started and stopped. The question that gets asked at 25 — "what should I do about my hairline?" — becomes a different question at 53: "given where I am now, is more intervention the right move, or is acceptance?"

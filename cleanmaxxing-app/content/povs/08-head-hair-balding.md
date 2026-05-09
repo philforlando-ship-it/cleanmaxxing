@@ -45,6 +45,57 @@ __Hair Should Match Your Overall Vibe__
 
 Clean style and neat structured hair go together\. Athletic and active reads better with slightly natural texture\. Edgier styles call for more contrast and sharper cuts\. Mismatch between hair and overall presentation creates an unsettling quality that people feel even when they cannot name it\.
 
+__The 2026 Cut Catalog — What's Actually on the Menu__
+
+Cut decisions used to default to whatever a barber suggested or whatever was trending in a feed\. The current system runs from a defined catalog because the menu itself is the strategy — not every cut serves every face, density state, or age cohort\. The catalog is calibrated for straight\-to\-wavy hair \(Andre Walker types 1A through 2C\); type 4 coily textures follow a different geometry and need a separate catalog, not a filter on this one\. Names below are canonical references — a barber may call the same shape something else\.
+
+__Short anchor cuts \(work across most density states\)__
+
+- __Crew cut__ — short on top, tapered sides\. Reads professional regardless of age\. Low maintenance\.
+- __Buzz cut__ — uniformly short clipper cut, no fade\. The simplest commitment\. Reads intentional when paired with the full bald system\.
+- __Caesar__ — short with a forward fringe\. The fringe anchors visual weight forward, which masks early recession and reads well on diffuse thinning\. The single best cut for receding hairlines that are not ready for the bald track\.
+- __High taper crop__ — short fade with a textured top\. Density\-friendly across the spectrum because the top stays short enough that thinning has nothing to hide behind\.
+- __Short fade__ — very\-short top with a tight fade\. Sits between buzz and crew\. Safe pick for early\-to\-mid thinning\.
+- __Overgrown buzz__ — modern buzz with more length on top\. Less military\-coded than a true buzz\. Cross\-age\.
+
+__Mid\-length textured cuts \(need full or near\-full density\)__
+
+- __Textured crop__ — short\-to\-medium with deliberate texture and a soft fringe\. The 2020s default for men with full density on a round\-to\-square face\.
+- __Textured fringe__ — Peaky Blinders\-style fringe across the brow with a low fade\. Distinct from a center\-parted curtains shape\.
+- __Textured quiff__ — volume lifted off the forehead with texture rather than a hard part\. Drops off the menu when the hairline matures, because the lift draws the eye to the temple line\.
+- __Mid\-length textured__ — longer textured top with a softer fade\. Needs density to carry\. Stops fitting past the mature\-hairline cohort\.
+- __Curtains__ — center\-parted mid\-length\. Carries volume forward across both temples\. Drops off when recession begins\.
+
+__Slicked and classic structured cuts__
+
+- __Slick back__ — combed back from the forehead with even tapered sides\. Works on full density and on mature hairlines if the recession is even\.
+- __Slick back undercut__ — same shape with hard\-contrast skin sides instead of a tapered fade\. Reads sharper and more deliberate\.
+- __Side part combover__ — soft side\-part with hair combed across the top\. Reads older than its years; designed to mask early recession at 35\+\. Wrong cut at 22\.
+- __Pompadour__ — volume up and back from the forehead\. Needs density and styling commitment\. Not a wash\-and\-go cut\.
+- __Ivy League__ — like a crew but slightly longer on top with a side part\. Conservative, ages well\.
+
+__Long and flow cuts \(need full density; most are youth\-coded\)__
+
+- __Bro flow__ — longer textured volume, no part, swept back loosely\. The salt\-and\-pepper variant works for the mature cohort; otherwise reads young\.
+- __Classic sweep back__ — executive flow silhouette designed to carry a mature hairline\. The grown\-up version of bro flow\.
+- __Broccoli__ — tight fade plus curly textured volume on top\. Youth\-only — past 30 it reads costume\.
+- __Wolf cut__ — shaggy and layered with deliberate flow\. Distinct from slick\-back\-undercut\. Youth\-only\.
+- __Modern mullet__ — low\-taper textured mullet, not the 80s version\. Youth\-only\.
+
+__Bald\-track cuts__
+
+- __Bald track__ — the transitional buzz for men still cycling clipper passes as they decide on a full shave\.
+- __Bald fade__ — deliberate shaved presentation with a structured fade at the back and sides\. Reads intentional even before the top is fully shaved\.
+- __Clean shave__ — Bic'd smooth\. The full commitment\. Pairs with the bald system below\.
+
+__Age cohort — what drops off the menu when__
+
+Cuts that depend on youth coding stop working at predictable ages\. Broccoli, wolf cut, and modern mullet drop off at 30\. Mid\-length textured, curtains, and the most youth\-coded textured looks drop off at 41\+\. Side part combover does the inverse — it drops off under 30 because it ages a young face unnecessarily\. These are hard exclusions, not soft preferences: an age\-mismatched cut reads as costume regardless of how technically correct the execution is\.
+
+__The honest test__
+
+The right cut at 26 is rarely the right cut at 46\. The right cut at full density is rarely the right cut at mature hairline\. Most men keep cutting their hair the same way they did at 22 long after their face, hairline, and density have moved\. Updating the cut to match the current state of the head — not the head you remember having — is the single highest\-leverage hair decision available without medical intervention\.
+
 __The Biggest Mistakes__
 
 - Copy\-paste haircuts — what works on someone else may not fit your face shape, hairline, or density
@@ -167,6 +218,24 @@ __Facial hair as a complement__
 
 Stubble or a beard alongside a shaved or buzzed head creates a strong, masculine frame\. It redistributes visual weight and gives the face definition that hair no longer provides\.
 
+__Cut Strategy by Density State__
+
+The cuts that work change as density changes\. The catalog above maps onto the density spectrum below, density\-first\.
+
+__Full density__ — the full menu is on the table; age cohort is the primary filter\. Pick the cut that flatters face shape rather than chasing trend cuts that don't suit the head\.
+
+__Mature hairline with full density behind it__ — cuts that expose the temples \(textured quiff, mid\-length textured, curtains\) drop off\. Slick back, slick back undercut, side part combover, classic sweep back, and the short anchor cuts all work\. The hairline is mature, not failing — most cuts still fit\.
+
+__Receding hairline__ — caesar and high taper crop become the primary picks\. Textured fringe and side part combover work because both anchor visual weight forward, masking the recession\. Slick back, curtains, and textured quiff drop off — all expose temples\. The bald track is a legitimate option but not yet mandatory\.
+
+__Crown thinning__ — caesar, high taper crop, crew, buzz, overgrown buzz, short fade, and textured crop are the cuts that don't depend on the crown carrying the look\. Anything that needs the top to project \(pompadour, slick back, mid\-length textured\) is wrong\. The crown is the problem; cuts that don't show it are the answer\.
+
+__Diffuse thinning__ — caesar, high taper crop, crew, buzz, overgrown buzz, short fade\. The cuts that still work are the ones that don't rely on density for their visual story\. Length amplifies the contrast that makes thinning visible; shortness reduces it\.
+
+__Advanced thinning__ — the decision point\. The shortest cuts \(high taper crop, crew, buzz, short fade\) keep the hair option open for men who aren't ready to commit to bald\. Bald track, bald fade, and clean shave open up\. Most of the framing decisions in this section are now about transition direction \(staying with hair vs\. moving toward bald\), not which cut technically works best\.
+
+__Shaved or buzzed__ — bald track, bald fade, clean shave\. Three different presentations of the same basic decision\. Bald fade reads structured and intentional even before the top is fully shaved\. Clean shave is the full commitment\. Bald track is the maintenance pattern for men cycling buzzes while they decide\.
+
 __Color Strategy for Balding Men__
 
 Without hair, the head and face become a more dominant focal point, and clothing colors near the face do more work in controlling contrast and harmony\.
@@ -254,6 +323,22 @@ Hats are especially useful between shaves when the horseshoe shadow looks uneven
 __When each layer is ready for the next__
 
 Stay with scalp care and skincare until both run automatically\. Only then is beard design worth the detailed attention it needs, because a designed beard on a dry or inflamed scalp still loses\. Physique work runs in parallel with the early skincare layer because the training timeline is long\. Face leanness is a multi\-month project; stack it with everything else rather than waiting for it\. Style and hats are last\. The reason for this order is that presentation polish on a weak foundation reads worse than a weak presentation on a strong foundation — the mismatch between the two is what produces the "trying too hard" impression bald men are specifically vulnerable to\.
+
+__The Hair System Runs in Sequence — Cut, Density Action, Product, Habit, Monitoring__
+
+Hair work is not a one\-time decision; it's a sequence\. Each stage answers a question the next stage assumes is settled, and skipping stages is the most common reason hair work doesn't deliver what it could\.
+
+__Cut comes first\.__ Until the cut is right for face shape, density, and age cohort, no product, routine, or treatment makes the hair look better — it just polishes the wrong shape\. Every variable downstream depends on a cut decision that has already been made well\.
+
+__Density action comes second\.__ Once the cut is settled, the question is whether the density trajectory needs intervention \(treat\), continued observation \(monitor\), or acceptance and transition planning \(transition toward bald\)\. The treat path triggers the medical conversation\. The monitor path triggers a baseline photo\. The transition path triggers the bald\-system layer above\.
+
+__Product match comes third\.__ Wash routine and styling product class follow from the cut and the hair type \(fine\-medium\-thick × straight\-wavy\-curly\)\. Most men use the wrong product for their hair type because they default to whatever they used a decade ago\. Fixing the product is fast — usually one purchase decision — but it has to come after the cut is right, not before\.
+
+__Daily habit comes fourth\.__ Two to three minutes per day of consistent styling\. The point is not optimization; it's repetition long enough that the styled outcome becomes the default rather than the special\-occasion version\. Most men under\-invest here because they conflate effort with vanity\.
+
+__Monitoring comes fifth\.__ Reference photos every 30, 90, or 180 days depending on whether you're treating, watching, or transitioning\. Hair changes slowly enough that the eye can't track it without timestamped reference; the camera is the only honest way to know whether the trajectory is improving, stable, or worsening\.
+
+The order matters\. Buying expensive product before the cut is right just polishes the wrong shape\. Starting finasteride before establishing a baseline photo means there is no clean record of what changed\. Each stage answers a question the next stage assumes is settled — work the sequence in order\.
 
 __Tier Placement__
 

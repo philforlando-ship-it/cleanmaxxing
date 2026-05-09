@@ -1,29 +1,46 @@
 'use client';
 
-// Style assessment form. Mirrors hair v0 form structure: four required
-// questions + optional free text. Same submit pattern (POST →
-// router.push('/plan/style') so ?edit=1 drops out).
+// Style assessment form, v2 reframe (2026-05-09). Replaces the
+// single coarse frame_estimate with five granular dimensions
+// (shoulder width, build, arm length, leg length, skin undertone)
+// per POV 12's Guzy + RMRS body-first hierarchy. The legacy
+// frame_estimate is derived server-side from build + shoulder_width
+// so downstream call sites unchanged.
+//
+// Aesthetic-feasibility hints surfaced inline under each target
+// archetype option so users see the realistic feasibility floor
+// before committing (per POV 12's per-archetype % framing).
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  ARCHETYPE_FEASIBILITY_HINT,
   ARCHETYPE_HINT,
   ARCHETYPE_LABEL,
+  ARM_LENGTH_LABEL,
+  ARM_LENGTHS,
+  BUILD_LABEL,
+  BUILDS,
   CLOSET_STATE_LABEL,
-  FRAME_ESTIMATE_LABEL,
+  LEG_LENGTH_LABEL,
+  LEG_LENGTHS,
+  SHOULDER_WIDTH_LABEL,
+  SHOULDER_WIDTHS,
+  SKIN_UNDERTONE_LABEL,
+  SKIN_UNDERTONES,
+  type ArmLength,
+  type Build,
   type ClosetState,
   type CurrentArchetype,
-  type FrameEstimate,
+  type LegLength,
+  type ShoulderWidth,
+  type SkinUndertone,
   type StyleArchetype,
 } from '@/lib/style/types';
-
-const FRAMES: FrameEstimate[] = [
-  'slim',
-  'athletic',
-  'regular',
-  'broader',
-  'heavier',
-];
+import {
+  FEASIBILITY_TIER_LABEL,
+  type FeasibilityMap,
+} from '@/lib/style/aesthetic-feasibility';
 
 const TARGET_ARCHETYPES: StyleArchetype[] = [
   'clean_minimalist',
@@ -47,7 +64,13 @@ const CLOSET_STATES: ClosetState[] = [
 ];
 
 export type StyleAssessmentInitialValues = {
-  frame_estimate: FrameEstimate;
+  // V2 granular fields. Nullable on pre-migration assessments — the
+  // form requires them on next submit.
+  shoulder_width: ShoulderWidth | null;
+  arm_length: ArmLength | null;
+  leg_length: LegLength | null;
+  build: Build | null;
+  skin_undertone: SkinUndertone | null;
   current_archetype: CurrentArchetype;
   target_archetype: StyleArchetype;
   closet_state: ClosetState;
@@ -56,15 +79,31 @@ export type StyleAssessmentInitialValues = {
 
 export function StyleAssessmentForm({
   initialValues,
+  feasibility,
 }: {
   initialValues?: StyleAssessmentInitialValues;
+  // Style v2 Phase 2b — per-user feasibility map computed server-side
+  // from the user's body data + age. When the picked target archetype
+  // is 'fights_your_frame', the form surfaces an inline warning with
+  // the per-user rationale (not the static hint).
+  feasibility?: FeasibilityMap;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const [frame, setFrame] = useState<FrameEstimate | null>(
-    initialValues?.frame_estimate ?? null,
+  const [shoulderWidth, setShoulderWidth] = useState<ShoulderWidth | null>(
+    initialValues?.shoulder_width ?? null,
+  );
+  const [build, setBuild] = useState<Build | null>(initialValues?.build ?? null);
+  const [armLength, setArmLength] = useState<ArmLength | null>(
+    initialValues?.arm_length ?? null,
+  );
+  const [legLength, setLegLength] = useState<LegLength | null>(
+    initialValues?.leg_length ?? null,
+  );
+  const [skinUndertone, setSkinUndertone] = useState<SkinUndertone | null>(
+    initialValues?.skin_undertone ?? null,
   );
   const [currentArchetype, setCurrentArchetype] =
     useState<CurrentArchetype | null>(
@@ -83,13 +122,21 @@ export function StyleAssessmentForm({
 
   function submit() {
     setError(null);
-    if (!frame) return setError('Pick a frame.');
+    if (!shoulderWidth) return setError('Pick a shoulder width.');
+    if (!build) return setError('Pick a build.');
+    if (!armLength) return setError('Pick an arm length.');
+    if (!legLength) return setError('Pick a leg length.');
+    if (!skinUndertone) return setError('Pick a skin undertone.');
     if (!currentArchetype) return setError('Pick a current archetype.');
     if (!targetArchetype) return setError('Pick a target archetype.');
     if (!closetState) return setError('Pick your closet state.');
 
     const payload = {
-      frame_estimate: frame,
+      shoulder_width: shoulderWidth,
+      build,
+      arm_length: armLength,
+      leg_length: legLength,
+      skin_undertone: skinUndertone,
       current_archetype: currentArchetype,
       target_archetype: targetArchetype,
       closet_state: closetState,
@@ -121,18 +168,18 @@ export function StyleAssessmentForm({
     <div className="space-y-10">
       <Question
         number={1}
-        title="What's your frame?"
-        helper="Honest read. Frame doesn't change a style plan in obvious ways but it does shift cuts and proportion calls."
+        title="Shoulder width — relative to your waist"
+        helper="The primary silhouette driver. Honest read: stand in a mirror in a fitted tee and read the shape, not what you wish you saw."
       >
         <div className="space-y-2">
-          {FRAMES.map((f) => (
+          {SHOULDER_WIDTHS.map((s) => (
             <RadioRow
-              key={f}
-              checked={frame === f}
-              onChange={() => setFrame(f)}
+              key={s}
+              checked={shoulderWidth === s}
+              onChange={() => setShoulderWidth(s)}
               disabled={pending}
-              label={FRAME_ESTIMATE_LABEL[f]}
-              name="frame_estimate"
+              label={SHOULDER_WIDTH_LABEL[s]}
+              name="shoulder_width"
             />
           ))}
         </div>
@@ -140,6 +187,82 @@ export function StyleAssessmentForm({
 
       <Question
         number={2}
+        title="Build"
+        helper="Distinct from shoulder width — this is body composition + frame size taken together. Stocky is broader-and-shorter; muscular-and-tall is athletic."
+      >
+        <div className="space-y-2">
+          {BUILDS.map((b) => (
+            <RadioRow
+              key={b}
+              checked={build === b}
+              onChange={() => setBuild(b)}
+              disabled={pending}
+              label={BUILD_LABEL[b]}
+              name="build"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={3}
+        title="Arm length — relative to torso"
+        helper="Drives sleeve and cuff visibility rules. Honest read: when arms hang relaxed, where do off-the-rack sleeves usually land?"
+      >
+        <div className="space-y-2">
+          {ARM_LENGTHS.map((a) => (
+            <RadioRow
+              key={a}
+              checked={armLength === a}
+              onChange={() => setArmLength(a)}
+              disabled={pending}
+              label={ARM_LENGTH_LABEL[a]}
+              name="arm_length"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={4}
+        title="Leg length — relative to torso"
+        helper="The single highest-leverage proportion lever. Long-torso/short-legs benefits massively from high-rise trousers; short-torso/long-legs runs different rules."
+      >
+        <div className="space-y-2">
+          {LEG_LENGTHS.map((l) => (
+            <RadioRow
+              key={l}
+              checked={legLength === l}
+              onChange={() => setLegLength(l)}
+              disabled={pending}
+              label={LEG_LENGTH_LABEL[l]}
+              name="leg_length"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={5}
+        title="Skin undertone — the jewelry test"
+        helper="Look at silver/platinum vs. gold jewelry held against your wrist or jawline. One usually flatters more than the other. If both look fine, you’re neutral."
+      >
+        <div className="space-y-2">
+          {SKIN_UNDERTONES.map((u) => (
+            <RadioRow
+              key={u}
+              checked={skinUndertone === u}
+              onChange={() => setSkinUndertone(u)}
+              disabled={pending}
+              label={SKIN_UNDERTONE_LABEL[u]}
+              name="skin_undertone"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={6}
         title="What are you dressing as today?"
         helper="The honest current read — what your wardrobe actually looks like, not what you'd like it to be. 'No clear archetype yet' is a fine answer."
       >
@@ -159,27 +282,37 @@ export function StyleAssessmentForm({
       </Question>
 
       <Question
-        number={3}
+        number={7}
         title="What are you moving toward?"
-        helper="Pick the one closest to who you want to look like in a year. You can change this later — same form, different answer."
+        helper="Pick the one closest to who you want to look like in a year. Each option is tagged with the honest per-user read — strong fit, workable, or fights your frame — based on the body data you just entered. Not a hard gate, but worth weighing before you commit."
       >
         <div className="space-y-2">
-          {TARGET_ARCHETYPES.map((a) => (
-            <RadioRow
-              key={a}
-              checked={targetArchetype === a}
-              onChange={() => setTargetArchetype(a)}
-              disabled={pending}
-              label={ARCHETYPE_LABEL[a]}
-              hint={ARCHETYPE_HINT[a]}
-              name="target_archetype"
-            />
-          ))}
+          {TARGET_ARCHETYPES.map((a) => {
+            const fr = feasibility?.[a];
+            return (
+              <ArchetypeRow
+                key={a}
+                checked={targetArchetype === a}
+                onChange={() => setTargetArchetype(a)}
+                disabled={pending}
+                label={ARCHETYPE_LABEL[a]}
+                feasibilityTier={fr?.tier ?? null}
+                feasibilityRationale={fr?.rationale ?? ARCHETYPE_FEASIBILITY_HINT[a]}
+              />
+            );
+          })}
         </div>
+        {targetArchetype &&
+          feasibility?.[targetArchetype]?.tier === 'fights_your_frame' && (
+            <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2.5 text-[13px] leading-relaxed text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+              <span className="font-semibold">Heads up — this fights your frame.</span>{' '}
+              {feasibility[targetArchetype].rationale} You can still pick it; the plan will lean into the moves that make it workable on your body, but expect more friction than a stronger-fit choice.
+            </div>
+          )}
       </Question>
 
       <Question
-        number={4}
+        number={8}
         title="What's the state of your closet?"
         helper="Drives whether the plan focuses on auditing what you have or building from scratch."
       >
@@ -198,7 +331,7 @@ export function StyleAssessmentForm({
       </Question>
 
       <Question
-        number={5}
+        number={9}
         title="Anything you want Mister P to know? (optional)"
         helper="One line. Specific situation, a stuck point, a budget reality."
       >
@@ -267,6 +400,75 @@ function Question({
   );
 }
 
+// Archetype option row — RadioRow + per-user feasibility badge and
+// rationale. Used only on Q7. The tier badge is colored: strong_fit
+// reads green, workable reads neutral, fights_your_frame reads amber
+// to flag the friction without blocking the choice.
+function ArchetypeRow({
+  checked,
+  onChange,
+  disabled,
+  label,
+  feasibilityTier,
+  feasibilityRationale,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  disabled: boolean;
+  label: string;
+  feasibilityTier:
+    | 'strong_fit'
+    | 'workable'
+    | 'fights_your_frame'
+    | null;
+  feasibilityRationale: string;
+}) {
+  const tierBadgeClass =
+    feasibilityTier === 'strong_fit'
+      ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200'
+      : feasibilityTier === 'fights_your_frame'
+        ? 'bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200'
+        : 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300';
+  return (
+    <label
+      className={
+        checked
+          ? 'flex cursor-pointer items-start gap-3 rounded-md border border-zinc-900 bg-zinc-50 px-3 py-2 dark:border-zinc-100 dark:bg-zinc-800'
+          : 'flex cursor-pointer items-start gap-3 rounded-md border border-zinc-200 px-3 py-2 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900'
+      }
+    >
+      <input
+        type="radio"
+        name="target_archetype"
+        checked={checked}
+        onChange={onChange}
+        disabled={disabled}
+        className="mt-0.5 h-4 w-4 border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700"
+      />
+      <span className="flex-1">
+        <span className="flex flex-wrap items-baseline gap-x-2">
+          <span className="text-sm text-zinc-900 dark:text-zinc-100">
+            {label}
+          </span>
+          {feasibilityTier && (
+            <span
+              className={
+                'rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ' +
+                tierBadgeClass
+              }
+            >
+              {FEASIBILITY_TIER_LABEL[feasibilityTier]}
+            </span>
+          )}
+        </span>
+        <span className="mt-1 block text-[12px] leading-snug text-zinc-500 dark:text-zinc-400">
+          {feasibilityRationale}
+        </span>
+      </span>
+    </label>
+  );
+}
+
 function RadioRow({
   checked,
   onChange,
@@ -303,7 +505,7 @@ function RadioRow({
           {label}
         </span>
         {hint && (
-          <span className="mt-0.5 block text-[12px] text-zinc-500 dark:text-zinc-400">
+          <span className="mt-0.5 block text-[12px] leading-snug text-zinc-500 dark:text-zinc-400">
             {hint}
           </span>
         )}

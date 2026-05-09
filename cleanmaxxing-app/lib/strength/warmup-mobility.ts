@@ -488,6 +488,33 @@ export function allStaticMobility(): WarmupMobilityExercise[] {
   );
 }
 
+// Cardio-specific static mobility — filters out lift-flavored entries
+// (pec / lat / heavy tspine work) that don't address the chronic
+// tightness patterns cardio users actually accumulate. Surfaces:
+// calves (gastroc + soleus, runners), IT band (cyclists + runners),
+// hamstrings (cyclists + rowers), hip flexor (everyone with seated
+// time), glutes / piriformis (runners + cyclists), spine (lumbar
+// release post-cycling). Used by the cardio mobility panel.
+const CARDIO_RELEVANT_AREAS: ReadonlyArray<TargetArea> = [
+  'calves',
+  'it_band',
+  'hamstrings',
+  'hip_flexor',
+  'glutes',
+  'piriformis',
+  'ankle',
+  'spine',
+];
+
+export function cardioStaticMobility(): WarmupMobilityExercise[] {
+  const areas = new Set<TargetArea>(CARDIO_RELEVANT_AREAS);
+  return WARMUP_MOBILITY_EXERCISES.filter(
+    (w) =>
+      w.flow_type === 'static_mobility' &&
+      w.targets_areas.some((a) => areas.has(a)),
+  );
+}
+
 export const FLOW_TYPE_LABEL: Record<WarmupFlowType, string> = {
   dynamic_warmup: 'Dynamic warm-up (pre-lift)',
   static_mobility: 'Static mobility (post-lift)',

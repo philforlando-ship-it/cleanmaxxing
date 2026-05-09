@@ -689,10 +689,21 @@ function bucket5_prescriberCheckIn(
 
 function bucket6_planStaleRefresh(state: PickerState): PrimaryAction | null {
   if (state.styleStalenessReasons.length > 0 && state.style?.report_text) {
+    // Phase 4 — when the bf-drift silhouette reason fires, surface
+    // body-comp-specific copy instead of the generic "inputs changed"
+    // line. The bf-drift signal is the load-bearing one for restyling
+    // (silhouette rules + archetype-feasibility shift on body comp).
+    const bfDrift = state.styleStalenessReasons.includes(
+      'bf_drift_silhouette',
+    );
     return primaryActionFor('style', {
       kind: 'plan_stale_refresh',
-      title: 'Style plan is out of date.',
-      body: 'Some inputs changed since this plan was written. Re-submit and Mister P rewrites it.',
+      title: bfDrift
+        ? 'Style plan was tuned for a different body comp.'
+        : 'Style plan is out of date.',
+      body: bfDrift
+        ? 'Your body fat has shifted enough that the silhouette and archetype-feasibility reads land differently now. Re-submit and Mister P rewrites it against your current body.'
+        : 'Some inputs changed since this plan was written. Re-submit and Mister P rewrites it.',
       cta_label: 'Refresh plan',
       cta_href: '/plan/style?edit=1',
     });

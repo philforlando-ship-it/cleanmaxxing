@@ -169,6 +169,12 @@ export type NutritionReportInputModifiers = {
   cardio_zone_2_layer_active: boolean;
   cardio_hiit_layer_active: boolean;
   strength_days_per_week: string | null;
+  // Bidirectional fatigue signal (slice 6, 2026-05-09). When level =
+  // 'struggling' AND source is one of cardio/strength, nutrition
+  // surfaces an "are you eating enough" check. Other source values
+  // inform but don't change the prescription.
+  fatigue_level: string | null;
+  fatigue_source: string | null;
   tdee_estimate: number | null;
   calorie_target: number | null;
   protein_target_g: number | null;

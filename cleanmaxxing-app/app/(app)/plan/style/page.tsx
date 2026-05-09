@@ -18,6 +18,7 @@ import {
   getStyleAssessment,
   isStyleReportStale,
 } from '@/lib/style/service';
+import { computeArchetypeFeasibility } from '@/lib/style/aesthetic-feasibility';
 import { getUserProfile } from '@/lib/profile/service';
 import { chipsForArchetype } from '@/lib/style/closet-audit-content';
 import { foundationPiecesFor } from '@/lib/style/foundation-pieces-content';
@@ -113,30 +114,67 @@ export default async function StylePlanPage({ searchParams }: Props) {
         </p>
       )}
 
-      {showForm && (
-        <section className={assessment && !hasReport ? 'mt-4' : 'mt-8'}>
-          <StyleAssessmentForm
-            initialValues={
-              assessment ? assessmentToInitialValues(assessment) : undefined
-            }
-          />
-        </section>
-      )}
+      {showForm && (() => {
+        // Style v2 Phase 2b — compute per-user feasibility from
+        // existing assessment dims when available, plus user_profile
+        // height + age. Form Q7 surfaces the per-archetype tier so
+        // the user sees which aesthetics fight their frame before
+        // committing.
+        const feasibility = computeArchetypeFeasibility({
+          shoulder_width: assessment?.shoulder_width ?? null,
+          build: assessment?.build ?? null,
+          height_inches: profile.height_inches,
+          age,
+        });
+        return (
+          <section className={assessment && !hasReport ? 'mt-4' : 'mt-8'}>
+            <StyleAssessmentForm
+              initialValues={
+                assessment ? assessmentToInitialValues(assessment) : undefined
+              }
+              feasibility={feasibility}
+            />
+          </section>
+        );
+      })()}
 
       {!showForm && assessment && hasReport && stalenessReasons.length > 0 && (
         <aside className="mt-8 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
-          <p className="font-medium">Your plan is out of date.</p>
-          <p className="mt-1 leading-relaxed">
-            This plan was written before some of your inputs changed.
-            Re-submit your answers and Mister P will rewrite it.{' '}
-            <Link
-              href="/plan/style?edit=1"
-              className="underline decoration-dotted underline-offset-2"
-            >
-              Edit answers
-            </Link>
-            .
-          </p>
+          {stalenessReasons.includes('bf_drift_silhouette') ? (
+            <>
+              <p className="font-medium">
+                Your style was tuned for a different body comp.
+              </p>
+              <p className="mt-1 leading-relaxed">
+                Your body fat has shifted enough that the silhouette
+                rules and archetype-feasibility read would land
+                differently now. Re-submit your answers and Mister P
+                will rewrite the plan against your current body.{' '}
+                <Link
+                  href="/plan/style?edit=1"
+                  className="underline decoration-dotted underline-offset-2"
+                >
+                  Edit answers
+                </Link>
+                .
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="font-medium">Your plan is out of date.</p>
+              <p className="mt-1 leading-relaxed">
+                This plan was written before some of your inputs changed.
+                Re-submit your answers and Mister P will rewrite it.{' '}
+                <Link
+                  href="/plan/style?edit=1"
+                  className="underline decoration-dotted underline-offset-2"
+                >
+                  Edit answers
+                </Link>
+                .
+              </p>
+            </>
+          )}
         </aside>
       )}
 

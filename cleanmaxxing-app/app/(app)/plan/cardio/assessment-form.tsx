@@ -15,6 +15,8 @@ import {
   CARDIO_OCCUPATION_ACTIVITY_LABEL,
   CARDIO_OUTDOOR_ACCESS_LABEL,
   CARDIO_OUTDOOR_ACCESSES,
+  CARDIO_PROGRAMMING_PRIORITIES,
+  CARDIO_PROGRAMMING_PRIORITY_LABEL,
   CARDIO_TIME_PER_SESSION_LABEL,
   CARDIO_TIME_PER_SESSIONS,
   CURRENT_MOVEMENT_LABEL,
@@ -28,6 +30,7 @@ import {
   type CardioOccupationActivity,
   type CardioOutdoorAccess,
   type CardioPrimaryRole,
+  type CardioProgrammingPriority,
   type CardioTimePerSession,
 } from '@/lib/cardio/types';
 
@@ -51,7 +54,8 @@ const MODALITY_PREFERENCES: CardioModalityPreference[] = [
   'running_jogging',
   'cycling',
   'rowing',
-  'walking_hiking',
+  'slow_walking',
+  'brisk_walking_hiking',
   'classes_group',
   'swimming',
   'hate_all_cardio',
@@ -65,16 +69,19 @@ const DAYS_PER_WEEKS: CardioDaysPerWeek[] = [
 ];
 
 export type CardioAssessmentInitialValues = {
-  primary_role: CardioPrimaryRole;
+  // Migration 0090 — primary_role / modality_preference / equipment_access
+  // are now arrays.
+  primary_role: CardioPrimaryRole[];
   current_movement: CardioCurrentMovement;
-  modality_preference: CardioModalityPreference;
+  modality_preference: CardioModalityPreference[];
   days_per_week: CardioDaysPerWeek;
   cardio_goal_text: string | null;
   injury_constraints: CardioInjuryConstraint[];
-  equipment_access: CardioEquipmentAccess | null;
+  equipment_access: CardioEquipmentAccess[];
   outdoor_access: CardioOutdoorAccess | null;
   time_per_session: CardioTimePerSession | null;
   occupation_activity: CardioOccupationActivity | null;
+  programming_priority: CardioProgrammingPriority | null;
 };
 
 export function CardioAssessmentForm({
@@ -86,17 +93,16 @@ export function CardioAssessmentForm({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const [primaryRole, setPrimaryRole] = useState<CardioPrimaryRole | null>(
-    initialValues?.primary_role ?? null,
+  const [primaryRoles, setPrimaryRoles] = useState<CardioPrimaryRole[]>(
+    initialValues?.primary_role ?? [],
   );
   const [currentMovement, setCurrentMovement] =
     useState<CardioCurrentMovement | null>(
       initialValues?.current_movement ?? null,
     );
-  const [modalityPreference, setModalityPreference] =
-    useState<CardioModalityPreference | null>(
-      initialValues?.modality_preference ?? null,
-    );
+  const [modalityPreferences, setModalityPreferences] = useState<
+    CardioModalityPreference[]
+  >(initialValues?.modality_preference ?? []);
   const [daysPerWeek, setDaysPerWeek] = useState<CardioDaysPerWeek | null>(
     initialValues?.days_per_week ?? null,
   );
@@ -106,10 +112,9 @@ export function CardioAssessmentForm({
   const [injuryConstraints, setInjuryConstraints] = useState<
     CardioInjuryConstraint[]
   >(initialValues?.injury_constraints ?? []);
-  const [equipmentAccess, setEquipmentAccess] =
-    useState<CardioEquipmentAccess | null>(
-      initialValues?.equipment_access ?? null,
-    );
+  const [equipmentAccesses, setEquipmentAccesses] = useState<
+    CardioEquipmentAccess[]
+  >(initialValues?.equipment_access ?? []);
   const [outdoorAccess, setOutdoorAccess] = useState<CardioOutdoorAccess | null>(
     initialValues?.outdoor_access ?? null,
   );
@@ -121,10 +126,29 @@ export function CardioAssessmentForm({
     useState<CardioOccupationActivity | null>(
       initialValues?.occupation_activity ?? null,
     );
+  const [programmingPriority, setProgrammingPriority] =
+    useState<CardioProgrammingPriority | null>(
+      initialValues?.programming_priority ?? null,
+    );
 
   function toggleInjury(i: CardioInjuryConstraint) {
     setInjuryConstraints((prev) =>
       prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i],
+    );
+  }
+  function togglePrimaryRole(r: CardioPrimaryRole) {
+    setPrimaryRoles((prev) =>
+      prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r],
+    );
+  }
+  function toggleModalityPreference(m: CardioModalityPreference) {
+    setModalityPreferences((prev) =>
+      prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m],
+    );
+  }
+  function toggleEquipmentAccess(e: CardioEquipmentAccess) {
+    setEquipmentAccesses((prev) =>
+      prev.includes(e) ? prev.filter((x) => x !== e) : [...prev, e],
     );
   }
 
@@ -132,27 +156,35 @@ export function CardioAssessmentForm({
 
   function submit() {
     setError(null);
-    if (!primaryRole) return setError('Pick a primary role.');
+    if (primaryRoles.length === 0)
+      return setError('Pick at least one primary role.');
     if (!currentMovement) return setError('Pick your current movement level.');
-    if (!modalityPreference) return setError('Pick a modality preference.');
+    if (modalityPreferences.length === 0)
+      return setError('Pick at least one modality preference.');
     if (!daysPerWeek) return setError('Pick days per week.');
-    if (!equipmentAccess) return setError('Pick your equipment access.');
+    if (equipmentAccesses.length === 0)
+      return setError('Pick at least one equipment-access option.');
     if (!outdoorAccess) return setError('Pick your outdoor-cardio access.');
     if (!timePerSession) return setError('Pick your time per session.');
     if (!occupationActivity)
       return setError('Pick your day-job activity level.');
+    if (!programmingPriority)
+      return setError(
+        'Pick your priority when cardio and strength training conflict.',
+      );
 
     const payload = {
-      primary_role: primaryRole,
+      primary_role: primaryRoles,
       current_movement: currentMovement,
-      modality_preference: modalityPreference,
+      modality_preference: modalityPreferences,
       days_per_week: daysPerWeek,
       cardio_goal_text: goalText.trim() || null,
       injury_constraints: injuryConstraints,
-      equipment_access: equipmentAccess,
+      equipment_access: equipmentAccesses,
       outdoor_access: outdoorAccess,
       time_per_session: timePerSession,
       occupation_activity: occupationActivity,
+      programming_priority: programmingPriority,
     };
 
     startTransition(async () => {
@@ -180,18 +212,17 @@ export function CardioAssessmentForm({
     <div className="space-y-10">
       <Question
         number={1}
-        title="What's the role of cardio for you?"
-        helper="Cardio is a support tool, not the driver of fat loss. Diet does that work. Picking the role here determines what shape the prescription takes."
+        title="What's the role of cardio for you? (pick any that apply)"
+        helper="Multi-select. Cardio is a support tool, not the driver of fat loss — diet does that work. Picking your roles here shapes the prescription. If more than one applies (e.g., fat loss AND cardiovascular health), pick both."
       >
         <div className="space-y-2">
           {PRIMARY_ROLES.map((r) => (
-            <RadioRow
+            <CheckboxRow
               key={r}
-              checked={primaryRole === r}
-              onChange={() => setPrimaryRole(r)}
+              checked={primaryRoles.includes(r)}
+              onChange={() => togglePrimaryRole(r)}
               disabled={pending}
               label={PRIMARY_ROLE_LABEL[r]}
-              name="primary_role"
             />
           ))}
         </div>
@@ -218,18 +249,17 @@ export function CardioAssessmentForm({
 
       <Question
         number={3}
-        title="Which modality will you actually do?"
-        helper="The program you'll still be running in twelve months beats the optimal one you'll quit in two months. Pick what you tolerate."
+        title="Which modalities will you actually do? (pick any that apply)"
+        helper="Multi-select. The program you'll still be running in twelve months beats the optimal one you'll quit in two months. If you'll do hiking AND Peloton, pick both — the plan will alternate or stack them."
       >
         <div className="space-y-2">
           {MODALITY_PREFERENCES.map((m) => (
-            <RadioRow
+            <CheckboxRow
               key={m}
-              checked={modalityPreference === m}
-              onChange={() => setModalityPreference(m)}
+              checked={modalityPreferences.includes(m)}
+              onChange={() => toggleModalityPreference(m)}
               disabled={pending}
               label={MODALITY_PREFERENCE_LABEL[m]}
-              name="modality_preference"
             />
           ))}
         </div>
@@ -256,18 +286,18 @@ export function CardioAssessmentForm({
 
       <Question
         number={5}
-        title="What equipment do you have access to?"
-        helper="Drives modality recommendations. ‘None / minimal’ is honest — incline walking outdoors covers a lot of ground."
+        title="When cardio and strength training conflict — what's your priority?"
+        helper="Cardio and strength can both be on, but they share recovery resources. If we have to bias one over the other, which wins? Drives the trade-off recommendation when both journeys ramp up."
       >
         <div className="space-y-2">
-          {CARDIO_EQUIPMENT_ACCESSES.map((e) => (
+          {CARDIO_PROGRAMMING_PRIORITIES.map((p) => (
             <RadioRow
-              key={e}
-              checked={equipmentAccess === e}
-              onChange={() => setEquipmentAccess(e)}
+              key={p}
+              checked={programmingPriority === p}
+              onChange={() => setProgrammingPriority(p)}
               disabled={pending}
-              label={CARDIO_EQUIPMENT_ACCESS_LABEL[e]}
-              name="equipment_access"
+              label={CARDIO_PROGRAMMING_PRIORITY_LABEL[p]}
+              name="programming_priority"
             />
           ))}
         </div>
@@ -275,6 +305,24 @@ export function CardioAssessmentForm({
 
       <Question
         number={6}
+        title="What equipment do you have access to? (pick any that apply)"
+        helper="Multi-select. Drives modality recommendations. Pick everything that applies — full gym AND home treadmill is realistic. ‘None / minimal’ is honest — incline walking outdoors covers a lot of ground."
+      >
+        <div className="space-y-2">
+          {CARDIO_EQUIPMENT_ACCESSES.map((e) => (
+            <CheckboxRow
+              key={e}
+              checked={equipmentAccesses.includes(e)}
+              onChange={() => toggleEquipmentAccess(e)}
+              disabled={pending}
+              label={CARDIO_EQUIPMENT_ACCESS_LABEL[e]}
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={7}
         title="Outdoor-cardio access?"
         helper="Climate + location matter. The plan defaults to indoor when outdoor isn’t reliable; favors outdoor when it is."
       >
@@ -293,7 +341,7 @@ export function CardioAssessmentForm({
       </Question>
 
       <Question
-        number={7}
+        number={8}
         title="Time budget per session?"
         helper="The realistic answer, not the aspirational one."
       >
@@ -312,7 +360,7 @@ export function CardioAssessmentForm({
       </Question>
 
       <Question
-        number={8}
+        number={9}
         title="What does your day job look like?"
         helper="If you’re on your feet for ten hours doing physical work, the cardio prescription downweights — you’re already doing a lot of the daily-movement layer."
       >
@@ -331,7 +379,7 @@ export function CardioAssessmentForm({
       </Question>
 
       <Question
-        number={9}
+        number={10}
         title="Any chronic conditions to design around? (optional)"
         helper="Multi-select. The plan routes around these — knee pain steers off running; back pain modifies rowing form; respiratory conditions soften early HIIT prescriptions. Skip if you don’t have any."
       >
@@ -364,7 +412,7 @@ export function CardioAssessmentForm({
       </Question>
 
       <Question
-        number={10}
+        number={11}
         title="Anything you want Mister P to know? (optional)"
         helper="One line. A specific situation, a constraint, a pattern. Training for an event, hate running outdoors, recovering from a marathon, etc."
       >
@@ -398,7 +446,7 @@ export function CardioAssessmentForm({
         </button>
         {pending && (
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            Takes about ten seconds.
+            Takes about fifteen seconds.
           </span>
         )}
       </div>
@@ -473,6 +521,39 @@ function RadioRow({
             {hint}
           </span>
         )}
+      </span>
+    </label>
+  );
+}
+
+function CheckboxRow({
+  checked,
+  onChange,
+  disabled,
+  label,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  disabled: boolean;
+  label: string;
+}) {
+  return (
+    <label
+      className={
+        checked
+          ? 'flex cursor-pointer items-start gap-3 rounded-md border border-zinc-900 bg-zinc-50 px-3 py-2 dark:border-zinc-100 dark:bg-zinc-800'
+          : 'flex cursor-pointer items-start gap-3 rounded-md border border-zinc-200 px-3 py-2 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900'
+      }
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        disabled={disabled}
+        className="mt-0.5 h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700"
+      />
+      <span className="flex-1 text-sm text-zinc-900 dark:text-zinc-100">
+        {label}
       </span>
     </label>
   );

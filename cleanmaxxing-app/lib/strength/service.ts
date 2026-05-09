@@ -60,6 +60,7 @@ export async function saveStrengthAssessment(
     secondary_objective: input.secondary_objective,
     injury_constraints: input.injury_constraints,
     bodyweight_preference: input.bodyweight_preference,
+    asymmetry_concern: input.asymmetry_concern,
     updated_at: new Date().toISOString(),
   };
   const { data, error } = await supabase
@@ -164,6 +165,8 @@ function rowToAssessment(row: unknown): StrengthAssessment {
     bodyweight_preference:
       (r.bodyweight_preference as StrengthAssessment['bodyweight_preference']) ??
       null,
+    asymmetry_concern:
+      (r.asymmetry_concern as StrengthAssessment['asymmetry_concern']) ?? null,
     equipment_owned:
       (r.equipment_owned as string[] | null) ?? null,
     selected_exercise_slugs:

@@ -92,6 +92,56 @@ __The mistake to avoid__
 
 Prescribing yourself the most "optimal" cardio modality from the menu, hating it, doing it inconsistently for two months, and concluding that cardio doesn't work for you. Every modality on this menu is well above zero return. What is below zero is the program you do not actually run.
 
+__Cardio and Strength Together — The Interference Effect__
+
+The "modality is agnostic" rule above is true for adherence — the program you actually run beats the optimal one you quit. It is not true for interference cost when cardio stacks with serious strength training. The interference effect is real but overstated by lifters who want a reason to skip cardio; the honest framing is that concurrent training is fine if you sequence and dose it correctly. As Greg Nuckols frames it: "the worst case scenario when combining strength training with reasonable aerobic training is that you'll still get bigger and stronger, but perhaps at a slightly slower rate."
+
+__Modality interference ranking when stacked with lifting__
+
+The order from lowest to highest interference cost: walking → cycling → elliptical → rowing → swimming → stairmaster → running on pavement. The mechanism is eccentric muscle damage. Running involves a substantial eccentric component every footstrike — the quads decelerate the body during the stance phase. Eccentric contractions produce more mechanical muscle damage than concentric, and damaged tissue takes longer to repair, leaving it temporarily unavailable to respond to a hypertrophy stimulus. Cycling at the legs is essentially purely concentric — no deceleration phase — so it produces far less damage. The 2012 Wilson meta-analysis specifically found that resistance training concurrent with running, but not cycling, produced significant reductions in both hypertrophy and strength.
+
+The practical implication is not "stop running." It is: if running is one of several modalities the user can tolerate AND general conditioning while lifting is the goal, bias the volume toward walking, cycling, or elliptical and reserve running for when there is an actual running goal. The specificity rule layers on top: cardio that hits the same muscles as the day's lift interferes more — running interferes with leg-day specifically, rowing interferes with pull-day. Lifters with a clear strength priority can bias modality away from the muscles they are training that day.
+
+__The interference inflection points__
+
+Frequency. Zero to two cardio sessions per week produces no detectable interference for almost anyone. Three sessions remains safe for almost everyone. The data identify an inflection around three to four sessions per week where interference becomes detectable, more so at higher training age. Five plus weekly sessions is sustainable only if cardio is low-intensity, low-impact, and well separated from lifting.
+
+Duration. Above 30 minutes per session, interference cost rises noticeably. The default for fat-loss-focused lifters is 25 to 30 minutes per Zone 2 session. Walking is exempt — a daily step target of 8,000 to 10,000 sits independently of this rule and is universally beneficial.
+
+Proximity. If cardio and lifting share a day, lift first. Cardio before lifting compromises strength output for six to eight hours. The ideal is to separate cardio and lifting by 24 hours when possible. The acceptable middle ground when same-day is unavoidable is the AM/PM split — cardio in the morning, lift in the evening, or vice versa. A five to ten minute warm-up of low-intensity cardio before a lift is preparation, not interference, and should not be flagged as such.
+
+Training status modulator. Interference is mostly a concern for advanced trainees. For lifters in the first one to two years of consistent training, the interference rules are essentially undetectable — apply them as gentle guidance, not hard caps. For lifters past three to ten years of consistent training, they matter and should drive the prescription.
+
+__The priority arbiter — when goals conflict__
+
+A lifter who wants both serious strength gains and serious cardio fitness eventually hits a recovery wall. The honest framing is that one wins. Picking which one — strength, muscle gain, fat loss, general fitness, athletic conditioning — drives the trade-off. When strength or muscle gain is the priority and cardio volume has crept above three to four sessions per week, the cleanest options are three: keep strength volume, drop cardio intensity to Zone 2 only and skip HIIT for the block; keep cardio intensity, drop strength to three to four sessions per week and accept slower progressive overload; or use the AM/PM split and accept the recovery cost. The first option is usually correct given a strength priority. When fat loss or athletic conditioning is the priority, the math runs the other way and lifting volume comes down to protect the cardio block.
+
+__Per-Cohort Templates — What the Prescription Looks Like for Your Goal__
+
+The structure above is general. The cohort-specific templates below are the actual coaching defaults — they map directly to the most common goal cohorts and are the cleanest starting point when the user has named a primary goal.
+
+__Lifter on a cut.__ Three Zone 2 sessions per week, 25 to 30 minutes each, biased toward incline walking, cycling, or the elliptical. Daily steps target 10,000. One HIIT session per week maximum, only if the user enjoys it and recovery is strong. Cardio scheduled on rest days or after lifting on training days.
+
+__Lifter on a bulk.__ Cardio is not required during a bulk; it is recommended for cardiovascular health only. Daily steps 7,000 to 10,000 plus one to two short LISS sessions per week of 15 to 20 minutes. The goal is to maintain VO2max and recovery capacity without eating into the calorie surplus. Stacking high-volume cardio on a bulk is counterproductive — it increases the calories needed to actually be in surplus and competes with the recovery resources the bulk depends on.
+
+__Recomp.__ Two to three Zone 2 sessions per week, 20 to 30 minutes each. Daily steps 8,000 to 10,000. Diet does the heavy lifting; cardio supports without dominating. HIIT is optional and only worth adding for users past 35 with strong recovery and clear cardiovascular health goals layered on top of the recomp.
+
+__Cardiovascular health and longevity-focused.__ Daily step floor 7,000 to 9,000 minimum, 10,000 plus if achievable — Nippard's stated longevity-protective threshold. Two to three Zone 2 sessions per week of 30 minutes each. One harder session per week is optional — Norwegian 4x4 on a bike, or a 20-minute hill effort. The age-45-plus framing earlier applies here: at this cohort the conversation shifts from "calories burned" to "VO2max as a health-span variable," and the protocol above is the cleanest path to driving that variable.
+
+The universal floor across cohorts is the daily step count. As Nippard frames it: "you might see better results by just upping your daily step count to over 8,000 a day." When in doubt, name step count first and let formal sessions slot in afterward.
+
+__Practical Calibration — Modality Variants, Seasonality, Cross-Plan Coordination__
+
+__Slow walking versus brisk walking — they are not the same modality.__ Slow walking is recovery work. It supports daily steps and active recovery between hard sessions, but it does not deliver the mitochondrial-density adaptation of structured Zone 2. Brisk walking and hiking, paced at the talk-test threshold (full sentences with mild breathlessness), are Zone 2 and produce the adaptation. A user with both modes covered — slow walking on rest days, brisk walking or hiking for structured Zone 2 — has a high-adherence pattern that hits both the volume and intensity sides of the equation. A user with only slow walking is missing the structured stimulus and should layer brisk work on top, or pair slow walking with cycling or rowing for the structured-cardio piece.
+
+__Multi-modality is the rule, not the exception.__ Most lifters who actually run sustainable cardio use more than one modality — Peloton on weekdays plus weekend hiking, treadmill walks plus stationary biking, running plus rowing class. The prescription should alternate or stack across these rather than picking one and ignoring the rest. The recovery-cost calculus runs across the total weekly load; the modality choice within the week is partly aesthetics, partly logistics, partly which surfaces don't aggravate yesterday's lift.
+
+__Seasonality matters and the prescription should know what month it is.__ A user with seasonal outdoor access who lives in the northern hemisphere has roughly April through October as the in-season window for outdoor cardio; the off-season is November through March. The southern hemisphere flips. The default mistake is to prescribe an indoor-only program to a user with seasonal access regardless of when the report is generated — that ignores the months when outdoor running, cycling, or hiking are the most adherence-friendly options available. The right framing is to lead with outdoor modalities when the current month is in-season for the user's hemisphere and to backfill with an indoor backup that takes over when the season turns.
+
+__Cross-plan coordination — when cardio activates, the deficit deepens.__ A lifter who finishes a nutrition plan with a calorie target tuned to a specific activity baseline and then activates a cardio plan that adds 400 to 600 weekly calories of burn has not changed their nutrition target — but the actual deficit is now deeper than the nutrition plan was tuned for. This is fine as long as it is visible. The fix is to surface the dependency — "the cardio prescription will add roughly X cal/wk on top of your existing deficit; revisit nutrition or expect different fatigue and recalibrate from how you actually feel." Silent recalculation is wrong. The user should see the trade-off and decide. The same logic runs in reverse when cardio drops off — if a user pulls back from a heavy cardio block while staying on the same nutrition target, fat loss may stall and the right move is to revisit nutrition rather than reflexively adding more cardio.
+
+__Mobility for cardio is different from mobility for lifting.__ Cardio modalities self-warm. A 5-minute easy spin warms cycling; 5 minutes of easy jogging warms running; 200 meters of easy rowing warms rowing. The dynamic warm-up demand is much smaller before cardio than before lifting because the modality itself is graduated. Static stretching pre-cardio has the same force-blunting effect documented for pre-lift static stretching and should be skipped. The high-leverage mobility work for cardio is post-session — calf and ankle mobility for runners, IT band and hip flexor for cyclists, lumbar release and hamstring work for rowers. Hold each for 45 to 90 seconds. The post-cardio holds address the chronic tightness patterns cardio actually accumulates; pre-cardio static stretching addresses none of them and reduces force production into the bargain.
+
 __The Practical Protocol__
 
 For most people, the following structure covers the majority of what cardio needs to accomplish without overcomplicating the program:

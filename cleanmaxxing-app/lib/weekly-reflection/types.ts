@@ -76,6 +76,40 @@ export const DIRECTIONAL_FLAG_LABEL: Record<DirectionalFlag, string> = {
   losing_momentum: 'Honestly losing momentum',
 };
 
+// Activity-change capture (migration 0089) — cross-journey energy +
+// fatigue architecture, slice 5. Optional. When 'increased' or
+// 'decreased', the form surfaces a nudge to revisit /plan/nutrition.
+export type ActivityChange = 'no_change' | 'increased' | 'decreased';
+
+export const ACTIVITY_CHANGE_LABEL: Record<ActivityChange, string> = {
+  no_change: 'About the same',
+  increased: 'Increased meaningfully (more cardio / strength / walking)',
+  decreased: 'Decreased meaningfully (dropped a journey, injured, paused)',
+};
+
+// Fatigue signal (migration 0092) — cross-journey energy + fatigue
+// architecture, slice 6. Optional. Three-point self-report; when
+// 'struggling', the source field becomes load-bearing for which
+// plan softens its prescription. Cross-modifier read by cardio +
+// strength + nutrition report builders.
+export type FatigueLevel = 'good' | 'okay' | 'struggling';
+
+export const FATIGUE_LEVEL_LABEL: Record<FatigueLevel, string> = {
+  good: 'Good — energy is high, recovery is solid',
+  okay: 'Okay — neither great nor struggling',
+  struggling: 'Struggling — low energy, recovery is compromised',
+};
+
+export type FatigueSource = 'cardio' | 'strength' | 'sleep' | 'stress' | 'unknown';
+
+export const FATIGUE_SOURCE_LABEL: Record<FatigueSource, string> = {
+  cardio: 'Cardio ramp — recent volume or intensity increase',
+  strength: 'Strength — heavy training, accumulating soreness',
+  sleep: 'Sleep — short, fragmented, or poor quality',
+  stress: 'Stress — work, life, or emotional load',
+  unknown: 'Not sure',
+};
+
 // Free-text rotating prompt keys. The form picks one per week
 // deterministically (weekIndex % 3) and stores which one it
 // showed so the chart can group answers by question type.
@@ -119,6 +153,9 @@ export type WeeklyReflectionV2Input = {
   directional_flag: DirectionalFlag | null;
   prompt_used: FreeTextPromptKey | null;
   notes: string | null;
+  activity_change: ActivityChange | null;
+  fatigue_level: FatigueLevel | null;
+  fatigue_source: FatigueSource | null;
 };
 
 // Active journey entry for the form — one row per journey the

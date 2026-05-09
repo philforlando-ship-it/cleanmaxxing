@@ -130,9 +130,13 @@ export function PushNotificationsSection() {
         Reminders
       </h2>
       <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
-        One push at 8 PM your local time for the daily check-in, and one
-        Sunday morning for the weekly reflection. Nothing else, no streak
-        nags, no marketing.
+        Two pushes a week. The 8 PM daily check-in is the lightweight one
+        — today&rsquo;s primary action, skip without consequence. The
+        Sunday morning weekly reflection is the load-bearing one — your
+        fatigue, activity-change, and process-adherence signals all land
+        there, and those are what your strength, cardio, and nutrition
+        plans read to recalibrate the following week. Nothing else. No
+        streak nags, no marketing.
       </p>
 
       <div className="mt-4">

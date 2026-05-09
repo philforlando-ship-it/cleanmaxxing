@@ -37,7 +37,9 @@ import {
   effectiveActivityLevel,
   type WeightLossPlan,
 } from './tdee';
-import { hasStrengthAssessment } from '@/lib/strength/service';
+import { getCardioAssessment } from '@/lib/cardio/service';
+import { getStrengthAssessment } from '@/lib/strength/service';
+import { getCurrentFatigueState } from '@/lib/weekly-reflection/service';
 
 const REPORT_MODEL = 'claude-sonnet-4-6';
 const POV_SLUG = '13-body-physical-foundation';
@@ -56,14 +58,22 @@ export async function generateAndSaveNutritionReport(
     initialProfile,
   );
 
-  const [{ data: userRow }, proteinSignal, strengthState] = await Promise.all([
+  const [
+    { data: userRow },
+    proteinSignal,
+    strengthAssessment,
+    cardioAssessment,
+    fatigueState,
+  ] = await Promise.all([
     supabase.from('users').select('age').eq('id', userId).maybeSingle(),
     getRecentProteinSignal(supabase, userId),
-    hasStrengthAssessment(supabase, userId),
+    getStrengthAssessment(supabase, userId),
+    getCardioAssessment(supabase, userId),
+    getCurrentFatigueState(supabase, userId),
   ]);
 
   const age = (userRow as { age: number | null } | null)?.age ?? null;
-  const isStrengthTraining = strengthState.hasReport;
+  const isStrengthTraining = strengthAssessment?.report_text != null;
   const isOnGlp1 = profile.current_interventions.includes('glp1');
 
   // Compute the deterministic targets (TDEE / calorie target / macro
@@ -153,6 +163,15 @@ export async function generateAndSaveNutritionReport(
     dietary_pattern: assessment.dietary_pattern,
     meal_service_willingness: assessment.meal_service_willingness,
     snacking_style: assessment.snacking_style,
+    gut_sensitivity: assessment.gut_sensitivity,
+    cardio_days_per_week: cardioAssessment?.days_per_week ?? null,
+    cardio_zone_2_layer_active:
+      cardioAssessment?.zone_2_layer_started_at != null,
+    cardio_hiit_layer_active:
+      cardioAssessment?.hiit_layer_started_at != null,
+    strength_days_per_week: strengthAssessment?.days_per_week ?? null,
+    fatigue_level: fatigueState?.level ?? null,
+    fatigue_source: fatigueState?.source ?? null,
     tdee_estimate: weightLossPlan?.tdee ?? targets.tdee_estimate,
     calorie_target:
       weightLossPlan?.daily_calorie_target ?? targets.calorie_target,
@@ -271,6 +290,37 @@ function formatAssessmentForPrompt(
   );
   modifierLines.push(
     `- snacking_style: ${modifiers.snacking_style ?? 'not set'}`,
+  );
+  modifierLines.push(`- gut_sensitivity: ${modifiers.gut_sensitivity}`);
+  modifierLines.push(
+    `- cardio_days_per_week (cardio_assessments, when present — drives activity-mismatch detection): ${
+      modifiers.cardio_days_per_week ?? 'no cardio assessment yet'
+    }`,
+  );
+  modifierLines.push(
+    `- cardio_zone_2_layer_active (cardio stage milestone): ${
+      modifiers.cardio_zone_2_layer_active ? 'yes' : 'no'
+    }`,
+  );
+  modifierLines.push(
+    `- cardio_hiit_layer_active (cardio stage milestone): ${
+      modifiers.cardio_hiit_layer_active ? 'yes' : 'no'
+    }`,
+  );
+  modifierLines.push(
+    `- strength_days_per_week (strength_assessments, when present): ${
+      modifiers.strength_days_per_week ?? 'no strength assessment yet'
+    }`,
+  );
+  modifierLines.push(
+    `- fatigue_level (weekly_reflections, last 14 days): ${
+      modifiers.fatigue_level ?? 'no recent signal'
+    }`,
+  );
+  modifierLines.push(
+    `- fatigue_source (only load-bearing when fatigue_level = 'struggling' and source is cardio or strength): ${
+      modifiers.fatigue_source ?? 'not attributed'
+    }`,
   );
 
   // v2 computed targets (numbers — load-bearing for the prompt)

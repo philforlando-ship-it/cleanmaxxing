@@ -57,6 +57,7 @@ export async function saveCardioAssessment(
     outdoor_access: input.outdoor_access,
     time_per_session: input.time_per_session,
     occupation_activity: input.occupation_activity,
+    programming_priority: input.programming_priority,
     updated_at: new Date().toISOString(),
   };
   const { data, error } = await supabase
@@ -112,28 +113,72 @@ export async function getRecentCardioSessionCount(
   return count ?? 0;
 }
 
+// Wearable adherence signal: days in the last 7 with >= 20 min of
+// medium+high-intensity activity (a meaningful session by WHO-150
+// framing). Returns null when no health integration is connected —
+// the absent state is meaningful and the prompt branches on it.
+//
+// Tri-state-ish integer (0..7) by design, not raw active calories.
+// Absolute calorie numbers would tempt the prompt into TDEE math
+// we don't do; active-days is interpretable without numeric leak.
+export async function getWearableActiveDaysLast7(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<number | null> {
+  const { data: integration } = await supabase
+    .from('health_integrations')
+    .select('id')
+    .eq('user_id', userId)
+    .limit(1)
+    .maybeSingle();
+  if (!integration) return null;
+
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  const { data: rows, error } = await supabase
+    .from('daily_activity')
+    .select('medium_minutes, high_minutes')
+    .eq('user_id', userId)
+    .gte('date', since);
+  if (error || !rows) return 0;
+
+  let activeDays = 0;
+  for (const r of rows) {
+    const mins = (r.medium_minutes ?? 0) + (r.high_minutes ?? 0);
+    if (mins >= 20) activeDays++;
+  }
+  return activeDays;
+}
+
 function rowToAssessment(row: unknown): CardioAssessment {
   const r = row as Record<string, unknown>;
   return {
     user_id: r.user_id as string,
-    primary_role: r.primary_role as CardioAssessment['primary_role'],
+    primary_role:
+      (r.primary_role as CardioAssessment['primary_role'] | null) ?? [],
     current_movement:
       r.current_movement as CardioAssessment['current_movement'],
     modality_preference:
-      r.modality_preference as CardioAssessment['modality_preference'],
+      (r.modality_preference as CardioAssessment['modality_preference'] | null) ??
+      [],
     days_per_week: r.days_per_week as CardioAssessment['days_per_week'],
     cardio_goal_text: (r.cardio_goal_text as string | null) ?? null,
     injury_constraints:
       (r.injury_constraints as CardioAssessment['injury_constraints'] | null) ??
       [],
     equipment_access:
-      (r.equipment_access as CardioAssessment['equipment_access']) ?? null,
+      (r.equipment_access as CardioAssessment['equipment_access'] | null) ??
+      [],
     outdoor_access:
       (r.outdoor_access as CardioAssessment['outdoor_access']) ?? null,
     time_per_session:
       (r.time_per_session as CardioAssessment['time_per_session']) ?? null,
     occupation_activity:
       (r.occupation_activity as CardioAssessment['occupation_activity']) ??
+      null,
+    programming_priority:
+      (r.programming_priority as CardioAssessment['programming_priority']) ??
       null,
     zone_2_layer_started_at:
       (r.zone_2_layer_started_at as string | null) ?? null,

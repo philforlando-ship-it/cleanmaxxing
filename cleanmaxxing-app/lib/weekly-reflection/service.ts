@@ -16,7 +16,10 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
+  ActivityChange,
   DirectionalFlag,
+  FatigueLevel,
+  FatigueSource,
   FreeTextPromptKey,
   JourneyTopic,
   OutcomeInitiated,
@@ -52,6 +55,12 @@ export type WeeklyReflection = {
   outcome_physical_feel: OutcomePhysicalFeel | null;
   directional_flag: DirectionalFlag | null;
   prompt_used: FreeTextPromptKey | null;
+  // Migration 0089 — optional activity-change capture (slice 5).
+  activity_change: ActivityChange | null;
+  // Migration 0092 — bidirectional fatigue signal (slice 6). Source
+  // is only load-bearing when level = 'struggling'; both nullable.
+  fatigue_level: FatigueLevel | null;
+  fatigue_source: FatigueSource | null;
   created_at: string | null;
 };
 
@@ -143,6 +152,9 @@ function mapRow(row: Record<string, unknown>): WeeklyReflection {
       (row.outcome_physical_feel as OutcomePhysicalFeel | null) ?? null,
     directional_flag: (row.directional_flag as DirectionalFlag | null) ?? null,
     prompt_used: (row.prompt_used as FreeTextPromptKey | null) ?? null,
+    activity_change: (row.activity_change as ActivityChange | null) ?? null,
+    fatigue_level: (row.fatigue_level as FatigueLevel | null) ?? null,
+    fatigue_source: (row.fatigue_source as FatigueSource | null) ?? null,
     created_at: (row.created_at as string | null) ?? null,
   };
 }
@@ -167,7 +179,9 @@ export async function getWeeklyReflectionState(
        process_adherence,
        outcome_appearance_comment, outcome_appearance_comment_text,
        outcome_initiated, outcome_physical_feel,
-       directional_flag, prompt_used`,
+       directional_flag, prompt_used,
+       activity_change,
+       fatigue_level, fatigue_source`,
     )
     .eq('user_id', userId)
     .order('week_start', { ascending: false })
@@ -209,6 +223,9 @@ export async function saveWeeklyReflectionV2(
         directional_flag: input.directional_flag,
         prompt_used: input.prompt_used,
         notes: input.notes,
+        activity_change: input.activity_change,
+        fatigue_level: input.fatigue_level,
+        fatigue_source: input.fatigue_source,
       },
       { onConflict: 'user_id,week_start' },
     );
@@ -216,6 +233,56 @@ export async function saveWeeklyReflectionV2(
   if (error) throw error;
 
   return getWeeklyReflectionState(supabase, userId, weekStart);
+}
+
+/**
+ * Cross-journey fatigue reader (slice 6, 2026-05-09). Returns the
+ * most recent fatigue_level + fatigue_source from weekly_reflections
+ * within the last 14 days, or null when no signal has been logged
+ * recently. Read by cardio + strength + nutrition report builders so
+ * each plan can soften its prescription when fatigue = struggling
+ * AND the source attributes to that journey.
+ *
+ * Two weeks is the staleness window: a fatigue signal older than
+ * that should not drive prescription changes — too much can shift in
+ * a fortnight. If the user hasn't filled out a recent reflection, the
+ * plans default to no-signal behavior.
+ */
+export type CurrentFatigueState = {
+  level: FatigueLevel;
+  source: FatigueSource | null;
+  logged_at_week_start: string;
+};
+
+export async function getCurrentFatigueState(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<CurrentFatigueState | null> {
+  const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  const { data, error } = await supabase
+    .from('weekly_reflections')
+    .select('week_start, fatigue_level, fatigue_source')
+    .eq('user_id', userId)
+    .gte('week_start', fourteenDaysAgo)
+    .not('fatigue_level', 'is', null)
+    .order('week_start', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) return null;
+  if (!data) return null;
+  const row = data as {
+    week_start: string;
+    fatigue_level: FatigueLevel | null;
+    fatigue_source: FatigueSource | null;
+  };
+  if (!row.fatigue_level) return null;
+  return {
+    level: row.fatigue_level,
+    source: row.fatigue_source ?? null,
+    logged_at_week_start: row.week_start,
+  };
 }
 
 /**
