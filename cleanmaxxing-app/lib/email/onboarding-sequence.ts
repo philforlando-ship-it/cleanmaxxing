@@ -1,11 +1,11 @@
 /**
  * Onboarding email sequence (spec §9 Week 5).
  *
- * Four emails across the 14-day trial:
+ * Four emails over the user's first two weeks:
  *   day 0  — welcome (fired immediately on signup, outside the cron)
  *   day 3  — check-in / "how are the first 72 hours"
- *   day 7  — halfway / confidence trend reminder
- *   day 14 — trial ending / convert-or-lose-access
+ *   day 7  — week one / weekly reflection nudge
+ *   day 14 — two weeks in / what to look for next
  *
  * The day-3/7/14 emails are picked up by the daily cron, which scans
  * users whose signup age matches and whose sequence step hasn't been
@@ -14,6 +14,11 @@
  *
  * Day-0 welcome is fired directly from the auth signup route (hotter path,
  * wants to land within seconds of signup), not from the cron.
+ *
+ * Refreshed 2026-05-09 for the free-app reframe (no trial countdown,
+ * no $9.99 conversion event) AND to match Weekly Reflection v2 — the
+ * old "four sliders, one minute" copy was retired when the v2 form
+ * shipped (process adherence per active journey + outcome questions).
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -35,11 +40,11 @@ export function renderOnboardingEmail(
   switch (step) {
     case 'welcome':
       return composeEmail({
-        subject: 'You\u2019re in. Here\u2019s how this works.',
+        subject: 'You’re in. Here’s how this works.',
         paragraphs: [
-          'Welcome. Cleanmaxxing is a structured, honest self-improvement platform for men who want to look and feel better without the radioactive parts of the category. You just started the 14-day free trial — no credit card, nothing to cancel unless you decide it\u2019s worth it.',
-          'The loop is simple. Ten seconds a day to check in on your goals. Sixty seconds on Sunday to reflect on how the week actually went, across four dimensions instead of one global self-worth rating. Mister P is the chat assistant — direct, a little dry, willing to tell you when something isn\u2019t worth your time.',
-          'One thing most products in this category won\u2019t say out loud: we\u2019re not trying to be your whole identity. There are other ways to build self-confidence — therapy, relationships, purpose, physical attributes. We own the fourth and acknowledge the other three as real. That\u2019s baked into the framework on purpose.',
+          'Welcome. Cleanmaxxing is a structured, honest self-improvement platform for men who want to look and feel better without the radioactive parts of the category. Free to use, no credit card, nothing to cancel unless you decide it’s not for you.',
+          'The loop is simple. Ten seconds a day on the daily check-in. A couple of minutes on Sunday on the weekly reflection — process adherence per active journey, plus a few outcome questions on what actually changed. Mister P is the chat assistant — direct, a little dry, willing to tell you when something isn’t worth your time.',
+          'One thing most products in this category won’t say out loud: we’re not trying to be your whole identity. There are other ways to build self-confidence — therapy, relationships, purpose, physical attributes. We own the fourth and acknowledge the other three as real. That’s baked into the framework on purpose.',
         ],
         ctaHref: `${appUrl}/today`,
         ctaLabel: 'Open your Today screen',
@@ -49,9 +54,9 @@ export function renderOnboardingEmail(
       return composeEmail({
         subject: 'Three days in — the hard part',
         paragraphs: [
-          'You\u2019re three days into the trial. If the check-ins have felt easy so far, that\u2019s normal — the first few days always do. The hard part is day 4 through day 10, when the novelty wears off and the system has to hold up on its own.',
-          'If you\u2019ve skipped a day, the move is simple: open the app, tick whatever you actually did today, close it. Ten seconds, no streak to worry about. And if the goals you started with don\u2019t feel right, swap them in the library — a few days is enough data to know.',
-          'One thing worth trying if you haven\u2019t yet: ask Mister P something you\u2019ve been wondering about. A skincare thing, a training thing, a hair thing. He\u2019ll answer from the corpus and tell you what actually matters.',
+          'You’re three days in. If the check-ins have felt easy so far, that’s normal — the first few days always do. The hard part is day 4 through day 10, when the novelty wears off and the system has to hold up on its own.',
+          'If you’ve skipped a day, the move is simple: open the app, tick whatever you actually did today, close it. Ten seconds, no streak to worry about. And if the journey you picked doesn’t feel right, /today shows all eight — pick a different one. A few days is enough data to know.',
+          'One thing worth trying if you haven’t yet: ask Mister P something you’ve been wondering about. A skincare thing, a training thing, a hair thing. He’ll answer from the corpus and tell you what actually matters.',
         ],
         ctaHref: `${appUrl}/today`,
         ctaLabel: CTA_OPEN,
@@ -59,26 +64,26 @@ export function renderOnboardingEmail(
 
     case 'day_7':
       return composeEmail({
-        subject: 'Halfway through the trial',
+        subject: 'Week one — what the chart is for',
         paragraphs: [
-          'A week in. If you\u2019ve saved at least one weekly reflection by now, your confidence chart has a first data point — which is not very interesting on its own, but starts becoming interesting around week 3.',
-          'The most valuable thing to do this week: finish the weekly reflection if you haven\u2019t yet. Four sliders, a minute of your time. It\u2019s the one surface that tracks the trend without training you to rate yourself daily, and the chart is the piece that will either convince you this is worth paying for or convince you it isn\u2019t.',
-          'If the goals you started with don\u2019t feel right anymore, swap them. A week of trying something is enough data to know whether it\u2019s the right layer for you right now.',
+          'A week in. If you’ve saved at least one weekly reflection by now, the process-adherence chart has a first data point — not very interesting on its own, but starts becoming readable around week 3.',
+          'The most valuable thing to do this week: finish the weekly reflection if you haven’t yet. Two minutes — process adherence per active journey, a few questions on what actually changed in the world, one directional flag. You report what happened; the app doesn’t ask you to rate yourself. Find it at /reflection.',
+          'If a journey isn’t earning its keep, swap it. A week of trying something is enough data to know whether it’s the right layer for you right now.',
         ],
-        ctaHref: `${appUrl}/today`,
-        ctaLabel: CTA_OPEN,
+        ctaHref: `${appUrl}/reflection`,
+        ctaLabel: 'Open Reflection',
       });
 
     case 'day_14':
       return composeEmail({
-        subject: 'Your trial ends tomorrow',
+        subject: 'Two weeks in — what to look for next',
         paragraphs: [
-          'The 14-day free trial ends tomorrow. No card was ever charged, nothing auto-renews, and there\u2019s no dark pattern on the way out.',
-          'If the system has been useful — if the check-ins are holding, if the weekly chart shows a direction, if Mister P has told you something you didn\u2019t already know — then this is the moment. $9.99/month, or $79/year if you want to commit. Either price, same product.',
-          'If it hasn\u2019t been useful, walk away. We\u2019d rather you leave now than stay on something that isn\u2019t earning its keep. Your data stays yours. If you come back later, your goals and history will still be here.',
+          'You’ve been at this two weeks. Long enough that the chart starts having something to say, short enough that nothing visible has changed yet — that’s the normal shape of the next month.',
+          'Three things to keep an eye on through week 6: process adherence per journey trending up across reflections, the directional flag landing on "more on track" or "about the same" most weeks, and Mister P’s answers feeling more calibrated to your situation as your check-in history piles up. Outcomes — visible body composition shift, a sharper haircut feel, better sleep continuity — usually arrive between weeks 6 and 12.',
+          'If it’s not paying off by week 6, walk away. We’d rather you leave than stay on something that isn’t earning its keep. Your data stays yours. If you come back later, your journeys and history will still be here.',
         ],
-        ctaHref: `${appUrl}/settings/billing`,
-        ctaLabel: 'Keep going',
+        ctaHref: `${appUrl}/today`,
+        ctaLabel: CTA_OPEN,
       });
   }
 }
