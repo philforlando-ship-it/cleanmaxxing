@@ -12,6 +12,7 @@ export type PrimaryActionKind =
   | 'first_run_assessment'     // bucket 1 — has focus areas, no assessments yet
   | 'pattern_d_concerning'     // bucket 2 — concerning side effect unresolved
   | 'pattern_a_overdue'        // bucket 3 — daily/weekly action overdue
+  | 'weekly_reflection_due'    // bucket 3b — Sunday + reflection not saved
   | 'pattern_a_current_stage'  // bucket 4 — current stage incomplete (in flow)
   | 'pattern_d_check_in'       // bucket 5 — prescriber check-in approaching
   | 'plan_stale_refresh'       // bucket 6 — assessment stale, refresh CTA

@@ -32,6 +32,7 @@ import { hasCardioAssessment } from '@/lib/cardio/service';
 import { hasSleepAssessment } from '@/lib/sleep/service';
 import { hasSkincareAssessment } from '@/lib/skincare/service';
 import { getUserProfile } from '@/lib/profile/service';
+import { getWeeklyReflectionState } from '@/lib/weekly-reflection/service';
 import type { PrimaryAction } from './types';
 
 // =====================
@@ -99,6 +100,12 @@ type PickerState = {
   // For first-run detection — true when the user has selected focus
   // areas but has no assessments at all (any focus area).
   hasAnyAssessment: boolean;
+  // Weekly reflection prompt gating. Server-time Sunday is the soft
+  // window; the picker doesn't try to honor user TZ for this nudge.
+  // Edge users (late Sat PT, early Mon UTC+) see it a few hours
+  // off — acceptable for a soft prompt.
+  isSunday: boolean;
+  weeklyReflectionPending: boolean;
 };
 
 // =====================
@@ -132,6 +139,7 @@ export async function gatherPickerState(
     { count: hairStage4Count },
     { count: strengthCount7d },
     { count: nutritionCount3d },
+    weeklyReflection,
   ] = await Promise.all([
     getUserProfile(supabase, userId),
     supabase
@@ -181,6 +189,7 @@ export async function gatherPickerState(
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .gte('date', threeDaysAgo.slice(0, 10)),
+    getWeeklyReflectionState(supabase, userId),
   ]);
 
   // Pull the intervention type onto the concerning-events rows so the
@@ -281,6 +290,8 @@ export async function gatherPickerState(
     nutritionLogs3Days: nutrition.hasReport ? (nutritionCount3d ?? 0) : null,
     styleStalenessReasons,
     hasAnyAssessment,
+    isSunday: new Date().getDay() === 0,
+    weeklyReflectionPending: weeklyReflection.current === null,
   };
 }
 
@@ -306,6 +317,7 @@ export function pickFromState(state: PickerState): PrimaryAction {
     bucket1_firstRunAssessment,
     bucket2_concerningSideEffect,
     bucket3_overdueDailyAction,
+    bucket3b_weeklyReflectionDue,
     bucket4_currentStage,
     bucket5_prescriberCheckIn,
     bucket6_planStaleRefresh,
@@ -522,6 +534,31 @@ function bucket3_overdueDailyAction(
     };
   }
   return null;
+}
+
+function bucket3b_weeklyReflectionDue(
+  state: PickerState,
+): PrimaryAction | null {
+  // Surface the once-a-week reflection on Sunday when it hasn't been
+  // saved yet. Slotted between overdue-daily and current-stage —
+  // overdue items take priority (resolve the past first), but
+  // reflection-due-today beats Pattern A flow work because reflection
+  // is a once-a-week opportunity that closes at midnight, while stage
+  // work has no deadline.
+  //
+  // Skipped for first-run users (no assessments yet — they have
+  // nothing to reflect on) by the bucket1 short-circuit running
+  // ahead of this one.
+  if (!state.isSunday) return null;
+  if (!state.weeklyReflectionPending) return null;
+  return {
+    kind: 'weekly_reflection_due',
+    journey_topic: null,
+    title: 'Weekly reflection — Sunday snapshot.',
+    body: 'Process adherence per active journey, a few outcome questions, about two minutes. The chart starts becoming readable around week 3.',
+    cta_label: 'Reflect',
+    cta_href: '/reflection#weekly-reflection',
+  };
 }
 
 function bucket4_currentStage(state: PickerState): PrimaryAction | null {
