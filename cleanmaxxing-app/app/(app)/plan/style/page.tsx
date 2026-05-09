@@ -29,6 +29,7 @@ import {
   type StyleAssessmentInitialValues,
 } from './assessment-form';
 import { BodyAxesPanel } from './body-axes-panel';
+import { ColorPaletteCard } from './color-palette-card';
 import { StyleStage1Card } from './stage-1-card';
 import { StyleStage2Card } from './stage-2-card';
 import { StyleStage3Card } from './stage-3-card';
@@ -243,8 +244,9 @@ export default async function StylePlanPage({ searchParams }: Props) {
           <BodyAxesPanel
             legLength={assessment.leg_length}
             armLength={assessment.arm_length}
-            skinUndertone={assessment.skin_undertone}
           />
+
+          <ColorPaletteCard skinUndertone={assessment.skin_undertone} />
 
           <StyleStage1Card
             targetArchetype={assessment.target_archetype}
