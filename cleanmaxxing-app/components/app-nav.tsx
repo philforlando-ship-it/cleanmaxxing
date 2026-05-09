@@ -31,12 +31,13 @@ const LINKS: Array<{ href: string; label: string; matchPrefix: string }> = [
   { href: '/photos', label: 'Photos', matchPrefix: '/photos' },
   { href: '/profile', label: 'Profile', matchPrefix: '/profile' },
   { href: '/system', label: 'The System', matchPrefix: '/system' },
-  { href: '/other-info', label: 'Articles', matchPrefix: '/other-info' },
   { href: '/settings', label: 'Settings', matchPrefix: '/settings' },
   // /goals + /goals/library nav links retired May 8 — the journey-
   // first model replaces the goals-picker era; the routes still
   // resolve for any direct links / legacy bookmarks but no longer
-  // appear in chrome. Same pattern used for /povs.
+  // appear in chrome. Same pattern used for /povs and /other-info
+  // (Articles — moved to a footer link on /system 2026-05-09 to
+  // free up nav real estate).
 ];
 
 const ADMIN_LINKS: Array<{ href: string; label: string; matchPrefix: string }> = [

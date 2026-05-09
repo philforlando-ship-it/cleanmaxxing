@@ -265,6 +265,16 @@ export default async function SystemPage() {
           attention and where you&rsquo;ve gone quiet.
         </p>
       </div>
+
+      <p className="mt-8 text-sm text-zinc-600 dark:text-zinc-400">
+        Want to go deeper on any of the topics above?{' '}
+        <Link
+          href="/other-info"
+          className="underline decoration-dotted underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100"
+        >
+          Browse the article library →
+        </Link>
+      </p>
     </main>
   );
 }
