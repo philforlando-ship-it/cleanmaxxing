@@ -19,9 +19,13 @@ export default async function SettingsPage() {
   const status = (profile?.subscription_status as string | null) ?? 'trial';
   const paused = Boolean(profile?.tracking_paused_at);
 
-  // Apple Health integration state. We surface the most-recent
-  // connection of any provider — for v1 only Apple Health is wired
-  // so there's at most one row.
+  // Wearable integration state. Junction aggregates Whoop / Oura /
+  // Fitbit / Garmin / Strava / Withings via a single OAuth widget;
+  // health_integrations stores at most one row per user (current
+  // connection). Apple Health is intentionally not wired — it needs
+  // a native iOS bridge this web app doesn't have. The most-recent
+  // row gives us the active provider; .limit(1) is defensive against
+  // future multi-provider support.
   const { data: healthRow } = await supabase
     .from('health_integrations')
     .select('provider, connected_at, last_synced_at')

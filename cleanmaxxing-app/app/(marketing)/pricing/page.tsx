@@ -110,7 +110,7 @@ const GROUPS: FeatureGroup[] = [
       {
         label: 'Connect any major wearable',
         description:
-          'Fitbit, Whoop, Oura, Garmin, Apple Watch, Withings, and more via Junction. Sleep, steps, intensity minutes, active calories, RHR, HRV, and VO2max all flow in.',
+          'Fitbit, Whoop, Oura, Garmin, Withings, Strava, and more via Junction. Sleep, steps, intensity minutes, active calories, RHR, HRV, and VO2max all flow in. Apple Watch / Apple Health needs a native iOS bridge that this web app doesn\'t have yet.',
         free: true,
         premium: true,
       },
