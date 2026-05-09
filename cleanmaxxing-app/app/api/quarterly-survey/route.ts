@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
-import {
-  saveQuarterlySurvey,
-  type QuarterlyAnswers,
-} from '@/lib/quarterly-survey/service';
+import { saveQuarterlySurvey } from '@/lib/quarterly-survey/service';
 
-const VALID_FOCUS = new Set([
+const FocusAreaEnum = z.enum([
   'fitness',
   'body_composition',
   'skin',
@@ -17,7 +15,7 @@ const VALID_FOCUS = new Set([
   'anti_aging',
 ]);
 
-const VALID_MOTIVATION = new Set([
+const MotivationEnum = z.enum([
   'feel-better-in-own-skin',
   'social-professional-confidence',
   'specific-event',
@@ -26,6 +24,18 @@ const VALID_MOTIVATION = new Set([
   'maintenance-aging',
   'not-sure-yet',
 ]);
+
+const BodySchema = z.object({
+  focusAreas: z.array(FocusAreaEnum).min(1).max(3),
+  motivationSegment: MotivationEnum,
+  // Free text — trimmed + capped at 500 chars to bound DB row size.
+  specificThing: z
+    .string()
+    .transform((s) => s.trim().slice(0, 500))
+    .nullable()
+    .optional()
+    .transform((s) => (s == null || s === '' ? null : s)),
+});
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -36,46 +46,26 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  let body: unknown;
+  let raw: unknown;
   try {
-    body = await req.json();
+    raw = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const parsed = body as Partial<QuarterlyAnswers> | null;
-  if (!parsed) return NextResponse.json({ error: 'Missing body' }, { status: 400 });
-
-  const focusAreas = Array.isArray(parsed.focusAreas) ? parsed.focusAreas : [];
-  if (focusAreas.length === 0 || focusAreas.length > 3) {
+  const result = BodySchema.safeParse(raw);
+  if (!result.success) {
     return NextResponse.json(
-      { error: 'Pick 1 to 3 focus areas' },
+      { error: 'Invalid body', details: result.error.issues },
       { status: 400 },
     );
   }
-  if (focusAreas.some((f) => typeof f !== 'string' || !VALID_FOCUS.has(f))) {
-    return NextResponse.json({ error: 'Invalid focus area' }, { status: 400 });
-  }
 
-  const motivationSegment = parsed.motivationSegment;
-  if (typeof motivationSegment !== 'string' || !VALID_MOTIVATION.has(motivationSegment)) {
-    return NextResponse.json({ error: 'Invalid motivation segment' }, { status: 400 });
-  }
-
-  let specificThing: string | null = null;
-  if (parsed.specificThing != null) {
-    if (typeof parsed.specificThing !== 'string') {
-      return NextResponse.json({ error: 'Invalid specific_thing' }, { status: 400 });
-    }
-    const trimmed = parsed.specificThing.trim();
-    specificThing = trimmed.length === 0 ? null : trimmed.slice(0, 500);
-  }
-
-  const { suggestions } = await saveQuarterlySurvey(supabase, user.id, {
-    focusAreas,
-    motivationSegment,
-    specificThing,
-  });
+  const { suggestions } = await saveQuarterlySurvey(
+    supabase,
+    user.id,
+    result.data,
+  );
 
   return NextResponse.json({ ok: true, suggestions });
 }

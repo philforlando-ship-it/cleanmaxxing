@@ -171,10 +171,12 @@ export async function POST(req: NextRequest) {
   const bodyKeys = Object.keys(event);
   const dataKeys = event.data ? Object.keys(event.data as object) : [];
 
-  // Temporary diagnostic — log to stdout AND persist to webhook_debug
-  // so we can read recent events via Supabase if Vercel's runtime
-  // stdout view is hard to access. Remove this whole block once
-  // ingestion is verified working.
+  // Diagnostic logging to stdout (Vercel runtime logs). The original
+  // version of this block also persisted to a `webhook_debug` table
+  // for easier post-hoc inspection via Supabase, but that table was
+  // dropped in 0083_security_lockdown.sql when the missing-RLS gap
+  // was closed. Calls to logBranch() are kept (23 sites) and now
+  // write to stdout only.
   console.log('[health/webhook] received', {
     eventType,
     hasVitalUserId: Boolean(vitalUserId),
@@ -182,13 +184,12 @@ export async function POST(req: NextRequest) {
     dataKeys,
   });
 
-  async function logBranch(branchTaken: string) {
-    const debugClient = createServiceClient();
-    await debugClient.from('webhook_debug').insert({
-      event_type: eventType,
-      body_keys: bodyKeys,
-      data_keys: dataKeys,
-      branch_taken: branchTaken,
+  function logBranch(branchTaken: string) {
+    console.log('[health/webhook] branch', {
+      eventType,
+      branchTaken,
+      bodyKeys,
+      dataKeys,
     });
   }
 
@@ -454,8 +455,7 @@ export async function POST(req: NextRequest) {
 
       // Diagnostic — log one example interval so we can verify the
       // start time + offset + bucketed day make sense if the user
-      // reports another mismatch. Drop alongside the rest of
-      // webhook_debug once ingestion is verified.
+      // reports another mismatch.
       if (exampleRow) {
         console.log('[health/webhook] steps example', {
           userTz,
