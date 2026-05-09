@@ -115,7 +115,7 @@ export function pickHero(input: Input): HeroSurface | null {
     return {
       kind: 'weekly-reflection',
       title: 'Weekly reflection',
-      sub: 'Sunday is the snapshot. Four sliders, one note, about a minute.',
+      sub: 'Sunday is the snapshot. Process adherence per active journey, a few outcome questions, about two minutes.',
       ctaLabel: 'Reflect',
       anchorId: 'weekly-reflection',
     };

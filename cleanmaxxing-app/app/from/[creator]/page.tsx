@@ -71,7 +71,7 @@ export default async function CreatorLandingPage({ params }: Props) {
         <p className="mt-4 max-w-2xl font-serif text-[17px] leading-relaxed text-zinc-700 dark:text-zinc-300">
           Cleanmaxxing is the structured, honest second opinion for the
           audience that already trusts them — a guided plan, a direct chat
-          assistant grounded in a 100–200k+ word corpus, and a framework that
+          assistant grounded in a 200k+ word corpus, and a framework that
           sequences what to work on based on where you actually are.
         </p>
         <div className="mt-10 flex flex-wrap items-center gap-4">
@@ -122,7 +122,7 @@ export default async function CreatorLandingPage({ params }: Props) {
                 your time.
               </div>
               <p className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-                The chat assistant is grounded in a 100–200k+ word corpus and
+                The chat assistant is grounded in a 200k+ word corpus and
                 cites the source on every answer. He won&rsquo;t sell you
                 supplements, vendor links, or cycle protocols. Sometimes the
                 honest answer is &ldquo;this one isn&rsquo;t worth fixing —

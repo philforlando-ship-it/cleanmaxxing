@@ -90,7 +90,7 @@ export default async function IsClavRightPage() {
         <p className="mt-3 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
           Structured, honest self-improvement for men who want to look and feel
           better — without the worst parts of looksmaxxing culture. A guided
-          plan built from a 100–200k+ word corpus, with a direct chat
+          plan built from a 200k+ word corpus, with a direct chat
           assistant that won&rsquo;t sell you anything and won&rsquo;t pretend
           every problem has a product-shaped solution.
         </p>

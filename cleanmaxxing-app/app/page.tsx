@@ -4,11 +4,11 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Cleanmaxxing — look and feel sharper at 35, 40, 45',
   description:
-    'A structured plan for men in their 30s and 40s. Daily check-ins, weekly reflection, and a chat assistant grounded in a 100k+ word evidence library.',
+    'A structured plan for men in their 30s and 40s. Daily check-ins, weekly reflection, and a chat assistant grounded in a 200k+ word evidence library.',
   openGraph: {
     title: 'Cleanmaxxing — for men in their 30s and 40s',
     description:
-      'A structured plan, daily check-ins, weekly reflection, a chat assistant grounded in a 100k+ word evidence library.',
+      'A structured plan, daily check-ins, weekly reflection, a chat assistant grounded in a 200k+ word evidence library.',
     type: 'website',
   },
 };
@@ -17,7 +17,7 @@ const PILLARS = [
   {
     number: '01',
     title: 'Built for limited evenings',
-    body: 'The plan assumes you have a job, a partner, kids, and not a lot of weeknight bandwidth. Daily check-ins are ten seconds. The Sunday reflection is about a minute. Mister P is there when you have a question, not a homework assignment.',
+    body: 'The plan assumes you have a job, a partner, kids, and not a lot of weeknight bandwidth. Daily check-ins are ten seconds. The Sunday reflection is about two minutes. Mister P is there when you have a question, not a homework assignment.',
   },
   {
     number: '02',
@@ -41,7 +41,7 @@ export default function Home() {
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
           A structured plan for men in their 30s and 40s. Daily check-ins,
-          weekly reflection, and a chat assistant grounded in a 100k+ word
+          weekly reflection, and a chat assistant grounded in a 200k+ word
           evidence library.
         </p>
         <div className="mt-10 flex flex-wrap items-center gap-4">
@@ -148,7 +148,7 @@ export default function Home() {
               <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
                 Direct, a little dry, willing to tell you something
                 isn&rsquo;t worth your time. He&rsquo;s grounded in a
-                100&ndash;200k+ word corpus and he sees your active
+                200k+ word corpus and he sees your active
                 journeys, your check-in history, and your reflection
                 notes. The answer you get is calibrated to where you
                 actually are. He won&rsquo;t sell you supplements, vendor

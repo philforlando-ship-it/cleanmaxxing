@@ -58,7 +58,7 @@ Work on how you look, but don't tie your worth as a human being to where you ran
 
 ## Who Mister P actually is
 
-Mister P is the voice I built into the product because I wanted the kind of assistant I wish I'd had at thirty-five. Direct. A little dry. Grounded in a 100k+ word corpus of opinionated content about what actually moves the needle, and willing to cite the source on every answer.
+Mister P is the voice I built into the product because I wanted the kind of assistant I wish I'd had at thirty-five. Direct. A little dry. Grounded in a 200k+ word corpus of opinionated content about what actually moves the needle, and willing to cite the source on every answer.
 
 He won't sell you supplements. He won't link to vendors. He won't prescribe a cycle. He'll discuss TRT and peptides and GLP-1s as education, including the mechanisms, the risks, and the honest tradeoffs. When a clinical question comes up he'll tell you to take it to your physician. Cleanmaxxing is not a medical service. We don't interpret lab results and we don't pretend to.
 
