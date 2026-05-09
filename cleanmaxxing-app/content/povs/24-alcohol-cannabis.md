@@ -115,5 +115,33 @@ __What to track and when to reassess__
 
 One variable is enough: drinks per week, or days of cannabis use per week\. A tally in a phone note is sufficient\. The tracking is not for accountability — it is for signal\. Without it, month three feels like month one and the question "is this actually working?" cannot be answered honestly\. The honest reassessment points are thirty and ninety days into whatever target was set\. Appearance changes show up on the sobriety timeline referenced above; performance changes show up in training logs and sleep quality\. If the expected changes are showing, the plan is working\. If they are not, the intake target is probably still too high — most people underestimate current intake and overestimate how much a small reduction produces\.
 
+__If You Are Drinking Anyway — Choosing Less Expensive Drinks__
+
+The reduction plan above is the primary work\. Drink selection is a secondary lever that narrows the calorie blow on the nights you do drink — it does not change the muscle protein synthesis cost, the sleep architecture damage, the testosterone suppression, or the next\-morning recovery toll\. A vodka soda still blunts MPS the same as a craft beer\; the only thing it changes is whether you also accidentally consumed 400 calories of liquid sugar on top\.
+
+Frame this as harm reduction inside the reduction plan, not an alternative to it\. Smart drink choices do not earn you more drinking nights — they make the existing drinking nights less expensive on body composition\.
+
+__Calorie ranking, low to high__
+
+The bands below assume one standard serving of each\. Numbers are approximate but the relative ordering is reliable\.
+
+- __Clear spirits with zero\-calorie mixer__ (vodka or tequila with soda water and lime\; gin with diet tonic) — roughly 95\-100 calories per 1\.5oz pour, no meaningful carb impact\. The cleanest option that exists\. The bartender adding a splash of cranberry or "just a little juice" can double this — say "soda water and lime" specifically\.
+- __Dry wines__ (most reds, dry whites like sauvignon blanc, brut champagne) — roughly 120\-130 calories per 5oz pour\. Reasonable middle ground\. Sweet wines (moscato, riesling, dessert wines) run 30\-50% higher and read closer to cocktail territory\.
+- __Light beers__ (Michelob Ultra, Miller Lite, Corona Premier) — roughly 95\-110 calories per 12oz\. The marketing positions these as a major reduction\; the actual gap from a standard 5% beer (~150 cal) is about 25\-30%\. Real but smaller than most people assume\.
+- __Hard seltzers__ (White Claw, High Noon, equivalents) — roughly 95\-100 calories per 12oz\. Comparable to clear spirit and soda but in a single\-can format\. The "natural / clean" framing is marketing — same alcohol cost as anything else, just a lower calorie load\.
+- __Standard beers__ (most lagers, ales, IPAs) — roughly 150\-200 calories per 12oz\. IPAs and craft beers run higher (200\-280) due to elevated ABV and residual sugars\. A double IPA can hit 300\+\.
+- __Standard cocktails__ (margarita, old fashioned, manhattan, negroni) — roughly 200\-300 calories depending on syrup load\. Sweet cocktails (espresso martini, anything with a fruit puree) climb to 400\+\.
+- __Sweet, frozen, or dessert cocktails__ (piña colada, mudslide, daiquiri at most bars) — 400\-600 calories each\. The drink itself becomes a meal\.
+
+__The mixer trap__
+
+The single biggest avoidable cost in most drinks is what the alcohol is mixed with, not the alcohol itself\. A 1\.5oz vodka pour is approximately 100 calories regardless of how it is served\. The cranberry, ginger beer, simple syrup, regular tonic, juice, or non\-diet soda the bar pairs it with frequently adds another 100\-200 calories — sometimes more than the alcohol itself\. Default to soda water, diet tonic, fresh lime or lemon, a splash of bitters\. Order with specifics: "soda water and lime, no juice\." A "vodka cranberry" without modifiers usually arrives with three ounces of high\-fructose juice\.
+
+__Practical heuristics__
+
+If body composition matters and you are drinking anyway: clear spirits with soda water, dry wine, hard seltzer, or light beer\. At a wedding or restaurant where these aren't on the menu cleanly: dry wine is almost always available and reads as a more sophisticated default than "I'll just have a light beer\." If a craft cocktail is genuinely what you want for the experience, order the one you actually want — count it as the drink\-equivalent of two or three standard servings and adjust the rest of the night accordingly\.
+
+The thing not to do is chase calorie\-conscious choices into a stack of six light beers\. Five light beers at 100 calories each is 500 calories of alcohol you would not have drunk if the framing had been "two of something I actually enjoyed" — and it is the same MPS, sleep, and cortisol hit either way\. Quantity is upstream of selection\.
+
 __Alcohol and cannabis are both net negatives that can be managed, but they are not equivalent problems\. Alcohol ages the body — skin, hormones, fat, sleep architecture — through direct physiological mechanisms that scale in cost with age\. The sobriety timeline from community experience: facial depuffing within weeks, skin and redness improvement around two to three months, more dramatic change around six months\. Cannabis primarily affects how you manage your life — motivation, consistency, appetite control, training intensity — through behavioral and neurological mechanisms\. Managing each requires understanding which problem you are actually dealing with\. Neither requires elimination, but both require intentional management rather than running alongside the system unexamined\.__
 
