@@ -73,7 +73,9 @@ export function ProcessOutcomeChart({ history }: Props) {
     <section className="space-y-5 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
       <header>
         <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-          What&rsquo;s happened over the last {v2Rows.length} weeks
+          {v2Rows.length === 1
+            ? 'What’s happened over the last week'
+            : `What’s happened over the last ${v2Rows.length} weeks`}
         </h3>
         <p className="mt-1 text-[12px] text-zinc-500 dark:text-zinc-400">
           Process adherence per journey + outcome observations.
