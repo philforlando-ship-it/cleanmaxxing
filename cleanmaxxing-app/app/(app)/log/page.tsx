@@ -19,7 +19,6 @@ import { createClient, getUser } from '@/lib/supabase/server';
 import { getSleepState } from '@/lib/sleep/service';
 import { getWorkoutState } from '@/lib/workout/service';
 import { getNutritionState } from '@/lib/nutrition/service';
-import { getTodayCheckInState } from '@/lib/check-in/service';
 import { getStage4State, getHairAssessment } from '@/lib/hair/service';
 import { getStrengthAssessment } from '@/lib/strength/service';
 import { getRecommendedExercises } from '@/lib/strength/recommended-exercises';
@@ -36,7 +35,6 @@ import {
   WorkoutLogCard,
   type PlanExerciseDefault,
 } from '@/app/(app)/today/workout-log-card';
-import { DailyCheckInCard } from '@/app/(app)/today/daily-check-in-card';
 import { HairRoutineCard } from '@/app/(app)/today/hair-routine-card';
 
 // "Insert from plan" dropdown cap. The selected/recommended list can run
@@ -75,13 +73,11 @@ export default async function LogPage() {
     sleepState,
     workoutState,
     nutritionState,
-    checkInState,
     strengthAssessment,
   ] = await Promise.all([
     getSleepState(supabase, user.id),
     getWorkoutState(supabase, user.id),
     getNutritionState(supabase, user.id, timezone),
-    getTodayCheckInState(supabase, user.id, timezone),
     getStrengthAssessment(supabase, user.id),
   ]);
 
@@ -146,10 +142,9 @@ export default async function LogPage() {
           Log
         </h1>
         <p className="mt-3 text-[14px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-          The daily basics — sleep, training, food, the check-in. Not
-          tied to any focus area, not mandatory. What you log here
-          grounds Mister P&rsquo;s answers and quietly shapes your
-          reports.
+          The daily basics — sleep, training, food. Not tied to any
+          focus area, not mandatory. What you log here grounds
+          Mister P&rsquo;s answers and quietly shapes your reports.
         </p>
       </header>
 
@@ -189,10 +184,6 @@ export default async function LogPage() {
 
           <div id="nutrition-log" className="scroll-mt-16">
             <NutritionLogCard state={nutritionState} timezone={timezone} />
-          </div>
-
-          <div id="daily-check-in" className="scroll-mt-16">
-            <DailyCheckInCard initialState={checkInState} />
           </div>
 
           {hairStage4 && hairStage4.target !== null && (
