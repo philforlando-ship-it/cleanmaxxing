@@ -25,7 +25,11 @@ import {
   type GearItem,
 } from '@/lib/strength/gear';
 import { getRecommendedExercises } from '@/lib/strength/recommended-exercises';
-import { hasNutritionAssessment } from '@/lib/nutrition/service';
+import { AlcoholRecoveryCallout } from '@/components/alcohol-recovery-callout';
+import {
+  getNutritionAssessment,
+  hasNutritionAssessment,
+} from '@/lib/nutrition/service';
 import { getUserProfile } from '@/lib/profile/service';
 import {
   StrengthAssessmentForm,
@@ -57,13 +61,22 @@ export default async function StrengthPlanPage({ searchParams }: Props) {
   // Pull assessment + the live session count + nutrition presence
   // in parallel. Session count powers the pre-form data preview;
   // nutrition presence drives a friendly nudge in the page header.
-  const [assessment, sessionsLast7, nutritionPresence, profile] =
-    await Promise.all([
-      getStrengthAssessment(supabase, user.id),
-      getRecentStrengthSessionCount(supabase, user.id, 7),
-      hasNutritionAssessment(supabase, user.id),
-      getUserProfile(supabase, user.id),
-    ]);
+  const [
+    assessment,
+    sessionsLast7,
+    nutritionPresence,
+    profile,
+    nutritionAssessment,
+  ] = await Promise.all([
+    getStrengthAssessment(supabase, user.id),
+    getRecentStrengthSessionCount(supabase, user.id, 7),
+    hasNutritionAssessment(supabase, user.id),
+    getUserProfile(supabase, user.id),
+    // Pulled to surface the alcohol-modifier callout when alcohol_use
+    // is moderate / heavy. Mirrors the cardio page's existing nutrition
+    // load. Optional — the callout component handles null.
+    getNutritionAssessment(supabase, user.id),
+  ]);
   const hasReport = assessment?.report_text != null;
   const showForm = !assessment || !hasReport || editParam;
 
@@ -159,6 +172,10 @@ export default async function StrengthPlanPage({ searchParams }: Props) {
 
       {!showForm && assessment && hasReport && (
         <article className="mt-8">
+          <AlcoholRecoveryCallout
+            alcohol_use={nutritionAssessment?.alcohol_use ?? null}
+            surface="strength"
+          />
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{

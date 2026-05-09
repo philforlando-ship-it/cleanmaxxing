@@ -25,6 +25,13 @@ import type { CutFamily, Stage2Path } from '@/lib/hair/types';
 
 type Props = {
   stage4Complete: boolean;
+  // Stage 4 progress state — used by the locked-state branch to
+  // render a "X of 14 logs OR Y of 14 calendar days" countdown
+  // (loosened gate as of 2026-05-08). Null when no Stage 4 row
+  // exists yet (user hasn't started the routine).
+  stage4Count: number | null;
+  stage4Target: number | null;
+  stage4StartedAt: string | null;
   startedAt: string | null;
   cadenceDays: number | null;
   lastSessionAt: string | null;
@@ -33,8 +40,16 @@ type Props = {
   stage2Path: Stage2Path | null;
 };
 
+// Calendar gate constant — mirrors STAGE_5_CALENDAR_DAYS in
+// lib/hair/service.ts. If you change one, change the other.
+const STAGE_5_CALENDAR_DAYS = 14;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
 export function HairStage5Card({
   stage4Complete,
+  stage4Count,
+  stage4Target,
+  stage4StartedAt,
   startedAt,
   cadenceDays,
   lastSessionAt,
@@ -95,18 +110,117 @@ export function HairStage5Card({
     });
   }
 
-  // State 1 — locked.
+  // State 1 — locked. Show progress against BOTH unlock paths:
+  //   (a) count gate — Stage 4's target of N logged check-ins
+  //   (b) calendar gate (loosened 2026-05-08) — 14 calendar days
+  //       since stage_4_started_at, with at least 1 logged routine
+  // Whichever fires first unlocks Stage 5. Both bars render when
+  // stage_4_started_at is set; if Stage 4 hasn't started, we just
+  // show the unlock criteria as plain text.
   if (!stage4Complete) {
+    // No Stage 4 row at all — bare locked tile.
+    if (!stage4StartedAt) {
+      return (
+        <section className="mt-6 rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-5 py-4 dark:border-zinc-700 dark:bg-zinc-900/50">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
+            <span className="font-medium text-zinc-700 dark:text-zinc-300">
+              Stage 5 — Photo monitoring
+            </span>
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+              Unlocks once you start Stage 4
+            </span>
+          </div>
+        </section>
+      );
+    }
+
+    // Stage 4 in progress — render dual progress bars.
+    const elapsedMs = Date.now() - new Date(stage4StartedAt).getTime();
+    const elapsedDays = Math.max(0, Math.floor(elapsedMs / MS_PER_DAY));
+    const calendarPct = Math.min(
+      100,
+      Math.round((elapsedDays / STAGE_5_CALENDAR_DAYS) * 100),
+    );
+    const calendarRemaining = Math.max(
+      0,
+      STAGE_5_CALENDAR_DAYS - elapsedDays,
+    );
+
+    const count = stage4Count ?? 0;
+    const target = stage4Target ?? 14;
+    const countPct = Math.min(100, Math.round((count / target) * 100));
+    const countRemaining = Math.max(0, target - count);
+
+    // Which gate is closer? The calendar gate also requires ≥1 log,
+    // so a user with 0 logs is gated on the count side until they
+    // log at least once. Reflect that in the framing.
+    const calendarGateActive = count >= 1;
+    const closerGate: 'count' | 'calendar' =
+      calendarGateActive && calendarRemaining < countRemaining
+        ? 'calendar'
+        : 'count';
+
     return (
-      <section className="mt-6 rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-5 py-4 dark:border-zinc-700 dark:bg-zinc-900/50">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
-          <span className="font-medium text-zinc-700 dark:text-zinc-300">
+      <section className="mt-6 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h2 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
             Stage 5 — Photo monitoring
-          </span>
+          </h2>
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            Unlocks when Stage 4 is complete
+            Unlocks at {target} logs OR {STAGE_5_CALENDAR_DAYS} days + ≥1 log
           </span>
         </div>
+
+        <div className="mt-4 space-y-3">
+          {/* Count gate */}
+          <div>
+            <div className="flex items-baseline justify-between text-[12px]">
+              <span className="text-zinc-700 dark:text-zinc-300">
+                Daily routine logs
+              </span>
+              <span className="tabular-nums text-zinc-500 dark:text-zinc-400">
+                {count} / {target}
+              </span>
+            </div>
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+              <div
+                className="h-full bg-zinc-900 dark:bg-zinc-100"
+                style={{ width: `${countPct}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Calendar gate */}
+          <div>
+            <div className="flex items-baseline justify-between text-[12px]">
+              <span className="text-zinc-700 dark:text-zinc-300">
+                Days since starting{calendarGateActive ? '' : ' (needs ≥1 log)'}
+              </span>
+              <span className="tabular-nums text-zinc-500 dark:text-zinc-400">
+                {Math.min(elapsedDays, STAGE_5_CALENDAR_DAYS)} /{' '}
+                {STAGE_5_CALENDAR_DAYS}
+              </span>
+            </div>
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+              <div
+                className={
+                  calendarGateActive
+                    ? 'h-full bg-zinc-900 dark:bg-zinc-100'
+                    : 'h-full bg-zinc-400 dark:bg-zinc-600'
+                }
+                style={{ width: `${calendarPct}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <p className="mt-4 text-[12px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+          {closerGate === 'calendar'
+            ? `Calendar path unlocks first — ${calendarRemaining} ${calendarRemaining === 1 ? 'day' : 'days'} to go.`
+            : count === 0
+              ? `Log Stage 4 at least once to activate the calendar path. Otherwise, the count gate unlocks at ${target} logs.`
+              : `Count path unlocks first — ${countRemaining} more ${countRemaining === 1 ? 'log' : 'logs'} to go.`}
+        </p>
       </section>
     );
   }

@@ -14,7 +14,7 @@ import {
   getRecentCardioSessionCount,
 } from '@/lib/cardio/service';
 import type { CardioAssessment } from '@/lib/cardio/types';
-import { hasNutritionAssessment } from '@/lib/nutrition/service';
+import { getNutritionAssessment } from '@/lib/nutrition/service';
 import { hasStrengthAssessment } from '@/lib/strength/service';
 import {
   CardioAssessmentForm,
@@ -22,12 +22,11 @@ import {
 } from './assessment-form';
 import { AddZone2Card } from './add-zone-2-card';
 import { AddHiitCard } from './add-hiit-card';
+import { CardioDeficitWarningCard } from './deficit-warning-card';
+import { AlcoholRecoveryCallout } from '@/components/alcohol-recovery-callout';
+import { CardioMobilityPanel } from './cardio-mobility-panel';
 import { RecommendedModalitiesPanel } from './recommended-modalities-panel';
-import { WarmupMobilityPanel } from '@/app/(app)/plan/strength/warmup-mobility-panel';
-import {
-  allStaticMobility,
-  universalWarmups,
-} from '@/lib/strength/warmup-mobility';
+import { cardioStaticMobility } from '@/lib/strength/warmup-mobility';
 
 type Props = {
   searchParams: Promise<{ edit?: string }>;
@@ -47,13 +46,13 @@ export default async function CardioPlanPage({ searchParams }: Props) {
   const [
     assessment,
     sessionsLast7,
-    nutritionPresence,
+    nutritionAssessment,
     strengthPresence,
     { data: userRow },
   ] = await Promise.all([
     getCardioAssessment(supabase, user.id),
     getRecentCardioSessionCount(supabase, user.id, 7),
-    hasNutritionAssessment(supabase, user.id),
+    getNutritionAssessment(supabase, user.id),
     hasStrengthAssessment(supabase, user.id),
     supabase.from('users').select('age').eq('id', user.id).maybeSingle(),
   ]);
@@ -61,8 +60,9 @@ export default async function CardioPlanPage({ searchParams }: Props) {
     (userRow as { age: number | null } | null)?.age ?? null;
   const hasReport = assessment?.report_text != null;
   const showForm = !assessment || !hasReport || editParam;
+  const nutritionHasReport = nutritionAssessment?.report_generated_at != null;
   const missingCrossModifiers =
-    !nutritionPresence.hasReport || !strengthPresence.hasReport;
+    !nutritionHasReport || !strengthPresence.hasReport;
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -89,7 +89,7 @@ export default async function CardioPlanPage({ searchParams }: Props) {
             {missingCrossModifiers && (
               <p className="mt-2 text-[13px] text-zinc-500 dark:text-zinc-400">
                 Tip: completing your{' '}
-                {!nutritionPresence.hasReport && (
+                {!nutritionHasReport && (
                   <>
                     <Link
                       href="/plan/nutrition"
@@ -163,6 +163,16 @@ export default async function CardioPlanPage({ searchParams }: Props) {
 
       {!showForm && assessment && hasReport && (
         <article className="mt-8">
+          {nutritionAssessment && (
+            <CardioDeficitWarningCard
+              daysPerWeek={assessment.days_per_week}
+              goalDirection={nutritionAssessment.goal_direction}
+            />
+          )}
+          <AlcoholRecoveryCallout
+            alcohol_use={nutritionAssessment?.alcohol_use ?? null}
+            surface="cardio"
+          />
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
@@ -227,20 +237,17 @@ export default async function CardioPlanPage({ searchParams }: Props) {
             outdoor_access={assessment.outdoor_access}
             time_per_session={assessment.time_per_session}
             injury_constraints={assessment.injury_constraints}
-            current_preference={assessment.modality_preference}
+            current_preferences={assessment.modality_preference}
           />
 
-          {/* Warm-up + mobility panel. Shared with /plan/strength —
-              the static mobility set serves cardio users post-workout
-              (calf stretch, IT band, forward fold are cardio-specific
-              additions). Cardio doesn't need lift-pattern-specific
-              dynamic warm-ups; most cardio modalities self-warm-up
-              via the first few minutes at low intensity. */}
-          <WarmupMobilityPanel
-            universalWarmups={universalWarmups()}
-            liftSpecificWarmups={[]}
-            staticMobility={allStaticMobility()}
-          />
+          {/* Cardio mobility panel — distinct from strength's. No
+              dynamic-warmup section (cardio modalities self-warm via
+              5 min easy at the modality). Static mobility filtered to
+              cardio-relevant areas (calves / IT band / hip flexor /
+              hamstrings / glutes / piriformis / ankle / lumbar
+              spine). Lift-flavored stretches (pec / lat / heavy
+              tspine) are excluded. */}
+          <CardioMobilityPanel staticMobility={cardioStaticMobility()} />
 
           {/* Add HIIT layer gate. Shows when user has structured Zone 2
               in place (either picked '1_2_days'+ originally OR went
@@ -314,5 +321,6 @@ function assessmentToInitialValues(
     outdoor_access: a.outdoor_access,
     time_per_session: a.time_per_session,
     occupation_activity: a.occupation_activity,
+    programming_priority: a.programming_priority,
   };
 }

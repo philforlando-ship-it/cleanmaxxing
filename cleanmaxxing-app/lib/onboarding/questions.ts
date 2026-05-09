@@ -17,7 +17,8 @@ export const QUESTIONS: Question[] = [
   {
     key: 'height_inches',
     prompt: 'Your height?',
-    helper: 'Optional. Skip if you\u2019d rather not share.',
+    helper:
+      'Optional, but if you skip, your nutrition plan will use qualitative recommendations instead of a calorie + macro target tuned to you. Add it later in /profile if you change your mind.',
     type: 'select',
     options: HEIGHT_OPTIONS,
     required: false,
@@ -25,7 +26,8 @@ export const QUESTIONS: Question[] = [
   {
     key: 'weight_lbs',
     prompt: 'Your weight, in pounds?',
-    helper: 'Optional. Skip if you\u2019d rather not share.',
+    helper:
+      'Optional, but if you skip, your nutrition plan can\u2019t compute a calorie target or safe-rate-capped weight-loss timeline. Add it later in /profile if you change your mind.',
     type: 'number',
     min: 80,
     max: 500,

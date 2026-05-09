@@ -324,6 +324,9 @@ export default async function HairPlanPage({ searchParams }: Props) {
 
           <HairStage5Card
             stage4Complete={stage4?.isComplete ?? false}
+            stage4Count={stage4?.count ?? null}
+            stage4Target={stage4?.target ?? null}
+            stage4StartedAt={stage4?.startedAt ?? null}
             startedAt={assessment.stage_5_started_at}
             cadenceDays={assessment.stage_5_cadence_days}
             lastSessionAt={assessment.stage_5_last_session_at}
