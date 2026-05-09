@@ -131,6 +131,17 @@ function isStepsEvent(t: string): boolean {
   );
 }
 
+// VO2max comes through its own event family with a timeseries payload
+// (Vital wraps even slow-cadence metrics as intervals). For each row
+// we take the value mapped to the user's local-day; if multiple rows
+// land on the same day, last write wins.
+function isVo2MaxEvent(t: string): boolean {
+  return (
+    t.startsWith('daily.data.vo2_max') ||
+    t.startsWith('historical.data.vo2_max')
+  );
+}
+
 export async function POST(req: NextRequest) {
   const raw = await req.text();
 
@@ -261,18 +272,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, ignored: 'no_user_match' });
   }
 
-  // Sleep, activity, and steps events are notifications: extract the
-  // date range, fetch via the SDK, iterate the response, upsert each
-  // row.
+  // Sleep, activity, steps, and VO2max events are notifications:
+  // extract the date range, fetch via the SDK, iterate the response,
+  // upsert each row.
   const isSleep = isSleepEvent(eventType);
   const isActivity = isActivityEvent(eventType);
   const isSteps = isStepsEvent(eventType);
-  if (isSleep || isActivity || isSteps) {
+  const isVo2Max = isVo2MaxEvent(eventType);
+  if (isSleep || isActivity || isSteps || isVo2Max) {
     const notif = (event.data ?? {}) as DataNotification;
     const startDate = notif.start_date;
     const endDate = notif.end_date;
     const providerSlug = notif.provider ?? null;
-    const branchPrefix = isSleep ? 'sleep' : isActivity ? 'activity' : 'steps';
+    const branchPrefix = isSleep
+      ? 'sleep'
+      : isActivity
+        ? 'activity'
+        : isSteps
+          ? 'steps'
+          : 'vo2_max';
 
     if (!startDate || !endDate || !vitalUserId) {
       await logBranch(`${branchPrefix}_incomplete_notification`);
@@ -317,12 +335,17 @@ export async function POST(req: NextRequest) {
         const mapped = vitalProviderToInternal(sourceSlug);
         const source = mapped?.source ?? sourceSlug;
 
-        // Resting HR is delivered inline on the sleep payload
-        // (ClientFacingSleep.hrResting). Providers that don't report
-        // it leave it undefined; we store NULL in that case.
+        // Resting HR + HRV are delivered inline on the sleep payload
+        // (ClientFacingSleep.hrResting / .averageHrv — rmssd in ms).
+        // Providers that don't report them leave the fields undefined;
+        // we store NULL in that case.
         const restingHeartRate =
           row.hrResting != null && Number.isFinite(row.hrResting)
             ? Math.round(row.hrResting)
+            : null;
+        const hrvRmssd =
+          row.averageHrv != null && Number.isFinite(row.averageHrv)
+            ? Math.round(row.averageHrv)
             : null;
 
         const { error } = await service.from('sleep_logs').upsert(
@@ -332,6 +355,7 @@ export async function POST(req: NextRequest) {
             hours,
             quality_1_5: quality,
             resting_heart_rate: restingHeartRate,
+            hrv_rmssd: hrvRmssd,
             source,
             updated_at: new Date().toISOString(),
           },
@@ -478,6 +502,97 @@ export async function POST(req: NextRequest) {
         type: 'steps_upserted',
         count: upserted,
         timezone: userTz,
+      });
+    }
+
+    // VO2max branch — slow-cadence aerobic capacity estimate. Vital
+    // returns a timeseries shape even though most providers update
+    // VO2max weekly or less often; we bucket by user-local day and
+    // last-write-wins when multiple intervals land on the same date.
+    if (isVo2Max) {
+      let response;
+      try {
+        response = await vital.vitals.vo2Max(vitalUserId, {
+          startDate,
+          endDate,
+          provider: providerSlug ?? undefined,
+        });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'unknown';
+        console.error('[health/webhook] vitals.vo2Max failed', msg);
+        await logBranch('vo2_max_fetch_failed');
+        return NextResponse.json(
+          { error: 'vo2_max_fetch_failed', message: msg },
+          { status: 502 },
+        );
+      }
+
+      const { data: userRow } = await service
+        .from('users')
+        .select('timezone')
+        .eq('id', cleanmaxxingUserId)
+        .maybeSingle();
+      const userTz =
+        (userRow?.timezone as string | null) ?? 'America/New_York';
+
+      const ymdFmt = new Intl.DateTimeFormat('en-CA', {
+        timeZone: userTz,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      });
+
+      // Last write wins per day. Provider order is chronological per
+      // Vital's timeseries convention, so iterating and overwriting
+      // gives us the most recent value per local-day.
+      const valueByDay = new Map<string, number>();
+      for (const row of response ?? []) {
+        if (!row.start || row.value == null || !Number.isFinite(row.value)) {
+          continue;
+        }
+        const day = ymdFmt.format(new Date(row.start));
+        valueByDay.set(day, row.value);
+      }
+
+      const sourceSlug = providerSlug ?? 'unknown';
+      const mapped = vitalProviderToInternal(sourceSlug);
+      const source = mapped?.source ?? sourceSlug;
+
+      let upserted = 0;
+      for (const [date, value] of valueByDay) {
+        const rounded = Math.round(value * 10) / 10;
+        const { error } = await service.from('daily_activity').upsert(
+          {
+            user_id: cleanmaxxingUserId,
+            date,
+            vo2_max: rounded,
+            source,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,date' },
+        );
+        if (error) {
+          console.error('[health/webhook] vo2_max upsert failed', error);
+          await logBranch('vo2_max_persist_failed');
+          return NextResponse.json(
+            { error: 'persist_failed', message: error.message },
+            { status: 500 },
+          );
+        }
+        upserted++;
+      }
+
+      await service
+        .from('health_integrations')
+        .update({ last_synced_at: new Date().toISOString() })
+        .eq('user_id', cleanmaxxingUserId)
+        .eq('vital_user_id', vitalUserId);
+
+      await logBranch(`vo2_max_upserted_${upserted}`);
+      return NextResponse.json({
+        ok: true,
+        type: 'vo2_max_upserted',
+        count: upserted,
       });
     }
 
