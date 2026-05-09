@@ -35,6 +35,11 @@ Thumbs.db
 __pycache__/
 *.pyc
 
+# Word documents — binary, not diffable. Track the .md sibling
+# instead when a doc is worth versioning.
+*.docx
+*.doc
+
 # Temporary Word lock files
 ~$*.docx
 ~$*.doc
