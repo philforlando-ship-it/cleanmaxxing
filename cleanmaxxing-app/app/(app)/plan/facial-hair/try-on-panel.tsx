@@ -165,12 +165,20 @@ export function FacialHairTryOnPanel({
           <p className="text-[13px] text-zinc-700 dark:text-zinc-300">
             Try-on previews are a Premium feature.
           </p>
-          <Link
-            href="/settings/billing"
-            className="mt-2 inline-block rounded-lg bg-zinc-900 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-          >
-            Upgrade to Premium
-          </Link>
+          <div className="mt-2 flex items-center gap-3">
+            <Link
+              href="/pricing"
+              className="inline-block rounded-lg bg-zinc-900 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            >
+              Upgrade to Premium
+            </Link>
+            <Link
+              href="/pricing"
+              className="text-xs text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+            >
+              See free vs premium →
+            </Link>
+          </div>
         </div>
       ) : !hasBaselinePhoto ? (
         <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-3 dark:border-amber-900 dark:bg-amber-950/40">

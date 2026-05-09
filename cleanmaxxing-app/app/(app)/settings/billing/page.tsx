@@ -10,9 +10,10 @@ type Props = {
 
 // 2026-05-09: dropped computeTrialDaysLeft + the "X days left" copy
 // when we shipped the free-app reframe. The 'trial' status value in
-// the DB is now effectively a stable "free plan" marker — no
-// expiration. When the premium tier launches, this whole page needs
-// a real rewrite around plan upgrade / payment management.
+// the DB is effectively a stable "free plan" marker — no expiration.
+// Public /pricing page carries the full free-vs-premium comparison;
+// this page is the upgrade + manage-billing surface for users who
+// already arrived intent-to-act.
 
 export default async function BillingPage({ searchParams }: Props) {
   const supabase = await createClient();
@@ -60,11 +61,20 @@ export default async function BillingPage({ searchParams }: Props) {
           </span>
         </div>
         {status === 'trial' && (
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            You&rsquo;re on the free plan. No payment required, no
-            expiration. The plan picker below is a placeholder until
-            the premium tier launches.
-          </p>
+          <>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              You&rsquo;re on the free plan. No payment required, no
+              expiration. Premium adds AI vision features — facial
+              analysis, hair cut try-on, hair photo trend analysis, and
+              beard try-on — on top of everything you already have.
+            </p>
+            <Link
+              href="/pricing"
+              className="mt-3 inline-block text-xs text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+            >
+              See full free vs premium comparison →
+            </Link>
+          </>
         )}
         {status === 'active' && (
           <>

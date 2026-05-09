@@ -446,12 +446,18 @@ function TryOnSection({
       </p>
 
       {!isPremium ? (
-        <div className="mt-3">
+        <div className="mt-3 flex items-center gap-3">
           <Link
-            href="/settings/billing"
+            href="/pricing"
             className="inline-block rounded-lg bg-zinc-900 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             Upgrade to Premium
+          </Link>
+          <Link
+            href="/pricing"
+            className="text-xs text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+          >
+            See free vs premium →
           </Link>
         </div>
       ) : !hasBaselinePhoto ? (
