@@ -27,12 +27,6 @@ type Inputs = {
   frame: FrameEstimate;
   bf_pct: BodyFatEstimate | null;
   age: number | null;
-  // v2 granular axes (migration 0093). Nullable for pre-migration
-  // assessments; when null, the v2 principles don't fire and the
-  // legacy frame-based principles still cover the user.
-  leg_length: LegLength | null;
-  arm_length: ArmLength | null;
-  skin_undertone: SkinUndertone | null;
 };
 
 // Universal principles — always present regardless of modifiers.
@@ -191,24 +185,14 @@ export function fitPrinciplesFor(inputs: Inputs): FitPrinciple[] {
   // Frame-specific principle.
   principles.push(FRAME_PRINCIPLES[inputs.frame]);
 
-  // v2 — leg_length proportion principle. Highest-leverage proportion
-  // lever per Gentleman's Gazette; surface above age principles since
-  // it applies all ages.
-  if (inputs.leg_length === 'short' || inputs.leg_length === 'long') {
-    principles.push(LEG_LENGTH_PRINCIPLES[inputs.leg_length]);
-  }
-
-  // v2 — arm_length tailoring principle. Same reasoning — applies
-  // every age, fires only on the off-rack-mismatch ends of the axis.
-  if (inputs.arm_length === 'short' || inputs.arm_length === 'long') {
-    principles.push(ARM_LENGTH_PRINCIPLES[inputs.arm_length]);
-  }
-
-  // v2 — skin_undertone palette principle. Always fires when set
-  // (including 'neutral', since the lean-toward-hair note is useful).
-  if (inputs.skin_undertone) {
-    principles.push(SKIN_UNDERTONE_PRINCIPLES[inputs.skin_undertone]);
-  }
+  // v2 axes (leg_length / arm_length / skin_undertone) deliberately
+  // NOT pushed into Stage 3. They're handled by BodyAxesPanel above
+  // Stage 1 (in-shopping reminder) + Stage 2 per-piece modifier_notes
+  // (next-to-the-buy actionable). Putting them here too caused the
+  // same principle to surface 3x on one page; we kept the actionable
+  // placements and dropped the consolidated-list redundancy. The
+  // exported *_PRINCIPLES records below are still the single source
+  // of truth — BodyAxesPanel imports from here.
 
   // Age-conditional layers.
   if (inputs.age != null && inputs.age >= 45) {

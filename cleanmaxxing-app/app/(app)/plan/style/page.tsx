@@ -242,9 +242,6 @@ export default async function StylePlanPage({ searchParams }: Props) {
                 frame: assessment.frame_estimate,
                 bf_pct: profile.bf_pct_self_estimate,
                 age,
-                leg_length: assessment.leg_length,
-                arm_length: assessment.arm_length,
-                skin_undertone: assessment.skin_undertone,
               })}
               acknowledgedAt={assessment.stage_3_acknowledged_at}
             />
