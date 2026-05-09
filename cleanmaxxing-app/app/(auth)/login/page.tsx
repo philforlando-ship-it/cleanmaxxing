@@ -99,7 +99,7 @@ function LoginForm() {
         <p className="mt-6 text-center text-sm text-zinc-600 dark:text-zinc-400">
           New here?{' '}
           <Link href="/signup" className="font-medium text-zinc-900 underline dark:text-zinc-100">
-            Start a free trial
+            Sign up free
           </Link>
         </p>
       </div>

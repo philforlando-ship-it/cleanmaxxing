@@ -79,7 +79,7 @@ export default async function CreatorLandingPage({ params }: Props) {
             href={signupHref}
             className="rounded-full bg-zinc-900 px-6 py-3 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
-            Start the 14-day free trial
+            Sign up free
           </Link>
           <Link
             href="/login"
@@ -89,8 +89,7 @@ export default async function CreatorLandingPage({ params }: Props) {
           </Link>
         </div>
         <p className="mt-4 text-xs text-zinc-500">
-          No credit card required. $1 first month for {creator.name}&rsquo;s
-          audience, then $9.99/month or $79/year.
+          Free to use. No credit card, no payment to start.
         </p>
       </section>
 
@@ -178,15 +177,16 @@ export default async function CreatorLandingPage({ params }: Props) {
             Start where you actually are.
           </h2>
           <p className="mt-5 mx-auto max-w-xl text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-            Fourteen days free. Ten seconds a day to check in. No credit card
-            to start. Keep the parts that work, walk away if they don&rsquo;t.
+            Free to use. Ten seconds a day to check in. No payment to
+            start, ever. Keep the parts that work, walk away if they
+            don&rsquo;t.
           </p>
           <div className="mt-10 flex items-center justify-center gap-4">
             <Link
               href={signupHref}
               className="rounded-full bg-zinc-900 px-6 py-3 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
-              Start the free trial
+              Sign up free
             </Link>
             <Link
               href="/login"

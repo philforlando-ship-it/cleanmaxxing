@@ -49,7 +49,7 @@ export default function Home() {
             href="/signup"
             className="rounded-full bg-zinc-900 px-6 py-3 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
-            Start your 14-day trial
+            Sign up free
           </Link>
           <Link
             href="/login"
@@ -59,7 +59,7 @@ export default function Home() {
           </Link>
         </div>
         <p className="mt-4 text-xs text-zinc-500">
-          No credit card required. 14 days free, then $9.99/month or $79/year.
+          Free to use. No credit card, no payment to start.
         </p>
       </section>
 
@@ -277,15 +277,16 @@ export default function Home() {
             Start where you actually are.
           </h2>
           <p className="mt-5 mx-auto max-w-xl text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-            Fourteen days free. Ten seconds a day to check in. No credit card
-            to start. Keep the parts that work, walk away if they don&rsquo;t.
+            Free to use. Ten seconds a day to check in. No payment to
+            start, ever. Keep the parts that work, walk away if they
+            don&rsquo;t.
           </p>
           <div className="mt-10 flex items-center justify-center gap-4">
             <Link
               href="/signup"
               className="rounded-full bg-zinc-900 px-6 py-3 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
-              Start the free trial
+              Sign up free
             </Link>
             <Link
               href="/login"

@@ -180,7 +180,7 @@ export default function FrameworkPage() {
             href="/signup"
             className="rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
-            Start the 14-day free trial
+            Sign up free
           </Link>
           <Link
             href="/login"

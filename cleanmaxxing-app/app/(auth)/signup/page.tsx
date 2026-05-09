@@ -143,7 +143,7 @@ function SignupForm() {
               {pendingEmail}
             </span>
             . Click the link in that email to finish creating your
-            account — your free trial starts the moment you confirm.
+            account — you&rsquo;re in the moment you confirm.
           </p>
           <div className="mt-6 rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm dark:border-zinc-800 dark:bg-zinc-900/50">
             <p className="font-medium text-zinc-900 dark:text-zinc-100">
@@ -216,9 +216,9 @@ function SignupForm() {
   return (
     <main className="flex flex-1 items-center justify-center px-6 py-24">
       <div className="w-full max-w-sm">
-        <h1 className="text-3xl font-semibold tracking-tight">Start free trial</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Sign up</h1>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          14 days free. No credit card required.
+          Free to use. No credit card.
         </p>
         <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-500">
           We&rsquo;ll send a confirmation link to your email — click it to
@@ -263,7 +263,7 @@ function SignupForm() {
             disabled={loading}
             className="w-full rounded-full bg-zinc-900 px-6 py-3 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
           >
-            {loading ? 'Creating account…' : 'Start free trial'}
+            {loading ? 'Creating account…' : 'Sign up'}
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-zinc-600 dark:text-zinc-400">

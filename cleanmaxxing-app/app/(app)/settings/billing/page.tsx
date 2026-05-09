@@ -8,18 +8,11 @@ type Props = {
   searchParams: Promise<{ billing?: string }>;
 };
 
-// Helper pulled out of the component so the impure Date.now() call is
-// isolated to a single, explicit location rather than mid-render.
-function computeTrialDaysLeft(
-  createdAt: Date | null,
-  status: string,
-): number | null {
-  if (!createdAt || status !== 'trial') return null;
-  const end = new Date(createdAt);
-  end.setDate(end.getDate() + 14);
-  const msLeft = end.getTime() - Date.now();
-  return Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
-}
+// 2026-05-09: dropped computeTrialDaysLeft + the "X days left" copy
+// when we shipped the free-app reframe. The 'trial' status value in
+// the DB is now effectively a stable "free plan" marker — no
+// expiration. When the premium tier launches, this whole page needs
+// a real rewrite around plan upgrade / payment management.
 
 export default async function BillingPage({ searchParams }: Props) {
   const supabase = await createClient();
@@ -28,23 +21,11 @@ export default async function BillingPage({ searchParams }: Props) {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('subscription_status, created_at')
+    .select('subscription_status')
     .eq('id', user.id)
     .maybeSingle();
 
   const status = (profile?.subscription_status as string | null) ?? 'trial';
-  const createdAt = profile?.created_at
-    ? new Date(profile.created_at as string)
-    : null;
-
-  // Trial end = created_at + 14 days. Used to show "X days left" on the
-  // trial status card. Null when we can't compute.
-  //
-  // This is a server component that runs once per request, so capturing
-  // "now" here is stable per-render and the purity lint warning doesn't
-  // reflect real instability. The calculation is pulled out of an IIFE
-  // to make the capture point explicit for future maintainers.
-  const trialDaysLeft = computeTrialDaysLeft(createdAt, status);
 
   const params = await searchParams;
   const billingFlag = params.billing;
@@ -78,12 +59,11 @@ export default async function BillingPage({ searchParams }: Props) {
             {status}
           </span>
         </div>
-        {status === 'trial' && trialDaysLeft !== null && (
+        {status === 'trial' && (
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            You&rsquo;re on the 14-day free trial.{' '}
-            {trialDaysLeft > 0
-              ? `${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'} left.`
-              : 'Your trial has ended.'}
+            You&rsquo;re on the free plan. No payment required, no
+            expiration. The plan picker below is a placeholder until
+            the premium tier launches.
           </p>
         )}
         {status === 'active' && (

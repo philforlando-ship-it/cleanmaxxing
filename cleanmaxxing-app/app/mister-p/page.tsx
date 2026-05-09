@@ -86,15 +86,15 @@ export default async function MisterPBackgroundPage() {
           Ready to try it?
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          Fourteen days free. No credit card. Ten seconds on the daily
-          check-in, a couple of minutes on Sunday on how the week went.
+          Free to sign up. Ten seconds on the daily check-in, a couple of
+          minutes on Sunday on how the week went.
         </p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <Link
             href="/signup"
             className="rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
-            Start the free trial
+            Sign up free
           </Link>
           <Link
             href="/login"
