@@ -352,6 +352,52 @@ async function check0093() {
   );
 }
 
+async function check0094() {
+  // strength_assessments.asymmetry_concern — nullable text column with
+  // a check constraint on ('none', 'mild', 'noticeable'). Sentinel
+  // sets the new column + the four required strength_assessments
+  // columns; FK rejects on user_id.
+  await supabase
+    .from('strength_assessments')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  const { error } = await supabase.from('strength_assessments').insert({
+    user_id: SENTINEL_USER_ID,
+    primary_goal: 'size',
+    days_per_week: '3_days',
+    equipment_access: 'full_commercial_gym',
+    current_split: 'full_body',
+    asymmetry_concern: 'noticeable',
+  });
+  await supabase
+    .from('strength_assessments')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  return classifyError(error, 'asymmetry_concern accepted');
+}
+
+async function check0095() {
+  // sleep_logs.resting_heart_rate — nullable int with check constraint
+  // (rhr > 0 and rhr < 250). Sentinel sets the three required
+  // sleep_logs columns + a valid rhr; FK rejects on user_id (sleep_logs
+  // FKs to auth.users, not public.users — same rejection shape).
+  await supabase
+    .from('sleep_logs')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  const { error } = await supabase.from('sleep_logs').insert({
+    user_id: SENTINEL_USER_ID,
+    night_of: '2099-01-05',
+    hours: 7.5,
+    resting_heart_rate: 58,
+  });
+  await supabase
+    .from('sleep_logs')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  return classifyError(error, 'resting_heart_rate accepted');
+}
+
 // Shared helper: classify a Supabase error into pass / fail with
 // detail. FK rejection = pass (column accepted, only the sentinel
 // user_id was wrong). Anything else = fail with the postgres reason.
@@ -428,6 +474,14 @@ async function main() {
     {
       label: '0093 — style_assessments granular body dimensions',
       run: check0093,
+    },
+    {
+      label: '0094 — strength_assessments.asymmetry_concern',
+      run: check0094,
+    },
+    {
+      label: '0095 — sleep_logs.resting_heart_rate',
+      run: check0095,
     },
   ];
 
