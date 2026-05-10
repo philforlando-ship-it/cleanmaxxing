@@ -200,14 +200,20 @@ export function SleepAssessmentForm({
               checked={primaryConcerns.includes(c)}
               onChange={() =>
                 setPrimaryConcerns(
-                  toggleMulti(primaryConcerns, c, PRIMARY_CONCERN_CAP),
+                  toggleMultiExclusive(
+                    primaryConcerns,
+                    c,
+                    'generally_fine',
+                    PRIMARY_CONCERN_CAP,
+                  ),
                 )
               }
               disabled={pending}
               label={PRIMARY_CONCERN_LABEL[c]}
               atCap={
                 primaryConcerns.length >= PRIMARY_CONCERN_CAP &&
-                !primaryConcerns.includes(c)
+                !primaryConcerns.includes(c) &&
+                !primaryConcerns.includes('generally_fine')
               }
             />
           ))}
@@ -280,7 +286,11 @@ export function SleepAssessmentForm({
             <CheckboxRow
               key={w}
               checked={whatTried.includes(w)}
-              onChange={() => setWhatTried(toggleMulti(whatTried, w))}
+              onChange={() =>
+                setWhatTried(
+                  toggleMultiExclusive(whatTried, w, 'nothing_systematic'),
+                )
+              }
               disabled={pending}
               label={WHAT_TRIED_LABEL[w]}
             />
