@@ -398,6 +398,115 @@ async function check0095() {
   return classifyError(error, 'resting_heart_rate accepted');
 }
 
+async function check0096() {
+  // Two columns added in one migration: sleep_logs.hrv_rmssd (int,
+  // 0 < n < 300) and daily_activity.vo2_max (numeric, 0 < n < 100).
+  // Probe both; combined PASS only if both columns accept their
+  // sentinel values + FK-reject the user_id.
+
+  // HRV first.
+  await supabase
+    .from('sleep_logs')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  const { error: hrvError } = await supabase.from('sleep_logs').insert({
+    user_id: SENTINEL_USER_ID,
+    night_of: '2099-01-06',
+    hours: 7.5,
+    hrv_rmssd: 45,
+  });
+  await supabase
+    .from('sleep_logs')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  const hrvResult = classifyError(hrvError, 'hrv_rmssd accepted');
+  if (!hrvResult.ok) {
+    return { ok: false, detail: `hrv_rmssd: ${hrvResult.detail}` };
+  }
+
+  // VO2max next.
+  await supabase
+    .from('daily_activity')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  const { error: vo2Error } = await supabase.from('daily_activity').insert({
+    user_id: SENTINEL_USER_ID,
+    date: '2099-01-06',
+    source: 'manual',
+    vo2_max: 42.5,
+  });
+  await supabase
+    .from('daily_activity')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  const vo2Result = classifyError(vo2Error, 'vo2_max accepted');
+  if (!vo2Result.ok) {
+    return { ok: false, detail: `vo2_max: ${vo2Result.detail}` };
+  }
+
+  return {
+    ok: true,
+    detail: 'hrv_rmssd + vo2_max both accepted (FK rejected sentinel user, expected)',
+  };
+}
+
+async function check0097() {
+  // style_assessments.frame_density — nullable text with check on
+  // ('lean', 'dense', 'soft'). Sentinel sets frame_density + required
+  // style_assessments columns; FK rejects on user_id.
+  await supabase
+    .from('style_assessments')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  const { error } = await supabase.from('style_assessments').insert({
+    user_id: SENTINEL_USER_ID,
+    frame_estimate: 'athletic',
+    current_archetype: 'clean_minimalist',
+    target_archetype: 'clean_minimalist',
+    closet_state: 'functional',
+    frame_density: 'dense',
+  });
+  await supabase
+    .from('style_assessments')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  return classifyError(error, 'frame_density accepted');
+}
+
+async function check0098() {
+  // Drop migration — daily_notes table was retired entirely. The
+  // probe shape inverts: we WANT the query to fail with a
+  // "table/relation does not exist" error. PostgREST surfaces this
+  // as PGRST205 (resource not found) or as a Postgres 42P01 message
+  // depending on whether the schema cache has refreshed. We accept
+  // either.
+  const { error } = await supabase
+    .from('daily_notes')
+    .select('id')
+    .limit(1);
+  if (!error) {
+    return {
+      ok: false,
+      detail: 'daily_notes still exists (migration not applied or cache stale)',
+    };
+  }
+  if (
+    error.code === 'PGRST205' ||
+    error.code === '42P01' ||
+    /does not exist/i.test(error.message ?? '') ||
+    /could not find the table/i.test(error.message ?? '')
+  ) {
+    return {
+      ok: true,
+      detail: 'daily_notes table absent (drop confirmed)',
+    };
+  }
+  return {
+    ok: false,
+    detail: `unexpected error (${error.code ?? 'no code'}): ${error.message}`,
+  };
+}
+
 async function check0099() {
   // style_assessments.eye_color — nullable text column with check
   // constraint on six values. Sentinel sets the four required
@@ -506,6 +615,18 @@ async function main() {
     {
       label: '0095 — sleep_logs.resting_heart_rate',
       run: check0095,
+    },
+    {
+      label: '0096 — sleep_logs.hrv_rmssd + daily_activity.vo2_max',
+      run: check0096,
+    },
+    {
+      label: '0097 — style_assessments.frame_density',
+      run: check0097,
+    },
+    {
+      label: '0098 — daily_notes table dropped',
+      run: check0098,
     },
     {
       label: '0099 — style_assessments.eye_color',
