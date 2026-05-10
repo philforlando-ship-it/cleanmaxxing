@@ -8,7 +8,6 @@
 // Body-dimension principles (leg_length, arm_length) live in
 // BodyAxesPanel; this card owns color only.
 
-import { WhyThis } from '@/components/why-this';
 import type { SkinUndertone } from '@/lib/style/types';
 
 type Swatch = {
@@ -27,10 +26,6 @@ type PaletteContent = {
   avoidLabel: string | null;
   avoid: Swatch[];
   jewelryNote: string;
-  // "Why these colors?" expander content. 3-5 short bullets explaining
-  // the undertone framework so users who want the rationale can read
-  // it without it cluttering the default surface.
-  rationale: string[];
 };
 
 const PALETTE_BY_UNDERTONE: Record<SkinUndertone, PaletteContent> = {
@@ -55,13 +50,6 @@ const PALETTE_BY_UNDERTONE: Record<SkinUndertone, PaletteContent> = {
     ],
     jewelryNote:
       'Jewelry test: silver and platinum suit you more than gold or brass.',
-    rationale: [
-      'Cool undertone means your skin reads with blue, pink, or rosy base notes — color theory says colors with the same temperature flatter, opposite-temperature colors fight.',
-      'Navy, charcoal, and slate share a cool base; jewel tones (sapphire, emerald) read saturated against cool skin without competing.',
-      'True white (vs cream or off-white) lifts a cool complexion; warm whites can pull yellow against the face.',
-      'Warm oranges, mustards, and warm browns near the collarline reflect warmth onto your skin and clash — they\'re fine on shoes, belts, or pants where the face isn\'t adjacent.',
-      'Framework borrowed from the Real Men Real Style + Gentleman\'s Gazette undertone literature; the jewelry test (silver vs gold flatter) is the cheapest 30-second self-check.',
-    ],
   },
   warm: {
     title: 'Your palette — warm',
@@ -83,13 +71,6 @@ const PALETTE_BY_UNDERTONE: Record<SkinUndertone, PaletteContent> = {
     ],
     jewelryNote:
       'Jewelry test: gold and brass suit you more than silver.',
-    rationale: [
-      'Warm undertone means your skin reads with yellow, peach, or golden base notes — colors with the same temperature flatter, opposite-temperature colors fight.',
-      'Olive, rust, ochre, and warm browns share a warm base and pull your complexion forward without competing.',
-      'Cream (vs stark white) lifts a warm complexion; stark white can pull cold and grey-out the face.',
-      'Icy blues and cool greys near the collarline reflect cool light onto warm skin and create a washed-out read — they work fine in pants, shoes, or accessories below the chest.',
-      'Framework borrowed from the Real Men Real Style + Gentleman\'s Gazette undertone literature; the jewelry test (gold vs silver flatter) is the cheapest 30-second self-check.',
-    ],
   },
   neutral: {
     title: 'Your palette — neutral',
@@ -108,13 +89,6 @@ const PALETTE_BY_UNDERTONE: Record<SkinUndertone, PaletteContent> = {
     avoid: [],
     jewelryNote:
       'Jewelry: either silver or gold works. Pick per outfit, then commit — mixing in the same look reads inconsistent.',
-    rationale: [
-      'Neutral undertone means your skin doesn\'t lean strongly cool or warm — most palettes work, which is why both jewelry tones flatter.',
-      'The default swatches above are the highest-leverage versatile core: navy + charcoal + olive + brown + white + cream cover business, casual, and most archetypes without fighting your face.',
-      'When you do want to lean a direction, eye color is the most universal read (hazel/amber/golden-brown → warm; blue/grey → cool); facial hair color is the next-best signal when present.',
-      'The trap with neutral is wearing one warm piece and one cool piece together near the face — the look reads undecided. Pick a direction per outfit and commit.',
-      'Framework borrowed from the Real Men Real Style + Gentleman\'s Gazette undertone literature.',
-    ],
   },
 };
 
@@ -151,8 +125,6 @@ export function ColorPaletteCard({ skinUndertone }: Props) {
       <p className="mt-5 text-[12px] leading-relaxed text-zinc-500 dark:text-zinc-400">
         {palette.jewelryNote}
       </p>
-
-      <WhyThis lines={palette.rationale} label="Why these colors?" />
     </section>
   );
 }
