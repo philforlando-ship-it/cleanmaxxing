@@ -10,6 +10,7 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { CMSpinner } from '@/components/cm-logo';
 import {
   BIGGEST_BLOCKER_LABEL,
   PRIMARY_CONCERN_LABEL,
@@ -117,6 +118,31 @@ export function SleepAssessmentForm({
     return [...current, value];
   }
 
+  // Variant that enforces mutual exclusion with a designated "none /
+  // not applicable" sentinel value. Used for Q2 (biggest_blockers)
+  // where 'nothing_obvious' contradicts any other blocker pick — if
+  // the user is selecting 'nothing_obvious', clear other picks; if
+  // they're picking something else while 'nothing_obvious' was set,
+  // drop 'nothing_obvious' first.
+  function toggleMultiExclusive<T extends string>(
+    current: T[],
+    value: T,
+    exclusiveValue: T,
+    cap?: number,
+  ): T[] {
+    if (current.includes(value)) {
+      return current.filter((v) => v !== value);
+    }
+    if (value === exclusiveValue) {
+      return [exclusiveValue]; // wipes everything else
+    }
+    const withoutExclusive = current.filter((v) => v !== exclusiveValue);
+    if (cap !== undefined && withoutExclusive.length >= cap) {
+      return withoutExclusive; // at cap (after dropping exclusive); no-op
+    }
+    return [...withoutExclusive, value];
+  }
+
   function submit() {
     setError(null);
     if (primaryConcerns.length === 0)
@@ -204,14 +230,20 @@ export function SleepAssessmentForm({
               checked={biggestBlockers.includes(b)}
               onChange={() =>
                 setBiggestBlockers(
-                  toggleMulti(biggestBlockers, b, BIGGEST_BLOCKER_CAP),
+                  toggleMultiExclusive(
+                    biggestBlockers,
+                    b,
+                    'nothing_obvious',
+                    BIGGEST_BLOCKER_CAP,
+                  ),
                 )
               }
               disabled={pending}
               label={BIGGEST_BLOCKER_LABEL[b]}
               atCap={
                 biggestBlockers.length >= BIGGEST_BLOCKER_CAP &&
-                !biggestBlockers.includes(b)
+                !biggestBlockers.includes(b) &&
+                !biggestBlockers.includes('nothing_obvious')
               }
             />
           ))}
@@ -297,11 +329,7 @@ export function SleepAssessmentForm({
             Cancel — keep current plan
           </Link>
         )}
-        {pending && (
-          <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            Takes about fifteen seconds.
-          </span>
-        )}
+        {pending && <CMSpinner label="Takes about fifteen seconds." />}
       </div>
     </div>
   );

@@ -34,8 +34,22 @@ export async function POST(req: NextRequest) {
     assessment = await saveSleepAssessment(supabase, user.id, parsed.data);
   } catch (err) {
     console.error('sleep_assessment_save_failed', err);
+    // Diagnostic: include the raw Supabase/Postgres error code +
+    // message in the response so a failing save surfaces the real
+    // cause in the browser network tab. Safe to keep — these errors
+    // describe DB-level rejection (constraint violation, missing
+    // column, etc.) and don't leak data. Revert to a generic message
+    // once the underlying flake is identified + fixed.
+    const e = err as { code?: string; message?: string; details?: string };
     return NextResponse.json(
-      { error: 'Could not save assessment' },
+      {
+        error: 'Could not save assessment',
+        debug: {
+          code: e.code ?? null,
+          message: e.message ?? null,
+          details: e.details ?? null,
+        },
+      },
       { status: 500 },
     );
   }
