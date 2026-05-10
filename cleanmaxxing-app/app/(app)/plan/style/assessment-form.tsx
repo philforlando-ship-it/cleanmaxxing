@@ -13,6 +13,7 @@
 
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
+import { CMSpinner } from '@/components/cm-logo';
 import { useRouter } from 'next/navigation';
 import {
   ARCHETYPE_FEASIBILITY_HINT,
@@ -23,6 +24,8 @@ import {
   BUILD_LABEL,
   BUILDS,
   CLOSET_STATE_LABEL,
+  EYE_COLOR_LABEL,
+  EYE_COLORS,
   FRAME_DENSITIES,
   FRAME_DENSITY_LABEL,
   LEG_LENGTH_LABEL,
@@ -35,6 +38,7 @@ import {
   type Build,
   type ClosetState,
   type CurrentArchetype,
+  type EyeColor,
   type FrameDensity,
   type LegLength,
   type ShoulderWidth,
@@ -76,6 +80,7 @@ export type StyleAssessmentInitialValues = {
   build: Build | null;
   frame_density: FrameDensity | null;
   skin_undertone: SkinUndertone | null;
+  eye_color: EyeColor | null;
   current_archetype: CurrentArchetype;
   target_archetype: StyleArchetype;
   closet_state: ClosetState;
@@ -117,6 +122,9 @@ export function StyleAssessmentForm({
   const [skinUndertone, setSkinUndertone] = useState<SkinUndertone | null>(
     initialValues?.skin_undertone ?? null,
   );
+  const [eyeColor, setEyeColor] = useState<EyeColor | null>(
+    initialValues?.eye_color ?? null,
+  );
   const [currentArchetype, setCurrentArchetype] =
     useState<CurrentArchetype | null>(
       initialValues?.current_archetype ?? null,
@@ -140,6 +148,7 @@ export function StyleAssessmentForm({
     if (!armLength) return setError('Pick an arm length.');
     if (!legLength) return setError('Pick a leg length.');
     if (!skinUndertone) return setError('Pick a skin undertone.');
+    if (!eyeColor) return setError('Pick an eye color.');
     if (!currentArchetype) return setError('Pick a current archetype.');
     if (!targetArchetype) return setError('Pick a target archetype.');
     if (!closetState) return setError('Pick your closet state.');
@@ -151,6 +160,7 @@ export function StyleAssessmentForm({
       arm_length: armLength,
       leg_length: legLength,
       skin_undertone: skinUndertone,
+      eye_color: eyeColor,
       current_archetype: currentArchetype,
       target_archetype: targetArchetype,
       closet_state: closetState,
@@ -296,6 +306,25 @@ export function StyleAssessmentForm({
 
       <Question
         number={7}
+        title="Eye color"
+        helper="Look at your eyes in natural daylight (not under warm indoor light, which shifts the read). The clearest signal you have for color direction — works regardless of hair, beard, or skin undertone."
+      >
+        <div className="space-y-2">
+          {EYE_COLORS.map((c) => (
+            <RadioRow
+              key={c}
+              checked={eyeColor === c}
+              onChange={() => setEyeColor(c)}
+              disabled={pending}
+              label={EYE_COLOR_LABEL[c]}
+              name="eye_color"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={8}
         title="What are you dressing as today?"
         helper="The honest current read — what your wardrobe actually looks like, not what you'd like it to be. 'No clear archetype yet' is a fine answer."
       >
@@ -315,7 +344,7 @@ export function StyleAssessmentForm({
       </Question>
 
       <Question
-        number={8}
+        number={9}
         title="What are you moving toward?"
         helper="Pick the one closest to who you want to look like in a year. Each option is tagged with the honest per-user read — strong fit, workable, or fights your frame — based on the body data you just entered. Not a hard gate, but worth weighing before you commit."
       >
@@ -345,7 +374,7 @@ export function StyleAssessmentForm({
       </Question>
 
       <Question
-        number={9}
+        number={10}
         title="What's the state of your closet?"
         helper="Drives whether the plan focuses on auditing what you have or building from scratch."
       >
@@ -364,7 +393,7 @@ export function StyleAssessmentForm({
       </Question>
 
       <Question
-        number={10}
+        number={11}
         title="Anything you want Mister P to know? (optional)"
         helper="One line. Specific situation, a stuck point, a budget reality."
       >
@@ -404,11 +433,7 @@ export function StyleAssessmentForm({
             Cancel — keep current plan
           </Link>
         )}
-        {pending && (
-          <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            Takes about fifteen seconds.
-          </span>
-        )}
+        {pending && <CMSpinner label="Takes about fifteen seconds." />}
       </div>
     </div>
   );

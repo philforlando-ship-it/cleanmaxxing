@@ -8,7 +8,7 @@
 // Body-dimension principles (leg_length, arm_length) live in
 // BodyAxesPanel; this card owns color only.
 
-import type { SkinUndertone } from '@/lib/style/types';
+import { eyeColorLean, type EyeColor, type SkinUndertone } from '@/lib/style/types';
 
 type Swatch = {
   hex: string;
@@ -94,11 +94,21 @@ const PALETTE_BY_UNDERTONE: Record<SkinUndertone, PaletteContent> = {
 
 type Props = {
   skinUndertone: SkinUndertone | null;
+  eyeColor: EyeColor | null;
 };
 
-export function ColorPaletteCard({ skinUndertone }: Props) {
+export function ColorPaletteCard({ skinUndertone, eyeColor }: Props) {
   if (!skinUndertone) return null;
   const palette = PALETTE_BY_UNDERTONE[skinUndertone];
+
+  // Resolve the neutral-undertone tiebreak when eye color is on file.
+  // Cool/warm undertones don't get a swap — their description copy is
+  // already direction-specific. Neutral users get the per-user
+  // resolved line in place of the generic eye/beard/hair guidance.
+  const description =
+    skinUndertone === 'neutral' && eyeColor
+      ? resolvedNeutralDescription(eyeColor)
+      : palette.description;
 
   return (
     <section className="mt-8 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
@@ -108,7 +118,7 @@ export function ColorPaletteCard({ skinUndertone }: Props) {
         </h2>
       </header>
       <p className="mb-5 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-400">
-        {palette.description}
+        {description}
       </p>
 
       <div className="space-y-5">
@@ -127,6 +137,22 @@ export function ColorPaletteCard({ skinUndertone }: Props) {
       </p>
     </section>
   );
+}
+
+// Per-user description for neutral-undertone users when eye_color
+// resolves the tiebreak. Cleaner than asking the user to apply the
+// hair/beard/eyes rule themselves — they answered the question, we
+// own the resolution.
+function resolvedNeutralDescription(eyeColor: EyeColor): string {
+  const lean = eyeColorLean(eyeColor);
+  if (lean === 'cool') {
+    return "Most colors work credibly on you, which is the easy mode of color. Your eye color leans cool, so when picking near-the-face items default to the cooler swatches above (navy, charcoal, white, slate); the warmer ones (olive, brown, cream) work fine below the chest.";
+  }
+  if (lean === 'warm') {
+    return "Most colors work credibly on you, which is the easy mode of color. Your eye color leans warm, so when picking near-the-face items default to the warmer swatches above (olive, brown, cream); the cooler ones (navy, charcoal, white) work fine below the chest.";
+  }
+  // green — genuinely doesn't lean
+  return "Most colors work credibly on you, which is the easy mode of color. Your eye color (green) doesn't push you cool or warm, so the balanced default above is the right read. Pick a direction per outfit so the look doesn't read undecided — but don't overthink it.";
 }
 
 function SwatchRow({

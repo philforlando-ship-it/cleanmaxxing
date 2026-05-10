@@ -16,11 +16,13 @@ import {
   ARM_LENGTH_LABEL,
   BUILD_LABEL,
   CLOSET_STATE_LABEL,
+  EYE_COLOR_LABEL,
   FRAME_DENSITY_LABEL,
   FRAME_ESTIMATE_LABEL,
   LEG_LENGTH_LABEL,
   SHOULDER_WIDTH_LABEL,
   SKIN_UNDERTONE_LABEL,
+  eyeColorLean,
   type StyleAssessment,
   type StyleReportInputModifiers,
 } from './types';
@@ -70,6 +72,7 @@ export async function generateAndSaveStyleReport(
     build: assessment.build,
     frame_density: assessment.frame_density,
     skin_undertone: assessment.skin_undertone,
+    eye_color: assessment.eye_color,
     target_archetype_feasibility_tier:
       // Only snapshot a tier when the body data was sufficient to
       // compute one (i.e. shoulder_width + build are both set).
@@ -155,6 +158,13 @@ function formatAssessmentForPrompt(
     `- skin_undertone (v2 color framework axis): ${modifiers.skin_undertone ?? 'null'}`,
   );
   modifierLines.push(
+    `- eye_color (universal-applicable color tiebreak — works for bald + clean-shaven users where hair/beard tiebreaks fail): ${
+      modifiers.eye_color
+        ? `${modifiers.eye_color} (leans ${eyeColorLean(modifiers.eye_color) ?? 'no clear direction'})`
+        : 'null'
+    }`,
+  );
+  modifierLines.push(
     `- target_archetype_feasibility_tier (Phase 2b — per-user computed read on whether the picked archetype fits / works / fights this user's frame): ${
       modifiers.target_archetype_feasibility_tier ?? 'null — body data insufficient to compute'
     }`,
@@ -196,6 +206,11 @@ function formatAssessmentForPrompt(
   if (assessment.skin_undertone) {
     granularLines.push(
       `- Skin undertone: ${SKIN_UNDERTONE_LABEL[assessment.skin_undertone]}`,
+    );
+  }
+  if (assessment.eye_color) {
+    granularLines.push(
+      `- Eye color: ${EYE_COLOR_LABEL[assessment.eye_color]}`,
     );
   }
   const granularBlock =

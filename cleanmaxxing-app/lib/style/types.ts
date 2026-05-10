@@ -29,6 +29,18 @@ export type Build = 'slight' | 'athletic' | 'stocky' | 'heavyset';
 export type FrameDensity = 'lean' | 'dense' | 'soft';
 export type SkinUndertone = 'cool' | 'warm' | 'neutral';
 
+// Migration 0099 (2026-05-10) — eye color axis. Universal-applicable
+// color tiebreak that works regardless of hair / beard presence.
+// Used by ColorPaletteCard to resolve the neutral-undertone tiebreak
+// and by the style report-prompt as a modifier.
+export type EyeColor =
+  | 'blue'
+  | 'grey'
+  | 'green'
+  | 'hazel'
+  | 'brown'
+  | 'dark_brown';
+
 export const SHOULDER_WIDTHS: ReadonlyArray<ShoulderWidth> = [
   'narrow',
   'medium',
@@ -65,6 +77,36 @@ export const SKIN_UNDERTONES: ReadonlyArray<SkinUndertone> = [
   'warm',
   'neutral',
 ];
+
+export const EYE_COLORS: ReadonlyArray<EyeColor> = [
+  'blue',
+  'grey',
+  'green',
+  'hazel',
+  'brown',
+  'dark_brown',
+];
+
+export const EYE_COLOR_LABEL: Record<EyeColor, string> = {
+  blue: 'Blue',
+  grey: 'Grey',
+  green: 'Green',
+  hazel: 'Hazel — green or brown with amber/golden flecks',
+  brown: 'Brown — medium or light',
+  dark_brown: 'Dark brown — very dark, near-black',
+};
+
+// How the eye color leans on the warm/cool axis. Used by
+// ColorPaletteCard to resolve the neutral-undertone tiebreak,
+// and by report prompts as a modifier signal.
+//   blue, grey            → cool
+//   hazel, brown, dark_b. → warm
+//   green                 → null (genuinely doesn't lean)
+export function eyeColorLean(eye: EyeColor): 'cool' | 'warm' | null {
+  if (eye === 'blue' || eye === 'grey') return 'cool';
+  if (eye === 'hazel' || eye === 'brown' || eye === 'dark_brown') return 'warm';
+  return null;
+}
 
 export const SHOULDER_WIDTH_LABEL: Record<ShoulderWidth, string> = {
   narrow: 'Narrow — shoulders read narrower than waist or about even',
@@ -179,6 +221,8 @@ export type StyleAssessment = {
   // Migration 0097 (2026-05-09) — orthogonal density axis.
   frame_density: FrameDensity | null;
   skin_undertone: SkinUndertone | null;
+  // Migration 0099 (2026-05-10) — universal-applicable color tiebreak.
+  eye_color: EyeColor | null;
   // Legacy v1 frame_estimate — derived from build + shoulder_width
   // when the v2 form is submitted. Retained so existing call sites
   // don't churn (cut-menu density gate, foundation-pieces content,
@@ -229,6 +273,8 @@ export type StyleReportInputModifiers = {
   // distinguish.
   frame_density: FrameDensity | null;
   skin_undertone: SkinUndertone | null;
+  // Migration 0099 — universal-applicable color tiebreak.
+  eye_color: EyeColor | null;
   // Phase 2b — per-user feasibility of the PICKED target archetype.
   // Computed from body data + age via lib/style/aesthetic-feasibility.
   // Snapshotted so the prompt can branch on whether the user picked
@@ -318,6 +364,14 @@ export const StyleAssessmentInputSchema = z.object({
   build: z.enum(['slight', 'athletic', 'stocky', 'heavyset']),
   frame_density: z.enum(['lean', 'dense', 'soft']),
   skin_undertone: z.enum(['cool', 'warm', 'neutral']),
+  eye_color: z.enum([
+    'blue',
+    'grey',
+    'green',
+    'hazel',
+    'brown',
+    'dark_brown',
+  ]),
   current_archetype: z.enum([
     'clean_minimalist',
     'athletic_casual',

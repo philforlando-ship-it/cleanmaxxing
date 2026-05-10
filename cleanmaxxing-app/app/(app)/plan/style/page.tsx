@@ -33,6 +33,7 @@ import { ColorPaletteCard } from './color-palette-card';
 import { StyleStage1Card } from './stage-1-card';
 import { StyleStage2Card } from './stage-2-card';
 import { StyleStage3Card } from './stage-3-card';
+import { RoiQuizCard } from './roi-quiz-card';
 
 type Props = {
   searchParams: Promise<{ edit?: string }>;
@@ -249,7 +250,10 @@ export default async function StylePlanPage({ searchParams }: Props) {
             armLength={assessment.arm_length}
           />
 
-          <ColorPaletteCard skinUndertone={assessment.skin_undertone} />
+          <ColorPaletteCard
+            skinUndertone={assessment.skin_undertone}
+            eyeColor={assessment.eye_color}
+          />
 
           <StyleStage1Card
             targetArchetype={assessment.target_archetype}
@@ -306,13 +310,13 @@ export default async function StylePlanPage({ searchParams }: Props) {
             </h2>
             <p className="mt-2 text-[14px] leading-relaxed text-zinc-700 dark:text-zinc-300">
               The plan above is body-data driven — it doesn&rsquo;t
-              score photos, by design. But Mister P can. Take a fit
-              photo, save it under{' '}
+              score photos, by design. But Mister P can. Save a clothed
+              full-body shot to the{' '}
               <Link
                 href="/photos"
                 className="underline decoration-dotted underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100"
               >
-                /photos
+                Fit photos section on /photos
               </Link>
               , then ask him about it in chat. He&rsquo;ll troubleshoot
               fit verbally — sleeves, shoulders, taper, proportions —
@@ -328,6 +332,11 @@ export default async function StylePlanPage({ searchParams }: Props) {
               </Link>
             </div>
           </aside>
+
+          {/* Engagement mechanic — teaches the cost-per-wear / foundation
+              / "requires reasoning" framework via 9 real-world purchase
+              calls. Renders unconditionally below the report; no gate. */}
+          <RoiQuizCard />
         </>
       )}
     </main>
@@ -344,6 +353,7 @@ function assessmentToInitialValues(
     build: a.build,
     frame_density: a.frame_density,
     skin_undertone: a.skin_undertone,
+    eye_color: a.eye_color,
     current_archetype: a.current_archetype,
     target_archetype: a.target_archetype,
     closet_state: a.closet_state,

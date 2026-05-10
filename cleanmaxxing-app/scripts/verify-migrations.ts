@@ -398,6 +398,30 @@ async function check0095() {
   return classifyError(error, 'resting_heart_rate accepted');
 }
 
+async function check0099() {
+  // style_assessments.eye_color — nullable text column with check
+  // constraint on six values. Sentinel sets the four required
+  // style_assessments columns + the new eye_color; FK rejects on
+  // user_id.
+  await supabase
+    .from('style_assessments')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  const { error } = await supabase.from('style_assessments').insert({
+    user_id: SENTINEL_USER_ID,
+    frame_estimate: 'athletic',
+    current_archetype: 'clean_minimalist',
+    target_archetype: 'clean_minimalist',
+    closet_state: 'functional',
+    eye_color: 'hazel',
+  });
+  await supabase
+    .from('style_assessments')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  return classifyError(error, 'eye_color accepted');
+}
+
 // Shared helper: classify a Supabase error into pass / fail with
 // detail. FK rejection = pass (column accepted, only the sentinel
 // user_id was wrong). Anything else = fail with the postgres reason.
@@ -482,6 +506,10 @@ async function main() {
     {
       label: '0095 — sleep_logs.resting_heart_rate',
       run: check0095,
+    },
+    {
+      label: '0099 — style_assessments.eye_color',
+      run: check0099,
     },
   ];
 
