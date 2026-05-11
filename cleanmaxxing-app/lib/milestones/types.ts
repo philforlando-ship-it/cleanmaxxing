@@ -51,6 +51,20 @@ export const STATIC_TRIGGER_KEYS = {
   // daily_activity.vo2_max via getVo2MaxSignal in
   // lib/vital/wearable-signals.ts.
   VO2_MAX_IMPROVING: 'vo2_max_improving',
+  // Journey phase-transition graduation milestones. Fire once when
+  // journey_states.phase first transitions implementing -> maintaining
+  // for the user. Written by lib/journey-state/persist.ts on the same
+  // /today render that flipped the phase. Free for all users
+  // (graduation is a celebratory floor; Pro-gating comes downstream
+  // on drift detection + climb-back protocols).
+  HAIR_MAINTENANCE_REACHED: 'hair_maintenance_reached',
+  STYLE_MAINTENANCE_REACHED: 'style_maintenance_reached',
+  BODY_COMPOSITION_MAINTENANCE_REACHED: 'body_composition_maintenance_reached',
+  STRENGTH_MAINTENANCE_REACHED: 'strength_maintenance_reached',
+  CARDIO_MAINTENANCE_REACHED: 'cardio_maintenance_reached',
+  SLEEP_MAINTENANCE_REACHED: 'sleep_maintenance_reached',
+  SKINCARE_MAINTENANCE_REACHED: 'skincare_maintenance_reached',
+  FACIAL_HAIR_MAINTENANCE_REACHED: 'facial_hair_maintenance_reached',
 } as const;
 
 export type StaticTriggerKey =

@@ -27,6 +27,9 @@ import {
 } from '@/lib/interventions/service';
 import { getUserProfile } from '@/lib/profile/service';
 import { getPremiumStatus } from '@/lib/billing/is-premium';
+import { getJourneyPhase } from '@/lib/journey-state/read';
+import { getMaintenanceContent } from '@/lib/journey-state/maintenance-content';
+import { MaintenanceView } from '@/components/journey/maintenance-view';
 import { appDayFor } from '@/lib/date/app-day';
 import type { HairAssessment } from '@/lib/hair/types';
 import {
@@ -69,6 +72,7 @@ export default async function HairPlanPage({ searchParams }: Props) {
     { data: baselinePhotoRow },
     premium,
     { data: ageFeelRow },
+    journeyState,
   ] = await Promise.all([
     getHairAssessment(supabase, user.id),
     getUserProfile(supabase, user.id),
@@ -92,6 +96,7 @@ export default async function HairPlanPage({ searchParams }: Props) {
       .eq('user_id', user.id)
       .eq('question_key', 'confidence_appearance')
       .maybeSingle(),
+    getJourneyPhase(supabase, user.id, 'hair'),
   ]);
 
   // Self-perceived age delta. confidence_appearance is the 2/4/6/8/10
@@ -192,6 +197,16 @@ export default async function HairPlanPage({ searchParams }: Props) {
           Mister P couldn’t finish your plan last time. Submit again and we’ll
           try once more.
         </p>
+      )}
+
+      {journeyState && journeyState.phase !== 'implementing' && (
+        <div className="mt-8">
+          <MaintenanceView
+            phase={journeyState.phase}
+            enteredAt={journeyState.entered_at}
+            content={getMaintenanceContent('hair')}
+          />
+        </div>
       )}
 
       {showForm && (

@@ -13,6 +13,9 @@ import remarkGfm from 'remark-gfm';
 import { createClient, getUser } from '@/lib/supabase/server';
 import { getSkincareAssessment } from '@/lib/skincare/service';
 import type { SkincareAssessment } from '@/lib/skincare/types';
+import { getJourneyPhase } from '@/lib/journey-state/read';
+import { getMaintenanceContent } from '@/lib/journey-state/maintenance-content';
+import { MaintenanceView } from '@/components/journey/maintenance-view';
 import {
   SkincareAssessmentForm,
   type SkincareAssessmentInitialValues,
@@ -39,7 +42,10 @@ export default async function SkincarePlanPage({ searchParams }: Props) {
   if (!user) redirect('/login');
   const supabase = await createClient();
 
-  const assessment = await getSkincareAssessment(supabase, user.id);
+  const [assessment, journeyState] = await Promise.all([
+    getSkincareAssessment(supabase, user.id),
+    getJourneyPhase(supabase, user.id, 'skincare'),
+  ]);
   const hasReport = assessment?.report_text != null;
   const showForm = !assessment || !hasReport || editParam;
 
@@ -83,6 +89,16 @@ export default async function SkincarePlanPage({ searchParams }: Props) {
           Mister P couldn&rsquo;t finish your plan last time. Submit again
           and we&rsquo;ll try once more.
         </p>
+      )}
+
+      {journeyState && journeyState.phase !== 'implementing' && (
+        <div className="mt-8">
+          <MaintenanceView
+            phase={journeyState.phase}
+            enteredAt={journeyState.entered_at}
+            content={getMaintenanceContent('skincare')}
+          />
+        </div>
       )}
 
       {showForm && (

@@ -20,6 +20,9 @@ import {
 } from '@/lib/style/service';
 import { computeArchetypeFeasibility } from '@/lib/style/aesthetic-feasibility';
 import { getUserProfile } from '@/lib/profile/service';
+import { getJourneyPhase } from '@/lib/journey-state/read';
+import { getMaintenanceContent } from '@/lib/journey-state/maintenance-content';
+import { MaintenanceView } from '@/components/journey/maintenance-view';
 import {
   chipsForArchetype,
   filterValidChipSelections,
@@ -59,9 +62,10 @@ export default async function StylePlanPage({ searchParams }: Props) {
   // Profile + age fetched once and threaded into every modifier-aware
   // surface (staleness banner, Stage 2 piece guidance, Stage 3
   // principles).
-  const [profile, userRow] = await Promise.all([
+  const [profile, userRow, journeyState] = await Promise.all([
     getUserProfile(supabase, user.id),
     supabase.from('users').select('age').eq('id', user.id).maybeSingle(),
+    getJourneyPhase(supabase, user.id, 'style'),
   ]);
   const age =
     (userRow.data as { age: number | null } | null)?.age ?? null;
@@ -117,6 +121,16 @@ export default async function StylePlanPage({ searchParams }: Props) {
           Mister P couldn&rsquo;t finish your plan last time. Submit again
           and we&rsquo;ll try once more.
         </p>
+      )}
+
+      {journeyState && journeyState.phase !== 'implementing' && (
+        <div className="mt-8">
+          <MaintenanceView
+            phase={journeyState.phase}
+            enteredAt={journeyState.entered_at}
+            content={getMaintenanceContent('style')}
+          />
+        </div>
       )}
 
       {showForm && (() => {

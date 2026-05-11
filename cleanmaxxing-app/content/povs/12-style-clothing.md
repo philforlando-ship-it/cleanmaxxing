@@ -408,6 +408,26 @@ Tier four — replaceable. T-shirts, undershirts, socks, underwear. High-rotatio
 
 The structural insight underneath the tiers is that ROI is a function of three multiplicative variables: visibility (how often the garment is seen), durability (how long the garment lasts at quality), and the gap between cheap and quality (how visible the difference between a twenty-dollar and an eighty-dollar version is). Shoes win on all three; t-shirts lose on all three. Investment should follow that math, not aesthetic preference. Most men over-invest in tier three (designer shirts, premium chinos) and under-invest in tier one (cheap shoes, no real outerwear) — and it shows.
 
+__Maintenance — Defending the Floor__
+
+Style is not a one-time journey, but it is also not infinite optimization. Once the closet has been audited, the foundation pieces are acquired, the fit principles have been internalized, and the archetype is reading the way you intended — the work shifts. You are no longer trying to prove you can dress well. Your job becomes defending the floor.
+
+Per POV 54, maintenance is a complete outcome — the point where the system becomes part of your life instead of a project you are trying to finish. Style specifically rewards this framing because the failure mode is not usually outright collapse; it is slow drift across body composition, season, life context, and accumulated minor decisions until one morning the wardrobe and the man no longer match.
+
+**The defended floor for style specifically.** Five to seven foundation pieces in the right cuts for your frame, all in fit. Shoes, outerwear, and watch (the Tier 1 splurges) maintained and rotated. Color choices stay anchored to your undertone. Closet contains no pieces that fight your frame or read miscast for your archetype. You can build a workable outfit for any common occasion in under five minutes without thinking. The wardrobe size is roughly stable — you replace as pieces wear, you do not accumulate. That is the floor.
+
+**Drift signals worth catching early.** Pants no longer fitting in the waist or thigh — usually the first sign body composition has shifted. The body-fat-drift staleness signal firing on your style plan (the app surfaces this automatically; it fires when your body fat tier has crossed a silhouette-relevant threshold since the plan was written). Finding yourself defaulting to athletic wear or "comfort clothes" in situations the archetype would otherwise own. Shoes visibly worn but unreplaced. Outerwear feeling dated or no longer matching the current rotation. Photos where the silhouette reads off and you cannot place why. Catching yourself buying pieces that fight the archetype you chose. Any one of these is fine on its own; two or three at once is the signal that the floor is drifting.
+
+**The climb-back protocol — not a wardrobe purge.** When you notice drift, you are not rebuilding from scratch. You are climbing back. Identify which axis drifted. If it is body composition: the silhouette rules have shifted with your frame, and the Edit-answers flow on /plan/style is the correct re-entry — the report rewrites against your current body without losing the foundation work below. If it is fit specifically: pull the two or three pieces that have started reading off and either tailor or replace them; do not touch the rest. If it is the archetype itself drifting: that is a reassessment, not a closet purge, and the right re-entry is the annual archetype review below. Most drift resolves with two or three deliberate replacements, not a full re-do.
+
+**Recalibration cadence.** Three surfaces, three cadences:
+
+- **Quarterly — a closet edit.** Twenty minutes. Walk the closet, identify three to five pieces that have stopped working (wrong fit, worn out, wrong archetype). Move them to a separate area; you are not throwing them out yet, just stepping them out of rotation. If after a month you have not pulled them back in, they go.
+- **At any body-fat-tier change — replan.** The body-fat-drift staleness signal does this automatically on /plan/style. When it fires, the silhouette rules and archetype-feasibility read would land differently now, and re-submitting the answers rewrites the plan against your current body. Do not wait for the annual review when this fires.
+- **Annual — archetype review.** Once a year, revisit the target archetype itself. Has your life context changed (new job, new city, new partner, new social circle)? Has your body changed enough that a different archetype is now more workable? Most years the archetype stays the same; the cadence exists so when it should shift, you notice.
+
+Drift is expected. Body composition shifts, seasons change, jobs change, social context shifts, taste evolves — all of these will move you off the floor. That is the texture of a life the wardrobe is meant to serve. The job is not to keep the wardrobe perfect; it is to keep the floor high enough that small drift is easy to catch and correct without a full rebuild.
+
 __Tier Placement__
 
 __Style is A\-tier\. Fit is the variable that matters most\. Color coordination and clean basics are high impact\. Designer brands and trend pieces are low ROI\. Most men do not need more clothes — they need better fit, cleaner choices, and more consistency\.__

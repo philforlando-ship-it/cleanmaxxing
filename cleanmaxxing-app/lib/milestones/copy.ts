@@ -78,6 +78,48 @@ const STATIC_COPY: Record<string, MilestoneCopy> = {
     title: 'VO2max — measurably improving.',
     body: 'Your latest VO2max is more than 5% above where it was three months ago. That\'s a real cardiovascular adaptation — bigger stroke volume, better oxygen delivery — not normal-day variability. The aerobic base you\'ve been building is reading in the lab.',
   },
+  // Phase-transition graduation milestones. Voice: POV 54 — the work
+  // shifts; defended floor; drift is expected; not a finish line. No
+  // confetti, no streak count.
+  hair_maintenance_reached: {
+    title: 'Hair — the work shifts now.',
+    body: 'You hit Stage 4 and held it for a month. Your routine is built. The job shifts from building density to defending what you have — drift is expected, the climb back is small.',
+    cta: { href: '/plan/hair', label: 'Open hair plan →' },
+  },
+  style_maintenance_reached: {
+    title: 'Style — the closet is assembled.',
+    body: 'Stage 3 closed out a month ago and the system is holding. Foundation pieces are in fit, archetype is coherent, color is anchored. Maintenance is its own outcome — a quarterly closet edit is most of the work from here.',
+    cta: { href: '/plan/style', label: 'Open style plan →' },
+  },
+  body_composition_maintenance_reached: {
+    title: 'Body composition — you\'re holding the range.',
+    body: 'Eight weeks within your defended weight band. The work shifts from cutting / building to staying — same sessions, same protein, same sleep, lower attention cost. The floor is yours.',
+  },
+  strength_maintenance_reached: {
+    title: 'Strength — twelve weeks of consistency.',
+    body: 'Three months of holding the cadence at the level the plan asked for. This isn\'t a plateau, it\'s the platform. The work compounds quietly from here.',
+    cta: { href: '/plan/strength', label: 'Open strength plan →' },
+  },
+  cardio_maintenance_reached: {
+    title: 'Cardio — the engine is built.',
+    body: 'Three months of consistent cadence on the prescribed modalities. The aerobic floor is set. What remains is holding it — the adaptation compounds quietly.',
+    cta: { href: '/plan/cardio', label: 'Open cardio plan →' },
+  },
+  sleep_maintenance_reached: {
+    title: 'Sleep — the rhythm is stable.',
+    body: 'Four weeks of consistent timing. The hours are downstream of the rhythm and the rhythm is locked in. Defend the window; the rest follows.',
+    cta: { href: '/plan/sleep', label: 'Open sleep plan →' },
+  },
+  skincare_maintenance_reached: {
+    title: 'Skincare — the routine is set.',
+    body: 'Two months on the routine without a meaningful change. Your skin has the inputs it needs. The work now is consistency, not complexity.',
+    cta: { href: '/plan/skincare', label: 'Open skincare plan →' },
+  },
+  facial_hair_maintenance_reached: {
+    title: 'Facial hair — the cadence holds.',
+    body: 'Target length reached and the upkeep cadence is consistent. The shape is yours now. Drift is a week of skipped trims, not a regression.',
+    cta: { href: '/plan/facial-hair', label: 'Open facial-hair plan →' },
+  },
 };
 
 const GLP1_THREE_MONTHS_COPY: MilestoneCopy = {

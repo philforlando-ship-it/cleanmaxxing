@@ -20,6 +20,7 @@
     "corpus-audit": "tsx scripts/corpus-audit.ts",
     "verify-migrations": "tsx -r dotenv/config scripts/verify-migrations.ts dotenv_config_path=.env.local",
     "grant-premium": "tsx -r dotenv/config scripts/grant-premium.ts dotenv_config_path=.env.local",
+    "backfill-journey-states": "tsx -r dotenv/config scripts/backfill-journey-states.ts dotenv_config_path=.env.local",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

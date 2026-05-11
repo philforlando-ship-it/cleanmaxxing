@@ -40,6 +40,9 @@ import { AlcoholQuizCard } from './alcohol-quiz-card';
 import { detectNutritionOffTrack } from '@/lib/contextual-prompt/prompts';
 import { getNutritionOffTrackInputs } from '@/lib/contextual-prompt/select';
 import { WhyThis } from '@/components/why-this';
+import { getJourneyPhase } from '@/lib/journey-state/read';
+import { getMaintenanceContent } from '@/lib/journey-state/maintenance-content';
+import { MaintenanceView } from '@/components/journey/maintenance-view';
 import {
   explainCalories,
   explainCarbs,

@@ -34,6 +34,7 @@ import { TodayClosureCard } from './today-closure-card';
 import { EscapeHatch } from './escape-hatch';
 import { detectAndRecordMilestones } from '@/lib/milestones/detect';
 import { listRecentMilestones } from '@/lib/milestones/service';
+import { syncJourneyStates } from '@/lib/journey-state/persist';
 import { getWeeklyReflectionState } from '@/lib/weekly-reflection/service';
 import { ProgressVisual } from './progress-visual';
 import { selectContextualPrompt } from '@/lib/contextual-prompt/select';
@@ -153,6 +154,15 @@ export default async function TodayPage({ searchParams }: Props) {
       console.error('milestones_detect_failed', err);
     },
   );
+
+  // Slice 1 of the maintenance reflection work (2026-05-11): sync
+  // per-journey phase signal alongside milestones. Writes any
+  // implementing -> maintaining transitions to journey_states and
+  // fires the graduation milestone. Wrapped to never throw; a sync
+  // failure must not break /today.
+  await syncJourneyStates(supabase, user.id).catch((err) => {
+    console.error('journey_states_sync_failed', err);
+  });
 
   const [
     profileCompletion,
