@@ -76,6 +76,8 @@ export const QUESTIONS: Question[] = [
       { value: 'sleep', label: 'Sleep' },
       { value: 'skincare', label: 'Skincare' },
       { value: 'facial_hair', label: 'Facial hair' },
+      { value: 'facial_structure', label: 'Facial structure' },
+      { value: 'presentation', label: 'Presentation' },
     ],
     required: true,
   },

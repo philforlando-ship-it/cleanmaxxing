@@ -80,7 +80,8 @@ export type FocusAreaSlug =
   | 'cardio'
   | 'sleep'
   | 'skincare'
-  | 'facial_hair';
+  | 'facial_hair'
+  | 'facial_structure';
 
 // User-facing journey labels. The `body_composition` slug renders as
 // "Nutrition" everywhere because the journey itself is about nutrition
@@ -98,6 +99,7 @@ export const FOCUS_AREA_LABEL: Record<FocusAreaSlug, string> = {
   sleep: 'Sleep',
   skincare: 'Skincare',
   facial_hair: 'Facial hair',
+  facial_structure: 'Facial structure',
 };
 
 export const FOCUS_AREA_TO_PLAN_PATH: Record<FocusAreaSlug, string> = {
@@ -109,6 +111,7 @@ export const FOCUS_AREA_TO_PLAN_PATH: Record<FocusAreaSlug, string> = {
   sleep: '/plan/sleep',
   skincare: '/plan/skincare',
   facial_hair: '/plan/facial-hair',
+  facial_structure: '/plan/facial-structure',
 };
 
 // Map onboarding focus_areas → canonical POV slug. Used to highlight
@@ -126,6 +129,7 @@ export const FOCUS_AREA_TO_POV_SLUG: Record<FocusAreaSlug, string> = {
   sleep: '42-sleep',
   skincare: '07-skincare-antiaging',
   facial_hair: '09-facial-hair',
+  facial_structure: '16-facial-definition-jawline',
 };
 
 // Reverse lookup — given a POV slug, get the focus_area it represents

@@ -14,6 +14,7 @@ const JOURNEY_LABELS: Record<string, string> = {
   sleep: 'Sleep',
   skincare: 'Skincare',
   facial_hair: 'Facial hair',
+  facial_structure: 'Facial structure',
   fitness: 'Fitness',
   skin: 'Skin',
   grooming: 'Grooming',

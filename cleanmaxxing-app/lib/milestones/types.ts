@@ -65,6 +65,7 @@ export const STATIC_TRIGGER_KEYS = {
   SLEEP_MAINTENANCE_REACHED: 'sleep_maintenance_reached',
   SKINCARE_MAINTENANCE_REACHED: 'skincare_maintenance_reached',
   FACIAL_HAIR_MAINTENANCE_REACHED: 'facial_hair_maintenance_reached',
+  FACIAL_STRUCTURE_MAINTENANCE_REACHED: 'facial_structure_maintenance_reached',
 } as const;
 
 export type StaticTriggerKey =

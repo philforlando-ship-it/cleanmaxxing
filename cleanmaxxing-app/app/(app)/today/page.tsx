@@ -19,6 +19,7 @@ import { ProfileCompletionCard } from './profile-completion-card';
 // focus, Mister P chat surface.
 import { HairRoutineCard } from './hair-routine-card';
 import { HairPhotoDueCard } from './hair-photo-due-card';
+import { FacialStructurePhotoCard } from './facial-structure-photo-card';
 import { SleepCommitmentsCard } from './sleep-commitments-card';
 import { RecoveryCheckCard } from './recovery-check-card';
 import { SkincareSpfCard } from './skincare-spf-card';
@@ -50,6 +51,7 @@ import { JourneysGrid } from './journeys-grid';
 import { sortJourneys } from '@/lib/today/journeys';
 import { getSkincareLogState } from '@/lib/skincare/log-service';
 import { getFacialHairAssessment } from '@/lib/facial-hair/service';
+import { hasFacialStructureAssessment } from '@/lib/facial-structure/service';
 import { getFacialHairGroomState } from '@/lib/facial-hair/groom-service';
 import { getTodayCommitmentsState } from '@/lib/sleep/commitments';
 import { daysUntilNext } from '@/lib/hair/stage-5-content';
@@ -236,6 +238,8 @@ export default async function TodayPage({ searchParams }: Props) {
     styleAssessment,
     nutritionAssessmentState,
     cardioAssessmentState,
+    facialStructureAssessmentState,
+    { data: facialStructureCadenceRow },
   ] = await Promise.all([
     supabase
       .from('survey_responses')
@@ -251,6 +255,17 @@ export default async function TodayPage({ searchParams }: Props) {
     getStyleAssessment(supabase, user.id),
     hasNutritionAssessment(supabase, user.id),
     hasCardioAssessment(supabase, user.id),
+    hasFacialStructureAssessment(supabase, user.id),
+    // Cadence read for the monthly photo tile. Only the three fields
+    // the tile gates on — kept separate from hasFacialStructureAssessment
+    // so the grid rollup stays a presence-only check.
+    supabase
+      .from('facial_structure_assessments')
+      .select(
+        'stage_1_acknowledged_at, last_facial_photo_logged_at, report_generated_at',
+      )
+      .eq('user_id', user.id)
+      .maybeSingle(),
   ]);
   // Focus-area flags remaining after Phase B cleanup. Style /
   // grooming / skin / body_composition flags were dropped because
@@ -368,6 +383,41 @@ export default async function TodayPage({ searchParams }: Props) {
     hairStage5Started &&
     (hairStage5IsFirstSession ||
       (hairStage5DaysUntil !== null && hairStage5DaysUntil <= 0));
+
+  // Facial-structure monthly photo cadence (Task 2 of facial-structure
+  // post-Slice-3 work, 2026-05-11). Fires when:
+  //   - report exists (assessment was generated)
+  //   - Stage 1 acknowledged (user has explicitly engaged with the
+  //     lever; before this, the photo cadence hasn't started)
+  //   - last log is null (first session) OR >30 days ago
+  const facialStructureCadence = (facialStructureCadenceRow as {
+    stage_1_acknowledged_at: string | null;
+    last_facial_photo_logged_at: string | null;
+    report_generated_at: string | null;
+  } | null) ?? null;
+  const facialStructurePhotoIsFirstSession =
+    facialStructureCadence !== null &&
+    facialStructureCadence.report_generated_at !== null &&
+    facialStructureCadence.stage_1_acknowledged_at !== null &&
+    facialStructureCadence.last_facial_photo_logged_at === null;
+  const facialStructurePhotoDaysSinceLast =
+    facialStructureCadence?.last_facial_photo_logged_at
+      ? Math.floor(
+          (Date.now() -
+            new Date(
+              facialStructureCadence.last_facial_photo_logged_at,
+            ).getTime()) /
+            (24 * 60 * 60 * 1000),
+        )
+      : null;
+  const showFacialStructurePhotoCard =
+    !steppedAway &&
+    facialStructureCadence !== null &&
+    facialStructureCadence.report_generated_at !== null &&
+    facialStructureCadence.stage_1_acknowledged_at !== null &&
+    (facialStructurePhotoIsFirstSession ||
+      (facialStructurePhotoDaysSinceLast !== null &&
+        facialStructurePhotoDaysSinceLast >= 30));
 
   // C6 (hair analog): mint a signed URL for the latest hair-session
   // anchor when the photo-due tile will render AND a prior anchor
@@ -709,6 +759,7 @@ export default async function TodayPage({ searchParams }: Props) {
         showHairRoutineTile && hairStage4 && hairStage4.target !== null,
       ) ||
       showHairPhotoDueTile ||
+      showFacialStructurePhotoCard ||
       show30dNudge ||
       show90dNudge ||
       show180dNudge ||
@@ -776,6 +827,11 @@ export default async function TodayPage({ searchParams }: Props) {
                 hasAssessment: facialHairAssessment !== null,
                 hasReport: facialHairAssessment?.report_text != null,
               },
+              facial_structure: facialStructureAssessmentState,
+              // Presentation has no assessment surface — the page is a
+              // curated content hub. Mark always-ready so the tile
+              // renders with the "Open" CTA instead of "Start" / "Resume".
+              presentation: { hasAssessment: true, hasReport: true },
             }}
           />
         )}
@@ -844,6 +900,13 @@ export default async function TodayPage({ searchParams }: Props) {
             isFirstSession={hairStage5IsFirstSession}
             daysUntil={hairStage5DaysUntil}
             priorAnchorSignedUrl={priorHairAnchorSignedUrl}
+          />
+        )}
+
+        {showFacialStructurePhotoCard && (
+          <FacialStructurePhotoCard
+            isFirstSession={facialStructurePhotoIsFirstSession}
+            daysSinceLast={facialStructurePhotoDaysSinceLast}
           />
         )}
 

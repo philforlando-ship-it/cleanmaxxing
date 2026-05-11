@@ -30,6 +30,7 @@ export type PrimaryAction = {
     | 'hair'
     | 'style'
     | 'facial_hair'
+    | 'facial_structure'
     | 'nutrition'
     | 'strength'
     | 'cardio'

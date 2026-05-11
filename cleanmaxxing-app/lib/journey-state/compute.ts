@@ -33,7 +33,8 @@ export type JourneySlug =
   | 'cardio'
   | 'sleep'
   | 'skincare'
-  | 'facial_hair';
+  | 'facial_hair'
+  | 'facial_structure';
 
 export type JourneyPhase = 'implementing' | 'maintaining' | 'drifting';
 
@@ -66,6 +67,10 @@ type NutritionRow = {
 
 type DatedRow = { created_at: string };
 
+type FacialStructureRow = {
+  stage_3_acknowledged_at: string | null;
+};
+
 export async function computeAllJourneyPhases(
   supabase: SupabaseClient,
   userId: string,
@@ -83,6 +88,7 @@ export async function computeAllJourneyPhases(
     { data: nutritionRow },
     { data: skincareRow },
     { data: facialHairRow },
+    { data: facialStructureRow },
     { data: sleepRows },
     { data: strengthWorkoutRows },
     { data: cardioWorkoutRows },
@@ -116,6 +122,11 @@ export async function computeAllJourneyPhases(
     supabase
       .from('facial_hair_assessments')
       .select('created_at')
+      .eq('user_id', userId)
+      .maybeSingle(),
+    supabase
+      .from('facial_structure_assessments')
+      .select('stage_3_acknowledged_at')
       .eq('user_id', userId)
       .maybeSingle(),
     supabase
@@ -218,6 +229,14 @@ export async function computeAllJourneyPhases(
       nowMs,
       8 * 7 * DAYS_MS,
       'facial_hair_assessment_8wks',
+    );
+  }
+
+  const facialStructure = facialStructureRow as FacialStructureRow | null;
+  if (facialStructure) {
+    out.facial_structure = computeFacialStructurePhase(
+      facialStructure,
+      nowMs,
     );
   }
 
@@ -438,4 +457,29 @@ function computeAssessmentAgePhase(
     return { phase: 'maintaining', source };
   }
   return { phase: 'implementing', source: `${source}_pending` };
+}
+
+function computeFacialStructurePhase(
+  row: FacialStructureRow,
+  nowMs: number,
+): ComputedJourneyState {
+  // Stage 3 (framing layer) acknowledged AND >=4 wks elapsed = the
+  // user has held the framing floor (hair / beard / tanning / glasses
+  // coordination) for a month. Stage 4 (Pattern D cosmetic shell) is
+  // OPTIONAL — most users will never enter it, so making it the
+  // maintenance gate would lock the majority out of maintaining.
+  // Matches the style journey's stage_3_acknowledged_at pattern.
+  if (row.stage_3_acknowledged_at) {
+    const ackMs = new Date(row.stage_3_acknowledged_at).getTime();
+    if (nowMs - ackMs >= 4 * 7 * DAYS_MS) {
+      return {
+        phase: 'maintaining',
+        source: 'facial_structure_stage_3_plus_4wks',
+      };
+    }
+  }
+  return {
+    phase: 'implementing',
+    source: 'facial_structure_assessment_active',
+  };
 }

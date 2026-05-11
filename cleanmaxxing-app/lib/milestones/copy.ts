@@ -120,6 +120,11 @@ const STATIC_COPY: Record<string, MilestoneCopy> = {
     body: 'Target length reached and the upkeep cadence is consistent. The shape is yours now. Drift is a week of skipped trims, not a regression.',
     cta: { href: '/plan/facial-hair', label: 'Open facial-hair plan →' },
   },
+  facial_structure_maintenance_reached: {
+    title: 'Facial structure — the framing floor is held.',
+    body: 'Body comp, posture, sleep, framing — the levers that produced the definition are holding. Monthly photo is the cadence; the work shifts from building to defending.',
+    cta: { href: '/plan/facial-structure', label: 'Open facial-structure plan →' },
+  },
 };
 
 const GLP1_THREE_MONTHS_COPY: MilestoneCopy = {

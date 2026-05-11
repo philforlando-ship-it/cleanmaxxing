@@ -49,6 +49,7 @@ type FocusArea =
   | 'style'
   | 'grooming'
   | 'facial_hair'
+  | 'facial_structure'
   | 'sleep'
   | 'skin'
   | 'skincare'
@@ -238,6 +239,7 @@ export async function gatherPickerState(
             'style',
             'grooming',
             'facial_hair',
+            'facial_structure',
             'sleep',
             'skin',
             'skincare',
@@ -401,6 +403,7 @@ const ORDER_FOR_FIRST_RUN: FocusArea[] = [
   'skin',
   'facial_hair',
   'grooming',
+  'facial_structure',
 ];
 
 const FIRST_RUN_BY_FOCUS: Record<
@@ -472,6 +475,12 @@ const FIRST_RUN_BY_FOCUS: Record<
     title: 'Start your skincare plan.',
     body: 'A short assessment about your skin type and concerns.',
     href: '/plan/skincare',
+  },
+  facial_structure: {
+    topic: 'facial_structure',
+    title: 'Start your facial structure plan.',
+    body: 'Six short questions about body comp, posture, chin/jaw, and openness to procedures. Mister P names a single lever.',
+    href: '/plan/facial-structure',
   },
 };
 
@@ -911,6 +920,13 @@ const MAINTENANCE_BUCKET_COPY: Record<
     body: 'Your upkeep cadence is keeping the shape. Monthly density check is the rest of the work.',
     cta_label: 'Open facial-hair plan',
     cta_href: '/plan/facial-hair',
+  },
+  facial_structure: {
+    topic: 'facial_structure',
+    title: 'Facial structure is in maintenance — the framing floor is held.',
+    body: 'Body comp, posture, sleep, framing all holding. Monthly same-conditions photo is the read; the face is downstream of behaviors that are already on.',
+    cta_label: 'Open facial-structure plan',
+    cta_href: '/plan/facial-structure',
   },
 };
 

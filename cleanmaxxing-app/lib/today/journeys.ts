@@ -24,7 +24,9 @@ export type JourneySlug =
   | 'cardio'
   | 'sleep'
   | 'skincare'
-  | 'facial_hair';
+  | 'facial_hair'
+  | 'facial_structure'
+  | 'presentation';
 
 export type JourneyConfig = {
   slug: JourneySlug;
@@ -97,6 +99,28 @@ export const JOURNEYS: ReadonlyArray<JourneyConfig> = [
     blurb: 'Density-aware style picks and grow-out plan.',
     tier: 'tier-3',
   },
+  {
+    slug: 'facial_structure',
+    label: 'Facial structure',
+    planPath: '/plan/facial-structure',
+    blurb:
+      'Chin, jaw, cheekbones — lever-driven, not procedure-first. Lifestyle floor before anything else.',
+    tier: 'tier-2',
+  },
+  {
+    slug: 'presentation',
+    label: 'Presentation',
+    planPath: '/plan/presentation',
+    blurb:
+      'Posture, voice, eye contact — daily practice prompts and the reading behind them.',
+    // Tier-4: matches the anchor POV (14-presence-intangibles). Lighter
+    // than tier-3 cardio / facial_hair — won't be the lever that moves
+    // outcomes, but worth practicing once the foundation is in place.
+    // No assessment surface; the page is a content hub branded as a
+    // journey. See /plan/presentation for the deliberate-no-assessment
+    // framing.
+    tier: 'tier-4',
+  },
 ];
 
 // Tier rank for sorting (lower = higher priority).
@@ -143,6 +167,8 @@ function expandLegacyFocusArea(value: string): JourneySlug[] {
     case 'sleep':
     case 'skincare':
     case 'facial_hair':
+    case 'facial_structure':
+    case 'presentation':
       return [value];
     case 'fitness':
       return ['strength', 'cardio'];

@@ -44,6 +44,7 @@ async function listCandidateUserIds(): Promise<string[]> {
     { table: 'sleep_assessments', column: 'user_id' },
     { table: 'skincare_assessments', column: 'user_id' },
     { table: 'facial_hair_assessments', column: 'user_id' },
+    { table: 'facial_structure_assessments', column: 'user_id' },
   ];
 
   const userIds = new Set<string>();

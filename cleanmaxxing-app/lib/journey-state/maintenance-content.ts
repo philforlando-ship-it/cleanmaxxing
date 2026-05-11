@@ -383,6 +383,61 @@ export const MAINTENANCE_CONTENT: Record<JourneySlug, MaintenanceContent> = {
     },
   },
 
+  facial_structure: {
+    headline: 'Facial structure — the framing floor is held.',
+    defendedFloor: {
+      intro:
+        'You held the levers that produced the definition you have. Body comp inside its range, posture out of forward-head, sleep / sodium / alcohol on baseline behaviors, hair / beard framing intact.',
+      items: [
+        'Body fat within the band that read sharp for your distribution (face-first vs face-softer calibrates the target).',
+        'Forward-head posture stays uncommon — head over shoulders is the resting state.',
+        'Sleep ≥7 hrs and alcohol at baseline — these are the daily puff variables.',
+        'Hair length / beard / glasses still complement the face shape; nothing has drifted enough to fight the structure.',
+      ],
+    },
+    driftSignals: {
+      intro:
+        'The face puff vs true regression distinction is critical here. Two days of vacation puff is not regression. Sustained 3-4 week drift past baseline behaviors is the real signal.',
+      items: [
+        'Morning puff persisting past 72 hours of normal-baseline behavior.',
+        'Body comp drifted 5+ lb above your defended range for 3+ weeks (face is downstream).',
+        'Forward-head posture creeping back — partner or photos catching it.',
+        'Friends asking "are you tired" when you are not — the face is reading softer.',
+        'Photos consistently reading softer over a month at the angle you used to feel best.',
+      ],
+    },
+    climbBack: {
+      intro:
+        'Overcorrection on temporary puff is the bigger risk than the regression itself. Wait the week before any aggressive action.',
+      items: [
+        'Identify the likely source first — sleep, alcohol, sodium, body comp, stress. The face responds to the source in 7-14 days.',
+        'If a full month at baseline does not move the face back, the issue is downstream body comp — climb back via /plan/nutrition, not facial-specific intervention.',
+        'Avoid fasting / sauna / procedure decisions in the first 2-3 weeks of any drift — most drift resolves on baseline return.',
+      ],
+    },
+    cadence: {
+      intro:
+        'Slow signal — monthly is the right read here. Daily mirror checks are too noisy and feed overcorrection.',
+      items: [
+        {
+          frequency: 'Monthly',
+          action:
+            'Same-conditions photo (same lighting / camera distance / morning before food) — compare to prior month.',
+        },
+        {
+          frequency: 'Quarterly',
+          action:
+            'Baseline-behavior audit — sleep average, alcohol, sodium pattern, training volume, stress.',
+        },
+        {
+          frequency: 'Annual',
+          action:
+            'Full re-assessment — body comp distribution, age-stratified considerations.',
+        },
+      ],
+    },
+  },
+
   facial_hair: {
     headline: 'Facial hair — the cadence holds.',
     defendedFloor: {

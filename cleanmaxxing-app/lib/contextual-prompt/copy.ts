@@ -191,6 +191,10 @@ const DRIFT_COPY: Record<JourneySlug, { title: string; body: string }> = {
     title: 'Facial hair upkeep cadence has slipped.',
     body: 'A trim + edge cleanup resets most of this. Return to your cadence the next session — do not double up to compensate.',
   },
+  facial_structure: {
+    title: 'Facial structure baseline has drifted.',
+    body: 'Body comp or posture has moved enough that the face is reading differently. The face is downstream — climb back on the upstream lever, not facial-specific intervention.',
+  },
 };
 
 export function copyJourneyDriftDetected(
