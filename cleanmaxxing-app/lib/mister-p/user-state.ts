@@ -17,6 +17,7 @@ import { getUserProfile, type UserProfile } from '@/lib/profile/service';
 import { getSleepState } from '@/lib/sleep/service';
 import { getWorkoutState } from '@/lib/workout/service';
 import { FIRST_CONVO_KEYS } from '@/lib/first-convo/service';
+import { getLatestHairAnchorPhotoPath } from '@/lib/photos/hair-anchor-lookup';
 
 export type ConfidenceTrend = 'rising' | 'flat' | 'declining';
 
@@ -34,10 +35,6 @@ export type MisterPUserState = {
 
   // Rough tenure signal so Mister P can calibrate "how deep to go."
   daysSinceOnboarding: number;
-
-  // Share of possible goal-tick slots ticked over the last 7 days.
-  // Null when there are no active goals or the user is < 2 days old.
-  weeklyCompletionRate: number | null;
 
   // Per-dimension latest reflection value + direction vs. the prior
   // reflection. Null when there are no reflections yet.
@@ -200,12 +197,6 @@ export async function getMisterPUserState(
       ? Number(userRow.age)
       : null;
 
-  // Weekly completion rate — share of tickable slots actually ticked
-  // across all active goals in the last 7 days. Mirrors
-  // getWeeklyCheckInSummary's semantics without importing it to keep
-  // this helper self-contained.
-  const weeklyCompletionRate = await computeWeeklyCompletion(supabase, userId, now);
-
   // Confidence snapshot — latest reflection plus direction vs. prior.
   // Pull 3 rows so we can both reason about trend and identify stuck
   // dimensions in one query.
@@ -355,42 +346,17 @@ export async function getMisterPUserState(
     (fitRows ?? [])[0]?.storage_path ?? null;
 
   // Latest completed hair session anchor photo (front for hair track,
-  // top_down for bald track). One query joins the most recent
-  // completed session to its anchor angle photo. We try 'front' first
-  // and fall back to 'top_down' if the user is on the bald track.
-  let latestHairAnchorPhotoPath: string | null = null;
-  const { data: latestSessionRow } = await supabase
-    .from('hair_photo_sessions')
-    .select('id')
-    .eq('user_id', userId)
-    .not('completed_at', 'is', null)
-    .order('captured_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const latestSessionId =
-    (latestSessionRow as { id: string } | null)?.id ?? null;
-  if (latestSessionId) {
-    const { data: anchorRow } = await supabase
-      .from('hair_photos')
-      .select('storage_path, angle')
-      .eq('user_id', userId)
-      .eq('session_id', latestSessionId)
-      .in('angle', ['front', 'top_down']);
-    const anchors = (anchorRow ?? []) as Array<{
-      storage_path: string;
-      angle: string;
-    }>;
-    // Prefer 'front' over 'top_down' when both exist (the hair track is
-    // the more common case).
-    const front = anchors.find((a) => a.angle === 'front');
-    const top = anchors.find((a) => a.angle === 'top_down');
-    latestHairAnchorPhotoPath = front?.storage_path ?? top?.storage_path ?? null;
-  }
+  // top_down for bald track). Single helper call instead of the
+  // session-then-photo two-query pattern that used to live here —
+  // see lib/photos/hair-anchor-lookup.ts for the embed-based query.
+  const latestHairAnchorPhotoPath = await getLatestHairAnchorPhotoPath(
+    supabase,
+    userId,
+  );
 
   return {
     specificThing,
     daysSinceOnboarding,
-    weeklyCompletionRate,
     confidence,
     stuckDimensions,
     age,
@@ -414,55 +380,3 @@ export async function getMisterPUserState(
   };
 }
 
-async function computeWeeklyCompletion(
-  supabase: SupabaseClient,
-  userId: string,
-  now: Date,
-): Promise<number | null> {
-  const endMs = now.getTime();
-  const startObj = new Date(now);
-  startObj.setDate(startObj.getDate() - 6);
-
-  function dateString(d: Date): string {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${dd}`;
-  }
-  const startDate = dateString(startObj);
-  const endDate = dateString(now);
-
-  const { data: goalRows } = await supabase
-    .from('goals')
-    .select('id, created_at')
-    .eq('user_id', userId)
-    .eq('status', 'active');
-  const activeGoals = (goalRows ?? []) as Array<{ id: string; created_at: string }>;
-  if (activeGoals.length === 0) return null;
-
-  let possible = 0;
-  for (const g of activeGoals) {
-    const daysSince = Math.floor((endMs - new Date(g.created_at).getTime()) / MS_PER_DAY) + 1;
-    possible += Math.max(0, Math.min(7, daysSince));
-  }
-  if (possible === 0) return null;
-
-  const { data: checkInRows } = await supabase
-    .from('check_ins')
-    .select('id')
-    .eq('user_id', userId)
-    .gte('date', startDate)
-    .lte('date', endDate);
-  const checkInIds = (checkInRows ?? []).map((c) => c.id as string);
-  if (checkInIds.length === 0) return 0;
-
-  const { data: tickedRows } = await supabase
-    .from('goal_check_ins')
-    .select('id')
-    .in('check_in_id', checkInIds)
-    .in('goal_id', activeGoals.map((g) => g.id))
-    .eq('completed', true);
-  const ticked = (tickedRows ?? []).length;
-
-  return Math.max(0, Math.min(1, ticked / possible));
-}
