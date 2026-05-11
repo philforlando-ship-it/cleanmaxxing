@@ -82,10 +82,17 @@ export type FocusAreaSlug =
   | 'skincare'
   | 'facial_hair';
 
+// User-facing journey labels. The `body_composition` slug renders as
+// "Nutrition" everywhere because the journey itself is about nutrition
+// inputs (macros, calorie target, protein floor, dietary preferences,
+// fasting protocol) — body composition is the OUTCOME that work
+// produces, not the journey name. Internal slug stays `body_composition`
+// so persisted survey_responses rows + journey-state mappings + DB
+// references don't have to migrate.
 export const FOCUS_AREA_LABEL: Record<FocusAreaSlug, string> = {
   hair: 'Hair',
   style: 'Style',
-  body_composition: 'Body composition',
+  body_composition: 'Nutrition',
   strength: 'Strength',
   cardio: 'Cardio',
   sleep: 'Sleep',

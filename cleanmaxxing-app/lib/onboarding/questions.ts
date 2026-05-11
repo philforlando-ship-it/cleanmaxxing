@@ -70,7 +70,7 @@ export const QUESTIONS: Question[] = [
     options: [
       { value: 'hair', label: 'Hair' },
       { value: 'style', label: 'Style' },
-      { value: 'body_composition', label: 'Body composition' },
+      { value: 'body_composition', label: 'Nutrition' },
       { value: 'strength', label: 'Strength' },
       { value: 'cardio', label: 'Cardio' },
       { value: 'sleep', label: 'Sleep' },

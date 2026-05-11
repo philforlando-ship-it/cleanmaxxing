@@ -50,9 +50,9 @@ export const JOURNEYS: ReadonlyArray<JourneyConfig> = [
   },
   {
     slug: 'body_composition',
-    label: 'Body composition',
+    label: 'Nutrition',
     planPath: '/plan/nutrition',
-    blurb: 'Nutrition plan — protein, calories, eating pattern.',
+    blurb: 'Protein floor, calorie target, eating pattern, alcohol.',
     tier: 'tier-1',
   },
   {

@@ -8,7 +8,7 @@ import { JourneyWelcome } from './journey-welcome';
 const JOURNEY_LABELS: Record<string, string> = {
   hair: 'Hair',
   style: 'Style',
-  body_composition: 'Body composition',
+  body_composition: 'Nutrition',
   strength: 'Strength',
   cardio: 'Cardio',
   sleep: 'Sleep',
