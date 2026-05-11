@@ -22,6 +22,7 @@ import type {
   CardioInjuryConstraint,
   CardioModalityPreference,
   CardioOutdoorAccess,
+  CardioPrimaryRole,
   CardioTimePerSession,
 } from './types';
 
@@ -30,6 +31,18 @@ export type RecommendedModalitiesArgs = {
   outdoor_access: CardioOutdoorAccess | null;
   time_per_session: CardioTimePerSession | null;
   injury_constraints: CardioInjuryConstraint[];
+  // Migration 0090 — primary_role is what cardio is FOR per the user.
+  // Multi-select array. Drives small additive bias on top of the
+  // equipment/injury/time constraints below — e.g.,
+  // cardiovascular_health users see cycling/rowing/elliptical biased
+  // up toward the VO2max-building modalities; conditioning_for_lifting
+  // users see running biased down (eccentric footstrike interferes).
+  // Weights are intentionally small (+/- 1-3) so they don't override
+  // hard exclusions — only break ties between otherwise-comparable
+  // modalities. Pre-migration assessments pass [] and no role-bias
+  // fires; the equipment/injury/time logic alone still produces a
+  // sensible top 3.
+  primary_role: CardioPrimaryRole[];
 };
 
 export type RankedModality = {
@@ -229,6 +242,73 @@ function scoreModality(
   ) {
     score += 1;
   }
+
+  // Primary-role bias (mig 0090). Small additive weights — the
+  // equipment / injury / time constraints above are load-bearing;
+  // role-bias is the tiebreak that points the user at the modalities
+  // best suited to their stated cardio goal. Multiple roles compound
+  // (e.g., cardiovascular_health + conditioning_for_lifting both
+  // present → cycling gets both bumps).
+  const role = new Set(args.primary_role);
+
+  if (role.has('cardiovascular_health')) {
+    // Bias toward modalities that build VO2max via interval-friendly
+    // formats; bias away from slow walking which adds steps but no
+    // cardiorespiratory ceiling.
+    if (
+      modality === 'cycling' ||
+      modality === 'rowing' ||
+      modality === 'running_jogging' ||
+      modality === 'elliptical_stair_machine'
+    ) {
+      score += 2;
+    }
+    if (modality === 'slow_walking') score -= 2;
+  }
+
+  if (role.has('conditioning_for_lifting')) {
+    // Bias toward low-interference modalities (pure-concentric or
+    // joint-friendly); bias away from running (eccentric footstrike
+    // load every step interferes with leg-day recovery — Nippard's
+    // explicit guidance).
+    if (
+      modality === 'cycling' ||
+      modality === 'brisk_walking_hiking' ||
+      modality === 'swimming'
+    ) {
+      score += 1;
+    }
+    if (modality === 'running_jogging') score -= 1;
+  }
+
+  if (role.has('support_fat_loss')) {
+    // Higher caloric burn per minute — running, rowing, group classes
+    // tend to drive the most output in the same time window. Small
+    // bump only; the eating side still does most of the work.
+    if (
+      modality === 'running_jogging' ||
+      modality === 'rowing' ||
+      modality === 'classes_group'
+    ) {
+      score += 1;
+    }
+  }
+
+  if (role.has('general_movement')) {
+    // The user wants to move more, no fitness-target framing. Walking
+    // is the right shape — slow walking included, since the goal is
+    // movement not VO2max. Don't penalize anything; just lift the
+    // friction-free options.
+    if (
+      modality === 'brisk_walking_hiking' ||
+      modality === 'slow_walking'
+    ) {
+      score += 1;
+    }
+  }
+
+  // 'not_sure' deliberately produces no adjustment — let the
+  // constraint-based logic alone produce the ranking.
 
   return { score, rationale };
 }

@@ -238,6 +238,7 @@ export default async function CardioPlanPage({ searchParams }: Props) {
             outdoor_access={assessment.outdoor_access}
             time_per_session={assessment.time_per_session}
             injury_constraints={assessment.injury_constraints}
+            primary_role={assessment.primary_role}
             current_preferences={assessment.modality_preference}
           />
 

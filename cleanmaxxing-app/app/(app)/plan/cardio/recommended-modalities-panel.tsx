@@ -16,6 +16,7 @@ import type {
   CardioInjuryConstraint,
   CardioModalityPreference,
   CardioOutdoorAccess,
+  CardioPrimaryRole,
   CardioTimePerSession,
 } from '@/lib/cardio/types';
 
@@ -26,6 +27,11 @@ type Props = {
   outdoor_access: CardioOutdoorAccess | null;
   time_per_session: CardioTimePerSession | null;
   injury_constraints: CardioInjuryConstraint[];
+  // primary_role drives an additive ranking bias inside scoreModality
+  // (cardiovascular_health pushes VO2max-building modalities up,
+  // conditioning_for_lifting pushes running down, etc.). Multi-select
+  // array per migration 0090.
+  primary_role: CardioPrimaryRole[];
   // Highlight the user's current modality_preference picks if any
   // appear in the top 3. Quiet visual marker, not a CTA. Now an
   // array under migration 0090.
@@ -37,6 +43,7 @@ export function RecommendedModalitiesPanel({
   outdoor_access,
   time_per_session,
   injury_constraints,
+  primary_role,
   current_preferences,
 }: Props) {
   // Need at least one equipment_access entry plus outdoor_access +
@@ -56,6 +63,7 @@ export function RecommendedModalitiesPanel({
     outdoor_access,
     time_per_session,
     injury_constraints,
+    primary_role,
   });
 
   if (ranked.length === 0) return null;
