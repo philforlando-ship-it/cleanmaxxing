@@ -6,6 +6,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { CMSpinner } from '@/components/cm-logo';
 
 type Props = {
   weeksSinceLastTouch: number;
@@ -74,6 +75,7 @@ export function StepUpCard({ weeksSinceLastTouch }: Props) {
             ? 'Mister P is rewriting your plan…'
             : 'Step up and re-run plan'}
         </button>
+        {pending && <CMSpinner size="xs" className="ml-3" />}
       </div>
     </section>
   );

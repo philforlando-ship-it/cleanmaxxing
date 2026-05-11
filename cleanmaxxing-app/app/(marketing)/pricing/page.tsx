@@ -1,12 +1,21 @@
-// /pricing — public Free vs Premium comparison.
+// /pricing — public Free vs Pro comparison.
 //
 // Server component: checks auth + current premium status so the CTA
 // section adapts (anonymous → sign up; logged-in free → plan picker;
-// logged-in premium → manage-billing link). The comparison content
-// itself is static — the truth source for what's gated is the
-// requirePremium calls in the API routes (facial analysis, hair
-// try-on, hair photo AI, beard try-on). Keep this page in sync when
-// new gates land or come off.
+// logged-in premium → manage-billing link).
+//
+// IMPORTANT — this page is FORWARD-LOOKING (2026-05-10 rewrite).
+// The matrix below reflects the INTENDED Free vs Pro split, which
+// is ahead of the actual enforcement. Several gates named here
+// (3-journey cap, 10-chat-queries-per-month cap, wearable Pro gate,
+// cross-journey Pro gate, photo-aware chat Pro gate) are not yet
+// implemented in the API routes / chat path / journey picker. The
+// page is the spec; the code catches up. When a gate ships, no
+// change is needed here unless the limit value moves.
+//
+// Already-gated today (truth source = requirePremium calls in API
+// routes): facial analysis, hair cut try-on, hair photo trend
+// analysis, beard try-on.
 
 import Link from 'next/link';
 import type { Metadata } from 'next';
@@ -17,14 +26,20 @@ import { BillingPlanPicker } from '@/app/(app)/settings/billing/billing-plan-pic
 export const metadata: Metadata = {
   title: 'Pricing — Cleanmaxxing',
   description:
-    "Most of the app is free. A few AI-heavy features unlock with premium. Here's the honest breakdown.",
+    'Three journeys free. Ten on Pro. The cross-journey logic is Pro only.',
 };
+
+// FeatureValue is either a boolean (rendered as check / dash) or a
+// string (rendered verbatim — e.g., "3 of your choice", "10/month",
+// "Basic"). String form is used for limit-based or tier-quality rows
+// where check/dash would lose information.
+type FeatureValue = boolean | string;
 
 type FeatureRow = {
   label: string;
   description?: string;
-  free: boolean;
-  premium: boolean;
+  free: FeatureValue;
+  premium: FeatureValue;
 };
 
 type FeatureGroup = {
@@ -37,11 +52,11 @@ const GROUPS: FeatureGroup[] = [
     heading: 'Journeys',
     rows: [
       {
-        label: 'All 10 structured plans',
+        label: 'Active journeys',
         description:
           'Hair, body composition, strength, cardio, sleep, skincare, style, facial hair, GLP-1, TRT. Full assessment + personalized report on each.',
-        free: true,
-        premium: true,
+        free: '3 of your choice',
+        premium: 'All 10',
       },
       {
         label: 'Plan re-evaluation',
@@ -79,28 +94,35 @@ const GROUPS: FeatureGroup[] = [
       {
         label: 'Milestone tracking',
         description:
-          'Body fat brackets, weight thresholds, sleep consistency, RHR trained band, GLP-1 anniversaries — fired automatically.',
-        free: true,
-        premium: true,
+          'Free covers weight thresholds and sleep consistency. Pro adds RHR trained-band, VO2max progression, body-fat brackets, and protocol anniversaries.',
+        free: 'Basic',
+        premium: 'Full',
       },
     ],
   },
   {
-    heading: 'Mister P',
+    heading: 'Mister P chat',
     rows: [
       {
         label: 'Chat with the full content library',
         description:
-          'Grounded in 100,000+ words of authored evidence. Knows your assessments, photos, and journey state.',
-        free: true,
+          'Grounded in 100,000+ words of authored evidence. Free covers a casual user’s monthly use; Pro is unlimited for power use.',
+        free: '10 queries / month',
+        premium: 'Unlimited',
+      },
+      {
+        label: 'Photo-aware chat',
+        description:
+          'Mister P sees your baseline face, recent progress, hair photos, and fit photos when answering. Pro only — vision tokens are an inference cost driver.',
+        free: false,
         premium: true,
       },
       {
-        label: 'Photo-aware conversation',
+        label: 'Cross-journey awareness in answers',
         description:
-          'Sees your baseline face photo and your latest hair anchor photo when relevant.',
-        free: true,
-        premium: true,
+          'Free Mister P answers each question in isolation. Pro Mister P reads how your strength, cardio, nutrition, sleep, and recovery interact — and answers from the whole picture.',
+        free: 'Limited',
+        premium: 'Full',
       },
     ],
   },
@@ -110,16 +132,63 @@ const GROUPS: FeatureGroup[] = [
       {
         label: 'Connect any major wearable',
         description:
-          'Fitbit, Whoop, Oura, Garmin, Withings, Strava, and more via Junction. Sleep, steps, intensity minutes, active calories, RHR, HRV, and VO2max all flow in. Apple Watch / Apple Health needs a native iOS bridge that this web app doesn\'t have yet.',
-        free: true,
+          'Fitbit, Whoop, Oura, Garmin, Withings, Strava, and more via Junction. Sleep, steps, intensity minutes, active calories, RHR, HRV, and VO2max all flow in. Apple Watch / Apple Health needs a native iOS bridge that this web app doesn’t have yet.',
+        free: false,
         premium: true,
       },
       {
         label: 'Wearable-aware coaching',
         description:
-          'Your reports and Mister P read passive recovery signals (HRV trend, RHR trained-band, VO2max progression) alongside the self-report.',
-        free: true,
+          'Your reports read passive recovery signals (HRV trend, RHR trained-band, VO2max progression) alongside self-report.',
+        free: false,
         premium: true,
+      },
+    ],
+  },
+  {
+    heading: 'Cross-journey orchestration',
+    rows: [
+      {
+        label: 'Strength ↔ cardio recovery balance',
+        description:
+          'Lifting volume up → cardio dose adjusts. High cardio output → strength recovery accommodates. Both share recovery; Pro models the trade-off.',
+        free: false,
+        premium: true,
+      },
+      {
+        label: 'Nutrition ↔ strength + cardio',
+        description:
+          'Caloric deficit warning when strength volume is high. Protein floor scales with lifting load. Cardio output influences calorie targets.',
+        free: false,
+        premium: true,
+      },
+      {
+        label: 'Hair ↔ facial-hair coordination',
+        description:
+          'Cut recommendation factors current beard. Beard recommendation factors hair density, balding pattern, head shape, graying. Each plan reads the other.',
+        free: false,
+        premium: true,
+      },
+      {
+        label: 'Sleep ↔ training fatigue signal',
+        description:
+          'Bidirectional. Sleep deficit downweights tomorrow’s training intensity. Heavy training week tightens sleep recommendations.',
+        free: false,
+        premium: true,
+      },
+      {
+        label: 'Activity-change recalibration',
+        description:
+          'When weekly reflection shows your real activity has shifted, every active plan re-evaluates against the new baseline — not just the journey you flagged.',
+        free: false,
+        premium: true,
+      },
+      {
+        label: 'Cross-journey signals on /today',
+        description:
+          'When two of your journeys interact in a way worth naming — cardio on top of a cut, cardio fatigue downweighting strength, activity change making nutrition stale — /today surfaces it as a contextual prompt. Free sees the cardio-cut signal as a teaser; Pro sees the full set.',
+        free: '1 signal (cardio + cut)',
+        premium: 'Full set',
       },
     ],
   },
@@ -129,14 +198,14 @@ const GROUPS: FeatureGroup[] = [
       {
         label: 'AI facial analysis',
         description:
-          "Your facial structure analyzed by a vision model. Identifies what's working, what's not, and which interventions would move the needle most.",
+          'Your facial structure analyzed by a vision model. Identifies what’s working, what’s not, and which interventions would move the needle most.',
         free: false,
         premium: true,
       },
       {
         label: 'Hair cut try-on',
         description:
-          "Preview yourself in any of the 22 cut families — caesar, high-taper crop, slick-back undercut, classic sweep-back, etc. — before you commit at the barber.",
+          'Preview yourself in any of the 22 cut families — caesar, high-taper crop, slick-back undercut, classic sweep-back, etc. — before you commit at the barber.',
         free: false,
         premium: true,
       },
@@ -170,14 +239,12 @@ export default async function PricingPage() {
       {/* Hero */}
       <section className="max-w-3xl">
         <h1 className="text-4xl font-semibold tracking-tight text-zinc-900 sm:text-5xl dark:text-zinc-100">
-          Most of the app is free.
+          Three journeys free. Ten on Pro.
         </h1>
         <p className="mt-6 text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
-          A few AI-heavy features unlock with premium. Everything else —
-          all 10 journeys, daily check-ins, weekly reflection, Mister P
-          chat against the full evidence library, wearable integration —
-          is on the free plan. No expiration, no payment required to use
-          it.
+          The cross-journey logic — the part that makes this not just an
+          LLM wrapper — is Pro only. Free is enough to know if the
+          system works for you. Pro is the system.
         </p>
       </section>
 
@@ -193,7 +260,7 @@ export default async function PricingPage() {
               Free
             </div>
             <div className="text-center text-xs font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
-              Premium
+              Pro
             </div>
           </div>
 
@@ -220,10 +287,10 @@ export default async function PricingPage() {
                     )}
                   </div>
                   <div className="flex justify-center pt-0.5">
-                    <Mark on={row.free} />
+                    <FeatureCell value={row.free} />
                   </div>
                   <div className="flex justify-center pt-0.5">
-                    <Mark on={row.premium} />
+                    <FeatureCell value={row.premium} emphasized />
                   </div>
                 </div>
               ))}
@@ -240,10 +307,11 @@ export default async function PricingPage() {
               Start free. Decide later.
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-              Sign up to use the free plan — all 10 journeys, daily
-              check-ins, weekly reflection, Mister P chat, and wearable
-              integration. Premium is available from the billing page
-              whenever you want the AI vision features.
+              Sign up and pick three journeys to start. Daily check-ins,
+              weekly reflection, and 10 Mister P queries a month are on
+              the free plan. Pro unlocks the other seven journeys, the
+              cross-journey logic, wearable integration, photo-aware
+              chat, unlimited Mister P, and the AI vision features.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-4">
               <Link
@@ -265,7 +333,7 @@ export default async function PricingPage() {
         {user && premium?.isPremium && (
           <div className="rounded-2xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-900">
             <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-              You&rsquo;re on premium.
+              You&rsquo;re on Pro.
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
               All AI vision features are unlocked. Manage your payment
@@ -286,12 +354,13 @@ export default async function PricingPage() {
         {user && !premium?.isPremium && (
           <div>
             <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-              Upgrade to premium.
+              Upgrade to Pro.
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-              Cancel anytime from the billing page. Your free plan
-              keeps working either way — premium adds the AI vision
-              features on top, it doesn&rsquo;t replace anything.
+              All ten journeys, the cross-journey logic, wearable
+              integration, photo-aware Mister P, unlimited chat, and
+              the AI vision features. Cancel anytime from the billing
+              page; your three free journeys stay yours either way.
             </p>
             <div className="mt-8">
               <BillingPlanPicker />
@@ -307,10 +376,10 @@ export default async function PricingPage() {
             No expiring trial.
           </div>
           <p className="mt-1 leading-relaxed">
-            The free plan has no end date. The system compounds over
-            months — most of the real change shows up at month three and
-            beyond, which is when most apps would have already pushed
-            you to pay.
+            The free plan has no end date. Your three journeys stay
+            yours; check-ins, weekly reflection, and 10 Mister P
+            queries a month renew indefinitely. Pro is when you want
+            the rest of the system.
           </p>
         </div>
         <div>
@@ -318,7 +387,7 @@ export default async function PricingPage() {
             Cancel anytime.
           </div>
           <p className="mt-1 leading-relaxed">
-            Premium is month-to-month or annual. Cancellation is one
+            Pro is month-to-month or annual. Cancellation is one
             click in the Stripe portal. Your free plan continues
             unaffected.
           </p>
@@ -338,8 +407,19 @@ export default async function PricingPage() {
   );
 }
 
-function Mark({ on }: { on: boolean }) {
-  if (on) {
+// Renders a feature-matrix cell. Booleans collapse to a check (true)
+// or a thin dash (false). Strings render verbatim — used for limit-
+// based rows ("3 of your choice", "10 / month") and tier-quality rows
+// ("Basic", "Limited"). The `emphasized` flag bumps text weight on
+// the Pro column so the "All 10" / "Unlimited" reads as the headline.
+function FeatureCell({
+  value,
+  emphasized = false,
+}: {
+  value: FeatureValue;
+  emphasized?: boolean;
+}) {
+  if (value === true) {
     return (
       <svg
         viewBox="0 0 20 20"
@@ -355,10 +435,23 @@ function Mark({ on }: { on: boolean }) {
       </svg>
     );
   }
+  if (value === false) {
+    return (
+      <span
+        aria-label="Not included"
+        className="block h-px w-3.5 bg-zinc-300 dark:bg-zinc-700"
+      />
+    );
+  }
   return (
     <span
-      aria-label="Not included"
-      className="block h-px w-3.5 bg-zinc-300 dark:bg-zinc-700"
-    />
+      className={
+        emphasized
+          ? 'text-center text-xs font-semibold text-zinc-900 dark:text-zinc-100'
+          : 'text-center text-xs text-zinc-600 dark:text-zinc-400'
+      }
+    >
+      {value}
+    </span>
   );
 }

@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { questionAt, QUESTION_COUNT } from '@/lib/onboarding/questions';
+import { getPremiumStatus } from '@/lib/billing/is-premium';
+import { journeyCapFor } from '@/lib/journeys/cap';
 import { QuestionForm } from './question-form';
 
 type Params = { step: string };
@@ -42,6 +44,12 @@ export default async function OnboardingStepPage({
     initialDetail = detail?.response_value ?? null;
   }
 
+  // Resolve the journey cap for the focus_areas picker. 14-day trial
+  // users are premium per getPremiumStatus, so onboarding sign-ups get
+  // the 10-journey ceiling during their trial.
+  const { isPremium } = await getPremiumStatus(user.id);
+  const focusAreasCap = journeyCapFor(isPremium);
+
   return (
     <main className="mx-auto flex min-h-[100svh] max-w-xl flex-col px-6 py-10">
       <div className="mb-8">
@@ -70,6 +78,7 @@ export default async function OnboardingStepPage({
         initialValue={existing?.response_value ?? null}
         initialDetail={initialDetail}
         isLast={step === QUESTION_COUNT - 1}
+        focusAreasCap={focusAreasCap}
       />
     </main>
   );

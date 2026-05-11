@@ -8,9 +8,10 @@
 //                    "Call it good" button
 //   3. completed   → collapsed summary line
 //
-// Auto-completes server-side when all 5 slugs are acquired (see
-// /api/plan/style/stage-2/piece). Users can also manually complete
-// via the "Call it good" button.
+// Auto-completes server-side when all CORE-tier slugs are acquired
+// (see /api/plan/style/stage-2/piece). Optional accessories elevate
+// but do not gate the stage. Users can also manually complete via the
+// "Call it good" button.
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
@@ -35,6 +36,16 @@ export function StyleStage2Card({
   );
 
   const isComplete = completedAt !== null;
+
+  // Split core vs optional pieces. Core gates auto-complete; optional
+  // accessories elevate but don't gate. The progress counter and
+  // auto-complete trigger track core only.
+  const corePieces = pieces.filter((p) => p.tier === 'core');
+  const optionalPieces = pieces.filter((p) => p.tier === 'optional');
+  const coreSlugs = new Set(corePieces.map((p) => p.slug));
+  const coreAcquiredCount = corePieces.filter((p) =>
+    acquired.has(p.slug),
+  ).length;
   const acquiredCount = acquired.size;
 
   function togglePiece(slug: string) {
@@ -63,9 +74,14 @@ export function StyleStage2Card({
           };
           throw new Error(body.error ?? `Request failed (${res.status})`);
         }
-        // If the server auto-completed (all 5 acquired), refresh so
-        // the page collapses to state 3.
-        if (willBeAcquired && acquiredCount + 1 === pieces.length) {
+        // If the server auto-completed (all CORE acquired), refresh so
+        // the page collapses to state 3. Trigger only when the toggled
+        // piece is a core slug and we just hit the full core count.
+        if (
+          willBeAcquired &&
+          coreSlugs.has(slug) &&
+          coreAcquiredCount + 1 === corePieces.length
+        ) {
           router.refresh();
         }
       } catch (err) {
@@ -107,7 +123,12 @@ export function StyleStage2Card({
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
           <span className="text-zinc-700 dark:text-zinc-300">
             <span className="font-medium">Stage 2 — Foundation pieces</span>
-            <span className="text-zinc-500"> · {acquiredCount}/{pieces.length} acquired</span>
+            <span className="text-zinc-500">
+              {' · '}
+              {coreAcquiredCount}/{corePieces.length} core
+              {optionalPieces.length > 0 &&
+                ` · ${acquiredCount - coreAcquiredCount}/${optionalPieces.length} optional`}
+            </span>
           </span>
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
             {new Date(completedAt!).toLocaleDateString(undefined, {
@@ -132,48 +153,42 @@ export function StyleStage2Card({
       </p>
 
       <ul className="mt-6 space-y-5">
-        {pieces.map((piece) => {
-          const isAcquired = acquired.has(piece.slug);
-          return (
-            <li
-              key={piece.slug}
-              className={`rounded-md border px-4 py-3 transition-colors ${
-                isAcquired
-                  ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950'
-                  : 'border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950'
-              }`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[14px] font-semibold text-zinc-900 dark:text-zinc-100">
-                    {piece.label}
-                  </p>
-                  <p className="mt-1 text-[13px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-                    {piece.guidance}
-                  </p>
-                  {piece.modifier_note && (
-                    <p className="mt-1 text-[12px] italic text-zinc-600 dark:text-zinc-400">
-                      {piece.modifier_note}
-                    </p>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => togglePiece(piece.slug)}
-                  disabled={pending}
-                  className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${
-                    isAcquired
-                      ? 'border-emerald-700 bg-emerald-700 text-white hover:bg-emerald-800'
-                      : 'border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800'
-                  }`}
-                >
-                  {isAcquired ? 'Acquired' : 'Mark acquired'}
-                </button>
-              </div>
-            </li>
-          );
-        })}
+        {corePieces.map((piece) => (
+          <PieceRow
+            key={piece.slug}
+            piece={piece}
+            isAcquired={acquired.has(piece.slug)}
+            pending={pending}
+            onToggle={() => togglePiece(piece.slug)}
+          />
+        ))}
       </ul>
+
+      {optionalPieces.length > 0 && (
+        <>
+          <div className="mt-8 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              Optional add-ons
+            </h3>
+            <p className="mt-1 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+              These elevate the look but don&rsquo;t gate Stage 2. Pick
+              them up as budget allows — the report calls out which are
+              load-bearing for your dress code.
+            </p>
+          </div>
+          <ul className="mt-4 space-y-5">
+            {optionalPieces.map((piece) => (
+              <PieceRow
+                key={piece.slug}
+                piece={piece}
+                isAcquired={acquired.has(piece.slug)}
+                pending={pending}
+                onToggle={() => togglePiece(piece.slug)}
+              />
+            ))}
+          </ul>
+        </>
+      )}
 
       {error && (
         <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>
@@ -183,16 +198,71 @@ export function StyleStage2Card({
         <button
           type="button"
           onClick={callItGood}
-          disabled={pending || acquiredCount === 0}
+          disabled={pending || coreAcquiredCount === 0}
           className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
         >
           Call it good — Stage 3 ready
         </button>
         <span className="text-xs text-zinc-500 dark:text-zinc-400">
-          {acquiredCount}/{pieces.length} pieces marked. Auto-completes
-          at {pieces.length}.
+          {coreAcquiredCount}/{corePieces.length} core pieces marked.
+          Auto-completes at {corePieces.length}.
         </span>
       </div>
     </section>
+  );
+}
+
+function PieceRow({
+  piece,
+  isAcquired,
+  pending,
+  onToggle,
+}: {
+  piece: FoundationPiece;
+  isAcquired: boolean;
+  pending: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <li
+      className={`rounded-md border px-4 py-3 transition-colors ${
+        isAcquired
+          ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950'
+          : 'border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950'
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[14px] font-semibold text-zinc-900 dark:text-zinc-100">
+            {piece.label}
+          </p>
+          <p className="mt-1 text-[13px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+            {piece.guidance}
+          </p>
+          {piece.modifier_note && (
+            <p className="mt-1 text-[12px] italic text-zinc-600 dark:text-zinc-400">
+              {piece.modifier_note}
+            </p>
+          )}
+          {piece.dress_code_note && (
+            <p className="mt-1 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-[12px] leading-snug text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+              {piece.dress_code_note}
+            </p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={onToggle}
+          disabled={pending}
+          className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${
+            isAcquired
+              ? 'border-emerald-700 bg-emerald-700 text-white hover:bg-emerald-800'
+              : 'border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800'
+          }`}
+        >
+          {isAcquired ? 'Acquired' : 'Mark acquired'}
+        </button>
+      </div>
+    </li>
   );
 }

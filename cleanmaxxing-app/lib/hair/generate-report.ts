@@ -7,18 +7,32 @@
 // this and returns once the report is saved. v0 single-shot — when we
 // add re-generation triggers later, this is the function they call.
 
-import { generateText } from 'ai';
+import { streamText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
+import type { StreamTextResult, ToolSet } from 'ai';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { kindForAnthropicModel, logCostEvent } from '@/lib/cost-events/log';
 import { povFor } from '@/lib/content/pov';
 import { getUserProfile } from '@/lib/profile/service';
+import { getFacialHairAssessment } from '@/lib/facial-hair/service';
 import {
+  CURRENT_STATE_LABEL as FACIAL_HAIR_STATE_LABEL,
+  DENSITY_AREA_LABEL as FACIAL_HAIR_DENSITY_AREA_LABEL,
+  GROWTH_QUALITY_LABEL as FACIAL_HAIR_GROWTH_LABEL,
+  type FacialHairAssessment,
+} from '@/lib/facial-hair/types';
+import {
+  BALDING_PATTERN_LABEL,
+  BALDING_SEVERITY_LABEL,
   DENSITY_STATE_LABEL,
+  EAR_PROMINENCE_LABEL,
   FACE_SHAPE_LABEL,
+  GRAYING_LEVEL_LABEL,
   HAIR_TYPE_DENSITY_LABEL,
   HAIR_TYPE_PATTERN_LABEL,
   HAIR_TYPE_STRAND_LABEL,
+  HEAD_SHAPE_LABEL,
+  HEAD_SIZE_LABEL,
   WHO_CUTS_LABEL,
   type HairAssessment,
   type ReportInputModifiers,
@@ -37,12 +51,25 @@ const REPORT_MODEL = 'claude-sonnet-4-6';
 // fully relevant for every hair report — there's nothing to retrieve.
 const POV_SLUGS = ['08-head-hair-balding', '27-hair-loss-treatments'];
 
-export async function generateAndSaveHairReport(
+// Streaming entrypoint — returns the StreamTextResult so the
+// route can call .toTextStreamResponse() for progressive client
+// rendering. onFinish handles save + cost logging once the stream
+// completes. See lib/nutrition/generate-report.ts for the canonical
+// pattern + rationale.
+export async function streamHairReport(
   supabase: SupabaseClient,
   userId: string,
   assessment: HairAssessment,
-): Promise<{ report_text: string }> {
-  const profile = await getUserProfile(supabase, userId);
+): Promise<StreamTextResult<ToolSet, never>> {
+  const [profile, facialHair] = await Promise.all([
+    getUserProfile(supabase, userId),
+    // D1/D2 (May 9 brain dump) — hair × facial-hair coordination.
+    // Read facial-hair state when present so the cut recommendation
+    // accounts for whether the beard is doing face-frame work or the
+    // cut needs to carry it alone. Null when the user hasn't taken
+    // the facial-hair assessment yet.
+    getFacialHairAssessment(supabase, userId),
+  ]);
 
   const modifiers: ReportInputModifiers = {
     hair_status: profile.hair_status,
@@ -52,34 +79,47 @@ export async function generateAndSaveHairReport(
   const povContext = await loadPovContext();
   const system = buildHairReportSystemPrompt(povContext);
 
-  const userPrompt = formatAssessmentForPrompt(assessment, modifiers);
+  const userPrompt = formatAssessmentForPrompt(
+    assessment,
+    modifiers,
+    facialHair,
+  );
 
-  const { text, usage } = await generateText({
+  return streamText({
     model: anthropic(REPORT_MODEL),
     system,
     prompt: userPrompt,
     // Slightly cooler than the weekly letter (which is 0.6) — the four
     // section structure benefits from less drift between sections.
     temperature: 0.5,
+    onFinish: async ({ text, usage }) => {
+      logCostEvent({
+        user_id: userId,
+        kind: kindForAnthropicModel(REPORT_MODEL),
+        tokens_input: usage?.inputTokens,
+        tokens_output: usage?.outputTokens,
+        feature: 'hair_report',
+      });
+      await saveHairReport(supabase, userId, {
+        report_text: text.trim(),
+        report_model: REPORT_MODEL,
+        report_input_modifiers: modifiers,
+      });
+    },
   });
+}
 
-  logCostEvent({
-    user_id: userId,
-    kind: kindForAnthropicModel(REPORT_MODEL),
-    tokens_input: usage?.inputTokens,
-    tokens_output: usage?.outputTokens,
-    feature: 'hair_report',
-  });
-
-  const reportText = text.trim();
-
-  await saveHairReport(supabase, userId, {
-    report_text: reportText,
-    report_model: REPORT_MODEL,
-    report_input_modifiers: modifiers,
-  });
-
-  return { report_text: reportText };
+// Backward-compat wrapper for non-streaming callers. Drains the
+// stream internally; onFinish (set above) still fires and handles
+// save + cost.
+export async function generateAndSaveHairReport(
+  supabase: SupabaseClient,
+  userId: string,
+  assessment: HairAssessment,
+): Promise<{ report_text: string }> {
+  const result = await streamHairReport(supabase, userId, assessment);
+  const text = await result.text;
+  return { report_text: text.trim() };
 }
 
 async function loadPovContext(): Promise<string> {
@@ -103,6 +143,7 @@ async function loadPovContext(): Promise<string> {
 function formatAssessmentForPrompt(
   assessment: HairAssessment,
   modifiers: ReportInputModifiers,
+  facialHair: FacialHairAssessment | null,
 ): string {
   const r = assessment.current_routine;
   const routineLines: string[] = [];
@@ -131,6 +172,90 @@ function formatAssessmentForPrompt(
     }`,
   );
 
+  // D1/D2 — facial-hair state as a face-framing modifier on the cut
+  // recommendation. Only emitted when the user has taken the
+  // facial-hair assessment. Per-area density preferred when present
+  // (newer rows); growth_quality fallback for legacy rows.
+  const facialHairLines: string[] = [];
+  if (facialHair) {
+    facialHairLines.push(
+      `- Current state: ${FACIAL_HAIR_STATE_LABEL[facialHair.current_state]}`,
+    );
+    if (
+      facialHair.density_cheeks ||
+      facialHair.density_chin ||
+      facialHair.density_mustache
+    ) {
+      const parts: string[] = [];
+      if (facialHair.density_cheeks) {
+        parts.push(
+          `cheeks: ${FACIAL_HAIR_DENSITY_AREA_LABEL[facialHair.density_cheeks]}`,
+        );
+      }
+      if (facialHair.density_chin) {
+        parts.push(
+          `chin: ${FACIAL_HAIR_DENSITY_AREA_LABEL[facialHair.density_chin]}`,
+        );
+      }
+      if (facialHair.density_mustache) {
+        parts.push(
+          `mustache: ${FACIAL_HAIR_DENSITY_AREA_LABEL[facialHair.density_mustache]}`,
+        );
+      }
+      facialHairLines.push(`- Density by area: ${parts.join('; ')}`);
+    } else if (facialHair.growth_quality) {
+      facialHairLines.push(
+        `- Growth quality: ${FACIAL_HAIR_GROWTH_LABEL[facialHair.growth_quality]}`,
+      );
+    }
+  }
+  const facialHairBlock =
+    facialHairLines.length > 0
+      ? `\n\n--- FACIAL HAIR (for cut coordination) ---\n${facialHairLines.join(
+          '\n',
+        )}\n--- END FACIAL HAIR ---`
+      : '';
+
+  // Migration 0099 — expanded precision variables. Each rendered
+  // only when the user actually answered (all are optional). Keeps
+  // the prompt budget tight and prevents the LLM from inventing
+  // values for fields it wasn't told about.
+  const expandedLines: string[] = [];
+  if (assessment.head_shape) {
+    expandedLines.push(
+      `- Head shape: ${HEAD_SHAPE_LABEL[assessment.head_shape]}`,
+    );
+  }
+  if (assessment.head_size) {
+    expandedLines.push(
+      `- Head size: ${HEAD_SIZE_LABEL[assessment.head_size]}`,
+    );
+  }
+  if (assessment.ear_prominence) {
+    expandedLines.push(
+      `- Ear prominence: ${EAR_PROMINENCE_LABEL[assessment.ear_prominence]}`,
+    );
+  }
+  if (assessment.graying_level) {
+    expandedLines.push(
+      `- Graying: ${GRAYING_LEVEL_LABEL[assessment.graying_level]}`,
+    );
+  }
+  if (assessment.balding_pattern) {
+    expandedLines.push(
+      `- Balding pattern: ${BALDING_PATTERN_LABEL[assessment.balding_pattern]}`,
+    );
+  }
+  if (assessment.balding_severity !== null) {
+    expandedLines.push(
+      `- Balding severity: ${BALDING_SEVERITY_LABEL[assessment.balding_severity]}`,
+    );
+  }
+  const expandedBlock =
+    expandedLines.length > 0
+      ? `\n\nMore precision (user-provided where they were sure):\n${expandedLines.join('\n')}`
+      : '';
+
   return `Here is the user's hair assessment.
 
 --- ASSESSMENT ---
@@ -138,7 +263,7 @@ function formatAssessmentForPrompt(
 - Density state: ${DENSITY_STATE_LABEL[assessment.density_state]}
 - Hair strand: ${HAIR_TYPE_STRAND_LABEL[assessment.hair_type_strand]}
 - Hair pattern: ${HAIR_TYPE_PATTERN_LABEL[assessment.hair_type_pattern]}
-- Hair density on the head: ${HAIR_TYPE_DENSITY_LABEL[assessment.hair_type_density]}
+- Hair density on the head: ${HAIR_TYPE_DENSITY_LABEL[assessment.hair_type_density]}${expandedBlock}
 
 Current routine:
 ${routineLines.join('\n')}
@@ -149,7 +274,7 @@ ${assessment.hair_goal_text ? `"${assessment.hair_goal_text}"` : '(nothing volun
 
 --- MODIFIERS ---
 ${modifierLines.join('\n')}
---- END MODIFIERS ---
+--- END MODIFIERS ---${facialHairBlock}
 
 Write the four-section hair plan now. 220 words maximum. Use the exact H2 headings specified in the system prompt. Do not narrate the modifiers back to the user — let them shape what you emphasize.`;
 }

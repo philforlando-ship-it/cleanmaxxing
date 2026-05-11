@@ -1,15 +1,23 @@
 // POST /api/plan/nutrition/assessment
 // Mirrors the other Pattern A v0 assessment routes. Saves the
-// assessment row, then synchronously generates the nutrition / body-
-// comp report. Failures of the generation step persist the assessment
-// but report a 500 — the Edit answers flow can retry from the saved
-// values.
+// assessment row, then streams the nutrition / body-comp report
+// back to the client. The streamText onFinish callback persists the
+// final report text to the DB once the stream completes, so the
+// client can redirect to /plan/nutrition and see the saved report
+// after the stream ends.
+//
+// Two response shapes:
+//   - 400 / 401 / 500 JSON for failures before the stream starts
+//   - text/plain streaming response when generation begins; tokens
+//     flow as plain UTF-8, no JSON wrapping. Mid-stream failure
+//     surfaces as a closed connection — the client's stream reader
+//     handles that case (treats it as an error, asks user to retry).
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { NutritionAssessmentInputSchema } from '@/lib/nutrition/types';
 import { saveNutritionAssessment } from '@/lib/nutrition/service';
-import { generateAndSaveNutritionReport } from '@/lib/nutrition/generate-report';
+import { streamNutritionReport } from '@/lib/nutrition/generate-report';
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -44,10 +52,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  let result;
   try {
-    await generateAndSaveNutritionReport(supabase, user.id, assessment);
+    result = await streamNutritionReport(supabase, user.id, assessment);
   } catch (err) {
-    console.error('nutrition_report_generation_failed', err);
+    console.error('nutrition_report_prep_failed', err);
     return NextResponse.json(
       {
         error:
@@ -57,5 +66,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return NextResponse.json({ ok: true });
+  // text/plain stream — tokens flow directly. onFinish (set inside
+  // streamNutritionReport) handles the DB save once the stream
+  // completes. Client reads with res.body.getReader().
+  return result.toTextStreamResponse();
 }

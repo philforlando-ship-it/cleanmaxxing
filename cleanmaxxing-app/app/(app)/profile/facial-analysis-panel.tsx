@@ -106,7 +106,7 @@ export function FacialAnalysisPanel({ beforeSlot, afterSlot, isPremium }: Props)
             err.message ?? 'Both timepoints need a front-facing photo.',
           );
         } else if (err.error === 'premium_required') {
-          setError('This is a Premium feature.');
+          setError('This is a Pro feature.');
         } else {
           setError(err.message ?? 'Analysis failed. Try again later.');
         }
@@ -153,7 +153,7 @@ export function FacialAnalysisPanel({ beforeSlot, afterSlot, isPremium }: Props)
           Observational read
         </h3>
         <span className="text-[11px] uppercase tracking-wider text-zinc-500">
-          Premium
+          Pro
         </span>
       </div>
       <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
@@ -168,13 +168,13 @@ export function FacialAnalysisPanel({ beforeSlot, afterSlot, isPremium }: Props)
             href="/pricing"
             className="inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
-            Upgrade to Premium
+            Upgrade to Pro
           </Link>
           <Link
             href="/pricing"
             className="text-xs text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
           >
-            See free vs premium →
+            See free vs Pro →
           </Link>
         </div>
       ) : (

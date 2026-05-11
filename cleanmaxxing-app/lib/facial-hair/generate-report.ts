@@ -6,8 +6,9 @@
 // v0 single-shot. Re-generation triggered via the Edit answers flow on
 // the page (which goes through saveFacialHairAssessment → generate again).
 
-import { generateText } from 'ai';
+import { streamText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
+import type { StreamTextResult, ToolSet } from 'ai';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { kindForAnthropicModel, logCostEvent } from '@/lib/cost-events/log';
 import { povFor } from '@/lib/content/pov';
@@ -27,29 +28,43 @@ import { saveFacialHairReport } from './service';
 const REPORT_MODEL = 'claude-sonnet-4-6';
 const POV_SLUG = '09-facial-hair';
 
-export async function generateAndSaveFacialHairReport(
+// Streaming entrypoint — see lib/nutrition/generate-report.ts for the
+// pattern + rationale.
+export async function streamFacialHairReport(
   supabase: SupabaseClient,
   userId: string,
   assessment: FacialHairAssessment,
-): Promise<{ report_text: string }> {
+): Promise<StreamTextResult<ToolSet, never>> {
   const profile = await getUserProfile(supabase, userId);
 
-  // Read age from users and face_shape from hair_assessments (when
-  // present) in parallel — both are optional modifier inputs.
+  // Read age from users and the relevant hair_assessments fields in
+  // parallel. The hair fields drive face-frame coordination (D1/D2
+  // reverse direction): how much face-framing the hair is doing
+  // shapes whether the beard is load-bearing or stylistic.
   const [{ data: userRow }, { data: hairRow }] = await Promise.all([
     supabase.from('users').select('age').eq('id', userId).maybeSingle(),
     supabase
       .from('hair_assessments')
-      .select('face_shape')
+      .select(
+        'face_shape, density_state, balding_pattern, balding_severity, head_shape, graying_level',
+      )
       .eq('user_id', userId)
       .maybeSingle(),
   ]);
 
+  const hair = hairRow as {
+    face_shape: string | null;
+    density_state: string | null;
+    balding_pattern: string | null;
+    balding_severity: number | null;
+    head_shape: string | null;
+    graying_level: string | null;
+  } | null;
+
   const modifiers: FacialHairReportInputModifiers = {
     current_interventions: profile.current_interventions,
     age: (userRow as { age: number | null } | null)?.age ?? null,
-    face_shape:
-      (hairRow as { face_shape: string | null } | null)?.face_shape ?? null,
+    face_shape: hair?.face_shape ?? null,
     bf_pct_self_estimate: profile.bf_pct_self_estimate,
     density_cheeks: assessment.density_cheeks,
     density_chin: assessment.density_chin,
@@ -57,6 +72,11 @@ export async function generateAndSaveFacialHairReport(
     growout_test_started_at: assessment.growout_test_started_at,
     growout_test_completed_at: assessment.growout_test_completed_at,
     minoxidil_for_beard_started_at: assessment.minoxidil_for_beard_started_at,
+    hair_density_state: hair?.density_state ?? null,
+    hair_balding_pattern: hair?.balding_pattern ?? null,
+    hair_balding_severity: hair?.balding_severity ?? null,
+    hair_head_shape: hair?.head_shape ?? null,
+    hair_graying_level: hair?.graying_level ?? null,
   };
 
   const pov = await povFor(POV_SLUG);
@@ -70,30 +90,36 @@ export async function generateAndSaveFacialHairReport(
 
   const userPrompt = formatAssessmentForPrompt(assessment, modifiers);
 
-  const { text, usage } = await generateText({
+  return streamText({
     model: anthropic(REPORT_MODEL),
     system,
     prompt: userPrompt,
     temperature: 0.5,
+    onFinish: async ({ text, usage }) => {
+      logCostEvent({
+        user_id: userId,
+        kind: kindForAnthropicModel(REPORT_MODEL),
+        tokens_input: usage?.inputTokens,
+        tokens_output: usage?.outputTokens,
+        feature: 'facial_hair_report',
+      });
+      await saveFacialHairReport(supabase, userId, {
+        report_text: text.trim(),
+        report_model: REPORT_MODEL,
+        report_input_modifiers: modifiers,
+      });
+    },
   });
+}
 
-  logCostEvent({
-    user_id: userId,
-    kind: kindForAnthropicModel(REPORT_MODEL),
-    tokens_input: usage?.inputTokens,
-    tokens_output: usage?.outputTokens,
-    feature: 'facial_hair_report',
-  });
-
-  const reportText = text.trim();
-
-  await saveFacialHairReport(supabase, userId, {
-    report_text: reportText,
-    report_model: REPORT_MODEL,
-    report_input_modifiers: modifiers,
-  });
-
-  return { report_text: reportText };
+export async function generateAndSaveFacialHairReport(
+  supabase: SupabaseClient,
+  userId: string,
+  assessment: FacialHairAssessment,
+): Promise<{ report_text: string }> {
+  const result = await streamFacialHairReport(supabase, userId, assessment);
+  const text = await result.text;
+  return { report_text: text.trim() };
 }
 
 function formatAssessmentForPrompt(
@@ -142,6 +168,36 @@ function formatAssessmentForPrompt(
       'not started — user is not on minoxidil specifically for beard'
     }`,
   );
+
+  // 2026-05-09 reverse coordination — hair fields. Only emit lines for
+  // fields the user actually populated; hair journey may not be taken
+  // yet, in which case all of these are null and the prompt falls back
+  // to face_shape alone.
+  if (modifiers.hair_density_state) {
+    modifierLines.push(
+      `- hair_density_state (hair_assessments): ${modifiers.hair_density_state}`,
+    );
+  }
+  if (modifiers.hair_balding_pattern) {
+    modifierLines.push(
+      `- hair_balding_pattern (hair_assessments): ${modifiers.hair_balding_pattern}`,
+    );
+  }
+  if (modifiers.hair_balding_severity !== null) {
+    modifierLines.push(
+      `- hair_balding_severity (0-4): ${modifiers.hair_balding_severity}`,
+    );
+  }
+  if (modifiers.hair_head_shape) {
+    modifierLines.push(
+      `- hair_head_shape (hair_assessments): ${modifiers.hair_head_shape}`,
+    );
+  }
+  if (modifiers.hair_graying_level) {
+    modifierLines.push(
+      `- hair_graying_level (hair_assessments): ${modifiers.hair_graying_level}`,
+    );
+  }
 
   // Density block: prefer per-area when populated, fall back to
   // overall growth_quality for legacy rows. The prompt has rules for

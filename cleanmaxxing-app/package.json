@@ -18,7 +18,6 @@
     "smoke-test": "tsx -r dotenv/config scripts/smoke-test.ts dotenv_config_path=.env.local",
     "check-query-log": "tsx -r dotenv/config scripts/check-query-log.ts dotenv_config_path=.env.local",
     "corpus-audit": "tsx scripts/corpus-audit.ts",
-    "motivation-diff": "tsx scripts/motivation-differentiation.ts",
     "verify-migrations": "tsx -r dotenv/config scripts/verify-migrations.ts dotenv_config_path=.env.local",
     "grant-premium": "tsx -r dotenv/config scripts/grant-premium.ts dotenv_config_path=.env.local",
     "typecheck": "tsc --noEmit"

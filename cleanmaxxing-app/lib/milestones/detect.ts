@@ -17,12 +17,13 @@ import {
   detectRhrTrainedBandEntered,
   detectSleepConsistency4Weeks,
   detectStrengthConsistency8Weeks,
+  detectVo2MaxImproving,
   detectWardrobeReevalDue,
   detectWeight5lbBelowStart,
 } from './triggers';
 import { recordMilestoneIfNew } from './service';
 import { STATIC_TRIGGER_KEYS, glp1ThreeMonthsKey } from './types';
-import { getRhrSignals } from '@/lib/vital/wearable-signals';
+import { getRhrSignals, getVo2MaxSignal } from '@/lib/vital/wearable-signals';
 
 const DAYS_MS = 24 * 60 * 60 * 1000;
 
@@ -57,9 +58,16 @@ function groupStrengthByWeek(
   return buckets;
 }
 
+// `isPremium` gates the Pro-tier milestones (body-fat brackets, RHR
+// trained-band, protocol anniversaries, VO2max progression). Free
+// users get the behavioral / state milestones — protein-floor,
+// strength-consistency, hair stage 4, weight 5lb below start, sleep
+// consistency, wardrobe reeval — but not the wearable-derived or
+// protocol-tenure ones, which is what the Pro pricing claims.
 export async function detectAndRecordMilestones(
   supabase: SupabaseClient,
   userId: string,
+  isPremium: boolean,
 ): Promise<void> {
   const now = Date.now();
   const eightWeeksAgo = new Date(now - 9 * 7 * DAYS_MS).toISOString().slice(0, 10);
@@ -75,6 +83,7 @@ export async function detectAndRecordMilestones(
     profile,
     { data: sleepRows },
     rhrSignals,
+    vo2MaxSignal,
   ] = await Promise.all([
     getRecentProteinSignal(supabase, userId),
     listInterventions(supabase, userId),
@@ -108,7 +117,12 @@ export async function detectAndRecordMilestones(
       .select('hours')
       .eq('user_id', userId)
       .gte('night_of', fourWeeksAgo),
-    getRhrSignals(supabase, userId),
+    isPremium
+      ? getRhrSignals(supabase, userId)
+      : Promise.resolve({ rolling_avg_rhr_14d: null, baseline_rhr: null }),
+    isPremium
+      ? getVo2MaxSignal(supabase, userId)
+      : Promise.resolve({ latest_value: null, latest_date: null, trend: null }),
   ]);
 
   // ===== Behavioral: protein floor autopilot =====
@@ -145,31 +159,33 @@ export async function detectAndRecordMilestones(
     );
   }
 
-  // ===== Calendar: GLP-1 three months on protocol =====
+  // ===== Calendar: GLP-1 three months on protocol — Pro =====
   // One milestone per intervention row — a user with two GLP-1
   // cycles (one ended, one current) gets two distinct trigger keys
   // when each crosses 90 days.
-  for (const intervention of interventions) {
-    if (intervention.type !== 'glp1') continue;
-    if (
-      detectGlp1ThreeMonths({
-        started_at: intervention.started_at,
-        status: intervention.status,
-        now,
-      })
-    ) {
-      await recordMilestoneIfNew(
-        supabase,
-        userId,
-        glp1ThreeMonthsKey(intervention.id),
-        {
-          intervention_id: intervention.id,
+  if (isPremium) {
+    for (const intervention of interventions) {
+      if (intervention.type !== 'glp1') continue;
+      if (
+        detectGlp1ThreeMonths({
           started_at: intervention.started_at,
-          days_on_protocol: Math.floor(
-            (now - new Date(intervention.started_at!).getTime()) / DAYS_MS,
-          ),
-        },
-      );
+          status: intervention.status,
+          now,
+        })
+      ) {
+        await recordMilestoneIfNew(
+          supabase,
+          userId,
+          glp1ThreeMonthsKey(intervention.id),
+          {
+            intervention_id: intervention.id,
+            started_at: intervention.started_at,
+            days_on_protocol: Math.floor(
+              (now - new Date(intervention.started_at!).getTime()) / DAYS_MS,
+            ),
+          },
+        );
+      }
     }
   }
 
@@ -189,9 +205,10 @@ export async function detectAndRecordMilestones(
     );
   }
 
-  // ===== Calendar: nutrition plan three months old =====
+  // ===== Calendar: nutrition plan three months old — Pro =====
   const nutritionAssessment = nutritionRow as { created_at: string | null } | null;
   if (
+    isPremium &&
     nutritionAssessment &&
     detectPlanThreeMonthsOld({
       assessment_created_at: nutritionAssessment.created_at,
@@ -206,9 +223,10 @@ export async function detectAndRecordMilestones(
     );
   }
 
-  // ===== Calendar: strength plan three months old =====
+  // ===== Calendar: strength plan three months old — Pro =====
   const strengthAssessment = strengthRow as { created_at: string | null } | null;
   if (
+    isPremium &&
     strengthAssessment &&
     detectPlanThreeMonthsOld({
       assessment_created_at: strengthAssessment.created_at,
@@ -223,7 +241,7 @@ export async function detectAndRecordMilestones(
     );
   }
 
-  // ===== State: body fat brackets =====
+  // ===== State: body fat brackets — Pro =====
   // Each below-N bracket fires once when self-estimate first enters
   // it; unique index keeps it once-per-user. Sequential thresholds
   // are checked together because a user dropping from over_25 to
@@ -238,16 +256,18 @@ export async function detectAndRecordMilestones(
     { threshold: 15, key: STATIC_TRIGGER_KEYS.BODY_FAT_BELOW_15 },
     { threshold: 12, key: STATIC_TRIGGER_KEYS.BODY_FAT_BELOW_12 },
   ];
-  for (const bracket of brackets) {
-    if (
-      detectBodyFatBelow({
-        bf_pct_self_estimate: profile.bf_pct_self_estimate,
-        threshold: bracket.threshold,
-      })
-    ) {
-      await recordMilestoneIfNew(supabase, userId, bracket.key, {
-        bf_pct_self_estimate: profile.bf_pct_self_estimate,
-      });
+  if (isPremium) {
+    for (const bracket of brackets) {
+      if (
+        detectBodyFatBelow({
+          bf_pct_self_estimate: profile.bf_pct_self_estimate,
+          threshold: bracket.threshold,
+        })
+      ) {
+        await recordMilestoneIfNew(supabase, userId, bracket.key, {
+          bf_pct_self_estimate: profile.bf_pct_self_estimate,
+        });
+      }
     }
   }
 
@@ -328,15 +348,14 @@ export async function detectAndRecordMilestones(
     );
   }
 
-  // ===== Tier 2: RHR trained-band entered =====
+  // ===== Pro: RHR trained-band entered =====
   // Fires once when the rolling 14d RHR avg drops below 60, AND the
   // user wasn't already there at baseline (their earliest 14-day
   // window of recorded RHR). Sourced from sleep_logs.resting_heart_rate
-  // (mig 0095). Detector returns false when either the rolling avg
-  // is null (insufficient data) or baseline was already < 60 (the
-  // user was already in the trained band when they connected the
-  // wearable — celebrating an unchanged state would be wrong).
+  // (mig 0095). Pro-gated: rhrSignals is hard-nulled for non-Pro users
+  // at fetch time above, so the detector returns false for them.
   if (
+    isPremium &&
     detectRhrTrainedBandEntered({
       rolling_avg_rhr_14d: rhrSignals.rolling_avg_rhr_14d,
       baseline_rhr: rhrSignals.baseline_rhr,
@@ -349,6 +368,26 @@ export async function detectAndRecordMilestones(
       {
         rolling_avg_rhr_14d: rhrSignals.rolling_avg_rhr_14d,
         baseline_rhr: rhrSignals.baseline_rhr,
+      },
+    );
+  }
+
+  // ===== Pro: VO2max trend turned improving =====
+  // Fires once when getVo2MaxSignal returns trend='improving' (latest
+  // vs ~90 days prior, >5% gain). Once-per-user via the unique index;
+  // subsequent improvements don't re-fire. Pro-gated.
+  if (
+    isPremium &&
+    detectVo2MaxImproving({ trend: vo2MaxSignal.trend })
+  ) {
+    await recordMilestoneIfNew(
+      supabase,
+      userId,
+      STATIC_TRIGGER_KEYS.VO2_MAX_IMPROVING,
+      {
+        latest_value: vo2MaxSignal.latest_value,
+        latest_date: vo2MaxSignal.latest_date,
+        trend: vo2MaxSignal.trend,
       },
     );
   }

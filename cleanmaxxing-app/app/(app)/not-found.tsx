@@ -21,10 +21,10 @@ export default function NotFound() {
           Back to Today
         </Link>
         <Link
-          href="/goals"
+          href="/system"
           className="rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-700 dark:border-zinc-700 dark:text-zinc-300"
         >
-          Goals
+          Browse the system
         </Link>
       </div>
     </main>

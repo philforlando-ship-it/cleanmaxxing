@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { CardioAssessmentInputSchema } from '@/lib/cardio/types';
 import { saveCardioAssessment } from '@/lib/cardio/service';
-import { generateAndSaveCardioReport } from '@/lib/cardio/generate-report';
+import { streamCardioReport } from '@/lib/cardio/generate-report';
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -36,10 +36,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  let result;
   try {
-    await generateAndSaveCardioReport(supabase, user.id, assessment);
+    result = await streamCardioReport(supabase, user.id, assessment);
   } catch (err) {
-    console.error('cardio_report_generation_failed', err);
+    console.error('cardio_report_prep_failed', err);
     return NextResponse.json(
       {
         error:
@@ -48,6 +49,5 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-
-  return NextResponse.json({ ok: true });
+  return result.toTextStreamResponse();
 }

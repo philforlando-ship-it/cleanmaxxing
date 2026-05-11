@@ -15,6 +15,8 @@ import {
   CUT_FAMILY_LABEL,
   DENSITY_STATE_LABEL,
   FACE_SHAPE_LABEL,
+  type BaldingPattern,
+  type BaldingSeverity,
   type CutFamily,
   type DensityState,
   type FaceShape,
@@ -25,13 +27,28 @@ export type CutFamilyExplainerInputs = {
   density_state: DensityState;
   face_shape: FaceShape;
   age: number | null;
+  // Migration 0099 — when the balding pattern + severity override
+  // narrows the allowed list (front_and_vertex / diffuse + severity
+  // 3+), we surface that to the user so they understand the cut
+  // pool was tightened beyond what density_state alone implies.
+  balding_pattern: BaldingPattern | null;
+  balding_severity: BaldingSeverity | null;
 };
 
 export function explainCutFamily(
   args: CutFamilyExplainerInputs,
 ): string[] {
-  const densityCuts = cutsForDensity(args.density_state);
+  const densityCuts = cutsForDensity(
+    args.density_state,
+    args.balding_pattern,
+    args.balding_severity,
+  );
   const ageFiltered = cutsForAge(args.age, densityCuts);
+  const baldingOverrideFired =
+    args.balding_severity !== null &&
+    args.balding_severity >= 3 &&
+    (args.balding_pattern === 'front_and_vertex' ||
+      args.balding_pattern === 'diffuse');
   const ageCohort: 'young' | 'middle' | 'mature' =
     args.age == null
       ? 'young'
@@ -44,6 +61,12 @@ export function explainCutFamily(
   const lines: string[] = [
     `Density: ${DENSITY_STATE_LABEL[args.density_state]}. The cut catalog is filtered to the ~${densityCuts.length} cuts that work at this density (no curtains on a thinning crown, no hard fades on shaved-or-buzzed, etc.).`,
   ];
+
+  if (baldingOverrideFired) {
+    lines.push(
+      `Pattern + severity: you flagged ${args.balding_pattern === 'diffuse' ? 'diffuse thinning' : 'both front and vertex loss'} at severity ${args.balding_severity}/4. That tightens the pool further — coverage strategies stop working past that point, so volume-on-top cuts are out regardless of how density alone read.`,
+    );
+  }
 
   if (args.age != null) {
     lines.push(

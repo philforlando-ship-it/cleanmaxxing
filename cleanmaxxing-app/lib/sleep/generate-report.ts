@@ -3,8 +3,9 @@
 // pulls live data (getSleepState) so the report can name the user's
 // actual rolling 7-night average alongside the self-report.
 
-import { generateText } from 'ai';
+import { streamText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
+import type { StreamTextResult, ToolSet } from 'ai';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { kindForAnthropicModel, logCostEvent } from '@/lib/cost-events/log';
 import { povFor } from '@/lib/content/pov';
@@ -23,11 +24,13 @@ import { getSleepState, saveSleepReport } from './service';
 const REPORT_MODEL = 'claude-sonnet-4-6';
 const POV_SLUG = '42-sleep';
 
-export async function generateAndSaveSleepReport(
+// Streaming entrypoint — see lib/nutrition/generate-report.ts for the
+// pattern + rationale.
+export async function streamSleepReport(
   supabase: SupabaseClient,
   userId: string,
   assessment: SleepAssessment,
-): Promise<{ report_text: string }> {
+): Promise<StreamTextResult<ToolSet, never>> {
   const profile = await getUserProfile(supabase, userId);
 
   // Live data + age in parallel. SleepState carries last 7 logged
@@ -59,30 +62,36 @@ export async function generateAndSaveSleepReport(
 
   const userPrompt = formatAssessmentForPrompt(assessment, modifiers);
 
-  const { text, usage } = await generateText({
+  return streamText({
     model: anthropic(REPORT_MODEL),
     system,
     prompt: userPrompt,
     temperature: 0.5,
+    onFinish: async ({ text, usage }) => {
+      logCostEvent({
+        user_id: userId,
+        kind: kindForAnthropicModel(REPORT_MODEL),
+        tokens_input: usage?.inputTokens,
+        tokens_output: usage?.outputTokens,
+        feature: 'sleep_report',
+      });
+      await saveSleepReport(supabase, userId, {
+        report_text: text.trim(),
+        report_model: REPORT_MODEL,
+        report_input_modifiers: modifiers,
+      });
+    },
   });
+}
 
-  logCostEvent({
-    user_id: userId,
-    kind: kindForAnthropicModel(REPORT_MODEL),
-    tokens_input: usage?.inputTokens,
-    tokens_output: usage?.outputTokens,
-    feature: 'sleep_report',
-  });
-
-  const reportText = text.trim();
-
-  await saveSleepReport(supabase, userId, {
-    report_text: reportText,
-    report_model: REPORT_MODEL,
-    report_input_modifiers: modifiers,
-  });
-
-  return { report_text: reportText };
+export async function generateAndSaveSleepReport(
+  supabase: SupabaseClient,
+  userId: string,
+  assessment: SleepAssessment,
+): Promise<{ report_text: string }> {
+  const result = await streamSleepReport(supabase, userId, assessment);
+  const text = await result.text;
+  return { report_text: text.trim() };
 }
 
 function formatAssessmentForPrompt(

@@ -20,34 +20,45 @@ export type ConversationPair = {
 
 // Global (unscoped) /today chat keeps a tight 8-pair window — the global
 // thread cuts across topics, so longer history pulls in context that
-// rarely recurs. Per-goal threads run deeper because the topic stays
-// stable across turns; 15 pairs gives enough continuity for a user
-// returning to a goal-specific conversation a week later without
-// blowing the prompt's token budget.
+// rarely recurs. Per-thread scopes (journey or goal) run deeper because
+// the topic stays stable across turns; 15 pairs gives enough continuity
+// for a user returning a week later without blowing the prompt's token
+// budget.
 const DEFAULT_LIMIT_GLOBAL = 8;
-const DEFAULT_LIMIT_PER_GOAL = 15;
+const DEFAULT_LIMIT_PER_THREAD = 15;
 const ANSWER_MAX_CHARS = 800;
 const QUESTION_MAX_CHARS = 300;
 
 export async function getRecentConversation(
   supabase: SupabaseClient,
   userId: string,
-  options: { goalId?: string | null; limit?: number } = {},
+  options: {
+    journeySlug?: string | null;
+    goalId?: string | null;
+    limit?: number;
+  } = {},
 ): Promise<ConversationPair[]> {
-  const { goalId = null, limit } = options;
+  const { journeySlug = null, goalId = null, limit } = options;
+  const isScoped = journeySlug !== null || goalId !== null;
   const effectiveLimit =
-    limit ?? (goalId ? DEFAULT_LIMIT_PER_GOAL : DEFAULT_LIMIT_GLOBAL);
+    limit ?? (isScoped ? DEFAULT_LIMIT_PER_THREAD : DEFAULT_LIMIT_GLOBAL);
 
   let query = supabase
     .from('mister_p_queries')
     .select('question, answer, created_at')
     .eq('user_id', userId);
 
-  // Scope to the right thread. When goalId is provided, only that
-  // goal's messages load. When null, the global thread loads — which
-  // means messages with no goal_id, so per-goal threads don't bleed
-  // into /today's general chat surface.
-  query = goalId ? query.eq('goal_id', goalId) : query.is('goal_id', null);
+  // Scope to the right thread. journey_slug takes precedence (current
+  // primary picker); goal_id is the legacy /goals/[id] path. When
+  // neither is set, the General thread loads — rows with BOTH
+  // scopes null — so scoped histories don't bleed into General.
+  if (journeySlug) {
+    query = query.eq('journey_slug', journeySlug);
+  } else if (goalId) {
+    query = query.eq('goal_id', goalId);
+  } else {
+    query = query.is('journey_slug', null).is('goal_id', null);
+  }
 
   const { data, error } = await query
     .order('created_at', { ascending: false })

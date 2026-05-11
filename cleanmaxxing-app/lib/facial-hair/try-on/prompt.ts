@@ -34,7 +34,7 @@ const STYLE_DESCRIPTION: Record<FacialHairStyleSlug, string> = {
   circle_beard:
     'A connected mustache and rounded chin patch. The mustache joins down both sides of the mouth into a rounded patch covering the chin (more substantial than a goatee). Cheeks and jaw are completely clean shaven. Compact and well-defined.',
   chinstrap_beard:
-    'A thin line of beard hair tracing the jawline from one sideburn to the other, going under the chin but NOT covering the chin or upper lip. Cheeks above the line are clean shaven, upper lip is clean shaven. Sharp, defined edges.',
+    'A NARROW STRIP of hair, roughly 8-12mm wide, that traces the jawbone like a thin strap — running from one sideburn, down along the jawline, under the chin, and back up the opposite jawline. This is NOT a full beard and NOT a goatee. CRITICAL clean-shaven zones (must be smooth, no hair, no stubble): the entire cheeks ABOVE the jawline strip, the entire chin pad (the soft area between the lower lip and the bottom of the jaw — only the bone-edge has hair), the upper lip, and the area directly below the lower lip. Hair is present ONLY along the bony jawline edge. Sharp, razor-defined edges on both the upper border (cheek-side) and lower border (neck-side) of the strap. The visual effect should be a thin dark line framing the jaw — if the strip looks wider than ~1cm or fills the chin, it is wrong.',
   short_boxed_beard:
     'A short, even beard covering the cheeks, chin, jaw, and upper lip. Roughly 1-2 weeks of trimmed growth — not stubble but not long. Clean cheek line slightly above the natural hairline. Mustache connects to the beard.',
   medium_full_beard:

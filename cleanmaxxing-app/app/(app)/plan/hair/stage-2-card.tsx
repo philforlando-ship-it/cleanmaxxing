@@ -11,7 +11,6 @@
 // the framing for each branch is consistent across users.
 
 import { useState, useTransition } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   STAGE_2_BRANCHES,
@@ -31,7 +30,6 @@ type Props = {
   stage1Complete: boolean;
   stage2Path: Stage2Path | null;
   stage2LockedInAt: string | null;
-  stage2PatternDGoalId: string | null;
   densityState: DensityState;
   currentInterventions: string[];
   /** Stage 1's recommended cut family. Used to weight the suggestion —
@@ -49,7 +47,6 @@ export function HairStage2Card({
   stage1Complete,
   stage2Path,
   stage2LockedInAt,
-  stage2PatternDGoalId,
   densityState,
   currentInterventions,
   cutFamily,
@@ -58,7 +55,6 @@ export function HairStage2Card({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [linkFailedHint, setLinkFailedHint] = useState(false);
 
   // State 1 — locked.
   if (!stage1Complete) {
@@ -96,17 +92,12 @@ export function HairStage2Card({
             })}
           </span>
         </div>
-        {stage2Path === 'treat' && stage2PatternDGoalId && (
+        {stage2Path === 'treat' && (
           <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
-            Treatment-tracking goal created. The full protocol surface
-            (titration, labs, side-effect log) is on the roadmap — until then,
-            the goal page is a marker rather than a tool.{' '}
-            <Link
-              href={`/goals/${stage2PatternDGoalId}`}
-              className="underline decoration-dotted underline-offset-2 hover:text-zinc-800 dark:hover:text-zinc-200"
-            >
-              Open it →
-            </Link>
+            Treat path locked in. The full protocol surface (titration,
+            labs, side-effect log) is on the roadmap. The Pattern D
+            Considering card on this page is the current home for that
+            work.
           </p>
         )}
       </section>
@@ -125,7 +116,6 @@ export function HairStage2Card({
 
   function lockIn(path: Stage2Path) {
     setError(null);
-    setLinkFailedHint(false);
     startTransition(async () => {
       try {
         const res = await fetch('/api/plan/hair/stage-2/lock-in', {
@@ -133,14 +123,12 @@ export function HairStage2Card({
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ path }),
         });
-        const body = (await res.json().catch(() => ({}))) as {
-          error?: string;
-          link_failed?: boolean;
-        };
         if (!res.ok) {
+          const body = (await res.json().catch(() => ({}))) as {
+            error?: string;
+          };
           throw new Error(body.error ?? `Request failed (${res.status})`);
         }
-        if (body.link_failed) setLinkFailedHint(true);
         router.refresh();
       } catch (err) {
         setError((err as Error).message);
@@ -223,16 +211,6 @@ export function HairStage2Card({
 
       {error && (
         <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
-      {linkFailedHint && (
-        <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
-          Path locked in, but Mister P couldn’t auto-link your treatment plan.
-          Add it from{' '}
-          <Link href="/goals/library" className="underline">
-            the goals library
-          </Link>{' '}
-          when you have a moment.
-        </p>
       )}
     </section>
   );

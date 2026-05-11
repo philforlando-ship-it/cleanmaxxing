@@ -112,6 +112,12 @@ export type MisterPUserState = {
   // P visual context the baseline-face + hair photos don't carry.
   latestBodyProgressPhotoPath: string | null;
 
+  // Most-recent fit (clothed outfit) photo. Distinct from body
+  // photos — fit is for chat-mediated outfit / fit troubleshooting
+  // (sleeves, shoulders, taper, proportions), not body-comp tracking.
+  // Null when the user hasn't uploaded any fit photos yet.
+  latestFitPhotoPath: string | null;
+
   // Storage path for the anchor photo from the user's most recent
   // COMPLETED hair session (front for hair track, top_down for bald
   // track). One image per chat turn — adding all 5 hair angles would
@@ -332,6 +338,22 @@ export async function getMisterPUserState(
     bodyPhotos[0]?.storage_path ??
     null;
 
+  // Most-recent fit (outfit) photo. Chat-only context for fit
+  // troubleshooting; never sent to the scoring-style facial-analysis
+  // route (that path hard-filters to category='face'). One photo
+  // per turn keeps token cost predictable; users with multiple fit
+  // photos can ask Mister P about a specific one verbally and the
+  // most recent will be in scope.
+  const { data: fitRows } = await supabase
+    .from('progress_photos')
+    .select('storage_path, captured_at')
+    .eq('user_id', userId)
+    .eq('category', 'fit')
+    .order('captured_at', { ascending: false })
+    .limit(1);
+  const latestFitPhotoPath =
+    (fitRows ?? [])[0]?.storage_path ?? null;
+
   // Latest completed hair session anchor photo (front for hair track,
   // top_down for bald track). One query joins the most recent
   // completed session to its anchor angle photo. We try 'front' first
@@ -387,6 +409,7 @@ export async function getMisterPUserState(
     latestFaceProgressPhotoPath,
     latestFaceProgressSlot,
     latestBodyProgressPhotoPath,
+    latestFitPhotoPath,
     latestHairAnchorPhotoPath,
   };
 }

@@ -92,6 +92,15 @@ export type FacialHairReportInputModifiers = {
   // profile.current_interventions; null when the user hasn't started
   // beard-specific use of the drug.
   minoxidil_for_beard_started_at: string | null;
+  // 2026-05-09 reverse coordination — hair-assessment fields read
+  // alongside face_shape so the facial-hair plan can coordinate
+  // with the user's hair. All optional; null when the user hasn't
+  // taken the hair journey assessment.
+  hair_density_state: string | null;
+  hair_balding_pattern: string | null;
+  hair_balding_severity: number | null;
+  hair_head_shape: string | null;
+  hair_graying_level: string | null;
 };
 
 export const CURRENT_STATE_LABEL: Record<CurrentState, string> = {

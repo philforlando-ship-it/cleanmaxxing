@@ -8,6 +8,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { CMSpinner } from '@/components/cm-logo';
 
 type Props = {
   weeksOnZone2Base: number;
@@ -99,6 +100,7 @@ export function AddHiitCard({ weeksOnZone2Base, age }: Props) {
               ? 'Mister P is rewriting your plan…'
               : 'Add HIIT layer and re-run plan'}
           </button>
+          {pending && <CMSpinner size="xs" className="ml-3" />}
         </div>
       )}
     </section>

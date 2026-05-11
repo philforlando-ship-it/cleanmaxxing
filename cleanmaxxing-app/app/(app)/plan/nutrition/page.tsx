@@ -35,6 +35,10 @@ import { BmrCalculatorPanel } from './bmr-calculator-panel';
 import { FoodLibraryPanel } from './food-library-panel';
 import { MealPlanPanel } from './meal-plan-panel';
 import { NutritionReEvalCard } from './re-eval-card';
+import { NutritionOffTrackCard } from './off-track-card';
+import { AlcoholQuizCard } from './alcohol-quiz-card';
+import { detectNutritionOffTrack } from '@/lib/contextual-prompt/prompts';
+import { getNutritionOffTrackInputs } from '@/lib/contextual-prompt/select';
 import { WhyThis } from '@/components/why-this';
 import {
   explainCalories,
@@ -66,6 +70,7 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
     glp1Rollup,
     initialProfile,
     { data: userRow },
+    offTrackInputs,
   ] = await Promise.all([
     getNutritionAssessment(supabase, user.id),
     getRecentProteinSignal(supabase, user.id),
@@ -73,6 +78,7 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
     getProtocolRollup(supabase, user.id, 'glp1'),
     getUserProfile(supabase, user.id),
     supabase.from('users').select('age').eq('id', user.id).maybeSingle(),
+    getNutritionOffTrackInputs(supabase, user.id),
   ]);
   // Backfill weight/height from the onboarding survey if the profile
   // columns are still null (pre-dates the onboarding-submit mirror).
@@ -97,6 +103,22 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
     assessment !== null &&
     assessment.calorie_target !== null &&
     assessment.protein_target_g !== null;
+
+  // Off-track detection. Only meaningful once the user has a report
+  // in hand — before that, /plan/nutrition is asking them to fill
+  // out the assessment, not telling them they've drifted from a
+  // plan that doesn't exist yet. The detector itself enforces the
+  // 14-day-old + lifetime-engagement floors.
+  const offTrackResult =
+    assessment && hasReport
+      ? detectNutritionOffTrack({
+          hasNutritionPlan: true,
+          planAgeDays: computePlanAgeDays(assessment.created_at),
+          lifetimeLogsCount: offTrackInputs.lifetimeLogsCount,
+          hitLast7: offTrackInputs.hitLast7,
+          loggedLast7: offTrackInputs.loggedLast7,
+        })
+      : { fires: false, shape: 'silence' as const };
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -135,6 +157,14 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
       </header>
 
       <BmrCalculatorPanel result={bmrResult} />
+
+      {/* Off-track recovery — only when a report exists and the user
+          isn't currently editing. The card is the on-page companion
+          to the /today Area 2 nutrition_off_track prompt; same
+          detector backs both surfaces. */}
+      {offTrackResult.fires && !editParam && (
+        <NutritionOffTrackCard shape={offTrackResult.shape} />
+      )}
 
       {glp1Rollup === 'on_protocol' && (
         <aside className="mt-6 rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 text-[13px] text-zinc-800 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
@@ -384,6 +414,13 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
             hasComputedTargets={hasComputedTargets}
           />
 
+          {/* Alcohol & the day after — interactive quiz teaching
+              the framework (calorie efficiency, sleep architecture,
+              two-drink threshold, compensation trap). Lands the N3
+              content gap from the May 10 brain dump in the form
+              the Style ROI quiz proved works. */}
+          <AlcoholQuizCard />
+
           <footer className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 pt-6 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
             <span>
               Written by Mister P on{' '}
@@ -404,6 +441,14 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
       )}
     </main>
   );
+}
+
+// Server component runs once per request; the impure Date.now()
+// call is isolated here so the page body stays lint-clean. Same
+// pattern as today/page.tsx's computeIsFirstRun.
+function computePlanAgeDays(createdAt: string): number {
+  const created = new Date(createdAt).getTime();
+  return Math.floor((Date.now() - created) / (24 * 60 * 60 * 1000));
 }
 
 function TargetCell({
@@ -464,6 +509,7 @@ function assessmentToInitialValues(
     fasting_protocol: a.fasting_protocol,
     alcohol_use: a.alcohol_use,
     cannabis_use: a.cannabis_use,
+    cheat_day_pattern: a.cheat_day_pattern,
     cooking_capacity: a.cooking_capacity,
     dietary_pattern: a.dietary_pattern,
     meal_service_willingness: a.meal_service_willingness,

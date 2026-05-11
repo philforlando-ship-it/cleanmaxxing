@@ -48,6 +48,17 @@ export type AlcoholUse = 'none' | 'occasional' | 'moderate' | 'heavy';
 
 export type CannabisUse = 'none' | 'occasional' | 'regular';
 
+// Cheat-day pattern (migration 0103). Differentiates structured
+// off-plan eating (a planned Sunday meal, calorie-reservoir math
+// applies) from unstructured off-plan eating (no calibration; the
+// trend-over-week framing applies instead). Existing prompt
+// adherence-reality line is one-size-fits-all without this signal.
+export type CheatDayPattern =
+  | 'none_or_rare'
+  | 'planned_weekly_meal'
+  | 'planned_weekly_day'
+  | 'unplanned';
+
 // T2 capacity & willingness fields (migration 0066). Each drives a
 // distinct prompt rule — see lib/nutrition/report-prompt.ts for the
 // modifier handling.
@@ -87,6 +98,11 @@ export type NutritionAssessment = {
   fasting_protocol: FastingProtocol;
   alcohol_use: AlcoholUse;
   cannabis_use: CannabisUse;
+  // Cheat-day pattern (migration 0103). Nullable until the user
+  // submits the new form question; existing assessments stay valid.
+  // Falls through to the existing implicit adherence framing when
+  // null.
+  cheat_day_pattern: CheatDayPattern | null;
   // T2 capacity & willingness (migration 0066). Nullable until the
   // user submits the new form fields; existing assessments stay valid.
   cooking_capacity: CookingCapacity | null;
@@ -152,6 +168,8 @@ export type NutritionReportInputModifiers = {
   fasting_protocol: FastingProtocol;
   alcohol_use: AlcoholUse;
   cannabis_use: CannabisUse;
+  // Cheat-day pattern (migration 0103). Null when legacy assessment.
+  cheat_day_pattern: CheatDayPattern | null;
   // T2 capacity fields — null when the user hasn't filled them in
   // since migration 0066 landed.
   cooking_capacity: CookingCapacity | null;
@@ -257,6 +275,17 @@ export const CANNABIS_USE_LABEL: Record<CannabisUse, string> = {
   none: 'None — I don’t use cannabis',
   occasional: 'Occasional — once a week or less',
   regular: 'Regular — several times a week',
+};
+
+export const CHEAT_DAY_PATTERN_LABEL: Record<CheatDayPattern, string> = {
+  none_or_rare:
+    'None or rare — I stick to the plan most weeks; indulgences are small',
+  planned_weekly_meal:
+    'One planned meal per week — a structured indulgence (e.g., Sunday dinner out)',
+  planned_weekly_day:
+    'One planned day per week — a full off-plan day baked into my week',
+  unplanned:
+    'Unplanned — off-plan eating happens whenever (stress, social, fatigue)',
 };
 
 export const COOKING_CAPACITY_LABEL: Record<CookingCapacity, string> = {
@@ -561,6 +590,16 @@ export const NutritionAssessmentInputSchema = z.object({
   ]),
   alcohol_use: z.enum(['none', 'occasional', 'moderate', 'heavy']),
   cannabis_use: z.enum(['none', 'occasional', 'regular']),
+  // Cheat-day pattern (migration 0103). Nullable for the same
+  // migration-window reason as the T2 fields below.
+  cheat_day_pattern: z
+    .enum([
+      'none_or_rare',
+      'planned_weekly_meal',
+      'planned_weekly_day',
+      'unplanned',
+    ])
+    .nullable(),
   // T2 capacity fields. Nullable to support the migration window
   // where existing assessments don't have these — the form requires
   // them on next submit.

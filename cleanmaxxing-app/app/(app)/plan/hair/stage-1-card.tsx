@@ -12,9 +12,12 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { CMSpinner } from '@/components/cm-logo';
 import {
   CUT_FAMILY_LABEL,
   CUT_FAMILY_REFERENCES,
+  type BaldingPattern,
+  type BaldingSeverity,
   type CutFamily,
   type DensityState,
   type FaceShape,
@@ -35,6 +38,29 @@ const BALDING_DENSITY_STATES: ReadonlyArray<DensityState> = [
   'advanced_thinning',
   'shaved_or_buzzed',
 ];
+
+// Cut families with at least one mature-cohort image variant in
+// /public/images/cut-families/ (either {family}_mature.png or
+// {family}_balding_mature.png). Used to filter the alternatives grid
+// for mature-cohort users so the suggestions never include a young
+// model's photo as the reference image. Maintained by hand against
+// the file-system catalog — update when shipping new mature variants.
+const MATURE_VARIANT_CUTS: ReadonlySet<CutFamily> = new Set<CutFamily>([
+  'caesar',
+  'high_taper_crop',
+  'textured_crop',
+  'crew_cut',
+  'buzz_cut',
+  'slick_back_undercut',
+  'pompadour',
+  'bald_fade',
+  'bro_flow',
+  'classic_sweep_back',
+  // Reachable only via _balding_mature (no plain _mature file):
+  'short_fade',
+  'clean_shave',
+  'side_part_combover',
+]);
 
 // Image candidates in priority order for a (cutFamily, cohort,
 // isBalding) tuple. Each suffix priority is then crossed with the
@@ -83,7 +109,7 @@ function CutFamilyImage({
   cutFamily,
   cohort,
   density,
-  className = 'mt-3 max-h-64 w-full rounded-md object-cover object-top',
+  className = 'mt-3 w-full max-w-sm rounded-md object-contain',
 }: {
   cutFamily: CutFamily;
   cohort: 'young' | 'mature';
@@ -130,6 +156,12 @@ type Props = {
   // explainer to name the face-geometry input that drove the LLM's
   // pick within the density × age allowed set.
   faceShape: FaceShape;
+  // Migration 0099 — balding pattern + severity refine the density
+  // filter (front_and_vertex / diffuse + severity 3+ overrides the
+  // density_state-derived list down to advanced_thinning's set). Both
+  // are nullable; null falls back to density-only behavior.
+  baldingPattern: BaldingPattern | null;
+  baldingSeverity: BaldingSeverity | null;
   // Self-perceived age delta from confidence_appearance (2-10 scale,
   // 6 = "about my age"). Combined with actual age to compute the
   // image cohort: a 47yo who reads as much younger gets young
@@ -166,6 +198,8 @@ export function HairStage1Card({
   densityState,
   age,
   faceShape,
+  baldingPattern,
+  baldingSeverity,
   ageFeelValue,
 }: Props) {
   const effectiveAge = effectiveAgeForImageCohort(age, ageFeelValue);
@@ -223,7 +257,7 @@ export function HairStage1Card({
             err.message ?? 'Capture a baseline face photo at /photos first.',
           );
         } else if (err.error === 'premium_required') {
-          setTryOnError('This is a Premium feature.');
+          setTryOnError('This is a Pro feature.');
         } else {
           setTryOnError(err.message ?? 'Generation failed. Try again later.');
         }
@@ -301,39 +335,45 @@ export function HairStage1Card({
           </button>
         </div>
 
-        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-          Recommended cut family
-        </p>
-        <p className="mt-1 text-base font-semibold text-zinc-900 dark:text-zinc-100">
-          {CUT_FAMILY_LABEL[cutFamily]}
-        </p>
-        {CUT_FAMILY_REFERENCES[cutFamily].length > 0 && (
-          <p className="mt-1 text-[12px] text-zinc-500 dark:text-zinc-400">
-            Variants: {CUT_FAMILY_REFERENCES[cutFamily].join(' · ')}
+        <div className="mt-4 rounded-lg border-2 border-emerald-500 bg-emerald-50/50 p-4 dark:border-emerald-600 dark:bg-emerald-950/20">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white dark:bg-emerald-500">
+              Current pick
+            </span>
+            <span className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+              {CUT_FAMILY_LABEL[cutFamily]}
+            </span>
+          </div>
+          {CUT_FAMILY_REFERENCES[cutFamily].length > 0 && (
+            <p className="mt-1 text-[12px] text-zinc-600 dark:text-zinc-400">
+              Variants: {CUT_FAMILY_REFERENCES[cutFamily].join(' · ')}
+            </p>
+          )}
+          <WhyThis
+            lines={explainCutFamily({
+              cut_family: cutFamily,
+              density_state: densityState,
+              face_shape: faceShape,
+              age,
+              balding_pattern: baldingPattern,
+              balding_severity: baldingSeverity,
+            })}
+            label="Why this cut?"
+          />
+          <CutFamilyImage
+            cutFamily={cutFamily}
+            cohort={cohort}
+            density={densityState}
+          />
+          <p className="mt-1 text-[11px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+            AI-generated reference. Yours will look different — same family,
+            your face, your hairline. Reference cuts here are calibrated for
+            straight-to-wavy hair (types 1–2C); coily and tightly-curled
+            textures (types 3B–4C) sit, lay, and shape differently — book a
+            barber who specializes in your texture and bring this as a
+            starting point, not a target.
           </p>
-        )}
-        <WhyThis
-          lines={explainCutFamily({
-            cut_family: cutFamily,
-            density_state: densityState,
-            face_shape: faceShape,
-            age,
-          })}
-          label="Why this cut?"
-        />
-        <CutFamilyImage
-          cutFamily={cutFamily}
-          cohort={cohort}
-          density={densityState}
-        />
-        <p className="mt-1 text-[11px] leading-relaxed text-zinc-500 dark:text-zinc-400">
-          AI-generated reference. Yours will look different — same family,
-          your face, your hairline. Reference cuts here are calibrated for
-          straight-to-wavy hair (types 1–2C); coily and tightly-curled
-          textures (types 3B–4C) sit, lay, and shape differently — book a
-          barber who specializes in your texture and bring this as a
-          starting point, not a target.
-        </p>
+        </div>
 
         <p className="mt-5 text-sm text-zinc-600 dark:text-zinc-400">
           Tell your barber
@@ -353,6 +393,8 @@ export function HairStage1Card({
 
         <OtherCutsForDensity
           densityState={densityState}
+          baldingPattern={baldingPattern}
+          baldingSeverity={baldingSeverity}
           recommended={cutFamily}
           cohort={cohort}
           age={age}
@@ -436,7 +478,7 @@ function TryOnSection({
           See yourself with this cut
         </p>
         <span className="text-[11px] uppercase tracking-wider text-zinc-500">
-          Premium · Optional
+          Pro · Optional
         </span>
       </div>
       <p className="mt-1 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-400">
@@ -451,13 +493,13 @@ function TryOnSection({
             href="/pricing"
             className="inline-block rounded-lg bg-zinc-900 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
-            Upgrade to Premium
+            Upgrade to Pro
           </Link>
           <Link
             href="/pricing"
             className="text-xs text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
           >
-            See free vs premium →
+            See free vs Pro →
           </Link>
         </div>
       ) : !hasBaselinePhoto ? (
@@ -498,9 +540,7 @@ function TryOnSection({
             {tryOnGenerating ? 'Generating preview…' : 'Generate preview'}
           </button>
           {tryOnGenerating && (
-            <span className="ml-3 text-[12px] text-zinc-500 dark:text-zinc-400">
-              Takes 20-40 seconds.
-            </span>
+            <CMSpinner size="xs" label="Takes 20-40 seconds." className="ml-3" />
           )}
         </div>
       )}
@@ -527,11 +567,15 @@ const MAX_ALTERNATES = 4;
 
 function OtherCutsForDensity({
   densityState,
+  baldingPattern,
+  baldingSeverity,
   recommended,
   cohort,
   age,
 }: {
   densityState: DensityState;
+  baldingPattern: BaldingPattern | null;
+  baldingSeverity: BaldingSeverity | null;
   recommended: CutFamily;
   cohort: 'young' | 'mature';
   age: number | null;
@@ -540,9 +584,19 @@ function OtherCutsForDensity({
   const [overriding, setOverriding] = useState<CutFamily | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const densityCuts = cutsForDensity(densityState);
+  const densityCuts = cutsForDensity(
+    densityState,
+    baldingPattern,
+    baldingSeverity,
+  );
   const ageFiltered = cutsForAge(age, densityCuts);
-  const others = ageFiltered
+  // Mature-cohort users should never see a young model's photo as a
+  // suggestion. Drop any cut family that has no mature image variant.
+  const cohortFiltered =
+    cohort === 'mature'
+      ? ageFiltered.filter((c) => MATURE_VARIANT_CUTS.has(c))
+      : ageFiltered;
+  const others = cohortFiltered
     .filter((c) => c !== recommended)
     .slice(0, MAX_ALTERNATES);
   if (others.length === 0) return null;

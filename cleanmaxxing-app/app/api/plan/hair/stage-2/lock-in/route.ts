@@ -2,10 +2,10 @@
 // Body: { path: 'treat' | 'monitor' | 'transition' }
 //
 // Stage 1 must be complete first (`stage_1_completed_at` is the unlock
-// signal). For path === 'treat', the service layer also creates or
-// links to the user's hair-loss-start-plan goal — that's the Pattern A
-// → Pattern D handoff. If the goal link fails the path still locks in
-// and the response surfaces a `link_failed` flag the UI can show.
+// signal). Pre-Tier-3, the 'treat' path also created a marker goal in
+// the legacy goals table; that mechanism retired with the goals
+// system on 2026-05-10. stage_2_path is now the single source of
+// truth for the user's chosen path.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -45,9 +45,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let result;
   try {
-    result = await lockInStage2(supabase, user.id, parsed.data.path);
+    await lockInStage2(supabase, user.id, parsed.data.path);
   } catch (err) {
     console.error('hair_stage_2_lock_in_failed', err);
     return NextResponse.json(
@@ -56,9 +55,5 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return NextResponse.json({
-    ok: true,
-    pattern_d_goal_id: result.patternDGoalId,
-    link_failed: result.linkFailed,
-  });
+  return NextResponse.json({ ok: true });
 }

@@ -66,7 +66,11 @@ export async function POST(req: NextRequest) {
   const age = (userRow as { age: number | null } | null)?.age ?? null;
   const allowedCuts = cutsForAge(
     age,
-    cutsForDensity(assessment.density_state),
+    cutsForDensity(
+      assessment.density_state,
+      assessment.balding_pattern,
+      assessment.balding_severity,
+    ),
   );
   const cutFamily = parsed.data.cut_family as CutFamily;
   if (!allowedCuts.includes(cutFamily)) {

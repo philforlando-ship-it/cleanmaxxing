@@ -5,8 +5,9 @@
 // v0 single-shot. Re-generation triggered via the Edit answers flow on
 // the page (which goes through saveStyleAssessment → generate again).
 
-import { generateText } from 'ai';
+import { streamText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
+import type { StreamTextResult, ToolSet } from 'ai';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { kindForAnthropicModel, logCostEvent } from '@/lib/cost-events/log';
 import { povFor } from '@/lib/content/pov';
@@ -16,12 +17,14 @@ import {
   ARM_LENGTH_LABEL,
   BUILD_LABEL,
   CLOSET_STATE_LABEL,
+  DRESS_CODE_CONTEXT_LABEL,
   EYE_COLOR_LABEL,
   FRAME_DENSITY_LABEL,
   FRAME_ESTIMATE_LABEL,
   LEG_LENGTH_LABEL,
   SHOULDER_WIDTH_LABEL,
   SKIN_UNDERTONE_LABEL,
+  WRIST_SIZE_LABEL,
   eyeColorLean,
   type StyleAssessment,
   type StyleReportInputModifiers,
@@ -33,21 +36,43 @@ import { computeArchetypeFeasibility } from './aesthetic-feasibility';
 const REPORT_MODEL = 'claude-sonnet-4-6';
 const POV_SLUG = '12-style-clothing';
 
-export async function generateAndSaveStyleReport(
+// Streaming entrypoint — see lib/nutrition/generate-report.ts for the
+// pattern + rationale.
+export async function streamStyleReport(
   supabase: SupabaseClient,
   userId: string,
   assessment: StyleAssessment,
-): Promise<{ report_text: string }> {
+): Promise<StreamTextResult<ToolSet, never>> {
   const profile = await getUserProfile(supabase, userId);
 
-  const { data: userRow } = await supabase
-    .from('users')
-    .select('age')
-    .eq('id', userId)
-    .maybeSingle();
+  // Read user age and hair_assessments balding signal in parallel.
+  // The hair fields drive sunglasses / hats / glasses architecture
+  // recs — bald + balding users carry less face-frame from the hair
+  // and the eyewear / hat picks need to do that work instead. Mirror
+  // of facial-hair's reverse-D1/D2 read (2026-05-09).
+  const [{ data: userRow }, { data: hairRow }] = await Promise.all([
+    supabase.from('users').select('age').eq('id', userId).maybeSingle(),
+    supabase
+      .from('hair_assessments')
+      .select('balding_pattern, balding_severity, density_state')
+      .eq('user_id', userId)
+      .maybeSingle(),
+  ]);
 
   const ageForFeasibility =
     (userRow as { age: number | null } | null)?.age ?? null;
+
+  const hair = hairRow as {
+    balding_pattern:
+      | 'none'
+      | 'front'
+      | 'vertex'
+      | 'front_and_vertex'
+      | 'diffuse'
+      | null;
+    balding_severity: 0 | 1 | 2 | 3 | 4 | null;
+    density_state: string | null;
+  } | null;
 
   // Phase 2b — compute per-user feasibility for the PICKED archetype
   // and snapshot the tier + rationale into modifiers. The prompt
@@ -73,6 +98,11 @@ export async function generateAndSaveStyleReport(
     frame_density: assessment.frame_density,
     skin_undertone: assessment.skin_undertone,
     eye_color: assessment.eye_color,
+    wrist_size: assessment.wrist_size,
+    dress_code_context: assessment.dress_code_context,
+    hair_balding_pattern: hair?.balding_pattern ?? null,
+    hair_balding_severity: hair?.balding_severity ?? null,
+    hair_density_state: hair?.density_state ?? null,
     target_archetype_feasibility_tier:
       // Only snapshot a tier when the body data was sufficient to
       // compute one (i.e. shoulder_width + build are both set).
@@ -94,30 +124,36 @@ export async function generateAndSaveStyleReport(
 
   const userPrompt = formatAssessmentForPrompt(assessment, modifiers);
 
-  const { text, usage } = await generateText({
+  return streamText({
     model: anthropic(REPORT_MODEL),
     system,
     prompt: userPrompt,
     temperature: 0.5,
+    onFinish: async ({ text, usage }) => {
+      logCostEvent({
+        user_id: userId,
+        kind: kindForAnthropicModel(REPORT_MODEL),
+        tokens_input: usage?.inputTokens,
+        tokens_output: usage?.outputTokens,
+        feature: 'style_report',
+      });
+      await saveStyleReport(supabase, userId, {
+        report_text: text.trim(),
+        report_model: REPORT_MODEL,
+        report_input_modifiers: modifiers,
+      });
+    },
   });
+}
 
-  logCostEvent({
-    user_id: userId,
-    kind: kindForAnthropicModel(REPORT_MODEL),
-    tokens_input: usage?.inputTokens,
-    tokens_output: usage?.outputTokens,
-    feature: 'style_report',
-  });
-
-  const reportText = text.trim();
-
-  await saveStyleReport(supabase, userId, {
-    report_text: reportText,
-    report_model: REPORT_MODEL,
-    report_input_modifiers: modifiers,
-  });
-
-  return { report_text: reportText };
+export async function generateAndSaveStyleReport(
+  supabase: SupabaseClient,
+  userId: string,
+  assessment: StyleAssessment,
+): Promise<{ report_text: string }> {
+  const result = await streamStyleReport(supabase, userId, assessment);
+  const text = await result.text;
+  return { report_text: text.trim() };
 }
 
 function formatAssessmentForPrompt(
@@ -163,6 +199,25 @@ function formatAssessmentForPrompt(
         ? `${modifiers.eye_color} (leans ${eyeColorLean(modifiers.eye_color) ?? 'no clear direction'})`
         : 'null'
     }`,
+  );
+  modifierLines.push(
+    `- wrist_size (gates watch dial sizing — small ~36-39mm, average ~38-41mm, large ~40-43mm): ${modifiers.wrist_size ?? 'null'}`,
+  );
+  modifierLines.push(
+    `- dress_code_context (independent of target_archetype — gates footwear / outerwear / shirt formality bias): ${modifiers.dress_code_context ?? 'null'}`,
+  );
+  modifierLines.push(
+    `- hair_balding_pattern (hair_assessments — drives face-frame architecture for sunglasses / hats / glasses): ${modifiers.hair_balding_pattern ?? 'null — hair journey not taken'}`,
+  );
+  modifierLines.push(
+    `- hair_balding_severity (0-4 scale; 0 none → 4 advanced): ${
+      modifiers.hair_balding_severity !== null
+        ? String(modifiers.hair_balding_severity)
+        : 'null'
+    }`,
+  );
+  modifierLines.push(
+    `- hair_density_state (hair_assessments — coarser balding signal): ${modifiers.hair_density_state ?? 'null'}`,
   );
   modifierLines.push(
     `- target_archetype_feasibility_tier (Phase 2b — per-user computed read on whether the picked archetype fits / works / fights this user's frame): ${
@@ -211,6 +266,16 @@ function formatAssessmentForPrompt(
   if (assessment.eye_color) {
     granularLines.push(
       `- Eye color: ${EYE_COLOR_LABEL[assessment.eye_color]}`,
+    );
+  }
+  if (assessment.wrist_size) {
+    granularLines.push(
+      `- Wrist size: ${WRIST_SIZE_LABEL[assessment.wrist_size]}`,
+    );
+  }
+  if (assessment.dress_code_context) {
+    granularLines.push(
+      `- Dress code context: ${DRESS_CODE_CONTEXT_LABEL[assessment.dress_code_context]}`,
     );
   }
   const granularBlock =

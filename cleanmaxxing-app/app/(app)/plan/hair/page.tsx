@@ -34,6 +34,7 @@ import {
   type HairAssessmentInitialValues,
 } from './assessment-form';
 import { HairStage1Card } from './stage-1-card';
+import { HairProductQuizCard } from './product-quiz-card';
 import { HairStage2Card } from './stage-2-card';
 import { HairStage3Card } from './stage-3-card';
 import { HairStage4Card } from './stage-4-card';
@@ -274,6 +275,8 @@ export default async function HairPlanPage({ searchParams }: Props) {
             densityState={assessment.density_state}
             age={(userRow as { age: number | null } | null)?.age ?? null}
             faceShape={assessment.face_shape}
+            baldingPattern={assessment.balding_pattern}
+            baldingSeverity={assessment.balding_severity}
             ageFeelValue={ageFeelClean}
           />
 
@@ -281,7 +284,6 @@ export default async function HairPlanPage({ searchParams }: Props) {
             stage1Complete={assessment.stage_1_completed_at !== null}
             stage2Path={assessment.stage_2_path}
             stage2LockedInAt={assessment.stage_2_locked_in_at}
-            stage2PatternDGoalId={assessment.stage_2_pattern_d_goal_id}
             densityState={assessment.density_state}
             currentInterventions={profile.current_interventions}
             cutFamily={assessment.stage_1_cut_family}
@@ -355,6 +357,13 @@ export default async function HairPlanPage({ searchParams }: Props) {
             assessment.stage_1_cut_family === 'clean_shave') && (
             <RemediesConsideringCard />
           )}
+
+          {/* Product-match quiz — interactive surface that teaches
+              the POV 61 framework (matte vs shine, hair-texture
+              match, front-hairline rule) by walking through 9
+              real-world hair-and-situation scenarios. Renders
+              unconditionally below the report; no gate. */}
+          <HairProductQuizCard />
         </article>
       )}
     </main>
@@ -374,6 +383,12 @@ function assessmentToInitialValues(
     hair_type_strand: a.hair_type_strand,
     hair_type_pattern: a.hair_type_pattern,
     hair_type_density: a.hair_type_density,
+    head_shape: a.head_shape,
+    head_size: a.head_size,
+    graying_level: a.graying_level,
+    ear_prominence: a.ear_prominence,
+    balding_pattern: a.balding_pattern,
+    balding_severity: a.balding_severity,
     current_routine: a.current_routine,
     hair_goal_text: a.hair_goal_text,
   };

@@ -240,6 +240,12 @@ export type StrengthReportInputModifiers = {
   // alongside the self-reported fatigue. NEVER cite the absolute
   // number — direction only.
   hrv_trend: 'declining' | 'stable' | 'elevated' | null;
+  // Resting heart rate (Pro-gated). Rolling 14-day avg + earliest 14-day
+  // baseline, sourced from sleep_logs.resting_heart_rate. Both null
+  // when fewer than 7 nights of RHR data, no wearable, OR free tier.
+  // Absolute bpm — RHR has clinical meaning across users.
+  rhr_rolling_avg_14d: number | null;
+  rhr_baseline: number | null;
   // User's exercise picker preferences (snapshotted at gen time so
   // the report's reasoning is reproducible)
   selected_exercise_slugs: string[];
@@ -2098,7 +2104,7 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
     movement_pattern: 'core',
     equipment: 'cable',
     primary_group: 'core',
-    primary_muscles: ['Rectus Abdominis'],
+    primary_muscles: ['Abs', 'Obliques'],
     key_points: [
       'Face away from high pulley',
       'Hold rope by ears',
@@ -2116,7 +2122,7 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
     movement_pattern: 'core',
     equipment: 'dumbbell',
     primary_group: 'core',
-    primary_muscles: ['Forearms', 'Traps', 'Core'],
+    primary_muscles: ['Forearms', 'Traps', 'Core', 'Glutes'],
     key_points: [
       'Heavy dumbbell in each hand',
       'Stand tall with chest up',
@@ -2232,7 +2238,7 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
     movement_pattern: 'hinge',
     equipment: 'kettlebell',
     primary_group: 'glutes',
-    primary_muscles: ['Glutes', 'Hamstrings', 'Lower Back'],
+    primary_muscles: ['Glutes', 'Hamstrings', 'Core'],
     key_points: [
       'Hinge — not a squat',
       'Bell hikes back between thighs',
@@ -2264,7 +2270,7 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
     movement_pattern: 'vertical_push',
     equipment: 'barbell',
     primary_group: 'shoulders',
-    primary_muscles: ['Front Delts', 'Side Delts', 'Triceps', 'Upper Chest'],
+    primary_muscles: ['Front Delts', 'Triceps', 'Upper Chest'],
     key_points: [
       'One end of bar in landmine, free end at shoulder',
       'Brace core and ribs down',

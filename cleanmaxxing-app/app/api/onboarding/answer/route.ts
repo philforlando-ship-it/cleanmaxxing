@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { questionByKey } from '@/lib/onboarding/questions';
+import { getPremiumStatus } from '@/lib/billing/is-premium';
+import { journeyCapFor } from '@/lib/journeys/cap';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -42,6 +44,29 @@ export async function POST(req: Request) {
     const n = Number(response_value);
     if (Number.isNaN(n) || n < 18) {
       return NextResponse.json({ error: 'Cleanmaxxing is 18+ only.' }, { status: 400 });
+    }
+  }
+
+  // Server-side cap on focus_areas count. Free = 3, Pro/trial = 10 (per
+  // lib/journeys/cap.ts). The client picker enforces the same number,
+  // but a direct POST could otherwise slip past with any array length.
+  if (question_key === 'focus_areas' && typeof response_value === 'string' && response_value.length > 0) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(response_value);
+    } catch {
+      return NextResponse.json({ error: 'Invalid focus_areas payload.' }, { status: 400 });
+    }
+    if (!Array.isArray(parsed)) {
+      return NextResponse.json({ error: 'focus_areas must be an array.' }, { status: 400 });
+    }
+    const { isPremium } = await getPremiumStatus(user.id);
+    const cap = journeyCapFor(isPremium);
+    if (parsed.length > cap) {
+      return NextResponse.json(
+        { error: `Pick up to ${cap}.` },
+        { status: 400 },
+      );
     }
   }
 

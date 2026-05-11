@@ -23,6 +23,7 @@ import {
   FACIAL_HAIR_STYLES,
   type FacialHairStyleSlug,
 } from '@/lib/facial-hair/types';
+import { CMSpinner, CleanmaxxingMark } from '@/components/cm-logo';
 
 type Props = {
   isPremium: boolean;
@@ -79,7 +80,7 @@ export function FacialHairTryOnPanel({
             body.message ?? 'Capture a baseline face photo at /photos first.',
           );
         } else if (body.error === 'premium_required') {
-          setError('This is a Premium feature.');
+          setError('This is a Pro feature.');
         } else {
           setError(body.message ?? 'Generation failed. Try again later.');
         }
@@ -111,7 +112,7 @@ export function FacialHairTryOnPanel({
             Try a style on yourself
           </span>
           <span className="text-[11px] uppercase tracking-wider text-zinc-500">
-            Premium · Optional
+            Pro · Optional
           </span>
         </div>
         <p className="mt-1 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-400">
@@ -163,20 +164,20 @@ export function FacialHairTryOnPanel({
       {!isPremium ? (
         <div className="mt-4 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-3 dark:border-zinc-800 dark:bg-zinc-900/60">
           <p className="text-[13px] text-zinc-700 dark:text-zinc-300">
-            Try-on previews are a Premium feature.
+            Try-on previews are a Pro feature.
           </p>
           <div className="mt-2 flex items-center gap-3">
             <Link
               href="/pricing"
               className="inline-block rounded-lg bg-zinc-900 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
-              Upgrade to Premium
+              Upgrade to Pro
             </Link>
             <Link
               href="/pricing"
               className="text-xs text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
             >
-              See free vs premium →
+              See free vs Pro →
             </Link>
           </div>
         </div>
@@ -242,7 +243,11 @@ export function FacialHairTryOnPanel({
                   </span>
                 )}
                 {isGeneratingThis && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/60 text-[11px] text-zinc-100">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-zinc-950/60 text-[11px] text-zinc-100">
+                    <CleanmaxxingMark
+                      size="md"
+                      className="animate-spin [animation-duration:1.6s]"
+                    />
                     Generating…
                   </div>
                 )}
@@ -276,9 +281,9 @@ export function FacialHairTryOnPanel({
       </ul>
 
       {generating && (
-        <p className="mt-4 text-[12px] text-zinc-500 dark:text-zinc-400">
-          Generation runs 20–40 seconds. Hang tight.
-        </p>
+        <div className="mt-4">
+          <CMSpinner size="xs" label="Generation runs 20–40 seconds. Hang tight." />
+        </div>
       )}
     </section>
   );

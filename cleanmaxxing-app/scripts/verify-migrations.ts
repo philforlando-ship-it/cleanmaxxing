@@ -531,6 +531,81 @@ async function check0099() {
   return classifyError(error, 'eye_color accepted');
 }
 
+async function check0102() {
+  // style_assessments.wrist_size + dress_code_context — two nullable
+  // text columns with check constraints. Sentinel sets the four
+  // required style_assessments columns + both new fields; FK rejects
+  // on user_id.
+  await supabase
+    .from('style_assessments')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  const { error } = await supabase.from('style_assessments').insert({
+    user_id: SENTINEL_USER_ID,
+    frame_estimate: 'athletic',
+    current_archetype: 'clean_minimalist',
+    target_archetype: 'clean_minimalist',
+    closet_state: 'functional',
+    wrist_size: 'average',
+    dress_code_context: 'business_casual',
+  });
+  await supabase
+    .from('style_assessments')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  return classifyError(error, 'wrist_size + dress_code_context accepted');
+}
+
+async function check0104() {
+  // mister_p_queries.journey_slug — nullable text column, no DB-side
+  // check constraint (slug values are validated app-side against
+  // lib/today/journeys.ts JOURNEYS catalog). Sentinel insert sets
+  // user_id (FK reject expected), question, answer, and journey_slug
+  // to a known journey. FK rejection = pass.
+  await supabase
+    .from('mister_p_queries')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  const { error } = await supabase.from('mister_p_queries').insert({
+    user_id: SENTINEL_USER_ID,
+    question: 'sentinel',
+    answer: 'sentinel',
+    journey_slug: 'hair',
+  });
+  await supabase
+    .from('mister_p_queries')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  return classifyError(error, 'journey_slug accepted');
+}
+
+async function check0103() {
+  // nutrition_assessments.cheat_day_pattern — nullable text column
+  // with check constraint on the four enum values. Sentinel sets
+  // the required existing columns + the new field; FK rejects on
+  // user_id (the sentinel UUID isn't a real user).
+  await supabase
+    .from('nutrition_assessments')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  const { error } = await supabase.from('nutrition_assessments').insert({
+    user_id: SENTINEL_USER_ID,
+    goal_direction: 'lose_fat',
+    urgency: 'steady_6_to_12_months',
+    eating_context: 'cook_most_meals',
+    what_tried: 'nothing_systematic',
+    fasting_protocol: 'none',
+    alcohol_use: 'occasional',
+    cannabis_use: 'none',
+    cheat_day_pattern: 'planned_weekly_meal',
+  });
+  await supabase
+    .from('nutrition_assessments')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  return classifyError(error, 'cheat_day_pattern accepted');
+}
+
 // Shared helper: classify a Supabase error into pass / fail with
 // detail. FK rejection = pass (column accepted, only the sentinel
 // user_id was wrong). Anything else = fail with the postgres reason.
@@ -631,6 +706,18 @@ async function main() {
     {
       label: '0099 — style_assessments.eye_color',
       run: check0099,
+    },
+    {
+      label: '0102 — style_assessments.wrist_size + dress_code_context',
+      run: check0102,
+    },
+    {
+      label: '0103 — nutrition_assessments.cheat_day_pattern',
+      run: check0103,
+    },
+    {
+      label: '0104 — mister_p_queries.journey_slug',
+      run: check0104,
     },
   ];
 

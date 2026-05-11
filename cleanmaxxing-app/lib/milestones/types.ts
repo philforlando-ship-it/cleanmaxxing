@@ -46,6 +46,11 @@ export const STATIC_TRIGGER_KEYS = {
   // the conventional 50-60 bpm range for aerobically-conditioned
   // adults. Sourced from sleep_logs.resting_heart_rate (mig 0095).
   RHR_TRAINED_BAND_ENTERED: 'rhr_trained_band_entered',
+  // VO2max trend turned 'improving' (latest vs ~90 days prior, >5%
+  // gain) for the first time. Pro-gated. Sourced from
+  // daily_activity.vo2_max via getVo2MaxSignal in
+  // lib/vital/wearable-signals.ts.
+  VO2_MAX_IMPROVING: 'vo2_max_improving',
 } as const;
 
 export type StaticTriggerKey =

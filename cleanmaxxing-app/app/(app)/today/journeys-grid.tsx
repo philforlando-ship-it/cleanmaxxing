@@ -11,9 +11,19 @@ import {
   STATUS_LABEL,
   sortJourneys,
   statusFromAssessment,
+  tierForJourney,
   type JourneyConfig,
   type JourneyStatus,
 } from '@/lib/today/journeys';
+import type { TierKey } from '@/lib/hierarchy/tiers';
+
+// User-visible tier label. Maps the canonical tier-N keys onto the
+// "Tier N" copy pattern used in /system and now on /today's grid.
+function tierLabelFor(tier: TierKey): string {
+  // Defensive: TierKey is a finite union, but the replace-based form
+  // makes the relationship between the key and the label obvious.
+  return tier.replace('tier-', 'Tier ');
+}
 
 type AssessmentRollup = {
   hasAssessment: boolean;
@@ -28,10 +38,17 @@ export type JourneysGridProps = {
   // action picker upstream; pass through to avoid a duplicate query
   // round-trip.
   assessments: Record<JourneyConfig['slug'], AssessmentRollup>;
+  // Age threads through both the sort (cardio's tier flips at 35+)
+  // and the displayed tier label on each tile. Null when not on file.
+  age: number | null;
 };
 
-export function JourneysGrid({ focusAreas, assessments }: JourneysGridProps) {
-  const sorted = sortJourneys(focusAreas);
+export function JourneysGrid({
+  focusAreas,
+  assessments,
+  age,
+}: JourneysGridProps) {
+  const sorted = sortJourneys(focusAreas, age);
   const pickedSlugs = new Set(focusAreas);
 
   return (
@@ -41,8 +58,8 @@ export function JourneysGrid({ focusAreas, assessments }: JourneysGridProps) {
           Your journeys
         </h2>
         <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-400">
-          All eight available. Order reflects what you picked at
-          onboarding plus the foundational tiers underneath.
+          Foundation first. The Focus chip marks what you picked at
+          onboarding.
         </p>
       </header>
       <ul className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -59,6 +76,7 @@ export function JourneysGrid({ focusAreas, assessments }: JourneysGridProps) {
               journey={journey}
               status={status}
               isPicked={isPicked}
+              tier={tierForJourney(journey, age)}
             />
           );
         })}
@@ -71,10 +89,12 @@ function JourneyTile({
   journey,
   status,
   isPicked,
+  tier,
 }: {
   journey: JourneyConfig;
   status: JourneyStatus;
   isPicked: boolean;
+  tier: TierKey;
 }) {
   // Picked journeys get a stronger visual treatment (the user's
   // declared priority should read clearly above unpicked ones, even
@@ -93,12 +113,18 @@ function JourneyTile({
           <h3 className="text-[15px] font-medium text-zinc-900 dark:text-zinc-100">
             {journey.label}
           </h3>
+          {/* Status line carries the framework tier as a left-anchored
+              prefix. Surfaces what /system explains in detail without
+              re-cluttering the tile with a separate badge. The tier
+              comes from the resolved (age-aware) value, not the static
+              JourneyConfig — cardio shows Tier 2 for users 35+ even
+              though the config still lists tier-3 as the default. */}
           <p className="mt-1 text-[12px] text-zinc-500 dark:text-zinc-400">
-            {STATUS_LABEL[status]}
+            {tierLabelFor(tier)} · {STATUS_LABEL[status]}
           </p>
         </div>
         {isPicked && (
-          <span className="rounded-full bg-zinc-900 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-white dark:bg-zinc-100 dark:text-zinc-900">
+          <span className="rounded-full border border-zinc-300 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-zinc-700 dark:border-zinc-600 dark:text-zinc-300">
             Focus
           </span>
         )}

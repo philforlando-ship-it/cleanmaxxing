@@ -273,3 +273,21 @@ export function validateChipSelections(
   }
   return null;
 }
+
+// Drops slugs orphaned by a target_archetype change. The DB row keeps
+// the raw selections (so a user toggling back to the prior archetype
+// recovers their taps), but the form should only seed with slugs that
+// match the chip catalog being rendered. Without this, submitting
+// after an archetype change throws "Unknown chip slug" server-side.
+export function filterValidChipSelections<T>(
+  archetype: StyleArchetype,
+  selections: Record<string, T> | null,
+): Record<string, T> {
+  if (!selections) return {};
+  const valid = new Set(CHIPS[archetype].map((c) => c.slug));
+  const out: Record<string, T> = {};
+  for (const [slug, value] of Object.entries(selections)) {
+    if (valid.has(slug)) out[slug] = value;
+  }
+  return out;
+}

@@ -6,9 +6,15 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { CMSpinner } from '@/components/cm-logo';
+import {
+  StreamingPlanPreview,
+  consumeTextStream,
+} from '@/components/streaming-plan-preview';
 import {
   ALCOHOL_USE_LABEL,
   CANNABIS_USE_LABEL,
+  CHEAT_DAY_PATTERN_LABEL,
   COOKING_CAPACITY_LABEL,
   DIETARY_PATTERN_LABEL,
   EATING_CONTEXT_LABEL,
@@ -21,6 +27,7 @@ import {
   URGENCY_LABEL,
   type AlcoholUse,
   type CannabisUse,
+  type CheatDayPattern,
   type CookingCapacity,
   type DietaryPattern,
   type EatingContext,
@@ -70,12 +77,20 @@ const FASTING_PROTOCOLS: FastingProtocol[] = [
   'time_restricted_18_6',
   'omad',
   'five_two',
+  'extended_36_biweekly',
   'other',
 ];
 
 const ALCOHOL_USES: AlcoholUse[] = ['none', 'occasional', 'moderate', 'heavy'];
 
 const CANNABIS_USES: CannabisUse[] = ['none', 'occasional', 'regular'];
+
+const CHEAT_DAY_PATTERNS: CheatDayPattern[] = [
+  'none_or_rare',
+  'planned_weekly_meal',
+  'planned_weekly_day',
+  'unplanned',
+];
 
 const COOKING_CAPACITIES: CookingCapacity[] = [
   'cook_often_real_meals',
@@ -114,6 +129,7 @@ export type NutritionAssessmentInitialValues = {
   fasting_protocol: FastingProtocol;
   alcohol_use: AlcoholUse;
   cannabis_use: CannabisUse;
+  cheat_day_pattern: CheatDayPattern | null;
   cooking_capacity: CookingCapacity | null;
   dietary_pattern: DietaryPattern | null;
   meal_service_willingness: MealServiceWillingness | null;
@@ -146,6 +162,12 @@ export function NutritionAssessmentForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  // K1: streaming plan generation. Set to '' when streaming starts,
+  // accumulates tokens as they arrive, set to null when not streaming.
+  // The render path below replaces the form with a streaming preview
+  // panel while this is non-null, so the user sees the report
+  // assembling in real time instead of staring at a 15s spinner.
+  const [streamingText, setStreamingText] = useState<string | null>(null);
 
   const [goal, setGoal] = useState<GoalDirection | null>(
     initialValues?.goal_direction ?? null,
@@ -167,6 +189,9 @@ export function NutritionAssessmentForm({
   );
   const [cannabisUse, setCannabisUse] = useState<CannabisUse | null>(
     initialValues?.cannabis_use ?? null,
+  );
+  const [cheatDayPattern, setCheatDayPattern] = useState<CheatDayPattern | null>(
+    initialValues?.cheat_day_pattern ?? null,
   );
   const [cookingCapacity, setCookingCapacity] = useState<CookingCapacity | null>(
     initialValues?.cooking_capacity ?? null,
@@ -220,6 +245,7 @@ export function NutritionAssessmentForm({
     if (!fastingProtocol) return setError('Pick a fasting protocol (or "None").');
     if (!alcoholUse) return setError('Pick alcohol use level.');
     if (!cannabisUse) return setError('Pick cannabis use level.');
+    if (!cheatDayPattern) return setError('Pick your cheat-day pattern.');
     if (!cookingCapacity) return setError('Pick your cooking capacity.');
     if (!dietaryPattern) return setError('Pick your dietary pattern.');
     if (!mealServiceWillingness)
@@ -287,6 +313,7 @@ export function NutritionAssessmentForm({
       fasting_protocol: fastingProtocol,
       alcohol_use: alcoholUse,
       cannabis_use: cannabisUse,
+      cheat_day_pattern: cheatDayPattern,
       cooking_capacity: cookingCapacity,
       dietary_pattern: dietaryPattern,
       meal_service_willingness: mealServiceWillingness,
@@ -306,17 +333,31 @@ export function NutritionAssessmentForm({
           body: JSON.stringify(payload),
         });
         if (!res.ok) {
+          // Pre-stream failure — server returned JSON error, not a
+          // stream. Parse and surface.
           const body = (await res.json().catch(() => ({}))) as {
             error?: string;
           };
           throw new Error(body.error ?? `Save failed (${res.status})`);
         }
+        // K1: progressive stream read. Server-side onFinish handles
+        // the DB save, so once the stream closes cleanly we can
+        // redirect straight to the rendered report.
+        await consumeTextStream(res, setStreamingText);
         router.push('/plan/nutrition');
         router.refresh();
       } catch (err) {
+        setStreamingText(null);
         setError((err as Error).message);
       }
     });
+  }
+
+  // While the report is streaming, replace the form with the shared
+  // preview panel. Bridge between submit and the fully-rendered
+  // markdown view on /plan/nutrition.
+  if (streamingText !== null) {
+    return <StreamingPlanPreview text={streamingText} />;
   }
 
   return (
@@ -456,6 +497,25 @@ export function NutritionAssessmentForm({
 
       <Question
         number={8}
+        title="How do off-plan days usually go for you?"
+        helper="Structured cheat meals (planned Sunday dinner out, etc.) sit cleanly inside the 7-day math — Mister P can build that into the plan. Unstructured off-plan days are calibrated differently. No moralizing about the choice — just honest framing."
+      >
+        <div className="space-y-2">
+          {CHEAT_DAY_PATTERNS.map((c) => (
+            <RadioRow
+              key={c}
+              checked={cheatDayPattern === c}
+              onChange={() => setCheatDayPattern(c)}
+              disabled={pending}
+              label={CHEAT_DAY_PATTERN_LABEL[c]}
+              name="cheat_day_pattern"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={9}
         title="What's your real cooking capacity?"
         helper="Honest read on what you can sustain — not what you did last week. Drives whether the plan recommends real cooking, simple meals, or assembly / services."
       >
@@ -474,7 +534,7 @@ export function NutritionAssessmentForm({
       </Question>
 
       <Question
-        number={9}
+        number={10}
         title="Dietary pattern?"
         helper="Drives how the protein floor gets hit and which food categories the plan leans on. ‘Mixed / no clear pattern’ is fine."
       >
@@ -493,7 +553,7 @@ export function NutritionAssessmentForm({
       </Question>
 
       <Question
-        number={10}
+        number={11}
         title="Meal services — open to them?"
         helper="If your cooking capacity is low, services like Factor / Trifecta / Tovala can carry weight. Mister P only recommends them if you're open to it."
       >
@@ -512,7 +572,7 @@ export function NutritionAssessmentForm({
       </Question>
 
       <Question
-        number={11}
+        number={12}
         title="How do you eat across the day?"
         helper="Three meals vs. snacking vs. grazing changes how protein gets distributed and what snack guidance (if any) shows up in the plan."
       >
@@ -531,7 +591,7 @@ export function NutritionAssessmentForm({
       </Question>
 
       <Question
-        number={12}
+        number={13}
         title="Sensitive gut?"
         helper="If high-acid (citrus, tomatoes), high-fat, or FODMAP-heavy foods (legumes, cruciferous, onions) consistently cause issues, picking 'sensitive' filters the worst offenders out of your food picker AND the meal plan. You'll still see the rest of the catalog."
       >
@@ -555,7 +615,7 @@ export function NutritionAssessmentForm({
 
       {goal === 'lose_fat' && (
         <Question
-          number={13}
+          number={14}
           title="Set a weight target? (optional)"
           helper={
             goalWeightFloor != null
@@ -616,7 +676,7 @@ export function NutritionAssessmentForm({
       )}
 
       <Question
-        number={goal === 'lose_fat' ? 13 : 12}
+        number={goal === 'lose_fat' ? 14 : 13}
         title="Recent body fat % reading? (optional)"
         helper="Skip if you don't have a reading. A recent caliper, DEXA, or InBody number gives a more accurate safe-rate cap for users who are muscular (BMI alone miscategorizes athletes). Visual estimates are unreliable enough that we'd rather not have them."
       >
@@ -636,7 +696,7 @@ export function NutritionAssessmentForm({
       </Question>
 
       <Question
-        number={goal === 'lose_fat' ? 14 : 13}
+        number={goal === 'lose_fat' ? 15 : 14}
         title="Anything you want Mister P to know? (optional)"
         helper="One line. A specific situation, a constraint, a pattern."
       >
@@ -676,11 +736,7 @@ export function NutritionAssessmentForm({
             Cancel — keep current plan
           </Link>
         )}
-        {pending && (
-          <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            Takes about fifteen seconds.
-          </span>
-        )}
+        {pending && <CMSpinner label="Takes about fifteen seconds." />}
       </div>
     </div>
   );

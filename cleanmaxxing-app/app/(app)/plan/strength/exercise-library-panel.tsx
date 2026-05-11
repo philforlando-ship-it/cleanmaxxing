@@ -12,6 +12,7 @@
 
 import { useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { CMSpinner } from '@/components/cm-logo';
 import {
   MUSCLE_GROUP_LABEL,
   type MuscleGroup,
@@ -452,6 +453,7 @@ export function ExerciseLibraryPanel({
             ? 'Mister P is rewriting your plan…'
             : 'Regenerate plan with these picks'}
         </button>
+        {regenerating && <CMSpinner size="xs" />}
         {dirty && !savingPrefs && !regenerating && (
           <span className="text-[11px] text-amber-700 dark:text-amber-400">
             Unsaved picks — save before regenerating to apply them.

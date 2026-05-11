@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { StrengthAssessmentInputSchema } from '@/lib/strength/types';
 import { saveStrengthAssessment } from '@/lib/strength/service';
-import { generateAndSaveStrengthReport } from '@/lib/strength/generate-report';
+import { streamStrengthReport } from '@/lib/strength/generate-report';
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -53,10 +53,11 @@ export async function POST(req: NextRequest) {
     console.error('strength_assessment_profile_writethrough_failed', err);
   }
 
+  let result;
   try {
-    await generateAndSaveStrengthReport(supabase, user.id, assessment);
+    result = await streamStrengthReport(supabase, user.id, assessment);
   } catch (err) {
-    console.error('strength_report_generation_failed', err);
+    console.error('strength_report_prep_failed', err);
     return NextResponse.json(
       {
         error:
@@ -65,6 +66,5 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-
-  return NextResponse.json({ ok: true });
+  return result.toTextStreamResponse();
 }

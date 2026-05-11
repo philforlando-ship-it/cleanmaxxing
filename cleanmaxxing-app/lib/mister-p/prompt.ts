@@ -19,12 +19,13 @@ When the user asks where they can read more, how to access a doc, or "send me th
 Always render heights in feet-inches notation (e.g. 6'3", 5'10") rather than raw inches. The user's height is shown to you below in the user-state block in this format — match it in your answers.
 
 Photo access:
-When the user has uploaded photos, you can see them — they will be attached as image content on their message. Up to FOUR images may be attached, in this fixed order:
+When the user has uploaded photos, you can see them — they will be attached as image content on their message. Up to FIVE images may be attached, in this fixed order:
 
   1. Baseline face photo (front, captured at onboarding or /photos)
   2. Most-recent face progress photo (30d / 90d / 180d, newest)
-  3. Most-recent body progress photo (any slot, front angle preferred)
-  4. Anchor angle from the most-recent COMPLETED hair photo session (front for hair track, top_down for bald track)
+  3. Most-recent body progress photo (any slot, front angle preferred — minimal-clothing body-comp shot)
+  4. Most-recent fit photo (clothed full-body outfit shot — uploaded by the user specifically for fit / outfit feedback). When present, this is the photo the user wants you to troubleshoot fit on (sleeves, shoulders, taper, proportions). It is grounded in the body dimensions on /plan/style. NOT for body-comp judgment — that's image 3.
+  5. Anchor angle from the most-recent COMPLETED hair photo session (front for hair track, top_down for bald track)
 
 Many users have only image 1 (baseline) plus maybe one other. Reference each by what it actually is, not by index — say "your baseline" or "your most recent face shot" or "your latest hair photo," never "image 2." Use them the way a thoughtful friend would: reference visible features only when they're load-bearing for the answer ("from your hair photo the recession reads as stable" is useful; describing a photo unprompted is creepy). When the user asks about progress or change ("am I leaner than at baseline?" / "is my recession stabilizing?") and you have both a baseline and a recent shot, do the comparison directly — that's exactly what both photos exist for. When the question is unrelated to anything visible (a sleep question, a supplement question), ignore the photos entirely. If no photo is attached, behave exactly as you did before — never refer to a photo that isn't there. Do NOT comment on attractiveness, rate appearance, or volunteer observations the user didn't ask for. Hard refusals on attractiveness ranking and "alpha" framings still apply when a photo is in view; if anything they apply more strongly there.
 
@@ -118,37 +119,6 @@ Stay in voice. Conversational, optional, never pushy. This is a recommendation, 
 // refusals (sourcing, prescriptive non-medical protocols, lab
 // interpretation) still apply — this is autonomy, not safety override.
 //
-// Only injected when (a) the chat is goal-scoped AND (b) that goal's
-// chat_execution_mode is true. The general thread and other goals'
-// threads are unaffected.
-export const EXECUTION_MODE_ADVISORY = `
---- EXECUTION MODE ACTIVE ---
-The user has explicitly opted into execution help for the goal in focus.
-They've heard the foundation-first read in this thread already, acknowledged
-it, and asked you to help with the goal anyway.
-
-For this turn:
-1. Skip foundation-first redirects ("fix sleep before peptides," "get to
-   15% body fat first," "you're not ready for this yet"). The user has
-   already considered that framing and chosen to proceed.
-2. Engage with the goal directly: what to track, what to expect, how to
-   tell if it's working, when to reassess, the educational content from
-   the relevant POV doc — at the depth a committed user needs.
-3. Foundational considerations are still legitimate context. Don't
-   pretend they don't matter. But they should not dominate the response
-   unless the user explicitly asks about them.
-
-Hard refusals are unchanged. Execution mode does not unlock sourcing
-guidance, prescriptive non-medical protocols, lab interpretation, or
-any other off-limits topic. If the user asks for something on the hard-
-refusal list, refuse in the usual voice.
-
-Stay in voice — direct, dry, willing to be useful. Don't reward the
-opt-in with sycophancy ("good call!" "love the commitment!"). Just
-engage with the goal.
---- END EXECUTION MODE ---
-`;
-
 // Per spec §13: when a user asks 5+ questions about the same topic in 7 days,
 // Mister P should name the pattern and suggest stepping back. The advisory is
 // injected into the system prompt for that specific turn — not a global
@@ -175,81 +145,11 @@ export function buildSystemPromptWithAdvisory(
   return base + '\n\n' + advisory;
 }
 
-// Active goal block — injected when the user has active goals so Mister P
-// can anchor responses to what the user is actually working on. Not a
-// directive to force every answer through the goal lens; just context.
-export type GoalContext = {
-  title: string;
-  description: string | null;
-  source_slug: string | null;
-  goal_type: 'process' | 'outcome';
-  daysActive: number;
-  // How many of the user's prior Mister P answers cited this goal's source
-  // doc. Signals that the user has already read foundational material on
-  // this topic and doesn't need the 101 version again.
-  priorCitationCount: number;
-};
-
-function describeDuration(days: number): string {
-  if (days < 1) return 'just started';
-  if (days === 1) return 'active 1 day';
-  if (days < 14) return `active ${days} days`;
-  if (days < 60) return `active ${Math.round(days / 7)} weeks`;
-  const months = Math.round(days / 30);
-  return `active ${months} month${months === 1 ? '' : 's'}`;
-}
-
-export function formatGoalsBlock(goals: GoalContext[]): string | null {
-  if (goals.length === 0) return null;
-  const lines = goals.map((g, i) => {
-    const duration = describeDuration(g.daysActive);
-    const source = g.source_slug
-      ? `\n   Source: ${g.source_slug}${g.priorCitationCount > 0 ? ` (covered in ${g.priorCitationCount} prior chat${g.priorCitationCount === 1 ? '' : 's'})` : ''}`
-      : '';
-    return `${i + 1}. ${g.title} — ${duration}${source}`;
-  });
-  return `--- USER'S ACTIVE GOALS ---
-The user is currently working on these goals. When the user's question
-overlaps with a goal, anchor your answer to what they're already doing
-— name the connection briefly and build from there. You do not need to
-reference goals every turn, and you should not force a connection that
-isn't there. If the question is unrelated, answer the question.
-
-Calibrate your depth by the goal age and prior-chat coverage. A user
-weeks or months into a goal who has already seen the source doc cited
-in prior chats does not need foundations — they need the next layer,
-the plateau fix, or the honest assessment of whether to keep going.
-
-${lines.join('\n')}
---- END USER'S ACTIVE GOALS ---`;
-}
-
-// Active goal focus — injected when the chat is opened from a
-// specific goal context (goal_id passed to /api/mister-p/ask).
-// Disambiguates references like "this", "this goal", "it" so Mister
-// P does not have to guess across the user's full active set. The
-// block is additive, not a replacement for the goals block: the
-// user might ask cross-goal questions ("should I drop my sleep goal
-// to focus on this?") and the broader list still needs to be in
-// context.
-export function formatActiveGoalFocusBlock(goal: GoalContext | null): string | null {
-  if (!goal) return null;
-  const desc = goal.description ? ` — ${goal.description}` : '';
-  return `--- USER'S CURRENT FOCUS ---
-The user opened this chat from a specific goal page. Treat ambiguous references like "this", "this goal", "it", or "the goal" as referring to the goal below unless the user explicitly names a different one. The full active-goals list is still in context for cross-goal questions.
-
-GOAL: ${goal.title}${desc}
---- END USER'S CURRENT FOCUS ---`;
-}
-
 export function buildSystemPromptFull(
   retrievedChunks: string,
   advisory: string | null,
-  goalsBlock: string | null,
   userStateBlock: string | null = null,
   conversationHistoryBlock: string | null = null,
-  activeGoalFocusBlock: string | null = null,
-  executionModeActive: boolean = false,
   journeyStateBlock: string | null = null,
 ): string {
   let prompt = MISTER_P_SYSTEM_PROMPT.replace('{retrieved_chunks}', retrievedChunks);
@@ -260,18 +160,6 @@ export function buildSystemPromptFull(
   // the strength state needs to be salient nearby.
   if (journeyStateBlock) prompt += '\n\n' + journeyStateBlock;
   if (conversationHistoryBlock) prompt += '\n\n' + conversationHistoryBlock;
-  if (goalsBlock) prompt += '\n\n' + goalsBlock;
-  // Focus block sits AFTER the goals block so it reads as "here is the
-  // full set... and here is the one currently in focus." Order matters
-  // for the LLM's anchoring behavior — the most recent block carries
-  // the most weight when resolving ambiguous references.
-  if (activeGoalFocusBlock) prompt += '\n\n' + activeGoalFocusBlock;
-  // Execution-mode advisory sits AFTER the focus block (so the LLM
-  // knows which goal it's executing on) but BEFORE any per-turn
-  // advisory (circuit breaker, proactive suggestion) so a circuit
-  // breaker can still fire on top — execution mode skips foundation
-  // redirects, not pattern-recognition feedback.
-  if (executionModeActive) prompt += '\n\n' + EXECUTION_MODE_ADVISORY;
   if (advisory) prompt += '\n\n' + advisory;
   return prompt;
 }
@@ -496,6 +384,24 @@ export function formatJourneyStateBlock(
     const parts: string[] = ['report ✓'];
     if (state.hair.density_state) {
       parts.push(`density_state=${state.hair.density_state}`);
+    }
+    // Migration 0099 — expanded precision fields. Each emitted only
+    // when populated so the line stays tight when they're null on
+    // legacy rows.
+    if (state.hair.balding_pattern) {
+      parts.push(`balding_pattern=${state.hair.balding_pattern}`);
+    }
+    if (state.hair.balding_severity !== null) {
+      parts.push(`balding_severity=${state.hair.balding_severity}`);
+    }
+    if (state.hair.head_shape) {
+      parts.push(`head_shape=${state.hair.head_shape}`);
+    }
+    if (state.hair.head_size) {
+      parts.push(`head_size=${state.hair.head_size}`);
+    }
+    if (state.hair.graying_level) {
+      parts.push(`graying=${state.hair.graying_level}`);
     }
     if (state.hair.stage_2_path) {
       parts.push(`stage_2_path=${state.hair.stage_2_path}`);

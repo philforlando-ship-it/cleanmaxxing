@@ -11,6 +11,7 @@ import { getUserProfile } from '@/lib/profile/service';
 import {
   ALCOHOL_USE_LABEL,
   CANNABIS_USE_LABEL,
+  CHEAT_DAY_PATTERN_LABEL,
   FASTING_PROTOCOL_LABEL,
   FOODS,
   GOAL_DIRECTION_LABEL,
@@ -41,6 +42,7 @@ export type MealPlanInputsSnapshot = {
   fasting_protocol: string;
   alcohol_use: string;
   cannabis_use: string;
+  cheat_day_pattern: string | null;
   food_preferences: string[];
   food_exclusions: string[];
   food_filter_text: string | null;
@@ -82,6 +84,7 @@ export async function generateAndSaveMealPlan(
     fasting_protocol: assessment.fasting_protocol,
     alcohol_use: assessment.alcohol_use,
     cannabis_use: assessment.cannabis_use,
+    cheat_day_pattern: assessment.cheat_day_pattern,
     food_preferences: assessment.food_preferences,
     food_exclusions: assessment.food_exclusions,
     food_filter_text: assessment.food_filter_text,
@@ -109,6 +112,11 @@ goal_direction: ${GOAL_DIRECTION_LABEL[assessment.goal_direction]}
 fasting_protocol: ${FASTING_PROTOCOL_LABEL[assessment.fasting_protocol]}
 alcohol_use: ${ALCOHOL_USE_LABEL[assessment.alcohol_use]}
 cannabis_use: ${CANNABIS_USE_LABEL[assessment.cannabis_use]}
+cheat_day_pattern: ${
+    assessment.cheat_day_pattern
+      ? CHEAT_DAY_PATTERN_LABEL[assessment.cheat_day_pattern]
+      : 'not set (legacy assessment) — treat as none_or_rare'
+  }
 
 --- DIETARY CONSTRAINTS ---
 diet_restrictions (profile): ${

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { tierExplainer, tierLabel } from '@/lib/goals/tier';
+import { tierExplainer, tierLabel } from '@/lib/hierarchy/tier-badge';
 
 type Props = {
   tier: string | null | undefined;

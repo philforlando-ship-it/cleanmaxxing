@@ -44,6 +44,7 @@ const ALL_MODALITIES: CardioModalityPreference[] = [
   'rowing',
   'slow_walking',
   'brisk_walking_hiking',
+  'elliptical_stair_machine',
   'classes_group',
   'swimming',
   'hate_all_cardio',
@@ -55,6 +56,7 @@ const MODALITY_LABEL: Record<CardioModalityPreference, string> = {
   rowing: 'Rowing',
   slow_walking: 'Slow walking (recovery + steps)',
   brisk_walking_hiking: 'Brisk walking or hiking (Zone 2)',
+  elliptical_stair_machine: 'Elliptical or stair machine (low-impact gym)',
   classes_group: 'Group classes (spin, rowing class, hiking groups)',
   swimming: 'Swimming',
   hate_all_cardio: 'Step count + brisk walking',
@@ -112,6 +114,14 @@ function scoreModality(
       return { score: -100, rationale: 'Excluded — no pool access.' };
     }
   }
+  if (modality === 'elliptical_stair_machine') {
+    if (!eq.has('full_gym') && !eq.has('classes_studio')) {
+      return {
+        score: -100,
+        rationale: 'Excluded — no gym access (machines aren’t in most homes).',
+      };
+    }
+  }
 
   // Now positive ranking — stronger fits get higher scores.
   let score = 0;
@@ -147,6 +157,15 @@ function scoreModality(
       score += 5;
       rationale = 'Joint-friendly full-body. Use perceived effort, not heart rate.';
       break;
+    case 'elliptical_stair_machine':
+      // Joint-friendly Zone 2 (elliptical) + high-RPE muscular endurance
+      // (stair). Strong fit when the user has gym access — sits between
+      // brisk walking and cycling on the interference-cost ladder.
+      score += 6;
+      rationale = inj.has('knee_pain')
+        ? 'Top-3 knee-friendly option. Elliptical for steady Zone 2; stair for hard intervals when knees allow.'
+        : 'Low-impact gym cardio. Elliptical for steady Zone 2; stair for hard intervals.';
+      break;
     case 'classes_group':
       score += 4;
       rationale = 'Social retention helps consistency. Watch HIIT-flavored classes for recovery cost.';
@@ -167,6 +186,15 @@ function scoreModality(
   }
   if (modality === 'swimming' && eq.has('classes_studio')) {
     score += 1;
+  }
+  // Knee-pain users: elliptical is the canonical aerobic answer.
+  // Promote it ahead of brisk walking to ensure it ranks.
+  if (modality === 'elliptical_stair_machine' && inj.has('knee_pain')) {
+    score += 3;
+  }
+  // Hip-pain users also benefit — same low-impact rationale.
+  if (modality === 'elliptical_stair_machine' && inj.has('hip_pain')) {
+    score += 2;
   }
   // No-equipment users get walking elevated even higher.
   if (

@@ -11,6 +11,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { CMSpinner } from '@/components/cm-logo';
+import {
+  StreamingPlanPreview,
+  consumeTextStream,
+} from '@/components/streaming-plan-preview';
 import {
   CURRENT_STATE_LABEL,
   DENSITY_AREA_LABEL,
@@ -72,6 +77,7 @@ export function FacialHairAssessmentForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [streamingText, setStreamingText] = useState<string | null>(null);
 
   const [currentState, setCurrentState] = useState<CurrentState | null>(
     initialValues?.current_state ?? null,
@@ -129,12 +135,18 @@ export function FacialHairAssessmentForm({
           };
           throw new Error(body.error ?? `Save failed (${res.status})`);
         }
+        await consumeTextStream(res, setStreamingText);
         router.push('/plan/facial-hair');
         router.refresh();
       } catch (err) {
+        setStreamingText(null);
         setError((err as Error).message);
       }
     });
+  }
+
+  if (streamingText !== null) {
+    return <StreamingPlanPreview text={streamingText} />;
   }
 
   return (
@@ -269,11 +281,7 @@ export function FacialHairAssessmentForm({
             Cancel — keep current plan
           </Link>
         )}
-        {pending && (
-          <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            Takes about fifteen seconds.
-          </span>
-        )}
+        {pending && <CMSpinner label="Takes about fifteen seconds." />}
       </div>
     </div>
   );

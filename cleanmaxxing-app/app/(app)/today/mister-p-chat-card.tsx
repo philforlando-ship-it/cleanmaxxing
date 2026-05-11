@@ -1,12 +1,19 @@
 'use client';
 
 // /today's Mister P chat card. Multi-thread aware: the user can ask
-// from the General thread (goal_id IS NULL) or any of their active
-// goal threads via a picker above the input. All threads hydrate
-// from server-loaded history on mount, so continuity is visible
-// across surfaces — including the per-goal panel on /goals/[id],
-// which writes into the same goal-scoped thread this card can read
-// from.
+// from the General thread (no journey scope) or any of their active
+// journeys via a picker above the input. All threads hydrate from
+// server-loaded history on mount, so continuity is visible across
+// sessions.
+//
+// Mig 0104 (2026-05-10): replaced the goal-scoped picker with a
+// journey-scoped picker, aligning the chat threading model with the
+// onboarding journey-picker (2026-05-07) and the rest of the product.
+// Legacy goal-scoped threads still exist on /goals/[id] for backward
+// reads — the /today picker no longer surfaces them. The per-goal
+// execution-mode toggle was retired in the same ship: it was a
+// per-goal concept ("push back on this specific goal") that doesn't
+// map cleanly to journeys.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -18,34 +25,24 @@ export type ChatMessage = {
   content: string;
 };
 
-export type GoalOption = {
-  id: string;
-  title: string;
-  // Per-goal Mister P execution mode. When true, the system prompt
-  // skips foundation-first redirects on this goal's thread.
-  executionMode: boolean;
-  // Whether the user has explicitly acknowledged the execution-mode
-  // prompt for this goal. Until acked, the enforcing banner blocks
-  // the chat input on goal-scoped threads after Mister P's first
-  // response — the user must pick "Help me anyway" or "Stay with
-  // foundations first" before continuing. Once acked, the enforcing
-  // banner is replaced with the lighter-weight on/off control.
-  promptAcked: boolean;
+export type JourneyOption = {
+  slug: string;
+  label: string;
 };
 
-// Sentinel key used in the threads map and as the picker's "no goal"
-// value. UUIDs from the goals table can never collide with this.
+// Sentinel key used in the threads map and as the picker's "no
+// journey scope" value. Journey slugs can never collide with this.
 const GENERAL_KEY = '__general__';
 
 type Props = {
-  goals: GoalOption[];
-  // Threads keyed by GENERAL_KEY for the unscoped chat, or by a goal
-  // UUID for goal-scoped chats. Threads omitted from the map default
-  // to empty.
+  journeys: JourneyOption[];
+  // Threads keyed by GENERAL_KEY for the unscoped chat, or by a
+  // journey slug for journey-scoped chats. Threads omitted from the
+  // map default to empty.
   initialThreads: Record<string, ChatMessage[]>;
 };
 
-export function MisterPChatCard({ goals, initialThreads }: Props) {
+export function MisterPChatCard({ journeys, initialThreads }: Props) {
   const router = useRouter();
   const [selectedKey, setSelectedKey] = useState<string>(GENERAL_KEY);
   const [threads, setThreads] = useState<Record<string, ChatMessage[]>>(
@@ -56,7 +53,6 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [confirmingClear, setConfirmingClear] = useState(false);
   const [clearing, setClearing] = useState(false);
-  const [togglingMode, setTogglingMode] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLElement>(null);
@@ -101,34 +97,10 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
       // visible state. The selectedKey state is allowed to change
       // freely — but token-append targets this snapshot. An explicit
       // threadKey override lets cross-card prefill events route into
-      // a specific goal's thread regardless of the picker's current
-      // selection.
+      // a specific journey's thread regardless of the picker's
+      // current selection.
       const targetKey = threadKey ?? selectedKey;
-      const goalId = targetKey === GENERAL_KEY ? null : targetKey;
-
-      // Respect the execution-mode prompt gate even on cross-card
-      // prefill. If the user has already heard Mister P's first read
-      // on this goal but hasn't picked a path yet, drop the question
-      // rather than bypass the banner. Threads with no prior
-      // assistant response (a brand-new goal-scoped thread) skip this
-      // gate — the first response is the read the prompt is about.
-      if (goalId) {
-        const targetGoal = goals.find((g) => g.id === goalId);
-        const targetMessages = threads[goalId] ?? [];
-        const targetHasFirstResponse = targetMessages.some(
-          (m) => m.role === 'assistant',
-        );
-        if (
-          targetGoal &&
-          !targetGoal.promptAcked &&
-          targetHasFirstResponse
-        ) {
-          setError(
-            'Pick how Mister P should engage with this goal before continuing.',
-          );
-          return;
-        }
-      }
+      const journeySlug = targetKey === GENERAL_KEY ? null : targetKey;
 
       setError(null);
       setInput('');
@@ -148,7 +120,10 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
         const res = await fetch('/api/mister-p/ask', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ question: trimmed, goal_id: goalId }),
+          body: JSON.stringify({
+            question: trimmed,
+            journey_slug: journeySlug,
+          }),
           signal: controller.signal,
         });
 
@@ -193,23 +168,28 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
         abortRef.current = null;
       }
     },
-    [selectedKey, setMessagesForThread, goals, threads],
+    [selectedKey, setMessagesForThread],
   );
 
   // Listen for "ask mister p about X" events from sibling cards. When
-  // the event carries a goalId for one of the user's active goals,
-  // route the prefilled question into that goal's thread (and switch
-  // the picker so the user sees where the answer is landing). Without
-  // a goalId, fall back to the currently-selected thread.
+  // the event carries a journeySlug for one of the user's active
+  // journeys, route the prefilled question into that journey's thread
+  // (and switch the picker so the user sees where the answer is
+  // landing). Without a journeySlug, fall back to the currently-
+  // selected thread.
   useEffect(() => {
     function handler(e: Event) {
-      const detail = (e as CustomEvent<{ question?: string; goalId?: string }>)
-        .detail;
+      const detail = (
+        e as CustomEvent<{ question?: string; journeySlug?: string }>
+      ).detail;
       if (!detail?.question) return;
 
       let targetKey = selectedKey;
-      if (detail.goalId && goals.some((g) => g.id === detail.goalId)) {
-        targetKey = detail.goalId;
+      if (
+        detail.journeySlug &&
+        journeys.some((j) => j.slug === detail.journeySlug)
+      ) {
+        targetKey = detail.journeySlug;
         if (targetKey !== selectedKey) setSelectedKey(targetKey);
       }
 
@@ -218,7 +198,7 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
     }
     window.addEventListener('mister-p:prefill', handler);
     return () => window.removeEventListener('mister-p:prefill', handler);
-  }, [sendQuestion, selectedKey, goals]);
+  }, [sendQuestion, selectedKey, journeys]);
 
   function send() {
     sendQuestion(input);
@@ -228,75 +208,16 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
     abortRef.current?.abort();
   }
 
-  // Flip the focused goal's execution mode flag (and ack the prompt).
-  // Used by the enforcing banner's "Help me anyway" CTA and by the
-  // post-ack on/off control. After flipping, refresh the route so the
-  // server-loaded goals carry the new value on next render.
-  async function toggleExecutionMode() {
-    if (togglingMode || streaming) return;
-    if (selectedKey === GENERAL_KEY) return;
-    const goal = goals.find((g) => g.id === selectedKey);
-    if (!goal) return;
-    const next = !goal.executionMode;
-    setTogglingMode(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/mister-p/execution-mode', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ goal_id: goal.id, enabled: next }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? `Toggle failed (${res.status})`);
-      }
-      router.refresh();
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setTogglingMode(false);
-    }
-  }
-
-  // "Stay with foundations first" — acks the prompt without flipping
-  // execution mode. After this, the enforcing banner disappears and
-  // the chat input becomes live; Mister P continues to give the
-  // foundation-aware default response on subsequent messages.
-  async function dismissExecutionPrompt() {
-    if (togglingMode || streaming) return;
-    if (selectedKey === GENERAL_KEY) return;
-    const goal = goals.find((g) => g.id === selectedKey);
-    if (!goal) return;
-    setTogglingMode(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/mister-p/dismiss-execution-prompt', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ goal_id: goal.id }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? `Dismiss failed (${res.status})`);
-      }
-      router.refresh();
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setTogglingMode(false);
-    }
-  }
-
   async function clearThread() {
     if (clearing || streaming) return;
     setClearing(true);
     setError(null);
     try {
-      const goalId = selectedKey === GENERAL_KEY ? null : selectedKey;
+      const journeySlug = selectedKey === GENERAL_KEY ? null : selectedKey;
       const res = await fetch('/api/mister-p/clear', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ goal_id: goalId }),
+        body: JSON.stringify({ journey_slug: journeySlug }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -305,8 +226,8 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
       setMessagesForThread(selectedKey, () => []);
       setConfirmingClear(false);
       // Invalidate the router cache so a navigation back to /today
-      // or over to /goals/[id] re-runs the server hydration and
-      // doesn't show the just-cleared messages from a stale RSC.
+      // re-runs the server hydration and doesn't show the just-
+      // cleared messages from a stale RSC.
       router.refresh();
     } catch (err) {
       setError((err as Error).message);
@@ -318,18 +239,7 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
   const selectedLabel =
     selectedKey === GENERAL_KEY
       ? 'General'
-      : goals.find((g) => g.id === selectedKey)?.title ?? 'Goal';
-
-  // The chat input is gated when the enforcing execution-prompt banner
-  // is showing — the user must pick a path before continuing. Same
-  // condition as the banner-render check above so the two stay in sync.
-  const inputBlockedByPrompt = (() => {
-    if (selectedKey === GENERAL_KEY) return false;
-    const goal = goals.find((g) => g.id === selectedKey);
-    if (!goal) return false;
-    if (goal.promptAcked) return false;
-    return messages.some((m) => m.role === 'assistant');
-  })();
+      : journeys.find((j) => j.slug === selectedKey)?.label ?? 'Journey';
 
   return (
     <section
@@ -350,119 +260,30 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
         )}
       </div>
 
-      <div className="mt-3">
-        <label
-          htmlFor="mister-p-thread"
-          className="block text-xs text-zinc-600 dark:text-zinc-400"
-        >
-          Asking about
-        </label>
-        <select
-          id="mister-p-thread"
-          value={selectedKey}
-          onChange={(e) => setSelectedKey(e.target.value)}
-          disabled={streaming || clearing}
-          className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900"
-        >
-          <option value={GENERAL_KEY}>General</option>
-          {goals.map((g) => (
-            <option key={g.id} value={g.id}>
-              {g.title}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {selectedKey !== GENERAL_KEY && (() => {
-        const goal = goals.find((g) => g.id === selectedKey);
-        if (!goal) return null;
-        const hasFirstResponse = messages.some((m) => m.role === 'assistant');
-
-        // Enforcing state: user has heard Mister P's first response on
-        // this goal but hasn't yet acked the choice. Banner blocks the
-        // chat input (rendered below) until one of the two paths is
-        // chosen. Skipped in the General thread and before any
-        // assistant response (the user gets one honest read first).
-        const enforcingPrompt =
-          !goal.promptAcked && hasFirstResponse;
-
-        if (enforcingPrompt) {
-          return (
-            <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-900 dark:bg-amber-950/40">
-              <p className="font-medium text-amber-900 dark:text-amber-200">
-                Pick how Mister P should engage with this goal.
-              </p>
-              <p className="mt-1.5 text-xs leading-relaxed text-amber-900/80 dark:text-amber-200/80">
-                By default Mister P will push back when your foundations
-                (sleep, training, body comp) don&rsquo;t support a goal.
-                If you&rsquo;ve thought it through and want execution help
-                anyway, switch into execution mode — foundation redirects
-                stop, hard refusals stay.
-              </p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={toggleExecutionMode}
-                  disabled={togglingMode || streaming}
-                  className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-                >
-                  {togglingMode ? 'Saving…' : 'Help me anyway'}
-                </button>
-                <button
-                  type="button"
-                  onClick={dismissExecutionPrompt}
-                  disabled={togglingMode || streaming}
-                  className="rounded-md border border-amber-400 px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50 dark:border-amber-700 dark:text-amber-200 dark:hover:bg-amber-950"
-                >
-                  Stay with foundations first
-                </button>
-              </div>
-            </div>
-          );
-        }
-
-        // Acked state. Show the lighter-weight on/off control so the
-        // user can switch modes later without re-encountering the
-        // enforcing banner. Hidden when nothing's happened yet
-        // (acked=true with no messages = clean slate).
-        if (!hasFirstResponse && !goal.executionMode) return null;
-
-        return (
-          <div className="mt-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-            {goal.executionMode ? (
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-zinc-700 dark:text-zinc-300">
-                  Execution mode is on for this goal — foundation-first
-                  redirects are off.
-                </span>
-                <button
-                  type="button"
-                  onClick={toggleExecutionMode}
-                  disabled={togglingMode || streaming}
-                  className="shrink-0 rounded-md border border-zinc-300 px-2.5 py-1 font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                >
-                  {togglingMode ? 'Saving…' : 'Turn off'}
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-zinc-700 dark:text-zinc-300">
-                  Foundations-first mode. Switch to execution mode if
-                  you&rsquo;d rather Mister P engage with the goal directly.
-                </span>
-                <button
-                  type="button"
-                  onClick={toggleExecutionMode}
-                  disabled={togglingMode || streaming}
-                  className="shrink-0 rounded-md border border-zinc-300 px-2.5 py-1 font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                >
-                  {togglingMode ? 'Saving…' : 'Switch to execution'}
-                </button>
-              </div>
-            )}
-          </div>
-        );
-      })()}
+      {journeys.length > 0 && (
+        <div className="mt-3">
+          <label
+            htmlFor="mister-p-thread"
+            className="block text-xs text-zinc-600 dark:text-zinc-400"
+          >
+            Asking about
+          </label>
+          <select
+            id="mister-p-thread"
+            value={selectedKey}
+            onChange={(e) => setSelectedKey(e.target.value)}
+            disabled={streaming || clearing}
+            className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900"
+          >
+            <option value={GENERAL_KEY}>General</option>
+            {journeys.map((j) => (
+              <option key={j.slug} value={j.slug}>
+                {j.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {confirmingClear && (
         <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm dark:border-amber-900 dark:bg-amber-950/30">
@@ -493,8 +314,8 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
       {messages.length === 0 ? (
         <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
           {selectedKey === GENERAL_KEY
-            ? 'Ask about anything Cleanmaxxing covers — training, skin, hair, supplements, sleep, style. Switch the thread above to keep a question scoped to a goal.'
-            : 'Ask Mister P about this goal. The thread is saved across sessions until you clear it.'}
+            ? 'Ask about anything Cleanmaxxing covers — training, skin, hair, supplements, sleep, style. Switch the thread above to keep a question scoped to a journey.'
+            : `Ask Mister P about ${selectedLabel}. The thread is saved across sessions until you clear it.`}
         </p>
       ) : (
         <div
@@ -547,17 +368,15 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={
-            inputBlockedByPrompt
-              ? 'Pick how to engage with this goal first ↑'
-              : selectedKey === GENERAL_KEY
-                ? 'Ask Mister P a question...'
-                : `Ask about "${selectedLabel}"...`
+            selectedKey === GENERAL_KEY
+              ? 'Ask Mister P a question...'
+              : `Ask about ${selectedLabel}...`
           }
-          disabled={streaming || inputBlockedByPrompt}
+          disabled={streaming}
           className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
         />
         <VoiceInputButton
-          disabled={streaming || inputBlockedByPrompt}
+          disabled={streaming}
           onTranscribed={(text) =>
             setInput((prev) => (prev ? `${prev} ${text}` : text))
           }
@@ -573,7 +392,7 @@ export function MisterPChatCard({ goals, initialThreads }: Props) {
         ) : (
           <button
             type="submit"
-            disabled={!input.trim() || inputBlockedByPrompt}
+            disabled={!input.trim()}
             className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             Send

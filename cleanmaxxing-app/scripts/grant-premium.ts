@@ -82,9 +82,23 @@ async function main() {
     process.exit(1);
   }
 
+  const nowIso = new Date().toISOString();
+  const auditPatch = revoke
+    ? {
+        pro_revoked_at: nowIso,
+        pro_revoked_by_email: 'cli',
+      }
+    : {
+        pro_granted_at: nowIso,
+        pro_granted_by_email: 'cli',
+        pro_grant_reason: null,
+        pro_revoked_at: null,
+        pro_revoked_by_email: null,
+      };
+
   const { error: updateErr } = await supabase
     .from('users')
-    .update({ subscription_status: newStatus })
+    .update({ subscription_status: newStatus, ...auditPatch })
     .eq('id', userId);
 
   if (updateErr) {

@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { StyleAssessmentInputSchema } from '@/lib/style/types';
 import { saveStyleAssessment } from '@/lib/style/service';
-import { generateAndSaveStyleReport } from '@/lib/style/generate-report';
+import { streamStyleReport } from '@/lib/style/generate-report';
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -39,10 +39,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  let result;
   try {
-    await generateAndSaveStyleReport(supabase, user.id, assessment);
+    result = await streamStyleReport(supabase, user.id, assessment);
   } catch (err) {
-    console.error('style_report_generation_failed', err);
+    console.error('style_report_prep_failed', err);
     return NextResponse.json(
       {
         error:
@@ -51,6 +52,5 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-
-  return NextResponse.json({ ok: true });
+  return result.toTextStreamResponse();
 }

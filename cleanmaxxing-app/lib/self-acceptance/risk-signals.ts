@@ -152,6 +152,17 @@ export const PATTERN_TEMPLATE_RECOMMENDATION: Record<RiskPattern, string> = {
   abandon_restart: '56-identity-beyond-appearance',
 };
 
+// Inlined nudge titles keyed by POV slug. Pre-Tier-3 these came from
+// content/goal-templates.ts via templateBySlug(); the templates table
+// retired with the goals system on 2026-05-10. The four POV slugs
+// the nudge selects from are stable — when one changes, update here.
+const PATTERN_TITLE: Record<RiskPattern, string> = {
+  over_capacity: 'Practice noticing when to stop',
+  polish_without_base: 'Practice noticing when to stop',
+  circuit_breaker: 'Accept the limits of self-improvement',
+  abandon_restart: 'Build an identity beyond your appearance',
+};
+
 // Voice-matched intro line per pattern. Kept short — the card
 // closes with a generic "this might be a good time to add a goal
 // that keeps the work from taking over," so the per-pattern line
@@ -190,6 +201,7 @@ export type SelfAcceptanceNudge = {
   pattern: RiskPattern;
   intro: string;
   recommendedSlug: string;
+  recommendedTitle: string;
 };
 
 export async function pickSelfAcceptanceNudge(
@@ -223,5 +235,6 @@ export async function pickSelfAcceptanceNudge(
     pattern: winner,
     intro: PATTERN_INTRO[winner],
     recommendedSlug: PATTERN_TEMPLATE_RECOMMENDATION[winner],
+    recommendedTitle: PATTERN_TITLE[winner],
   };
 }

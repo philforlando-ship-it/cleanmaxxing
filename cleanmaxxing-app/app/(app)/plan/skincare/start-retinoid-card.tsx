@@ -8,6 +8,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { CMSpinner } from '@/components/cm-logo';
 
 type Props = {
   weeksSinceReport: number;
@@ -94,6 +95,7 @@ export function StartRetinoidCard({ weeksSinceReport }: Props) {
               ? 'Mister P is rewriting your plan…'
               : 'Mark started and re-run plan'}
           </button>
+          {pending && <CMSpinner size="xs" className="ml-3" />}
         </div>
       )}
     </section>

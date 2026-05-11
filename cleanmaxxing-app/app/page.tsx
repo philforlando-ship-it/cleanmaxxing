@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { CleanmaxxingLogo } from '@/components/cm-logo';
 
 export const metadata: Metadata = {
   title: 'Cleanmaxxing — look and feel sharper at 35, 40, 45',
@@ -35,7 +36,10 @@ export default function Home() {
   return (
     <main className="flex flex-1 flex-col">
       {/* Hero */}
-      <section className="mx-auto w-full max-w-3xl px-6 py-24 sm:py-32">
+      <section className="mx-auto w-full max-w-3xl px-6 py-24 text-center sm:py-32 sm:text-left">
+        <div className="mb-10 flex justify-center">
+          <CleanmaxxingLogo size="xl" />
+        </div>
         <h1 className="text-4xl font-semibold tracking-tight text-zinc-900 sm:text-6xl dark:text-zinc-100">
           Look and feel sharper at 35, 40, 45.
         </h1>

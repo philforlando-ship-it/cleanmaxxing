@@ -41,6 +41,23 @@ export type EyeColor =
   | 'brown'
   | 'dark_brown';
 
+// Migration 0102 (2026-05-10) — wrist_size + dress_code_context.
+// Two segmentation axes the per-component POV library needs that the
+// v2 reframe didn't capture. wrist_size drives watch dial sizing
+// (small ~36-39mm, average ~38-41mm, large ~40-43mm). dress_code_
+// context drives footwear / outerwear / shirt formality bias —
+// independent of target_archetype (a clean-minimalist in finance and
+// a clean-minimalist WFH need different prescriptions).
+export type WristSize = 'small' | 'average' | 'large';
+
+export type DressCodeContext =
+  | 'corporate'
+  | 'business_casual'
+  | 'creative'
+  | 'casual_wfh'
+  | 'blue_collar'
+  | 'mixed';
+
 export const SHOULDER_WIDTHS: ReadonlyArray<ShoulderWidth> = [
   'narrow',
   'medium',
@@ -85,6 +102,21 @@ export const EYE_COLORS: ReadonlyArray<EyeColor> = [
   'hazel',
   'brown',
   'dark_brown',
+];
+
+export const WRIST_SIZES: ReadonlyArray<WristSize> = [
+  'small',
+  'average',
+  'large',
+];
+
+export const DRESS_CODE_CONTEXTS: ReadonlyArray<DressCodeContext> = [
+  'corporate',
+  'business_casual',
+  'creative',
+  'casual_wfh',
+  'blue_collar',
+  'mixed',
 ];
 
 export const EYE_COLOR_LABEL: Record<EyeColor, string> = {
@@ -155,6 +187,30 @@ export const SKIN_UNDERTONE_LABEL: Record<SkinUndertone, string> = {
     'Neutral — both jewelry tones look fine; you can wear most colors',
 };
 
+export const WRIST_SIZE_LABEL: Record<WristSize, string> = {
+  small:
+    'Small — under ~6.75" / 17cm circumference. Most off-the-rack watches read oversized.',
+  average:
+    'Average — ~6.75–7.5" / 17–19cm. Most watch sizes fit; this is the design center.',
+  large:
+    'Large — over ~7.5" / 19cm. Smaller dress watches read undersized; oversized cases work better here than on most.',
+};
+
+export const DRESS_CODE_CONTEXT_LABEL: Record<DressCodeContext, string> = {
+  corporate:
+    'Corporate — suits / tailored separates most days. Finance, law, consulting, formal client-facing.',
+  business_casual:
+    'Business casual — collared shirts + chinos / trousers, occasional blazer. Most office jobs.',
+  creative:
+    'Creative — visual / agency / tech where intentional style is expected and rewarded.',
+  casual_wfh:
+    'Casual / WFH — remote or near-fully-casual. Jeans + tee or polo most days, dress up only for occasions.',
+  blue_collar:
+    'Blue collar / trades — workwear / uniform most days. Style is for off-work life.',
+  mixed:
+    'Mixed — varies meaningfully across the week (e.g., hybrid roles, client days vs. internal days).',
+};
+
 // Derive the legacy frame_estimate from the v2 granular fields.
 // Used in the API route on submit so existing downstream consumers
 // (cut-menu density gate, foundation-pieces content, prompt rules
@@ -223,6 +279,12 @@ export type StyleAssessment = {
   skin_undertone: SkinUndertone | null;
   // Migration 0099 (2026-05-10) — universal-applicable color tiebreak.
   eye_color: EyeColor | null;
+  // Migration 0102 (2026-05-10) — wrist_size drives watch dial sizing;
+  // dress_code_context drives footwear/outerwear formality bias
+  // independent of target_archetype. Both nullable on pre-migration
+  // rows; v2 form requires them on next submit.
+  wrist_size: WristSize | null;
+  dress_code_context: DressCodeContext | null;
   // Legacy v1 frame_estimate — derived from build + shoulder_width
   // when the v2 form is submitted. Retained so existing call sites
   // don't churn (cut-menu density gate, foundation-pieces content,
@@ -275,6 +337,24 @@ export type StyleReportInputModifiers = {
   skin_undertone: SkinUndertone | null;
   // Migration 0099 — universal-applicable color tiebreak.
   eye_color: EyeColor | null;
+  // Migration 0102 — segmentation axes for the per-component POV
+  // library. wrist_size gates watch dial sizing recs; dress_code_
+  // context gates footwear / outerwear / shirt formality bias.
+  wrist_size: WristSize | null;
+  dress_code_context: DressCodeContext | null;
+  // 2026-05-10 hair × style coordination (mirror of D1/D2). The style
+  // report reads the user's hair_assessments balding signal so the
+  // sunglasses / hats / glasses prescription accounts for face-frame
+  // architecture. Null when the user hasn't taken the hair journey.
+  hair_balding_pattern:
+    | 'none'
+    | 'front'
+    | 'vertex'
+    | 'front_and_vertex'
+    | 'diffuse'
+    | null;
+  hair_balding_severity: 0 | 1 | 2 | 3 | 4 | null;
+  hair_density_state: string | null;
   // Phase 2b — per-user feasibility of the PICKED target archetype.
   // Computed from body data + age via lib/style/aesthetic-feasibility.
   // Snapshotted so the prompt can branch on whether the user picked
@@ -371,6 +451,15 @@ export const StyleAssessmentInputSchema = z.object({
     'hazel',
     'brown',
     'dark_brown',
+  ]),
+  wrist_size: z.enum(['small', 'average', 'large']),
+  dress_code_context: z.enum([
+    'corporate',
+    'business_casual',
+    'creative',
+    'casual_wfh',
+    'blue_collar',
+    'mixed',
   ]),
   current_archetype: z.enum([
     'clean_minimalist',

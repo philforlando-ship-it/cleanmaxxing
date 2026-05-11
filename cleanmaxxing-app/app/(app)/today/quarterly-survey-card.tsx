@@ -1,20 +1,20 @@
 'use client';
 
-// Day-90 re-survey card. Collapsed default shows a short intro + Start
-// button; expanded shows the three questions (focus areas, motivation,
-// specific thing). On save, the card switches to a "suggestions" state
-// listing up to three fresh goals produced by the ranker against the
-// updated inputs. The user can add any suggestion to their goals via
-// /api/goals/add without leaving /today.
+// Day-90 re-survey card. Three short questions refresh the user's
+// focus areas, motivation segment, and "one specific thing" framing.
+// Downstream surfaces (journey ordering on /today, motivation-aware
+// prompts, monthly checkpoint's specific_thing mirror) read these
+// updated values directly from survey_responses.
 //
-// Completion state is written server-side via survey_responses, so the
-// card simply disappears on the next /today load once saved.
+// Pre-Sub-ship-B, the card also surfaced ranker-suggested goals
+// after save. The goal-suggestion sub-feature retired alongside the
+// rest of the goals system (2026-05-10). The form half of the card
+// remains valuable as a focus-signal refresh; "view: 'suggestions'"
+// was replaced with "view: 'saved'" — a one-line confirmation.
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { TierBadge } from '@/components/tier-badge';
 import type { QuarterlySurveyPrior } from '@/lib/quarterly-survey/service';
-import type { SuggestedGoal } from '@/lib/onboarding/goal-suggest';
 
 type Props = {
   prior: QuarterlySurveyPrior;
@@ -40,16 +40,16 @@ const FOCUS_OPTIONS: Array<{ value: string; label: string }> = [
 const MOTIVATION_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'feel-better-in-own-skin', label: 'I want to feel better in my own skin' },
   { value: 'social-professional-confidence', label: 'I want to feel more confident socially or professionally' },
-  { value: 'specific-event', label: 'I\u2019m preparing for a specific event or life change' },
+  { value: 'specific-event', label: 'I’m preparing for a specific event or life change' },
   { value: 'structured-plan', label: 'I want a structured plan for self-improvement' },
   { value: 'something-specific-bothering-me', label: 'Something specific is bothering me' },
   { value: 'maintenance-aging', label: 'I want to maintain how I look and defend against age-related decline' },
-  { value: 'not-sure-yet', label: 'Honestly, I\u2019m not sure yet' },
+  { value: 'not-sure-yet', label: 'Honestly, I’m not sure yet' },
 ];
 
 const MAX_FOCUS = 3;
 
-type View = 'intro' | 'form' | 'suggestions';
+type View = 'intro' | 'form' | 'saved';
 
 export function QuarterlySurveyCard({ prior }: Props) {
   const router = useRouter();
@@ -57,8 +57,6 @@ export function QuarterlySurveyCard({ prior }: Props) {
   const [focusAreas, setFocusAreas] = useState<string[]>(prior.focusAreas);
   const [motivation, setMotivation] = useState<string>(prior.motivationSegment ?? '');
   const [specificThing, setSpecificThing] = useState<string>(prior.specificThing ?? '');
-  const [suggestions, setSuggestions] = useState<SuggestedGoal[]>([]);
-  const [addedSlugs, setAddedSlugs] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -78,7 +76,7 @@ export function QuarterlySurveyCard({ prior }: Props) {
       return;
     }
     if (!motivation) {
-      setError('Pick what\u2019s bringing you here right now.');
+      setError('Pick what’s bringing you here right now.');
       return;
     }
     startTransition(async () => {
@@ -96,40 +94,11 @@ export function QuarterlySurveyCard({ prior }: Props) {
           const body = await res.json().catch(() => ({}));
           throw new Error(body.error ?? `Save failed (${res.status})`);
         }
-        const body = (await res.json()) as { suggestions: SuggestedGoal[] };
-        setSuggestions(body.suggestions);
-        setView('suggestions');
+        setView('saved');
       } catch (err) {
         setError((err as Error).message);
       }
     });
-  }
-
-  async function addGoal(goal: SuggestedGoal) {
-    setError(null);
-    try {
-      const res = await fetch('/api/goals/add', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          source_slug: goal.source_slug,
-          title: goal.title,
-          description: goal.description,
-          category: goal.category,
-          priority_tier: goal.priority_tier,
-          goal_type: goal.goal_type,
-          force: true, // user explicitly picked; don't surface the 5-goal cap nudge mid-survey
-        }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? `Add failed (${res.status})`);
-      }
-      setAddedSlugs((prev) => new Set(prev).add(goal.source_slug));
-      router.refresh();
-    } catch (err) {
-      setError((err as Error).message);
-    }
   }
 
   function dismiss() {
@@ -141,10 +110,10 @@ export function QuarterlySurveyCard({ prior }: Props) {
       <section className="rounded-xl border border-zinc-300 bg-zinc-50 p-6 dark:border-zinc-700 dark:bg-zinc-900">
         <h2 className="text-lg font-medium">Ninety days in. A quick refocus?</h2>
         <p className="mt-2 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          Three short questions about your current direction &mdash; focus areas,
-          what\u2019s bringing you here, and anything specific on your mind. Takes a
-          minute. We&rsquo;ll regenerate goal suggestions based on your updated
-          answers.
+          Three short questions about your current direction &mdash;
+          focus areas, what&rsquo;s bringing you here, and anything
+          specific on your mind. Takes a minute. The updated answers
+          refresh your journey ordering and the prompts Mister P uses.
         </p>
         <button
           type="button"
@@ -240,7 +209,7 @@ export function QuarterlySurveyCard({ prior }: Props) {
             disabled={pending}
             className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
           >
-            {pending ? 'Saving\u2026' : 'Save and see suggestions'}
+            {pending ? 'Saving…' : 'Save'}
           </button>
           <button
             type="button"
@@ -255,65 +224,19 @@ export function QuarterlySurveyCard({ prior }: Props) {
     );
   }
 
-  // view === 'suggestions'
+  // view === 'saved'
   return (
     <section className="rounded-xl border border-zinc-300 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
-      <h2 className="text-lg font-medium">Saved. Here&rsquo;s what the ranker suggests now.</h2>
+      <h2 className="text-lg font-medium">Saved.</h2>
       <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
-        These are the highest-impact goals you haven&rsquo;t tried yet, ranked
-        against your updated focus areas and motivation. Add any that make
-        sense right now; skip the rest.
+        Your focus areas, motivation, and specific-thing answer have
+        been updated. The new values are already in effect across
+        /today and the prompts Mister P uses.
       </p>
-
-      {suggestions.length === 0 && (
-        <p className="mt-4 text-sm text-zinc-500">
-          Nothing fresh to recommend \u2014 either you\u2019ve already picked the
-          highest-impact options for your profile, or the POV corpus doesn\u2019t
-          have a strong match for your current inputs.
-        </p>
-      )}
-
-      <ul className="mt-4 flex flex-col gap-3">
-        {suggestions.map((goal) => {
-          const added = addedSlugs.has(goal.source_slug);
-          return (
-            <li
-              key={goal.source_slug}
-              className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
-            >
-              <div className="flex items-center gap-2 text-xs">
-                <TierBadge tier={goal.priority_tier} />
-                <span
-                  className={
-                    goal.goal_type === 'process'
-                      ? 'rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
-                      : 'rounded-full bg-amber-50 px-2 py-0.5 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
-                  }
-                >
-                  {goal.goal_type}
-                </span>
-              </div>
-              <div className="mt-2 text-sm font-semibold">{goal.title}</div>
-              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{goal.description}</p>
-              <button
-                type="button"
-                onClick={() => addGoal(goal)}
-                disabled={added}
-                className="mt-3 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-              >
-                {added ? 'Added' : 'Add to my goals'}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-
-      {error && <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>}
-
       <button
         type="button"
         onClick={dismiss}
-        className="mt-5 text-xs text-zinc-600 underline dark:text-zinc-400"
+        className="mt-4 text-xs text-zinc-600 underline dark:text-zinc-400"
       >
         Done, close this
       </button>

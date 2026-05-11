@@ -108,6 +108,26 @@ const TIER_RANK: Record<TierKey, number> = {
   'tier-5': 5,
 };
 
+// Age-aware tier resolution. Most journeys keep their static tier;
+// cardio is the exception — tier-3 under 35, tier-2 at 35+.
+//
+// Why: under ~35, lifting + nutrition + sleep do most of the work and
+// cardio is polish. Past 35, VO2max decline accelerates, all-cause-
+// mortality coupling tightens (Mandsager 2018 / Cooper Institute data),
+// and cardio's downstream effects on sleep + stress + recovery become
+// more leverage. The static tier-3 understates the framework for the
+// 35+ cohort. When age is null (not on file), default to the static
+// value rather than guessing.
+export function tierForJourney(
+  journey: JourneyConfig,
+  age: number | null,
+): TierKey {
+  if (journey.slug === 'cardio' && age !== null && age >= 35) {
+    return 'tier-2';
+  }
+  return journey.tier;
+}
+
 // Maps legacy focus_area vocabulary (pre-2026-05-07 picker) onto the
 // current journey slugs. fitness expanded into strength + cardio; skin
 // became skincare; grooming became facial_hair. Body composition was
@@ -135,11 +155,21 @@ function expandLegacyFocusArea(value: string): JourneySlug[] {
   }
 }
 
-// Sort the journey list by (picked first, then tier, then catalog
-// order). Pure function — pass in the user's focus_areas array and
-// receive a stable, deterministic ordering.
+// Sort the journey list by resolved tier first, picked-within-tier as
+// tiebreak, catalog order as final tiebreak. Pure function — pass in
+// the user's focus_areas array + age and receive a stable, deterministic
+// ordering.
+//
+// 2026-05-10: changed from "picked first, tier breaks ties" to
+// "tier first, picked breaks ties." The old order had un-picked Tier-1
+// foundation journeys (e.g., body_composition, sleep) ranking BELOW a
+// picked Tier-3 journey (e.g., facial_hair), which contradicts the
+// premise of tiers. Foundation always shows first; the Focus chip
+// communicates the user's stated priorities without re-ordering the
+// framework.
 export function sortJourneys(
   focusAreas: ReadonlyArray<string>,
+  age: number | null,
 ): JourneyConfig[] {
   const pickedSet = new Set<JourneySlug>(
     focusAreas.flatMap(expandLegacyFocusArea),
@@ -149,12 +179,14 @@ export function sortJourneys(
   );
 
   return [...JOURNEYS].sort((a, b) => {
+    const aTier = tierForJourney(a, age);
+    const bTier = tierForJourney(b, age);
+    if (TIER_RANK[aTier] !== TIER_RANK[bTier]) {
+      return TIER_RANK[aTier] - TIER_RANK[bTier];
+    }
     const aPicked = pickedSet.has(a.slug);
     const bPicked = pickedSet.has(b.slug);
     if (aPicked !== bPicked) return aPicked ? -1 : 1;
-    if (TIER_RANK[a.tier] !== TIER_RANK[b.tier]) {
-      return TIER_RANK[a.tier] - TIER_RANK[b.tier];
-    }
     return (catalogIndex.get(a.slug) ?? 0) - (catalogIndex.get(b.slug) ?? 0);
   });
 }

@@ -1,32 +1,23 @@
 /**
- * Monthly checkpoint service (spec §2.5 stickiness 5b).
+ * Monthly checkpoint service.
  *
- * On day 30+, surface a one-shot card on the Today screen showing:
+ * On day 30+, surface a one-shot card on /reflection showing:
+ *   - days since onboarding
  *   - confidence delta (first reflection vs latest) with behavioral copy
- *   - goal completion rate across the lifetime of check-ins
- *   - 3 fresh goal suggestions the user hasn't tried yet
+ *   - specific_thing reflection prompt
  *
- * Dismissal is persisted via `survey_responses` as a KV entry (key:
- * `monthly_checkpoint_dismissed_at`) so the card doesn't reappear. This
- * avoids a migration for one boolean — move to a real column once the
- * motivation_segment migration batch lands.
+ * Dismissal persists via `survey_responses` as a KV entry (key:
+ * `monthly_checkpoint_dismissed_at`) so the card doesn't reappear.
+ *
+ * Goals-era content (completion rate, suggested adds, per-goal
+ * insights) retired in Sub-ship B (2026-05-10) once the legacy v1
+ * user population was wiped. The card is now a slim month-in
+ * reflection sitting between the weekly cadence and the quarterly
+ * survey.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
-import {
-  rankCandidates,
-  pickTopN,
-  type PovDocRow,
-  type SuggestedGoal,
-  type MotivationSegment,
-} from '@/lib/onboarding/goal-suggest';
-import type { AgeSegment } from '@/lib/onboarding/types';
 import { averageConfidence } from '@/lib/weekly-reflection/service';
 import { contextFor, deltaPhrase } from '@/lib/confidence/context';
-import {
-  buildGoalInsights,
-  type GoalInsight,
-  type ReflectionRow,
-} from '@/lib/goals/goal-insights';
 
 const DISMISS_KEY = 'monthly_checkpoint_dismissed_at';
 const CHECKPOINT_DAY_THRESHOLD = 30;
@@ -39,15 +30,6 @@ export type CheckpointSummary = {
   confidence_from_label: string | null;
   confidence_to_label: string | null;
   delta_phrase: string | null;
-  completion_rate: number | null; // 0–1, null when no check-ins yet
-  total_goal_check_ins: number;
-  completed_goal_check_ins: number;
-  suggestions: SuggestedGoal[];
-  // Per-goal alignment insights correlating goal-active duration with
-  // the relevant confidence dimension's trend. Empty array when there
-  // isn't enough data (< 4 reflections, or no goals with enough weeks
-  // active). Capped internally at 5 to avoid card overload.
-  goal_insights: GoalInsight[];
   // The specific_thing free-text from onboarding (or the quarterly
   // re-survey update when set). One month in is the right moment for a
   // mirror — "is this still the thing?" — so the card can surface it
@@ -65,11 +47,9 @@ export async function getCheckpointState(
   userId: string,
   now: Date = new Date()
 ): Promise<CheckpointState> {
-  // Load user created_at, age segment, and motivation segment (nullable
-  // until the 0005 migration has been applied).
   const { data: profile } = await supabase
     .from('users')
-    .select('created_at, age_segment, motivation_segment')
+    .select('created_at')
     .eq('id', userId)
     .maybeSingle();
   if (!profile) return { status: 'not_eligible', days_since_start: 0 };
@@ -120,83 +100,6 @@ export async function getCheckpointState(
     deltaCopy = deltaPhrase(confidenceFrom, confidenceTo);
   }
 
-  // Goal completion rate — lifetime across all goal_check_ins visible to
-  // this user via RLS (goal_check_ins RLS joins through check_ins.user_id).
-  const { data: goalCheckIns } = await supabase
-    .from('goal_check_ins')
-    .select('completed');
-  const totalChecks = goalCheckIns?.length ?? 0;
-  const completedChecks = (goalCheckIns ?? []).filter(
-    (r) => r.completed === true
-  ).length;
-  const completionRate = totalChecks > 0 ? completedChecks / totalChecks : null;
-
-  // Fresh suggestions — rank everything, then filter out slugs the user
-  // has already touched (active, completed, or abandoned).
-  let suggestions: SuggestedGoal[] = [];
-  if (profile.age_segment) {
-    const { data: focusRow } = await supabase
-      .from('survey_responses')
-      .select('response_value')
-      .eq('user_id', userId)
-      .eq('question_key', 'focus_areas')
-      .maybeSingle();
-
-    let focusAreas: string[] = [];
-    if (focusRow?.response_value) {
-      try {
-        const parsed = JSON.parse(focusRow.response_value as string);
-        if (Array.isArray(parsed)) focusAreas = parsed;
-      } catch {
-        // ignore
-      }
-    }
-
-    const { data: povRows } = await supabase
-      .from('pov_docs')
-      .select('slug, title, category, priority_tier, age_segments');
-
-    const { data: touchedGoals } = await supabase
-      .from('goals')
-      .select('source_slug')
-      .eq('user_id', userId);
-    const touchedSlugs = new Set(
-      (touchedGoals ?? [])
-        .map((g) => g.source_slug as string | null)
-        .filter((s): s is string => Boolean(s))
-    );
-
-    const ranked = rankCandidates({
-      povDocs: (povRows ?? []) as PovDocRow[],
-      ageSegment: profile.age_segment as AgeSegment,
-      focusAreas,
-      motivationSegment:
-        ((profile as Record<string, unknown>).motivation_segment as MotivationSegment) ?? null,
-    });
-    const fresh = ranked.filter((g) => !touchedSlugs.has(g.source_slug));
-    suggestions = pickTopN(fresh, 3);
-  }
-
-  // Goal-alignment insights. Pull the user's active goals and
-  // correlate each against the relevant confidence dimension over its
-  // active window. Uses the same reflection rows already loaded above.
-  const { data: activeGoalsRaw } = await supabase
-    .from('goals')
-    .select('id, title, source_slug, created_at')
-    .eq('user_id', userId)
-    .eq('status', 'active');
-  const activeGoals = (activeGoalsRaw ?? []).map((g) => ({
-    id: g.id as string,
-    title: g.title as string,
-    source_slug: (g.source_slug as string | null) ?? null,
-    created_at: g.created_at as string,
-  }));
-  const goalInsights = buildGoalInsights(
-    activeGoals,
-    refRows as ReflectionRow[],
-    now,
-  );
-
   // Specific-thing lookup — quarterly answer wins over onboarding answer
   // so a user who updated their framing at day 90 sees the current text,
   // not the stale one.
@@ -224,11 +127,6 @@ export async function getCheckpointState(
     confidence_to_label:
       confidenceTo !== null ? contextFor(confidenceTo).label : null,
     delta_phrase: deltaCopy,
-    completion_rate: completionRate,
-    total_goal_check_ins: totalChecks,
-    completed_goal_check_ins: completedChecks,
-    suggestions,
-    goal_insights: goalInsights,
     specific_thing: specificThing,
   };
 

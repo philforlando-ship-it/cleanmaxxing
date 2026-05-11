@@ -43,6 +43,60 @@ export function detectSkippedCheckIns(args: {
 }
 
 // =====================
+// nutrition_off_track
+// =====================
+
+// Behavior-anchored single-journey signal — fires when the user
+// established a nutrition plan, proved engagement (logged at least a
+// few days at some point), and has since drifted: either the log has
+// gone quiet over the last 7 days or they're still logging but
+// missing the protein target on most days.
+//
+// Distinct from process_adherence_declining (cross-journey tier slip
+// over 3+ reflections). This one runs off actual nutrition_logs
+// rows, so it picks up the "wheels came off" case before three
+// weekly reflections have accumulated. Two sub-shapes drive
+// different copy:
+//   - 'silence'         → log went quiet (<3 logged days in 7)
+//   - 'missing_targets' → still logging, hit ratio < 40%
+//
+// Won't fire for:
+//   - users without a nutrition plan (no baseline to be "off" from)
+//   - plans younger than 14 days (no honest off-track read this early)
+//   - users who never logged ≥3 days lifetime (no engagement baseline
+//     — "off-track" assumes "on-track existed first")
+const OFF_TRACK_MIN_PLAN_AGE_DAYS = 14;
+const OFF_TRACK_MIN_LIFETIME_LOGS = 3;
+const OFF_TRACK_SILENCE_MAX_LOGGED = 3; // <3 logs in last 7 days
+const OFF_TRACK_HIT_RATIO_FLOOR = 0.4;  // ratio below this fires
+
+export type NutritionOffTrackShape = 'silence' | 'missing_targets';
+
+export function detectNutritionOffTrack(args: {
+  hasNutritionPlan: boolean;
+  planAgeDays: number;
+  lifetimeLogsCount: number; // capped at whatever the caller fetched
+  hitLast7: number;
+  loggedLast7: number;
+}): { fires: boolean; shape: NutritionOffTrackShape } {
+  if (!args.hasNutritionPlan) return { fires: false, shape: 'silence' };
+  if (args.planAgeDays < OFF_TRACK_MIN_PLAN_AGE_DAYS) {
+    return { fires: false, shape: 'silence' };
+  }
+  if (args.lifetimeLogsCount < OFF_TRACK_MIN_LIFETIME_LOGS) {
+    return { fires: false, shape: 'silence' };
+  }
+  if (args.loggedLast7 < OFF_TRACK_SILENCE_MAX_LOGGED) {
+    return { fires: true, shape: 'silence' };
+  }
+  const ratio = args.hitLast7 / args.loggedLast7;
+  if (ratio < OFF_TRACK_HIT_RATIO_FLOOR) {
+    return { fires: true, shape: 'missing_targets' };
+  }
+  return { fires: false, shape: 'silence' };
+}
+
+// =====================
 // process_adherence_declining (replaces confidence_declining in Phase F)
 // =====================
 
@@ -114,6 +168,77 @@ export function detectProcessAdherenceDeclining(
     weeksDeclining,
     decliningJourneys: Array.from(decliningJourneys),
   };
+}
+
+// =====================
+// cross_journey_dependency (I1)
+// =====================
+
+// Three behavioral signals that make the platform's cross-journey
+// architecture visible to the user. Currently all three are *invisible*
+// in prod — they live inside plan-generation prompts but never surface
+// as a discrete "X is affecting Y" callout. Free users see one as a
+// teaser; Pro users see all three.
+//
+// Shape mapping:
+//   cardio_cut_conflict           — cardio + lose_fat goal
+//   fatigue_softens_strength      — recent struggling-fatigue from cardio
+//                                   while strength plan is active
+//   activity_change_nutrition_stale — recent activity_change ≠ no_change
+//                                     while nutrition plan exists
+
+import type {
+  ActivityChange,
+  FatigueLevel,
+  FatigueSource,
+} from '@/lib/weekly-reflection/types';
+import type { CardioDaysPerWeek } from '@/lib/cardio/types';
+import type { GoalDirection } from '@/lib/nutrition/types';
+
+export function detectCardioCutConflict(args: {
+  hasNutritionPlan: boolean;
+  nutritionGoalDirection: GoalDirection | null;
+  hasCardioPlan: boolean;
+  cardioDaysPerWeek: CardioDaysPerWeek | null;
+}): { fires: boolean } {
+  if (!args.hasNutritionPlan || !args.hasCardioPlan) return { fires: false };
+  if (args.nutritionGoalDirection !== 'lose_fat') return { fires: false };
+  if (
+    args.cardioDaysPerWeek == null ||
+    args.cardioDaysPerWeek === '0_days'
+  ) {
+    return { fires: false };
+  }
+  return { fires: true };
+}
+
+export function detectFatigueStrugglingSoftensStrength(args: {
+  hasStrengthPlan: boolean;
+  fatigueLevel: FatigueLevel | null;
+  fatigueSource: FatigueSource | null;
+}): { fires: boolean } {
+  if (!args.hasStrengthPlan) return { fires: false };
+  if (args.fatigueLevel !== 'struggling') return { fires: false };
+  if (args.fatigueSource !== 'cardio') return { fires: false };
+  return { fires: true };
+}
+
+export function detectActivityChangeNutritionStale(args: {
+  hasNutritionPlan: boolean;
+  // Most recent reflection's activity_change. Null when no v2
+  // reflection in the staleness window (2 weeks).
+  recentActivityChange: ActivityChange | null;
+}): { fires: boolean; direction: 'increased' | 'decreased' } {
+  if (!args.hasNutritionPlan) {
+    return { fires: false, direction: 'increased' };
+  }
+  if (
+    args.recentActivityChange !== 'increased' &&
+    args.recentActivityChange !== 'decreased'
+  ) {
+    return { fires: false, direction: 'increased' };
+  }
+  return { fires: true, direction: args.recentActivityChange };
 }
 
 // =====================

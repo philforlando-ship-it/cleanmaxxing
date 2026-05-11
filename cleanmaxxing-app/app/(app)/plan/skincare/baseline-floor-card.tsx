@@ -11,6 +11,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { CMSpinner } from '@/components/cm-logo';
 
 export function BaselineFloorCard() {
   const router = useRouter();
@@ -72,6 +73,7 @@ export function BaselineFloorCard() {
             ? 'Mister P is rewriting your plan…'
             : 'Floor is in — re-run plan'}
         </button>
+        {pending && <CMSpinner size="xs" className="ml-3" />}
       </div>
     </section>
   );

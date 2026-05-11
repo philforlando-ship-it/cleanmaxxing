@@ -4,26 +4,22 @@
  * Three-month is long enough that the onboarding answers (focus areas,
  * motivation segment, the "one specific thing" text) may no longer
  * describe the user's reality. This surface re-asks those three
- * variables, persists the updated answers to `survey_responses` with a
- * version-suffixed key so the originals stay intact for historical
- * ranker audits, and returns fresh ranker suggestions using the new
- * inputs.
+ * variables and persists the updated answers to `survey_responses`
+ * with version-suffixed keys so the originals stay intact for
+ * historical ranker audits.
  *
  * Storage: answers go into `survey_responses` as KV rows keyed by
  * `focus_areas_q1`, `motivation_segment_q1`, `specific_thing_q1`. A
  * fourth row `quarterly_survey_q1_completed_at` acts as the "done"
- * marker — same pattern the monthly checkpoint uses for its dismissal
- * state. Avoids a migration for a one-shot feature.
+ * marker. Avoids a migration for a one-shot feature.
+ *
+ * Goals-era suggestion path (rankCandidates + pickTopN producing
+ * SuggestedGoal[]) retired in Sub-ship B (2026-05-10). The re-survey
+ * still refreshes focus_areas + motivation, which downstream surfaces
+ * (journey ordering on /today, motivation-segment-aware prompts) read
+ * for the rest of the user's lifecycle.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
-import {
-  rankCandidates,
-  pickTopN,
-  type PovDocRow,
-  type SuggestedGoal,
-  type MotivationSegment,
-} from '@/lib/onboarding/goal-suggest';
-import type { AgeSegment } from '@/lib/onboarding/types';
 
 const QUARTERLY_DAY_THRESHOLD = 90;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -125,18 +121,18 @@ export async function getQuarterlySurveyState(
 }
 
 /**
- * Persist the quarterly-survey answers and return fresh ranker
- * suggestions based on the updated inputs. Suggestions are filtered to
- * exclude slugs the user has already accepted, completed, or
- * abandoned — the surface is for new directions, not re-proposing the
- * same slugs.
+ * Persist the quarterly-survey answers. The pre-Sub-ship-B version
+ * also returned ranker suggestions; the suggestion path retired with
+ * the goals system. Downstream surfaces consume the persisted
+ * focus_areas_q1 / motivation_segment_q1 directly from
+ * survey_responses.
  */
 export async function saveQuarterlySurvey(
   supabase: SupabaseClient,
   userId: string,
   answers: QuarterlyAnswers,
   now: Date = new Date(),
-): Promise<{ suggestions: SuggestedGoal[] }> {
+): Promise<void> {
   // survey_responses has no unique constraint on (user_id, question_key)
   // in the 0001 schema, so we follow the same delete-then-insert pattern
   // the onboarding answer endpoint uses rather than crafting an upsert
@@ -178,36 +174,4 @@ export async function saveQuarterlySurvey(
   ];
   const { error: insError } = await supabase.from('survey_responses').insert(rows);
   if (insError) throw insError;
-
-  // Run the ranker with the updated inputs. Age segment is stable; we
-  // read it from the users table rather than re-asking.
-  const { data: profile } = await supabase
-    .from('users')
-    .select('age_segment')
-    .eq('id', userId)
-    .maybeSingle();
-  if (!profile?.age_segment) return { suggestions: [] };
-
-  const { data: povRows } = await supabase
-    .from('pov_docs')
-    .select('slug, title, category, priority_tier, age_segments');
-
-  const { data: touchedGoals } = await supabase
-    .from('goals')
-    .select('source_slug')
-    .eq('user_id', userId);
-  const touched = new Set(
-    (touchedGoals ?? [])
-      .map((g) => g.source_slug as string | null)
-      .filter((s): s is string => Boolean(s)),
-  );
-
-  const ranked = rankCandidates({
-    povDocs: (povRows ?? []) as PovDocRow[],
-    ageSegment: profile.age_segment as AgeSegment,
-    focusAreas: answers.focusAreas,
-    motivationSegment: answers.motivationSegment as MotivationSegment,
-  });
-  const fresh = ranked.filter((g) => !touched.has(g.source_slug));
-  return { suggestions: pickTopN(fresh, 3) };
 }

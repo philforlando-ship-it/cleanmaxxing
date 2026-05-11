@@ -3,8 +3,9 @@
 // pulls profile-level modifiers, generates a 4-section markdown
 // report, persists to the assessment row.
 
-import { generateText } from 'ai';
+import { streamText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
+import type { StreamTextResult, ToolSet } from 'ai';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { kindForAnthropicModel, logCostEvent } from '@/lib/cost-events/log';
 import { povFor } from '@/lib/content/pov';
@@ -32,11 +33,13 @@ const REPORT_MODEL = 'claude-sonnet-4-6';
 // prompt picks what's relevant.
 const POV_SLUGS = ['07-skincare-antiaging', '32-skin-texture-scarring'];
 
-export async function generateAndSaveSkincareReport(
+// Streaming entrypoint — see lib/nutrition/generate-report.ts for the
+// pattern + rationale.
+export async function streamSkincareReport(
   supabase: SupabaseClient,
   userId: string,
   assessment: SkincareAssessment,
-): Promise<{ report_text: string }> {
+): Promise<StreamTextResult<ToolSet, never>> {
   const profile = await getUserProfile(supabase, userId);
 
   const { data: userRow } = await supabase
@@ -71,30 +74,36 @@ export async function generateAndSaveSkincareReport(
 
   const userPrompt = formatAssessmentForPrompt(assessment, modifiers);
 
-  const { text, usage } = await generateText({
+  return streamText({
     model: anthropic(REPORT_MODEL),
     system,
     prompt: userPrompt,
     temperature: 0.5,
+    onFinish: async ({ text, usage }) => {
+      logCostEvent({
+        user_id: userId,
+        kind: kindForAnthropicModel(REPORT_MODEL),
+        tokens_input: usage?.inputTokens,
+        tokens_output: usage?.outputTokens,
+        feature: 'skincare_report',
+      });
+      await saveSkincareReport(supabase, userId, {
+        report_text: text.trim(),
+        report_model: REPORT_MODEL,
+        report_input_modifiers: modifiers,
+      });
+    },
   });
+}
 
-  logCostEvent({
-    user_id: userId,
-    kind: kindForAnthropicModel(REPORT_MODEL),
-    tokens_input: usage?.inputTokens,
-    tokens_output: usage?.outputTokens,
-    feature: 'skincare_report',
-  });
-
-  const reportText = text.trim();
-
-  await saveSkincareReport(supabase, userId, {
-    report_text: reportText,
-    report_model: REPORT_MODEL,
-    report_input_modifiers: modifiers,
-  });
-
-  return { report_text: reportText };
+export async function generateAndSaveSkincareReport(
+  supabase: SupabaseClient,
+  userId: string,
+  assessment: SkincareAssessment,
+): Promise<{ report_text: string }> {
+  const result = await streamSkincareReport(supabase, userId, assessment);
+  const text = await result.text;
+  return { report_text: text.trim() };
 }
 
 function formatAssessmentForPrompt(

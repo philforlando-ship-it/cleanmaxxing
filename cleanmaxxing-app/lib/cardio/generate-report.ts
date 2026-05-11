@@ -3,8 +3,9 @@
 // the cardio prescription stays aligned with the rest of the fitness
 // trio. Live signal: last 7 days cardio session count.
 
-import { generateText } from 'ai';
+import { streamText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
+import type { StreamTextResult, ToolSet } from 'ai';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { kindForAnthropicModel, logCostEvent } from '@/lib/cost-events/log';
 import { povFor } from '@/lib/content/pov';
@@ -14,8 +15,10 @@ import { getStrengthAssessment } from '@/lib/strength/service';
 import { getCurrentFatigueState } from '@/lib/weekly-reflection/service';
 import {
   getHrvTrend,
+  getRhrSignals,
   getVo2MaxSignal,
 } from '@/lib/vital/wearable-signals';
+import { isPremium as resolveIsPremium } from '@/lib/billing/is-premium';
 import {
   CARDIO_DAYS_PER_WEEK_LABEL,
   CURRENT_MOVEMENT_LABEL,
@@ -34,11 +37,13 @@ import {
 const REPORT_MODEL = 'claude-sonnet-4-6';
 const POV_SLUG = '23-cardio';
 
-export async function generateAndSaveCardioReport(
+// Streaming entrypoint — see lib/nutrition/generate-report.ts for the
+// pattern + rationale.
+export async function streamCardioReport(
   supabase: SupabaseClient,
   userId: string,
   assessment: CardioAssessment,
-): Promise<{ report_text: string }> {
+): Promise<StreamTextResult<ToolSet, never>> {
   const profile = await getUserProfile(supabase, userId);
 
   // Pull cross-modifier reads + age + timezone + live signal in parallel.
@@ -49,8 +54,7 @@ export async function generateAndSaveCardioReport(
     strengthAssessment,
     fatigueState,
     wearableActiveDays,
-    hrvSignal,
-    vo2MaxSignal,
+    userIsPremium,
   ] = await Promise.all([
     supabase
       .from('users')
@@ -62,9 +66,24 @@ export async function generateAndSaveCardioReport(
     getStrengthAssessment(supabase, userId),
     getCurrentFatigueState(supabase, userId),
     getWearableActiveDaysLast7(supabase, userId),
-    getHrvTrend(supabase, userId),
-    getVo2MaxSignal(supabase, userId),
+    resolveIsPremium(userId),
   ]);
+
+  // Wearable signals are Pro-gated. Free users get the same prompt
+  // shape with null wearable inputs (prompt already handles "no signal
+  // — insufficient data or no wearable" branch), so the report content
+  // shifts without the prompt template having to branch on tier.
+  const [hrvSignal, vo2MaxSignal, rhrSignals] = userIsPremium
+    ? await Promise.all([
+        getHrvTrend(supabase, userId),
+        getVo2MaxSignal(supabase, userId),
+        getRhrSignals(supabase, userId),
+      ])
+    : [
+        { trend: null, recent_avg_ms: null, baseline_avg_ms: null },
+        { latest_value: null, latest_date: null, trend: null },
+        { rolling_avg_rhr_14d: null, baseline_rhr: null },
+      ];
 
   // Seasonal awareness — pass the current month + user's timezone so
   // the prompt can reason about hemisphere + outdoor-cardio
@@ -104,6 +123,8 @@ export async function generateAndSaveCardioReport(
     hrv_trend: hrvSignal.trend,
     vo2_max_latest: vo2MaxSignal.latest_value,
     vo2_max_trend: vo2MaxSignal.trend,
+    rhr_rolling_avg_14d: rhrSignals.rolling_avg_rhr_14d,
+    rhr_baseline: rhrSignals.baseline_rhr,
   };
 
   const pov = await povFor(POV_SLUG);
@@ -117,30 +138,36 @@ export async function generateAndSaveCardioReport(
 
   const userPrompt = formatAssessmentForPrompt(assessment, modifiers);
 
-  const { text, usage } = await generateText({
+  return streamText({
     model: anthropic(REPORT_MODEL),
     system,
     prompt: userPrompt,
     temperature: 0.5,
+    onFinish: async ({ text, usage }) => {
+      logCostEvent({
+        user_id: userId,
+        kind: kindForAnthropicModel(REPORT_MODEL),
+        tokens_input: usage?.inputTokens,
+        tokens_output: usage?.outputTokens,
+        feature: 'cardio_report',
+      });
+      await saveCardioReport(supabase, userId, {
+        report_text: text.trim(),
+        report_model: REPORT_MODEL,
+        report_input_modifiers: modifiers,
+      });
+    },
   });
+}
 
-  logCostEvent({
-    user_id: userId,
-    kind: kindForAnthropicModel(REPORT_MODEL),
-    tokens_input: usage?.inputTokens,
-    tokens_output: usage?.outputTokens,
-    feature: 'cardio_report',
-  });
-
-  const reportText = text.trim();
-
-  await saveCardioReport(supabase, userId, {
-    report_text: reportText,
-    report_model: REPORT_MODEL,
-    report_input_modifiers: modifiers,
-  });
-
-  return { report_text: reportText };
+export async function generateAndSaveCardioReport(
+  supabase: SupabaseClient,
+  userId: string,
+  assessment: CardioAssessment,
+): Promise<{ report_text: string }> {
+  const result = await streamCardioReport(supabase, userId, assessment);
+  const text = await result.text;
+  return { report_text: text.trim() };
 }
 
 function formatAssessmentForPrompt(
@@ -272,6 +299,20 @@ function formatAssessmentForPrompt(
   modifierLines.push(
     `- vo2_max_trend (vs ~90 days prior; null when no comparison value): ${
       modifiers.vo2_max_trend ?? 'no trend signal'
+    }`,
+  );
+  modifierLines.push(
+    `- rhr_rolling_avg_14d (sleep_logs.resting_heart_rate rolling 14d avg in bpm; Pro-gated and may be null for free users): ${
+      modifiers.rhr_rolling_avg_14d == null
+        ? 'no signal — insufficient data, no wearable, or free tier'
+        : String(modifiers.rhr_rolling_avg_14d)
+    }`,
+  );
+  modifierLines.push(
+    `- rhr_baseline (earliest 14-day RHR window — the user's starting point): ${
+      modifiers.rhr_baseline == null
+        ? 'no baseline'
+        : String(modifiers.rhr_baseline)
     }`,
   );
 

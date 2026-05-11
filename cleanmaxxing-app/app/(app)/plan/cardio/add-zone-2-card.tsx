@@ -8,6 +8,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { CMSpinner } from '@/components/cm-logo';
 
 type Props = {
   weeksSinceReport: number;
@@ -94,6 +95,7 @@ export function AddZone2Card({ weeksSinceReport }: Props) {
               ? 'Mister P is rewriting your plan…'
               : 'Add Zone 2 and re-run plan'}
           </button>
+          {pending && <CMSpinner size="xs" className="ml-3" />}
         </div>
       )}
     </section>

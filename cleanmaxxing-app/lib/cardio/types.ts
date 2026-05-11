@@ -28,6 +28,10 @@ export type CardioModalityPreference =
   | 'rowing'
   | 'slow_walking'
   | 'brisk_walking_hiking'
+  // Migration 0101 — low-impact gym cardio machines. Covers both
+  // elliptical (steady Zone 2) and stair machine (high-RPE muscular
+  // endurance) under one bucket. Canonical answer for knee_pain users.
+  | 'elliptical_stair_machine'
   | 'classes_group'
   | 'swimming'
   | 'hate_all_cardio';
@@ -227,6 +231,14 @@ export type CardioReportInputModifiers = {
   // quantity, not an HR-derived approximation).
   vo2_max_latest: number | null;
   vo2_max_trend: 'improving' | 'stable' | 'declining' | null;
+  // Resting heart rate (Pro-gated). Rolling 14-day avg + the user's
+  // earliest 14-day baseline, sourced from sleep_logs.resting_heart_rate
+  // via getRhrSignals. Both null when fewer than 7 nights of RHR data
+  // OR when the user is on the free tier (signal is gated upstream).
+  // Surfaced as absolute numbers — RHR has clinical meaning across
+  // users (unlike HRV which is per-user-baseline only).
+  rhr_rolling_avg_14d: number | null;
+  rhr_baseline: number | null;
 };
 
 export const PRIMARY_ROLE_LABEL: Record<CardioPrimaryRole, string> = {
@@ -262,6 +274,8 @@ export const MODALITY_PREFERENCE_LABEL: Record<
     'Slow walking — relaxed pace, under conversational effort (steps + recovery, not Zone 2)',
   brisk_walking_hiking:
     'Brisk walking or hiking — Zone 2 effort, full sentences with mild breathlessness',
+  elliptical_stair_machine:
+    'Elliptical or stair machine — low-impact gym cardio (good knee-friendly option)',
   classes_group: 'Classes / group settings (spin, rowing classes, hiking groups)',
   swimming: 'Swimming',
   hate_all_cardio:
@@ -371,6 +385,7 @@ export const CardioAssessmentInputSchema = z.object({
         'rowing',
         'slow_walking',
         'brisk_walking_hiking',
+        'elliptical_stair_machine',
         'classes_group',
         'swimming',
         'hate_all_cardio',

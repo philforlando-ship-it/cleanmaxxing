@@ -64,7 +64,7 @@ export default async function BillingPage({ searchParams }: Props) {
           <>
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
               You&rsquo;re on the free plan. No payment required, no
-              expiration. Premium adds AI vision features — facial
+              expiration. Pro adds AI vision features — facial
               analysis, hair cut try-on, hair photo trend analysis, and
               beard try-on — on top of everything you already have.
             </p>
@@ -72,7 +72,7 @@ export default async function BillingPage({ searchParams }: Props) {
               href="/pricing"
               className="mt-3 inline-block text-xs text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
             >
-              See full free vs premium comparison →
+              See full free vs Pro comparison →
             </Link>
           </>
         )}

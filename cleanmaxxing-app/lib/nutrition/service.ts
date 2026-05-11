@@ -144,6 +144,7 @@ export async function saveNutritionAssessment(
     fasting_protocol: input.fasting_protocol,
     alcohol_use: input.alcohol_use,
     cannabis_use: input.cannabis_use,
+    cheat_day_pattern: input.cheat_day_pattern,
     cooking_capacity: input.cooking_capacity,
     dietary_pattern: input.dietary_pattern,
     meal_service_willingness: input.meal_service_willingness,
@@ -315,6 +316,9 @@ function rowToAssessment(row: unknown): NutritionAssessment {
       (r.alcohol_use as NutritionAssessment['alcohol_use']) ?? 'none',
     cannabis_use:
       (r.cannabis_use as NutritionAssessment['cannabis_use']) ?? 'none',
+    cheat_day_pattern:
+      (r.cheat_day_pattern as NutritionAssessment['cheat_day_pattern']) ??
+      null,
     cooking_capacity:
       (r.cooking_capacity as NutritionAssessment['cooking_capacity']) ?? null,
     dietary_pattern:

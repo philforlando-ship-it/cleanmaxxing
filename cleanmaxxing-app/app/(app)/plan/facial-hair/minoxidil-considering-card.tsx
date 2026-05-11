@@ -16,6 +16,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { CMSpinner } from '@/components/cm-logo';
 
 export function MinoxidilConsideringCard() {
   const router = useRouter();
@@ -92,6 +93,7 @@ export function MinoxidilConsideringCard() {
             ? 'Mister P is rewriting your plan…'
             : 'I started — re-run my plan'}
         </button>
+        {pending && <CMSpinner size="xs" className="ml-3" />}
       </div>
     </section>
   );

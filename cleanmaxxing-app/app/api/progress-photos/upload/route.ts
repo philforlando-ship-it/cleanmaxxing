@@ -9,7 +9,7 @@ const ALLOWED_SLOTS = new Set([
   'progress_180d',
 ]);
 const ALLOWED_ANGLES = new Set(['front', 'close', 'side', 'back']);
-const ALLOWED_CATEGORIES = new Set(['face', 'body']);
+const ALLOWED_CATEGORIES = new Set(['face', 'body', 'fit']);
 const ALLOWED_MIMES = new Set([
   'image/jpeg',
   'image/png',
@@ -110,31 +110,41 @@ export async function POST(req: Request) {
         : slot === 'progress_90d'
           ? 'progress-90d'
           : 'progress-180d';
-  // Path scheme: face photos keep the prior {slot}-{angle}.{ext}
-  // path so existing rows continue to read fine via storage_path.
-  // Body photos prefix with body- so the two categories never
-  // collide. The storage_path column on the row remains
-  // authoritative for reads. Output ext is always 'jpg' since the
-  // server-side processor re-encodes uniformly (E1).
-  const categoryPrefix = category === 'body' ? 'body-' : '';
-  const path = `${user.id}/${categoryPrefix}${filename}-${angle}.${OUTPUT_EXT}`;
+  // Path scheme:
+  //   face — {user_id}/{slot}-{angle}.jpg (legacy, deterministic)
+  //   body — {user_id}/body-{slot}-{angle}.jpg (deterministic, prefix
+  //          isolates from face)
+  //   fit  — {user_id}/fit-{timestamp}-{rand}.jpg (NON-deterministic;
+  //          each upload is a new row, so paths must be unique)
+  // The storage_path column on the row remains authoritative for reads.
+  // Output ext is always 'jpg' since the processor re-encodes uniformly.
+  let path: string;
+  if (category === 'fit') {
+    const rand = Math.random().toString(36).slice(2, 8);
+    path = `${user.id}/fit-${Date.now()}-${rand}.${OUTPUT_EXT}`;
+  } else {
+    const categoryPrefix = category === 'body' ? 'body-' : '';
+    path = `${user.id}/${categoryPrefix}${filename}-${angle}.${OUTPUT_EXT}`;
+  }
 
-  // If an older photo exists for this exact (slot, angle, category),
-  // remove it from storage first. The row upsert below handles the
-  // DB side. Other (slot, angle, category) rows are not touched.
-  const { data: existing } = await supabase
-    .from('progress_photos')
-    .select('storage_path')
-    .eq('user_id', user.id)
-    .eq('slot', slot)
-    .eq('angle', angle)
-    .eq('category', category)
-    .maybeSingle();
+  // Replace-on-reupload semantics for face + body. Fit skips this
+  // lookup entirely — each fit upload is its own row, so we never
+  // overwrite an existing one.
+  if (category !== 'fit') {
+    const { data: existing } = await supabase
+      .from('progress_photos')
+      .select('storage_path')
+      .eq('user_id', user.id)
+      .eq('slot', slot)
+      .eq('angle', angle)
+      .eq('category', category)
+      .maybeSingle();
 
-  if (existing && existing.storage_path && existing.storage_path !== path) {
-    await supabase.storage
-      .from(BUCKET)
-      .remove([existing.storage_path as string]);
+    if (existing && existing.storage_path && existing.storage_path !== path) {
+      await supabase.storage
+        .from(BUCKET)
+        .remove([existing.storage_path as string]);
+    }
   }
 
   // E1 + E4: resize + strip EXIF metadata + re-encode to JPEG. Cuts
@@ -165,17 +175,31 @@ export async function POST(req: Request) {
     );
   }
 
-  const { error: dbErr } = await supabase.from('progress_photos').upsert(
-    {
-      user_id: user.id,
-      slot,
-      angle,
-      category,
-      storage_path: path,
-      captured_at: new Date().toISOString(),
-    },
-    { onConflict: 'user_id,slot,angle,category' },
-  );
+  // Face + body rows upsert on (user_id, slot, angle, category) so a
+  // re-upload to the same milestone replaces the existing row. Fit
+  // rows always insert — the partial unique index in migration 0100
+  // explicitly excludes them from the uniqueness constraint.
+  const { error: dbErr } =
+    category === 'fit'
+      ? await supabase.from('progress_photos').insert({
+          user_id: user.id,
+          slot,
+          angle,
+          category,
+          storage_path: path,
+          captured_at: new Date().toISOString(),
+        })
+      : await supabase.from('progress_photos').upsert(
+          {
+            user_id: user.id,
+            slot,
+            angle,
+            category,
+            storage_path: path,
+            captured_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,slot,angle,category' },
+        );
 
   if (dbErr) {
     // Storage is ahead of DB now. Best-effort cleanup so we don't

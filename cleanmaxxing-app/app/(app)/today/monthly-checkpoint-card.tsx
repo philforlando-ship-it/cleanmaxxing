@@ -1,6 +1,18 @@
 'use client';
 
-import Link from 'next/link';
+// Monthly checkpoint card on /reflection. Slim month-in reflection
+// sitting between the weekly cadence (weekly letter + weekly
+// reflection) and the quarterly survey. Surfaces:
+//   - days-since-start tally
+//   - confidence delta (first reflection vs latest) — same dimensions
+//     the weekly chart uses, framed here as a 30-day pull-back
+//   - "what you said preoccupied you" mirror, prompting a re-read of
+//     whether the original framing still holds
+//
+// Goals-era content (completion rate, suggested adds, per-goal
+// insights) retired in Sub-ship B (2026-05-10). Dismissal persists
+// via survey_responses so the card doesn't reappear.
+
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CheckpointSummary } from '@/lib/checkpoint/service';
@@ -31,11 +43,6 @@ export function MonthlyCheckpointCard({ summary }: Props) {
 
   if (dismissed) return null;
 
-  const pct =
-    summary.completion_rate !== null
-      ? Math.round(summary.completion_rate * 100)
-      : null;
-
   return (
     <section className="rounded-xl border border-amber-300 bg-amber-50 p-6 dark:border-amber-900 dark:bg-amber-950/40">
       <div className="flex items-baseline justify-between">
@@ -64,19 +71,8 @@ export function MonthlyCheckpointCard({ summary }: Props) {
           </p>
         ) : (
           <p className="text-zinc-700 dark:text-zinc-300">
-            No weekly reflections yet. Save one this week and the next
-            checkpoint will show your trend.
-          </p>
-        )}
-
-        {pct !== null ? (
-          <p className="text-zinc-800 dark:text-zinc-200">
-            You completed <strong>{pct}%</strong> of your goal check-ins (
-            {summary.completed_goal_check_ins} of {summary.total_goal_check_ins}).
-          </p>
-        ) : (
-          <p className="text-zinc-700 dark:text-zinc-300">
-            No daily check-ins logged yet.
+            No weekly reflections yet. Save one this week and next
+            month&rsquo;s checkpoint will show your trend.
           </p>
         )}
       </div>
@@ -93,65 +89,6 @@ export function MonthlyCheckpointCard({ summary }: Props) {
             A month on &mdash; is this still the thing? If it&rsquo;s shifted,
             that&rsquo;s useful data. Mister P can help you think through it.
           </p>
-        </div>
-      )}
-
-      {summary.goal_insights.length > 0 && (
-        <div className="mt-5">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-            How your goals are tracking
-          </div>
-          <ul className="mt-2 space-y-2">
-            {summary.goal_insights.map((insight) => (
-              <li
-                key={insight.goalId}
-                className="rounded-lg border border-amber-200 bg-white p-3 text-sm leading-relaxed text-zinc-800 dark:border-amber-900/60 dark:bg-zinc-900 dark:text-zinc-200"
-              >
-                {insight.copy}
-              </li>
-            ))}
-          </ul>
-          <p className="mt-2 text-[11px] text-zinc-500 dark:text-zinc-400">
-            Insights correlate each goal&rsquo;s active duration with the
-            confidence dimension it&rsquo;s most tied to. They&rsquo;re suggestive,
-            not diagnostic — goals sharing a dimension will blur together.
-          </p>
-        </div>
-      )}
-
-      {summary.suggestions.length > 0 && (
-        <div className="mt-5">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-            Ready to layer in something new?
-          </div>
-          <ul className="mt-2 space-y-2">
-            {summary.suggestions.map((g) => (
-              <li
-                key={g.source_slug}
-                className="rounded-lg border border-amber-200 bg-white p-3 dark:border-amber-900/60 dark:bg-zinc-900"
-              >
-                <div className="flex items-baseline justify-between gap-2">
-                  <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                    {g.title}
-                  </div>
-                  <span className="text-[10px] uppercase tracking-wider text-zinc-500">
-                    {g.priority_tier}
-                  </span>
-                </div>
-                {g.plain_language && (
-                  <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
-                    {g.plain_language}
-                  </p>
-                )}
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/goals/library"
-            className="mt-3 inline-block rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          >
-            Browse the library
-          </Link>
         </div>
       )}
 

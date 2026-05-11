@@ -8,6 +8,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { CleanmaxxingWordmark } from '@/components/cm-logo';
+import { MisterPLauncher } from '@/components/mister-p-launcher';
+import type { ChatMessage } from '@/app/(app)/today/mister-p-chat-card';
 
 type Props = {
   userEmail: string;
@@ -16,6 +19,10 @@ type Props = {
   // passes through so the nav can show /admin/cost without leaking
   // the allowlist to the client bundle.
   isAdmin?: boolean;
+  // Server-hydrated general Mister P thread. Passed through to the
+  // ambient launcher so opening the modal from anywhere shows
+  // recent history without a client fetch.
+  initialGeneralThread: ChatMessage[];
 };
 
 const LINKS: Array<{ href: string; label: string; matchPrefix: string }> = [
@@ -32,27 +39,28 @@ const LINKS: Array<{ href: string; label: string; matchPrefix: string }> = [
   { href: '/profile', label: 'Profile', matchPrefix: '/profile' },
   { href: '/system', label: 'The System', matchPrefix: '/system' },
   { href: '/settings', label: 'Settings', matchPrefix: '/settings' },
-  // /goals + /goals/library nav links retired May 8 — the journey-
-  // first model replaces the goals-picker era; the routes still
-  // resolve for any direct links / legacy bookmarks but no longer
-  // appear in chrome. Same pattern used for /povs and /other-info
-  // (Articles — moved to a footer link on /system 2026-05-09 to
-  // free up nav real estate).
+  // /goals + /goals/library + /povs + /other-info nav links retired
+  // through May 2026 — the journey-first model replaced the goals-
+  // picker era. The /goals routes themselves were deleted 2026-05-10
+  // (Sub-ship A) after the legacy-user wipe. POV docs and Articles
+  // still resolve at their old URLs; they just no longer appear in
+  // chrome.
 ];
 
 const ADMIN_LINKS: Array<{ href: string; label: string; matchPrefix: string }> = [
   { href: '/admin/cost', label: 'Cost', matchPrefix: '/admin/cost' },
 ];
 
-// isActive uses matchPrefix (not exact match) so /goals/[id] still
-// highlights "Goals". Library is listed after Goals and matches first
-// via a more specific prefix, so /goals/library highlights Library
-// rather than both — see the ordering logic below.
+// isActive uses matchPrefix (not exact match) so e.g. /plan/hair/photos
+// still highlights "Today" (or its parent surface) via the longest-
+// matching prefix. Kept as a generic ordering helper since several
+// surfaces resolve to the same chrome.
 function resolveActive(
   pathname: string,
   links: ReadonlyArray<{ matchPrefix: string }>,
 ): string | null {
-  // Longest matchPrefix wins, so /goals/library takes precedence over /goals.
+  // Longest matchPrefix wins so a nested route picks the most specific
+  // entry from the catalog.
   const sorted = [...links].sort(
     (a, b) => b.matchPrefix.length - a.matchPrefix.length,
   );
@@ -64,7 +72,11 @@ function resolveActive(
   return null;
 }
 
-export function AppNav({ userEmail, isAdmin = false }: Props) {
+export function AppNav({
+  userEmail,
+  isAdmin = false,
+  initialGeneralThread,
+}: Props) {
   const pathname = usePathname() ?? '';
 
   // Hide the nav on onboarding flows and the POV reader. Those are
@@ -82,9 +94,10 @@ export function AppNav({ userEmail, isAdmin = false }: Props) {
         <div className="flex items-center gap-1 overflow-x-auto">
           <Link
             href="/today"
-            className="mr-3 shrink-0 text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100"
+            aria-label="Cleanmaxxing"
+            className="mr-3 inline-flex shrink-0 items-center"
           >
-            Cleanmaxxing
+            <CleanmaxxingWordmark size="sm" />
           </Link>
           {visibleLinks.map((link) => {
             const isActive = active === link.matchPrefix;
@@ -104,6 +117,7 @@ export function AppNav({ userEmail, isAdmin = false }: Props) {
           })}
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <MisterPLauncher initialGeneralThread={initialGeneralThread} />
           <span
             className="hidden max-w-[12rem] truncate text-xs text-zinc-500 sm:inline"
             title={userEmail}

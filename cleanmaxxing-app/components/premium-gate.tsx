@@ -26,7 +26,7 @@ type Props = {
 export function PremiumGate({
   isPremium,
   children,
-  cta = 'This feature is part of Cleanmaxxing Premium.',
+  cta = 'This feature is part of Cleanmaxxing Pro.',
   upgradeHref = '/settings/billing',
 }: Props) {
   if (isPremium) return <>{children}</>;
@@ -38,7 +38,7 @@ export function PremiumGate({
         href={upgradeHref}
         className="mt-4 inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
       >
-        Upgrade to Premium
+        Upgrade to Pro
       </Link>
     </div>
   );

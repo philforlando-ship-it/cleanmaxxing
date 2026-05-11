@@ -3,13 +3,25 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { saveQuarterlySurvey } from '@/lib/quarterly-survey/service';
 
+// Focus-area enum mirrors the onboarding journey-picker (post-2026-05-07)
+// while keeping the legacy vocabulary accepted so historical answers
+// stored in survey_responses remain valid. The card itself only renders
+// the canonical journey slugs (hair / style / body_composition /
+// strength / cardio / sleep / skincare / facial_hair).
 const FocusAreaEnum = z.enum([
-  'fitness',
-  'body_composition',
-  'skin',
+  // Canonical journey slugs
   'hair',
-  'facial_aesthetics',
   'style',
+  'body_composition',
+  'strength',
+  'cardio',
+  'sleep',
+  'skincare',
+  'facial_hair',
+  // Legacy values still in old survey_responses rows
+  'fitness',
+  'skin',
+  'facial_aesthetics',
   'posture',
   'grooming',
   'anti_aging',
@@ -61,11 +73,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { suggestions } = await saveQuarterlySurvey(
-    supabase,
-    user.id,
-    result.data,
-  );
+  await saveQuarterlySurvey(supabase, user.id, result.data);
 
-  return NextResponse.json({ ok: true, suggestions });
+  return NextResponse.json({ ok: true });
 }

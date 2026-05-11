@@ -212,3 +212,17 @@ export function detectRhrTrainedBandEntered(args: {
   if (args.baseline_rhr != null && args.baseline_rhr < 60) return false;
   return args.rolling_avg_rhr_14d < 60;
 }
+
+// =====================
+// Pro: VO2max progression
+// =====================
+// Fires once when the user's VO2max trend turns 'improving'
+// (`getVo2MaxSignal` returns 'improving' when latest is >5% above
+// the value ~90 days prior). Once-per-user via the unique index —
+// subsequent improvements don't re-fire. The detector is trivial
+// because getVo2MaxSignal already does the comparison work.
+export function detectVo2MaxImproving(args: {
+  trend: 'improving' | 'stable' | 'declining' | null;
+}): boolean {
+  return args.trend === 'improving';
+}

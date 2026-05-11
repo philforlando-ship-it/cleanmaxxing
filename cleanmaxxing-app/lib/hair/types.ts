@@ -25,6 +25,32 @@ export type HairTypeStrand = 'fine' | 'medium' | 'thick_coarse';
 export type HairTypePattern = 'straight' | 'wavy' | 'curly' | 'coily';
 export type HairTypeDensity = 'low' | 'medium' | 'high';
 
+// Migration 0099 (2026-05-09) — five expanded precision variables
+// the v0 four-question assessment didn't capture. All nullable both
+// at the DB layer and in this type — existing rows pre-date the
+// columns, and the report/stage-1 prompts fall back to density_state
+// + face_shape logic when these are null.
+export type HeadShape = 'round' | 'oval' | 'oblong';
+export type HeadSize = 'small' | 'average' | 'large';
+export type GrayingLevel =
+  | 'none'
+  | 'scattered'
+  | 'peppered'
+  | 'salt_and_pepper'
+  | 'mostly_gray';
+export type EarProminence = 'low' | 'average' | 'prominent';
+// BaldingPattern captures LOCATION; density_state mashes location
+// + severity together and can't express front + vertex simultaneously.
+export type BaldingPattern =
+  | 'none'
+  | 'front'
+  | 'vertex'
+  | 'front_and_vertex'
+  | 'diffuse';
+// 0-4 scalar. 0 = none, 1 = mild, 2 = moderate, 3 = significant,
+// 4 = advanced.
+export type BaldingSeverity = 0 | 1 | 2 | 3 | 4;
+
 export type WhoCuts = 'self' | 'chain' | 'dedicated_barber';
 
 // Stage 1 — cut family. Twelve named cuts a barber will recognize, plus
@@ -230,6 +256,13 @@ export type HairAssessment = {
   hair_type_strand: HairTypeStrand;
   hair_type_pattern: HairTypePattern;
   hair_type_density: HairTypeDensity;
+  // Migration 0099 — expanded precision variables. All nullable.
+  head_shape: HeadShape | null;
+  head_size: HeadSize | null;
+  graying_level: GrayingLevel | null;
+  ear_prominence: EarProminence | null;
+  balding_pattern: BaldingPattern | null;
+  balding_severity: BaldingSeverity | null;
   current_routine: CurrentRoutine;
   hair_goal_text: string | null;
   report_text: string | null;
@@ -243,12 +276,12 @@ export type HairAssessment = {
   stage_1_generated_at: string | null;
   stage_1_completed_at: string | null;
   // Stage 2 — density action. Path is null until the user locks one in.
-  // pattern_d_goal_id is the pointer to the linked hair-loss-start-plan
-  // goal when path === 'treat'. Null for monitor/transition or when we
-  // failed to create/link the goal.
+  // The pre-Tier-3 stage_2_pattern_d_goal_id column (a pointer to a
+  // marker goal in the legacy goals table) retired with the goals
+  // system on 2026-05-10. stage_2_path is now the single source of
+  // truth for the user's chosen path.
   stage_2_path: Stage2Path | null;
   stage_2_locked_in_at: string | null;
-  stage_2_pattern_d_goal_id: string | null;
   // Stage 3 — product match. Single markdown blob (3 product picks for
   // the style track, 3-item scalp routine for the bald track). Acked
   // when the user confirms "I have what I need" — that's the gate to
@@ -342,6 +375,58 @@ export const HAIR_TYPE_DENSITY_LABEL: Record<HairTypeDensity, string> = {
   high: 'High — thick coverage, hair feels dense on the head',
 };
 
+export const HEAD_SHAPE_LABEL: Record<HeadShape, string> = {
+  round: 'Round — width and length on top feel similar',
+  oval: 'Oval — slightly longer than wide, balanced',
+  oblong: 'Oblong / long — clearly longer than wide on top',
+};
+
+export const HEAD_SHAPE_HINT: Record<HeadShape, string> = {
+  round:
+    'Look in the mirror at the top of your head, not your face. If the dome reads as wide as it is long, that’s round.',
+  oval:
+    'The most common shape. The dome looks slightly elongated front-to-back without feeling stretched.',
+  oblong:
+    'The dome reads stretched front-to-back. Cuts that add height tend to over-elongate it; cuts with side weight balance it.',
+};
+
+export const HEAD_SIZE_LABEL: Record<HeadSize, string> = {
+  small: 'Small — hats run loose, head looks compact relative to shoulders',
+  average: 'Average — most fitted hats fit, no proportion concerns',
+  large: 'Large — hats run tight, head looks substantial relative to shoulders',
+};
+
+export const GRAYING_LEVEL_LABEL: Record<GrayingLevel, string> = {
+  none: 'No gray',
+  scattered: 'A few grays scattered through',
+  peppered: 'Visibly peppered (gray subordinate to base color)',
+  salt_and_pepper: 'Salt-and-pepper (gray and base roughly even)',
+  mostly_gray: 'Mostly gray or fully gray',
+};
+
+export const EAR_PROMINENCE_LABEL: Record<EarProminence, string> = {
+  low: 'Low — ears tuck close to the head',
+  average: 'Average — neither tucked nor sticking out',
+  prominent: 'Prominent — ears stick out noticeably',
+};
+
+export const BALDING_PATTERN_LABEL: Record<BaldingPattern, string> = {
+  none: 'No balding pattern',
+  front: 'Front / temples — recession at the hairline corners',
+  vertex: 'Crown / vertex — thinning at the top-back of the head',
+  front_and_vertex:
+    'Both front and crown — classic recession + vertex thinning',
+  diffuse: 'Diffuse — thinning spread across the top, no single zone',
+};
+
+export const BALDING_SEVERITY_LABEL: Record<BaldingSeverity, string> = {
+  0: 'None — no visible loss',
+  1: 'Mild — slight or only-you-notice',
+  2: 'Moderate — visible to others, density still mostly there',
+  3: 'Significant — pronounced thinning, scalp visible in the affected zone',
+  4: 'Advanced — scalp dominates the affected zone',
+};
+
 export const WHO_CUTS_LABEL: Record<WhoCuts, string> = {
   self: 'I cut it myself',
   chain: 'A chain (Supercuts, Great Clips, etc.)',
@@ -370,6 +455,33 @@ export const HairAssessmentInputSchema = z.object({
   hair_type_strand: z.enum(['fine', 'medium', 'thick_coarse']),
   hair_type_pattern: z.enum(['straight', 'wavy', 'curly', 'coily']),
   hair_type_density: z.enum(['low', 'medium', 'high']),
+  // Migration 0099 — all nullable on the wire. Form treats "skip" as
+  // null; pre-0099 rows that get edited stay null until the user
+  // answers.
+  head_shape: z.enum(['round', 'oval', 'oblong']).nullable(),
+  head_size: z.enum(['small', 'average', 'large']).nullable(),
+  graying_level: z
+    .enum([
+      'none',
+      'scattered',
+      'peppered',
+      'salt_and_pepper',
+      'mostly_gray',
+    ])
+    .nullable(),
+  ear_prominence: z.enum(['low', 'average', 'prominent']).nullable(),
+  balding_pattern: z
+    .enum(['none', 'front', 'vertex', 'front_and_vertex', 'diffuse'])
+    .nullable(),
+  balding_severity: z
+    .union([
+      z.literal(0),
+      z.literal(1),
+      z.literal(2),
+      z.literal(3),
+      z.literal(4),
+    ])
+    .nullable(),
   current_routine: z.object({
     // Cut cadence in weeks. Null when the user doesn't have a routine.
     cut_cadence_weeks: z.number().int().min(1).max(52).nullable(),

@@ -20,7 +20,10 @@ import {
 } from '@/lib/style/service';
 import { computeArchetypeFeasibility } from '@/lib/style/aesthetic-feasibility';
 import { getUserProfile } from '@/lib/profile/service';
-import { chipsForArchetype } from '@/lib/style/closet-audit-content';
+import {
+  chipsForArchetype,
+  filterValidChipSelections,
+} from '@/lib/style/closet-audit-content';
 import { foundationPiecesFor } from '@/lib/style/foundation-pieces-content';
 import { fitPrinciplesFor } from '@/lib/style/fit-calibration-content';
 import type { StyleAssessment } from '@/lib/style/types';
@@ -259,7 +262,10 @@ export default async function StylePlanPage({ searchParams }: Props) {
             targetArchetype={assessment.target_archetype}
             ageCohort={ageCohort}
             chips={chipsForArchetype(assessment.target_archetype)}
-            existingSelections={assessment.stage_1_chip_selections}
+            existingSelections={filterValidChipSelections(
+              assessment.target_archetype,
+              assessment.stage_1_chip_selections,
+            )}
             auditText={assessment.stage_1_audit_text}
             generatedAt={assessment.stage_1_generated_at}
             completedAt={assessment.stage_1_completed_at}
@@ -276,6 +282,7 @@ export default async function StylePlanPage({ searchParams }: Props) {
                 leg_length: assessment.leg_length,
                 arm_length: assessment.arm_length,
                 skin_undertone: assessment.skin_undertone,
+                dress_code_context: assessment.dress_code_context,
               })}
               initialAcquired={assessment.stage_2_pieces_acquired}
               completedAt={assessment.stage_2_completed_at}
@@ -354,6 +361,8 @@ function assessmentToInitialValues(
     frame_density: a.frame_density,
     skin_undertone: a.skin_undertone,
     eye_color: a.eye_color,
+    wrist_size: a.wrist_size,
+    dress_code_context: a.dress_code_context,
     current_archetype: a.current_archetype,
     target_archetype: a.target_archetype,
     closet_state: a.closet_state,

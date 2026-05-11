@@ -13,12 +13,9 @@ import {
   buildSystemPromptFull,
   buildProactiveSuggestionAdvisory,
   CIRCUIT_BREAKER_ADVISORY,
-  formatGoalsBlock,
-  formatActiveGoalFocusBlock,
   formatJourneyStateBlock,
   formatUserStateBlock,
   formatConversationHistoryBlock,
-  type GoalContext,
 } from '@/lib/mister-p/prompt';
 import {
   analyzeTopicCluster,
@@ -29,12 +26,15 @@ import { getMisterPUserState } from '@/lib/mister-p/user-state';
 import { getMisterPJourneyState } from '@/lib/mister-p/journey-state';
 import { getRecentConversation } from '@/lib/mister-p/conversation';
 import { logCostEvent } from '@/lib/cost-events/log';
+import { JOURNEYS } from '@/lib/today/journeys';
+
+const VALID_JOURNEY_SLUGS = new Set<string>(JOURNEYS.map((j) => j.slug));
 
 const RequestSchema = z.object({
   question: z.string().min(1).max(2000),
-  // Optional goal_id binds this turn (and the persisted row) to a
-  // specific goal's chat thread. Omit for the /today global chat.
-  goal_id: z.string().uuid().nullable().optional(),
+  // Journey-scoped chat thread (mig 0104). Validated app-side against
+  // the JOURNEYS catalog. Omit for the General thread.
+  journey_slug: z.string().nullable().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -42,7 +42,10 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
-  const { question, goal_id: requestedGoalId = null } = parsed.data;
+  const {
+    question,
+    journey_slug: requestedJourneySlug = null,
+  } = parsed.data;
 
   // Require auth
   const supabase = await createClient();
@@ -101,19 +104,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Validate goal_id ownership before we let it scope anything. A
-  // goal_id from another user must never write into this user's
-  // thread or read their per-goal history. Set to null on any miss
-  // rather than 400ing — the chat still works, just unscoped.
-  let goalId: string | null = null;
-  if (requestedGoalId) {
-    const { data: ownedGoal } = await supabase
-      .from('goals')
-      .select('id')
-      .eq('id', requestedGoalId)
-      .eq('user_id', user.id)
-      .maybeSingle();
-    if (ownedGoal) goalId = requestedGoalId;
+  // Resolve thread scope. Unknown journey slugs fall back to the
+  // General thread silently — the chat still works, just unscoped.
+  let journeySlug: string | null = null;
+  if (
+    requestedJourneySlug &&
+    VALID_JOURNEY_SLUGS.has(requestedJourneySlug)
+  ) {
+    journeySlug = requestedJourneySlug;
   }
 
   // Embed the question once — used for retrieval and topic clustering.
@@ -124,18 +122,7 @@ export async function POST(req: NextRequest) {
   // pass it into retrieval as a secondary query vector. The retrieval
   // layer finds relevant chunks automatically — Mister P does not need
   // to be told "the user is struggling with evening routines."
-  //
-  // Skipped for goal-scoped chats. The user explicitly opened the
-  // thread from a specific goal; the focused goal's embedding (built
-  // below) is the right secondary signal there. Pulling in broad
-  // life-context retrieval too lets reflection-note language bleed
-  // across topic boundaries — e.g. a passing peptide reference in a
-  // weekly note keeps surfacing in the jawline thread, even after
-  // the chat is cleared, because the note text persists outside
-  // mister_p_queries.
-  const contextText = goalId
-    ? null
-    : await getSemanticContextText(supabase, user.id);
+  const contextText = await getSemanticContextText(supabase, user.id);
   const contextEmbedding = contextText
     ? await embedQuestion(contextText)
     : null;
@@ -167,95 +154,14 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Active goals for the user — injected into the system prompt so Mister P
-  // can anchor answers to what they're actually working on. We pull `id`
-  // alongside the rest because when the chat is opened from a goal page
-  // we need to match the request's goal_id back to the right entry to
-  // build the focus block below.
-  //
-  // Loaded BEFORE retrieval so the focused goal's title + description
-  // can seed a third query vector (focus embedding) and its
-  // source_slug can drive the per-slug rerank bonus. Prior structure
-  // ran retrieval first and goals second; that order meant retrieval
-  // had no goal context, so vague questions ("tell me more about
-  // this") drifted to whatever happened to land near a generic
-  // question vector.
-  const { data: activeGoalRows } = await supabase
-    .from('goals')
-    .select(
-      'id, title, description, source_slug, goal_type, created_at, chat_execution_mode',
-    )
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .order('created_at', { ascending: true });
-
-  const nowMs = Date.now();
-  const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-  // Build goals + parallel id array. GoalContext deliberately omits id
-  // (the goals block is for prompt context, not for routing decisions
-  // downstream), so the id mapping lives here only.
-  const goalIds: string[] = [];
-  const goals: GoalContext[] = (activeGoalRows ?? []).map((g) => {
-    goalIds.push(g.id as string);
-    const createdAt = g.created_at ? new Date(g.created_at).getTime() : nowMs;
-    const daysActive = Math.max(0, Math.floor((nowMs - createdAt) / MS_PER_DAY));
-    const priorCitationCount = g.source_slug
-      ? citationCounts.get(g.source_slug) ?? 0
-      : 0;
-    return {
-      title: g.title,
-      description: g.description ?? null,
-      source_slug: g.source_slug ?? null,
-      goal_type: (g.goal_type ?? 'process') as 'process' | 'outcome',
-      daysActive,
-      priorCitationCount,
-    };
-  });
-
-  // Identify the focused goal (if any) BEFORE retrieval. Used twice:
-  // once to seed retrieval (focus embedding + slug-bonus reranking),
-  // once to inject the prompt's USER'S CURRENT FOCUS block further
-  // down. Goals query above is filtered to active; a goalId pointing
-  // to a completed/abandoned goal won't match here, which is fine.
-  const focusedGoalIndex = goalId ? goalIds.indexOf(goalId) : -1;
-  const focusedGoal: GoalContext | null =
-    focusedGoalIndex >= 0 ? goals[focusedGoalIndex] : null;
-
-  // Execution mode lookup. Pull the flag straight from the queried
-  // row (avoids a second query) and only honor it when the chat is
-  // goal-scoped. The general thread cannot be in execution mode —
-  // it's not anchored to a single goal in the first place.
-  const focusedGoalRaw = focusedGoalIndex >= 0
-    ? (activeGoalRows ?? [])[focusedGoalIndex]
-    : null;
-  const executionModeActive = Boolean(
-    focusedGoal &&
-      focusedGoalRaw &&
-      (focusedGoalRaw as { chat_execution_mode?: boolean }).chat_execution_mode,
-  );
-
-  // Focus embedding: vector representation of "what this goal is
-  // about" so vague questions still anchor to relevant chunks.
-  // Combined with focusedSlug bonus in retrieve, this prevents the
-  // "tell me more about this" → unrelated drift that the prompt-only
-  // focus block alone couldn't fix.
-  const focusText = focusedGoal
-    ? focusedGoal.description
-      ? `${focusedGoal.title}. ${focusedGoal.description}`
-      : focusedGoal.title
-    : null;
-  const focusEmbedding = focusText ? await embedQuestion(focusText) : null;
-
-  // Personalized retrieval: question + optional context + optional
-  // focus embeddings merged with dedupe, then reranked by slug
-  // citation counts (unseen +0.04, 3+-cited decays down to -0.15)
-  // and a focused-slug bonus (+0.10) when the chat is goal-scoped.
-  // Returns the top 5 for the prompt's retrieved-context block.
+  // Personalized retrieval: question + optional context embedding
+  // merged with dedupe, then reranked by slug citation counts
+  // (unseen +0.04, 3+-cited decays down to -0.15). Returns the top 5
+  // for the prompt's retrieved-context block.
   const chunks = await retrievePersonalized(questionEmbedding, {
     contextEmbedding,
-    focusEmbedding,
-    focusedSlug: focusedGoal?.source_slug ?? null,
+    focusEmbedding: null,
+    focusedSlug: null,
     citationCounts,
     returnCount: 5,
   });
@@ -269,38 +175,21 @@ export async function POST(req: NextRequest) {
   );
   const triggerCircuitBreaker = shouldTriggerCircuitBreaker(topicAnalysis);
 
-  // Set of POV slugs the user has actually accepted as goals. Mister P
-  // should only point to a full POV doc when it backs one of the user's
-  // own goals — otherwise the /povs index wouldn't have it listed and
-  // the nudge would dead-end.
-  const userGoalSlugs = new Set<string>();
-  for (const g of goals) {
-    if (g.source_slug) userGoalSlugs.add(g.source_slug);
-  }
-
-  // Advisory selection — at most one advisory per turn. Circuit breaker
-  // takes priority because it signals an obsessive loop that overrides the
-  // proactive-suggestion nudge. In practice the two are mutually exclusive
-  // (circuit breaker needs a familiar topic; proactive suggestion needs a
-  // new one), but the explicit priority defends against overlap.
+  // Advisory selection — at most one advisory per turn. Circuit
+  // breaker takes priority because it signals an obsessive loop. The
+  // proactive-suggestion advisory previously gated on whether the top
+  // citation matched one of the user's accepted goals; with goals
+  // retired, it now fires on any familiar-topic + relevant-chunk
+  // combination.
   let advisory: string | null = null;
   if (triggerCircuitBreaker) {
     advisory = CIRCUIT_BREAKER_ADVISORY;
   } else if (
     shouldTriggerProactiveSuggestion(topicAnalysis) &&
-    chunks.length > 0 &&
-    userGoalSlugs.has(chunks[0].doc_slug)
+    chunks.length > 0
   ) {
     advisory = buildProactiveSuggestionAdvisory(chunks[0].doc_title, chunks[0].doc_slug);
   }
-
-  const goalsBlock = formatGoalsBlock(goals);
-
-  // The focused goal was already resolved above (before retrieval) so
-  // both the retrieval bias and this prompt block use the same source
-  // of truth. If no goal is in focus, the block returns null and is
-  // dropped from the assembled prompt.
-  const activeGoalFocusBlock = formatActiveGoalFocusBlock(focusedGoal);
 
   // Behavioral state — specific_thing, tenure, weekly completion,
   // confidence trajectory, stuck dimensions. Cheap to fetch alongside
@@ -319,26 +208,20 @@ export async function POST(req: NextRequest) {
   const journeyStateBlock = formatJourneyStateBlock(journeyState);
 
   // Rolling conversation history — scoped to the current thread.
-  // When goalId is set, we load up to 15 prior Q&A pairs from that
-  // goal's thread; otherwise we load up to 8 pairs from the global
-  // (goal_id IS NULL) /today thread. Per-goal and global histories
-  // are kept disjoint so Mister P doesn't bleed unrelated topic
-  // context into a focused goal conversation. Uses the authed client
-  // so RLS on mister_p_queries applies; the service client would
-  // bypass it.
+  // journeySlug picks the journey-scoped thread; null picks the
+  // General thread. Per-scope histories are kept disjoint so
+  // unrelated topic context doesn't bleed across journeys. Uses the
+  // authed client so RLS on mister_p_queries applies.
   const recentPairs = await getRecentConversation(supabase, user.id, {
-    goalId,
+    journeySlug,
   });
   const conversationHistoryBlock = formatConversationHistoryBlock(recentPairs);
 
   const systemPrompt = buildSystemPromptFull(
     contextBlock,
     advisory,
-    goalsBlock,
     userStateBlock,
     conversationHistoryBlock,
-    activeGoalFocusBlock,
-    executionModeActive,
     journeyStateBlock,
   );
 
@@ -361,24 +244,27 @@ export async function POST(req: NextRequest) {
   }
   // Photo attachment ordering matters — Mister P's prompt rules name
   // them in this order so the model can reference each by index.
-  // Cap at 4 (baseline face / latest face progress / latest body /
-  // latest hair anchor) to keep token cost predictable; an image is
-  // ~1700 tokens of input regardless of relevance to the question.
+  // Cap at 5 (baseline face / latest face progress / latest body /
+  // latest fit / latest hair anchor) to keep token cost predictable;
+  // an image is ~1700 tokens of input regardless of relevance.
   const [
     baselineFaceImage,
     latestFaceProgressImage,
     latestBodyProgressImage,
+    latestFitImage,
     latestHairImage,
   ] = await Promise.all([
     downloadIfPresent(userState.baselineFacePhotoPath),
     downloadIfPresent(userState.latestFaceProgressPhotoPath),
     downloadIfPresent(userState.latestBodyProgressPhotoPath),
+    downloadIfPresent(userState.latestFitPhotoPath),
     downloadIfPresent(userState.latestHairAnchorPhotoPath),
   ]);
   const imagesToAttach: Buffer[] = [];
   if (baselineFaceImage) imagesToAttach.push(baselineFaceImage);
   if (latestFaceProgressImage) imagesToAttach.push(latestFaceProgressImage);
   if (latestBodyProgressImage) imagesToAttach.push(latestBodyProgressImage);
+  if (latestFitImage) imagesToAttach.push(latestFitImage);
   if (latestHairImage) imagesToAttach.push(latestHairImage);
 
   const result = streamText({
@@ -408,7 +294,7 @@ export async function POST(req: NextRequest) {
 
       await service.from('mister_p_queries').insert({
         user_id: user.id,
-        goal_id: goalId,
+        journey_slug: journeySlug,
         question,
         answer: text,
         citations,

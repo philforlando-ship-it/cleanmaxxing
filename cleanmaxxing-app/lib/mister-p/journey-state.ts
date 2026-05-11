@@ -61,6 +61,14 @@ type HairJourneySnapshot = {
   stage_4_active: boolean;
   stage_5_active: boolean;
   stage_5_days_since_last_session: number | null;
+  // 2026-05-09 — expanded precision fields surfaced to chat so Mister P
+  // can answer cut/style questions with the same precision the journey
+  // generators use. All optional; absent rows pre-date migration 0099.
+  balding_pattern: string | null;
+  balding_severity: number | null;
+  head_shape: string | null;
+  head_size: string | null;
+  graying_level: string | null;
 };
 
 type StyleJourneySnapshot = {
@@ -145,7 +153,7 @@ export async function getMisterPJourneyState(
     supabase
       .from('hair_assessments')
       .select(
-        'density_state, stage_2_path, stage_4_started_at, stage_5_started_at, stage_5_last_session_at, report_text',
+        'density_state, stage_2_path, stage_4_started_at, stage_5_started_at, stage_5_last_session_at, report_text, balding_pattern, balding_severity, head_shape, head_size, graying_level',
       )
       .eq('user_id', userId)
       .maybeSingle(),
@@ -223,6 +231,11 @@ export async function getMisterPJourneyState(
       stage_5_started_at: string | null;
       stage_5_last_session_at: string | null;
       report_text: string | null;
+      balding_pattern: string | null;
+      balding_severity: number | null;
+      head_shape: string | null;
+      head_size: string | null;
+      graying_level: string | null;
     };
     hair = {
       has_report: r.report_text !== null,
@@ -231,6 +244,11 @@ export async function getMisterPJourneyState(
       stage_4_active: r.stage_4_started_at !== null,
       stage_5_active: r.stage_5_started_at !== null,
       stage_5_days_since_last_session: daysSince(r.stage_5_last_session_at, now),
+      balding_pattern: r.balding_pattern,
+      balding_severity: r.balding_severity,
+      head_shape: r.head_shape,
+      head_size: r.head_size,
+      graying_level: r.graying_level,
     };
   }
 

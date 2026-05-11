@@ -15,20 +15,38 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { CMSpinner } from '@/components/cm-logo';
 import {
+  StreamingPlanPreview,
+  consumeTextStream,
+} from '@/components/streaming-plan-preview';
+import {
+  BALDING_PATTERN_LABEL,
+  BALDING_SEVERITY_LABEL,
   DENSITY_STATE_LABEL,
+  EAR_PROMINENCE_LABEL,
   FACE_SHAPE_HINT,
   FACE_SHAPE_LABEL,
+  GRAYING_LEVEL_LABEL,
   HAIR_TYPE_DENSITY_LABEL,
   HAIR_TYPE_PATTERN_LABEL,
   HAIR_TYPE_STRAND_LABEL,
+  HEAD_SHAPE_HINT,
+  HEAD_SHAPE_LABEL,
+  HEAD_SIZE_LABEL,
   WHO_CUTS_LABEL,
+  type BaldingPattern,
+  type BaldingSeverity,
   type CurrentRoutine,
   type DensityState,
+  type EarProminence,
   type FaceShape,
+  type GrayingLevel,
   type HairTypeDensity,
   type HairTypePattern,
   type HairTypeStrand,
+  type HeadShape,
+  type HeadSize,
   type WhoCuts,
 } from '@/lib/hair/types';
 
@@ -38,6 +56,12 @@ export type HairAssessmentInitialValues = {
   hair_type_strand: HairTypeStrand;
   hair_type_pattern: HairTypePattern;
   hair_type_density: HairTypeDensity;
+  head_shape: HeadShape | null;
+  head_size: HeadSize | null;
+  graying_level: GrayingLevel | null;
+  ear_prominence: EarProminence | null;
+  balding_pattern: BaldingPattern | null;
+  balding_severity: BaldingSeverity | null;
   current_routine: CurrentRoutine;
   hair_goal_text: string | null;
 };
@@ -65,6 +89,36 @@ const PATTERNS: HairTypePattern[] = ['straight', 'wavy', 'curly', 'coily'];
 const DENSITIES: HairTypeDensity[] = ['low', 'medium', 'high'];
 const WHO_CUTS_OPTIONS: WhoCuts[] = ['self', 'chain', 'dedicated_barber'];
 
+const HEAD_SHAPES: HeadShape[] = ['round', 'oval', 'oblong'];
+const HEAD_SIZES: HeadSize[] = ['small', 'average', 'large'];
+const GRAYING_LEVELS: GrayingLevel[] = [
+  'none',
+  'scattered',
+  'peppered',
+  'salt_and_pepper',
+  'mostly_gray',
+];
+const EAR_PROMINENCES: EarProminence[] = ['low', 'average', 'prominent'];
+const BALDING_PATTERNS: BaldingPattern[] = [
+  'none',
+  'front',
+  'vertex',
+  'front_and_vertex',
+  'diffuse',
+];
+const BALDING_SEVERITIES: BaldingSeverity[] = [0, 1, 2, 3, 4];
+
+// Density states where the balding pattern + severity question is
+// load-bearing. For 'full' / 'shaved_or_buzzed' the question is moot
+// and we leave the fields null rather than pestering the user.
+const DENSITY_STATES_WITH_BALDING: ReadonlyArray<DensityState> = [
+  'mature_hairline',
+  'receding_hairline',
+  'crown_thinning',
+  'diffuse_thinning',
+  'advanced_thinning',
+];
+
 export function HairAssessmentForm({
   initialValues,
   hasBaselinePhoto = false,
@@ -82,6 +136,7 @@ export function HairAssessmentForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [streamingText, setStreamingText] = useState<string | null>(null);
 
   // Face shape auto-detection state. detecting = LLM call in flight.
   // detectedNote = the message to show under the radios after a
@@ -160,11 +215,33 @@ export function HairAssessmentForm({
       setDetecting(false);
     }
   }
-  // Q2
+  // Q2 — head/ear precision (migration 0099). All optional so the
+  // user can submit even if they aren't sure.
+  const [headShape, setHeadShape] = useState<HeadShape | null>(
+    initialValues?.head_shape ?? null,
+  );
+  const [headSize, setHeadSize] = useState<HeadSize | null>(
+    initialValues?.head_size ?? null,
+  );
+  const [earProminence, setEarProminence] = useState<EarProminence | null>(
+    initialValues?.ear_prominence ?? null,
+  );
+
+  // Q3
   const [densityState, setDensityState] = useState<DensityState | null>(
     initialValues?.density_state ?? null,
   );
-  // Q3
+
+  // Q4 — balding pattern + severity (migration 0099). Conditional on
+  // density_state being in a thinning state. Both null when the user
+  // is in 'full' / 'shaved_or_buzzed'.
+  const [baldingPattern, setBaldingPattern] = useState<BaldingPattern | null>(
+    initialValues?.balding_pattern ?? null,
+  );
+  const [baldingSeverity, setBaldingSeverity] =
+    useState<BaldingSeverity | null>(initialValues?.balding_severity ?? null);
+
+  // Q5 hair type
   const [strand, setStrand] = useState<HairTypeStrand | null>(
     initialValues?.hair_type_strand ?? null,
   );
@@ -173,6 +250,9 @@ export function HairAssessmentForm({
   );
   const [density, setDensity] = useState<HairTypeDensity | null>(
     initialValues?.hair_type_density ?? null,
+  );
+  const [grayingLevel, setGrayingLevel] = useState<GrayingLevel | null>(
+    initialValues?.graying_level ?? null,
   );
   // Q4
   const [cutCadenceWeeks, setCutCadenceWeeks] = useState(
@@ -213,12 +293,26 @@ export function HairAssessmentForm({
       return setError('Cut cadence should be between 1 and 52 weeks.');
     }
 
+    // Balding pattern + severity only meaningful when density_state
+    // is in a thinning state. Force null otherwise so a user who
+    // toggles from receding_hairline → full doesn't carry stale
+    // answers through to the saved row.
+    const showsBalding = DENSITY_STATES_WITH_BALDING.includes(densityState);
+    const submittedBaldingPattern = showsBalding ? baldingPattern : null;
+    const submittedBaldingSeverity = showsBalding ? baldingSeverity : null;
+
     const payload = {
       face_shape: faceShape,
       density_state: densityState,
       hair_type_strand: strand,
       hair_type_pattern: pattern,
       hair_type_density: density,
+      head_shape: headShape,
+      head_size: headSize,
+      graying_level: grayingLevel,
+      ear_prominence: earProminence,
+      balding_pattern: submittedBaldingPattern,
+      balding_severity: submittedBaldingSeverity,
       current_routine: {
         cut_cadence_weeks: cadenceNum,
         products_used: productsUsed.trim() || null,
@@ -241,14 +335,22 @@ export function HairAssessmentForm({
           };
           throw new Error(body.error ?? `Save failed (${res.status})`);
         }
-        // Push (not refresh) so the ?edit=1 query param drops out of the
-        // URL once the regenerated report is live.
+        // Read the streaming response; server onFinish saves report
+        // to DB on stream close. Then push (not refresh) so the
+        // ?edit=1 query param drops out of the URL once the
+        // regenerated report is live.
+        await consumeTextStream(res, setStreamingText);
         router.push('/plan/hair');
         router.refresh();
       } catch (err) {
+        setStreamingText(null);
         setError((err as Error).message);
       }
     });
+  }
+
+  if (streamingText !== null) {
+    return <StreamingPlanPreview text={streamingText} />;
   }
 
   return (
@@ -295,6 +397,52 @@ export function HairAssessmentForm({
 
       <Question
         number={2}
+        title="A few things about your head (optional but helpful)"
+        helper="Different from face shape. These shape what works on TOP of your head and at the sides — head shape affects how a cut sits, head size affects proportion, ear prominence affects side length and taper height. Skip any you're unsure about."
+      >
+        <div className="space-y-5">
+          <SubGroup label="Head shape (looking at the dome, not the face)">
+            {HEAD_SHAPES.map((s) => (
+              <RadioRow
+                key={s}
+                checked={headShape === s}
+                onChange={() => setHeadShape(s)}
+                disabled={pending}
+                label={HEAD_SHAPE_LABEL[s]}
+                hint={HEAD_SHAPE_HINT[s]}
+                name="head_shape"
+              />
+            ))}
+          </SubGroup>
+          <SubGroup label="Head size relative to your shoulders">
+            {HEAD_SIZES.map((s) => (
+              <RadioRow
+                key={s}
+                checked={headSize === s}
+                onChange={() => setHeadSize(s)}
+                disabled={pending}
+                label={HEAD_SIZE_LABEL[s]}
+                name="head_size"
+              />
+            ))}
+          </SubGroup>
+          <SubGroup label="Ear prominence">
+            {EAR_PROMINENCES.map((e) => (
+              <RadioRow
+                key={e}
+                checked={earProminence === e}
+                onChange={() => setEarProminence(e)}
+                disabled={pending}
+                label={EAR_PROMINENCE_LABEL[e]}
+                name="ear_prominence"
+              />
+            ))}
+          </SubGroup>
+        </div>
+      </Question>
+
+      <Question
+        number={3}
         title="How does your hair density and hairline read in normal indoor light?"
         helper="Not the bathroom mirror with the overhead light frying the top of your head — that lies."
       >
@@ -312,10 +460,46 @@ export function HairAssessmentForm({
         </div>
       </Question>
 
+      {densityState &&
+        DENSITY_STATES_WITH_BALDING.includes(densityState) && (
+          <Question
+            number={4}
+            title="Where is the thinning, and how far along is it?"
+            helper="Two picks. Pattern is about WHERE — front recession, vertex (crown), both, or evenly spread. Severity is about HOW MUCH. Be honest; the cut recommendation hinges on this."
+          >
+            <div className="space-y-5">
+              <SubGroup label="Pattern (where)">
+                {BALDING_PATTERNS.map((p) => (
+                  <RadioRow
+                    key={p}
+                    checked={baldingPattern === p}
+                    onChange={() => setBaldingPattern(p)}
+                    disabled={pending}
+                    label={BALDING_PATTERN_LABEL[p]}
+                    name="balding_pattern"
+                  />
+                ))}
+              </SubGroup>
+              <SubGroup label="Severity (how much)">
+                {BALDING_SEVERITIES.map((s) => (
+                  <RadioRow
+                    key={s}
+                    checked={baldingSeverity === s}
+                    onChange={() => setBaldingSeverity(s)}
+                    disabled={pending}
+                    label={BALDING_SEVERITY_LABEL[s]}
+                    name="balding_severity"
+                  />
+                ))}
+              </SubGroup>
+            </div>
+          </Question>
+        )}
+
       <Question
-        number={3}
+        number={5}
         title="What's your hair type?"
-        helper="Three picks. Strand thickness is about each strand. Density is about how many hairs are on your head. You can have fine dense hair, thick low-density hair, or anything in between."
+        helper="Strand thickness is about each strand. Density is about how many hairs are on your head. You can have fine dense hair, thick low-density hair, or anything in between."
       >
         <div className="space-y-5">
           <SubGroup label="Strand thickness">
@@ -354,11 +538,23 @@ export function HairAssessmentForm({
               />
             ))}
           </SubGroup>
+          <SubGroup label="Graying (optional)">
+            {GRAYING_LEVELS.map((g) => (
+              <RadioRow
+                key={g}
+                checked={grayingLevel === g}
+                onChange={() => setGrayingLevel(g)}
+                disabled={pending}
+                label={GRAYING_LEVEL_LABEL[g]}
+                name="graying_level"
+              />
+            ))}
+          </SubGroup>
         </div>
       </Question>
 
       <Question
-        number={4}
+        number={6}
         title="What's your current routine?"
         helper="Skip what doesn't apply."
       >
@@ -440,7 +636,7 @@ export function HairAssessmentForm({
       </Question>
 
       <Question
-        number={5}
+        number={7}
         title="Anything you want Mister P to know? (optional)"
         helper="One line. What you want from your hair, what you've tried, what's not working."
       >
@@ -480,11 +676,7 @@ export function HairAssessmentForm({
             Cancel — keep current plan
           </Link>
         )}
-        {pending && (
-          <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            Takes about fifteen seconds.
-          </span>
-        )}
+        {pending && <CMSpinner label="Takes about fifteen seconds." />}
       </div>
     </div>
   );

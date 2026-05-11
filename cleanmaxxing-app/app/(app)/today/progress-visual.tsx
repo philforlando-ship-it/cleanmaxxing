@@ -1,11 +1,15 @@
 // Phase D of the /today redesign — Area 3 progress visual.
 //
 // Two states:
-//   - Default: confidence trend chart (last 90 days) + weekly
-//     completion counter beneath. Quiet, no header decoration.
+//   - Default: confidence trend chart (last 90 days). Quiet, no
+//     header decoration.
 //   - Milestone-active: when ≥1 milestone fired in the last 7 days,
 //     render the milestone fire(s) ABOVE the chart. Chart still
 //     visible below — less jarring than a full surface swap.
+//
+// The weekly-check-in counter ("X of Y days") retired with the
+// goals system on 2026-05-10 (Tier 3) — it was always derived from
+// goal_check_ins, which no longer exists.
 //
 // Voice posture:
 // - Absolute / self-comparison framing only (locked from H1/H2
@@ -21,24 +25,17 @@ import type { MilestoneRow } from '@/lib/milestones/types';
 type Props = {
   recentMilestones: MilestoneRow[];
   confidenceHistory: WeeklyReflection[];
-  weeklyTickedCount: number;
-  weeklyPossibleCount: number;
 };
 
 export function ProgressVisual({
   recentMilestones,
   confidenceHistory,
-  weeklyTickedCount,
-  weeklyPossibleCount,
 }: Props) {
-  const showWeeklyLine = weeklyPossibleCount > 0;
-
   // Show nothing at all when there's no history AND no recent
   // milestones — first-day users haven't earned an Area 3 yet.
   if (
     confidenceHistory.length === 0 &&
-    recentMilestones.length === 0 &&
-    !showWeeklyLine
+    recentMilestones.length === 0
   ) {
     return null;
   }
@@ -55,16 +52,6 @@ export function ProgressVisual({
 
       {confidenceHistory.length > 0 && (
         <ProcessOutcomeChart history={confidenceHistory} />
-      )}
-
-      {showWeeklyLine && (
-        <p className="text-[12px] text-zinc-500 dark:text-zinc-400">
-          Check-ins this week:{' '}
-          <strong className="font-medium text-zinc-800 dark:text-zinc-200">
-            {weeklyTickedCount} of {weeklyPossibleCount}
-          </strong>{' '}
-          days.
-        </p>
       )}
     </section>
   );

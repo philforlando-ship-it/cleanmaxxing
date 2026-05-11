@@ -12,7 +12,12 @@
 // that look great in the reference photos but produce the wrong
 // result on actual thinning hair.
 
-import type { CutFamily, DensityState } from './types';
+import type {
+  BaldingPattern,
+  BaldingSeverity,
+  CutFamily,
+  DensityState,
+} from './types';
 
 export const CUTS_FOR_DENSITY: Record<DensityState, ReadonlyArray<CutFamily>> = {
   // Full density — most options open. The 2026 modern roster
@@ -144,6 +149,29 @@ export const CUTS_FOR_DENSITY: Record<DensityState, ReadonlyArray<CutFamily>> = 
   shaved_or_buzzed: ['bald_track', 'bald_fade', 'clean_shave'],
 };
 
-export function cutsForDensity(state: DensityState): ReadonlyArray<CutFamily> {
+// Migration 0099 — balding_pattern + balding_severity hard override.
+// A user who self-rated density_state='mature_hairline' but flagged
+// front_and_vertex + severity 4 has more loss than the density label
+// suggests. Coverage strategies stop working when both zones are gone
+// or thinning is diffuse and severe; force the allowed list down to
+// the advanced_thinning set so volume-on-top cuts can't be picked
+// even by a mis-calibrated LLM.
+//
+// Override only NARROWS, never widens — passing pattern='none' or
+// severity=0 with density_state='advanced_thinning' still returns the
+// advanced_thinning list. Both args are optional; null/undefined fall
+// back to density-only filtering (existing behavior).
+export function cutsForDensity(
+  state: DensityState,
+  pattern: BaldingPattern | null = null,
+  severity: BaldingSeverity | null = null,
+): ReadonlyArray<CutFamily> {
+  if (
+    severity !== null &&
+    severity >= 3 &&
+    (pattern === 'front_and_vertex' || pattern === 'diffuse')
+  ) {
+    return CUTS_FOR_DENSITY.advanced_thinning;
+  }
   return CUTS_FOR_DENSITY[state];
 }

@@ -3,8 +3,9 @@
 // row (so the page can render them without recomputing), and injects
 // the full v2 modifier block into the prompt.
 
-import { generateText } from 'ai';
+import { streamText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
+import type { StreamTextResult, ToolSet } from 'ai';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { kindForAnthropicModel, logCostEvent } from '@/lib/cost-events/log';
 import { povFor } from '@/lib/content/pov';
@@ -15,6 +16,7 @@ import {
 import {
   ALCOHOL_USE_LABEL,
   CANNABIS_USE_LABEL,
+  CHEAT_DAY_PATTERN_LABEL,
   EATING_CONTEXT_LABEL,
   FASTING_PROTOCOL_LABEL,
   FOODS,
@@ -41,15 +43,84 @@ import { getCardioAssessment } from '@/lib/cardio/service';
 import { getStrengthAssessment } from '@/lib/strength/service';
 import { getCurrentFatigueState } from '@/lib/weekly-reflection/service';
 import { getHrvTrend } from '@/lib/vital/wearable-signals';
+import { isPremium as resolveIsPremium } from '@/lib/billing/is-premium';
 
 const REPORT_MODEL = 'claude-sonnet-4-6';
 const POV_SLUG = '13-body-physical-foundation';
 
+// Streaming entrypoint. Returns the StreamTextResult so the caller
+// can either (a) return .toTextStreamResponse() from a route handler
+// for progressive client rendering, or (b) await .text for non-
+// streaming consumers (re-evaluate background job). Either way the
+// onFinish callback fires once at the end of the stream and handles
+// the DB save + cost logging — so the streaming and non-streaming
+// paths share the same persistence behavior.
+//
+// onFinish runs in the server's request context after the route has
+// already returned the stream response. Vercel keeps the function
+// alive until the stream is fully drained, so the save completes
+// reliably.
+export async function streamNutritionReport(
+  supabase: SupabaseClient,
+  userId: string,
+  assessment: NutritionAssessment,
+): Promise<StreamTextResult<ToolSet, never>> {
+  const { system, userPrompt, modifiers } = await prepareNutritionReport(
+    supabase,
+    userId,
+    assessment,
+  );
+
+  return streamText({
+    model: anthropic(REPORT_MODEL),
+    system,
+    prompt: userPrompt,
+    temperature: 0.5,
+    onFinish: async ({ text, usage }) => {
+      logCostEvent({
+        user_id: userId,
+        kind: kindForAnthropicModel(REPORT_MODEL),
+        tokens_input: usage?.inputTokens,
+        tokens_output: usage?.outputTokens,
+        feature: 'nutrition_report',
+      });
+      await saveNutritionReport(supabase, userId, {
+        report_text: text.trim(),
+        report_model: REPORT_MODEL,
+        report_input_modifiers: modifiers,
+      });
+    },
+  });
+}
+
+// Non-streaming consumer (re-evaluate route). Drains the stream
+// internally and returns the full text. onFinish still fires inside
+// streamNutritionReport, so save + cost logging happen the same way.
 export async function generateAndSaveNutritionReport(
   supabase: SupabaseClient,
   userId: string,
   assessment: NutritionAssessment,
 ): Promise<{ report_text: string }> {
+  const result = await streamNutritionReport(supabase, userId, assessment);
+  const text = await result.text;
+  return { report_text: text.trim() };
+}
+
+// Prep — runs all the deterministic setup (profile sync, target
+// computation, weight-loss plan snapshot, modifier roll-up, POV
+// load, system + user prompt assembly). Pure-ish: writes the
+// snapshot rows (which is correct — they're idempotent and should
+// land regardless of LLM outcome). Shared by streaming and non-
+// streaming consumers above.
+async function prepareNutritionReport(
+  supabase: SupabaseClient,
+  userId: string,
+  assessment: NutritionAssessment,
+): Promise<{
+  system: string;
+  userPrompt: string;
+  modifiers: NutritionReportInputModifiers;
+}> {
   const initialProfile = await getUserProfile(supabase, userId);
   // Backfill weight/height from survey_responses if profile columns
   // are still null. Same reason as /plan/nutrition page.
@@ -65,15 +136,22 @@ export async function generateAndSaveNutritionReport(
     strengthAssessment,
     cardioAssessment,
     fatigueState,
-    hrvSignal,
+    userIsPremium,
   ] = await Promise.all([
     supabase.from('users').select('age').eq('id', userId).maybeSingle(),
     getRecentProteinSignal(supabase, userId),
     getStrengthAssessment(supabase, userId),
     getCardioAssessment(supabase, userId),
     getCurrentFatigueState(supabase, userId),
-    getHrvTrend(supabase, userId),
+    resolveIsPremium(userId),
   ]);
+
+  // HRV is Pro-gated. Free users get the same prompt shape with a
+  // null trend; the prompt template already handles "no signal —
+  // insufficient data or no wearable" without branching on tier.
+  const hrvSignal = userIsPremium
+    ? await getHrvTrend(supabase, userId)
+    : { trend: null, recent_avg_ms: null, baseline_avg_ms: null };
 
   const age = (userRow as { age: number | null } | null)?.age ?? null;
   const isStrengthTraining = strengthAssessment?.report_text != null;
@@ -162,6 +240,7 @@ export async function generateAndSaveNutritionReport(
     fasting_protocol: assessment.fasting_protocol,
     alcohol_use: assessment.alcohol_use,
     cannabis_use: assessment.cannabis_use,
+    cheat_day_pattern: assessment.cheat_day_pattern,
     cooking_capacity: assessment.cooking_capacity,
     dietary_pattern: assessment.dietary_pattern,
     meal_service_willingness: assessment.meal_service_willingness,
@@ -208,30 +287,7 @@ export async function generateAndSaveNutritionReport(
     weightLossPlan,
   );
 
-  const { text, usage } = await generateText({
-    model: anthropic(REPORT_MODEL),
-    system,
-    prompt: userPrompt,
-    temperature: 0.5,
-  });
-
-  logCostEvent({
-    user_id: userId,
-    kind: kindForAnthropicModel(REPORT_MODEL),
-    tokens_input: usage?.inputTokens,
-    tokens_output: usage?.outputTokens,
-    feature: 'nutrition_report',
-  });
-
-  const reportText = text.trim();
-
-  await saveNutritionReport(supabase, userId, {
-    report_text: reportText,
-    report_model: REPORT_MODEL,
-    report_input_modifiers: modifiers,
-  });
-
-  return { report_text: reportText };
+  return { system, userPrompt, modifiers };
 }
 
 function formatAssessmentForPrompt(
@@ -281,6 +337,9 @@ function formatAssessmentForPrompt(
   );
   modifierLines.push(`- alcohol_use: ${modifiers.alcohol_use}`);
   modifierLines.push(`- cannabis_use: ${modifiers.cannabis_use}`);
+  modifierLines.push(
+    `- cheat_day_pattern: ${modifiers.cheat_day_pattern ?? 'not set — fall through to default adherence-reality framing'}`,
+  );
 
   // T2 capacity & willingness modifiers
   modifierLines.push(
@@ -426,6 +485,7 @@ function formatAssessmentForPrompt(
 - Fasting protocol: ${FASTING_PROTOCOL_LABEL[assessment.fasting_protocol]}
 - Alcohol use: ${ALCOHOL_USE_LABEL[assessment.alcohol_use]}
 - Cannabis use: ${CANNABIS_USE_LABEL[assessment.cannabis_use]}
+- Cheat-day pattern: ${assessment.cheat_day_pattern ? CHEAT_DAY_PATTERN_LABEL[assessment.cheat_day_pattern] : 'not set'}
 
 What the user said they want:
 ${assessment.nutrition_goal_text ? `"${assessment.nutrition_goal_text}"` : '(nothing volunteered)'}

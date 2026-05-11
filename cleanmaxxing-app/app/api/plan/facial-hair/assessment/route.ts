@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { FacialHairAssessmentInputSchema } from '@/lib/facial-hair/types';
 import { saveFacialHairAssessment } from '@/lib/facial-hair/service';
-import { generateAndSaveFacialHairReport } from '@/lib/facial-hair/generate-report';
+import { streamFacialHairReport } from '@/lib/facial-hair/generate-report';
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -39,10 +39,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  let result;
   try {
-    await generateAndSaveFacialHairReport(supabase, user.id, assessment);
+    result = await streamFacialHairReport(supabase, user.id, assessment);
   } catch (err) {
-    console.error('facial_hair_report_generation_failed', err);
+    console.error('facial_hair_report_prep_failed', err);
     return NextResponse.json(
       {
         error:
@@ -51,6 +52,5 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-
-  return NextResponse.json({ ok: true });
+  return result.toTextStreamResponse();
 }

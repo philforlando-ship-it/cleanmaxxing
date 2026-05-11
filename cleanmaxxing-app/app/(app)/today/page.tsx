@@ -30,6 +30,7 @@ import {
 import { getHairAssessment, getStage4State } from '@/lib/hair/service';
 import { pickPrimaryAction } from '@/lib/today/primary-action-picker';
 import { PrimaryActionCard } from './primary-action-card';
+import { TodayClosureCard } from './today-closure-card';
 import { EscapeHatch } from './escape-hatch';
 import { detectAndRecordMilestones } from '@/lib/milestones/detect';
 import { listRecentMilestones } from '@/lib/milestones/service';
@@ -37,6 +38,7 @@ import { getWeeklyReflectionState } from '@/lib/weekly-reflection/service';
 import { ProgressVisual } from './progress-visual';
 import { selectContextualPrompt } from '@/lib/contextual-prompt/select';
 import { ContextualPromptCard } from './contextual-prompt-card';
+import { getPremiumStatus } from '@/lib/billing/is-premium';
 import { hasSleepAssessment } from '@/lib/sleep/service';
 import { hasStrengthAssessment } from '@/lib/strength/service';
 import { hasSkincareAssessment } from '@/lib/skincare/service';
@@ -44,13 +46,13 @@ import { hasNutritionAssessment } from '@/lib/nutrition/service';
 import { hasCardioAssessment } from '@/lib/cardio/service';
 import { getStyleAssessment } from '@/lib/style/service';
 import { JourneysGrid } from './journeys-grid';
+import { sortJourneys } from '@/lib/today/journeys';
 import { getSkincareLogState } from '@/lib/skincare/log-service';
 import { getFacialHairAssessment } from '@/lib/facial-hair/service';
 import { getFacialHairGroomState } from '@/lib/facial-hair/groom-service';
 import { getTodayCommitmentsState } from '@/lib/sleep/commitments';
 import { daysUntilNext } from '@/lib/hair/stage-5-content';
 import { getSleepState } from '@/lib/sleep/service';
-import { onrampFor, currentState, isBaselineStage } from '@/lib/content/onramp';
 import { getMisterPUserState } from '@/lib/mister-p/user-state';
 // FirstConversationCard removed 2026-05-08 — the two open-ended
 // questions ("what's been getting in the way" / "what didn't stick")
@@ -61,10 +63,8 @@ import { getMisterPUserState } from '@/lib/mister-p/user-state';
 // remain unrendered — kept around for ease of revert + so existing
 // completed answers stay readable. Future cleanup ticket: delete the
 // orphaned files once the change has settled.
-import { getWeeklyCheckInSummary, getStalestGoal } from '@/lib/check-in/service';
 import { appDayFor, daysBetweenAppDays, previousAppDayFor } from '@/lib/date/app-day';
 import { getProfileCompletion } from '@/lib/profile/completion';
-import { getStuckConfidenceSignal } from '@/lib/confidence/stuck-signal';
 
 // Ninety-day progress-photo window. Matches the /profile page's
 // PROGRESS_WINDOW_DAYS and the POVs' typical visible-change timeline.
@@ -113,10 +113,15 @@ export default async function TodayPage({ searchParams }: Props) {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('onboarding_completed_at, tracking_paused_at, timezone')
+    .select('onboarding_completed_at, tracking_paused_at, timezone, age')
     .eq('id', user.id)
     .maybeSingle();
   if (!profile?.onboarding_completed_at) redirect('/onboarding');
+
+  // Age threads into JourneysGrid for tier-aware sorting + display
+  // (cardio's tier flips at 35+). Null when not on file; the helpers
+  // fall back to the static configured tier in that case.
+  const userAge = (profile.age as number | null | undefined) ?? null;
 
   const steppedAway = Boolean(profile.tracking_paused_at);
   const timezone =
@@ -130,45 +135,41 @@ export default async function TodayPage({ searchParams }: Props) {
     timezone,
   );
 
+  // Premium status is read up-front so it can gate the milestone
+  // detector below as well as the contextual-prompt selector further
+  // down. Pro-tier milestones (body-fat brackets, RHR trained-band,
+  // protocol anniversaries, VO2max progression) only fire for Pro
+  // users; free users still get the behavioral/state ones.
+  const { isPremium: userIsPremium } = await getPremiumStatus(user.id);
+
   // Phase D: detect + record any new milestones BEFORE the
   // listRecentMilestones fetch below, so a freshly-fired
   // milestone shows up in the same render. Idempotent — the
   // unique (user_id, trigger_key) index prevents double-fires.
   // Wrapped to never throw; a milestone-detection failure must
   // not break /today.
-  await detectAndRecordMilestones(supabase, user.id).catch((err) => {
-    console.error('milestones_detect_failed', err);
-  });
+  await detectAndRecordMilestones(supabase, user.id, userIsPremium).catch(
+    (err) => {
+      console.error('milestones_detect_failed', err);
+    },
+  );
 
   const [
-    weeklySummary,
-    staleGoal,
-    stuckSignal,
     profileCompletion,
     sleepState,
     misterPUserState,
     reflectionState,
     recentMilestones,
-    { data: goalsRaw },
     { data: photoRowsRaw },
     { data: healthIntegrationRow },
     { data: latestActivityRow },
     { data: weeklyActivityRows },
   ] = await Promise.all([
-    getWeeklyCheckInSummary(supabase, user.id, timezone),
-    getStalestGoal(supabase, user.id, timezone),
-    getStuckConfidenceSignal(supabase, user.id),
     getProfileCompletion(supabase, user.id),
     getSleepState(supabase, user.id),
     getMisterPUserState(supabase, user.id),
     getWeeklyReflectionState(supabase, user.id),
     listRecentMilestones(supabase, user.id),
-    supabase
-      .from('goals')
-      .select('id, title, source_slug, created_at, baseline_stage, target_date, last_phase_seen, chat_execution_mode, chat_execution_prompt_acked')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .order('created_at', { ascending: true }),
     supabase
       .from('progress_photos')
       .select('slot, angle, category, storage_path')
@@ -415,23 +416,6 @@ export default async function TodayPage({ searchParams }: Props) {
     return names.join(' · ') + more;
   })();
 
-  // Cast to the WeeklyFocusCard's ActiveGoal shape. The supabase
-  // client's inferred response type drops columns it doesn't have
-  // in its generated schema (target_date was added in migration
-  // 0020 and the schema types haven't been regenerated yet); the
-  // select string is the source of truth here.
-  const activeGoals = (goalsRaw ?? []) as Array<{
-    id: string;
-    title: string;
-    source_slug: string | null;
-    created_at: string;
-    baseline_stage: string | null;
-    target_date: string | null;
-    last_phase_seen: string | null;
-    chat_execution_mode: boolean | null;
-    chat_execution_prompt_acked: boolean | null;
-  }>;
-
   // Note on health integration state: we used to suppress the
   // manual SleepLogCard when a Vital sync was "fresh" (synced in
   // last 24h). That hid sleep entirely from /today on days the
@@ -526,68 +510,47 @@ export default async function TodayPage({ searchParams }: Props) {
       .join(' ');
   })();
 
-  // Compute the slug set that the WeeklyFocusCard will render today.
-  // Mirrors that card's "newPhaseEntries" filter: an onramp is
-  // authored AND the user's current phase differs from the last
-  // phase they dismissed. Used to gate the per-row "Focus →" button
-  // in the daily check-in so it only appears when there's a live
-  // entry to scroll to.
-  const slugsWithFocus: string[] = [];
-  {
-    const grouped = new Map<string, typeof activeGoals[number]>();
-    for (const g of activeGoals) {
-      if (!g.source_slug) continue;
-      const existing = grouped.get(g.source_slug);
-      if (
-        !existing ||
-        new Date(g.created_at).getTime() <
-          new Date(existing.created_at).getTime()
-      ) {
-        grouped.set(g.source_slug, g);
-      }
-    }
-    for (const [slug, anchor] of grouped) {
-      const onramp = onrampFor(slug);
-      if (!onramp) continue;
-      const stage = isBaselineStage(anchor.baseline_stage)
-        ? anchor.baseline_stage
-        : 'new';
-      const state = currentState(onramp, new Date(anchor.created_at), stage);
-      const currentPhase =
-        state.kind === 'graduated' ? 'graduated' : state.block.range;
-      if (anchor.last_phase_seen !== currentPhase) slugsWithFocus.push(slug);
-    }
-  }
-
   // Hydrate every thread the chat-card picker can show: General
-  // (goal_id IS NULL) + one per active goal. We load up to 50 pairs
-  // per thread without truncating message text, so the visible UI
-  // matches exactly what the user wrote and Mister P answered.
-  // Bounded per-user query (active goals are capped at 5) so the
-  // single round-trip stays cheap.
-  const activeGoalIds = activeGoals.map((g) => g.id);
+  // (journey_slug IS NULL AND goal_id IS NULL) + one per journey.
+  // Per mig 0104 (2026-05-10), the picker is journey-scoped — the
+  // legacy goal-scoped picker retired here, though legacy goal
+  // threads are still readable on /goals/[id]. We load up to 50
+  // pairs per thread without truncating message text, so the
+  // visible UI matches exactly what the user wrote and Mister P
+  // answered. The General-thread filter requires BOTH scope columns
+  // to be null so legacy goal-scoped rows don't bleed into General.
+  const journeyOrdering = sortJourneys(focusAreasArray, userAge);
+  const journeySlugs = journeyOrdering.map((j) => j.slug);
   const { data: threadRowsRaw } = await supabase
     .from('mister_p_queries')
-    .select('question, answer, goal_id, created_at')
+    .select('question, answer, journey_slug, goal_id, created_at')
     .eq('user_id', user.id)
     .or(
-      activeGoalIds.length > 0
-        ? `goal_id.is.null,goal_id.in.(${activeGoalIds.join(',')})`
-        : 'goal_id.is.null',
+      `and(journey_slug.is.null,goal_id.is.null),journey_slug.in.(${journeySlugs.join(',')})`,
     )
     .order('created_at', { ascending: true });
 
   const GENERAL_KEY = '__general__';
   const initialThreads: Record<string, ChatMessage[]> = { [GENERAL_KEY]: [] };
-  for (const g of activeGoals) initialThreads[g.id] = [];
+  for (const slug of journeySlugs) initialThreads[slug] = [];
   for (const row of threadRowsRaw ?? []) {
     const r = row as {
       question: string;
       answer: string;
+      journey_slug: string | null;
       goal_id: string | null;
     };
-    const key = r.goal_id ?? GENERAL_KEY;
-    if (!initialThreads[key]) continue; // skip threads for inactive goals
+    // General thread: both scope columns null. Otherwise route by
+    // journey_slug. Rows with only goal_id set (legacy goal-scoped
+    // history) are skipped here — they remain accessible on
+    // /goals/[id] but don't appear in /today's journey picker.
+    let key: string | null = null;
+    if (r.journey_slug && initialThreads[r.journey_slug]) {
+      key = r.journey_slug;
+    } else if (r.journey_slug === null && r.goal_id === null) {
+      key = GENERAL_KEY;
+    }
+    if (!key) continue;
     initialThreads[key].push(
       { role: 'user', content: r.question },
       { role: 'assistant', content: r.answer },
@@ -599,11 +562,9 @@ export default async function TodayPage({ searchParams }: Props) {
     const arr = initialThreads[key];
     if (arr.length > 100) initialThreads[key] = arr.slice(-100);
   }
-  const chatGoals = activeGoals.map((g) => ({
-    id: g.id,
-    title: g.title,
-    executionMode: Boolean(g.chat_execution_mode),
-    promptAcked: Boolean(g.chat_execution_prompt_acked),
+  const chatJourneys = journeyOrdering.map((j) => ({
+    slug: j.slug,
+    label: j.label,
   }));
 
   // Progress photo surface decisions: which nudge (if any) fires on /today.
@@ -706,30 +667,79 @@ export default async function TodayPage({ searchParams }: Props) {
   // prompt fires (empty Area 2 is better than filler). Takes
   // primaryAction.kind so prompts can suppress themselves when
   // they'd duplicate the Area 1 message.
+  // I1 — premium status (read up-front above) gates the
+  // cross_journey_dependency detector set inside
+  // selectContextualPrompt. Free users get only the
+  // cardio_cut_conflict teaser; Pro users get the full set. Also
+  // passed to ContextualPromptCard so it can render the optional
+  // "How cross-journey signals work" ceiling hint for free users.
   const contextualPrompt = await selectContextualPrompt(
     supabase,
     user.id,
     primaryAction.kind,
     todayAppDay,
+    userIsPremium,
   );
+
+  // Closure signal: render `TodayClosureCard` in place of the primary
+  // action when (a) the picker has nothing pressing, (b) no contextual
+  // prompt is firing, and (c) no event-driven daily tile would render.
+  // Listens to existing self-suppression state on every gating tile —
+  // no new check-off buttons. The "Done for today" affordance was
+  // missing after the Phase A–F redesign retired the unified daily
+  // check-in concept; this restores the closure signal habit-app
+  // users expect.
+  const hasUnresolvedDailyTile =
+    !steppedAway &&
+    (sleepCommitmentsToday.length > 0 ||
+      Boolean(skincareLogState) ||
+      Boolean(facialHairGroomState?.isDue && facialHairAssessment) ||
+      Boolean(showRecoveryCheck && yesterdayStrengthWorkout) ||
+      Boolean(
+        showHairRoutineTile && hairStage4 && hairStage4.target !== null,
+      ) ||
+      showHairPhotoDueTile ||
+      show30dNudge ||
+      show90dNudge ||
+      show180dNudge ||
+      showBaselineNudge ||
+      isFirstRun);
+  const isAllClear =
+    !steppedAway &&
+    primaryAction.kind === 'all_quiet' &&
+    contextualPrompt === null &&
+    !hasUnresolvedDailyTile;
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Today</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Today&rsquo;s Check-in
+          </h1>
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            Your check-in for today. Log and Reflection are there when you
+            need them.
+          </p>
         </div>
         {isDev && <DevResetButton />}
       </div>
 
       <div className="mt-10 space-y-6">
-        <PrimaryActionCard action={primaryAction} />
+        {isAllClear ? (
+          <TodayClosureCard />
+        ) : (
+          <PrimaryActionCard action={primaryAction} />
+        )}
 
         {/* Phase E — Area 2 contextual prompt. Renders zero or
             one prompt; null when nothing fires. Sits between Area
             1 and the rest so it stays in the natural reading flow
             without competing with Area 1 for attention. */}
-        <ContextualPromptCard prompt={contextualPrompt} />
+        <ContextualPromptCard
+          prompt={contextualPrompt}
+          isPremium={userIsPremium}
+        />
 
         {/* All-journeys grid (May 8 redesign). Surfaces every journey
             regardless of focus_areas; ordering is picked-first, with
@@ -737,6 +747,7 @@ export default async function TodayPage({ searchParams }: Props) {
         {!steppedAway && (
           <JourneysGrid
             focusAreas={focusAreasArray}
+            age={userAge}
             assessments={{
               hair: {
                 hasAssessment: hairAssessment !== null,
@@ -939,12 +950,10 @@ export default async function TodayPage({ searchParams }: Props) {
         <ProgressVisual
           recentMilestones={recentMilestones}
           confidenceHistory={reflectionState.history}
-          weeklyTickedCount={weeklySummary.ticked}
-          weeklyPossibleCount={weeklySummary.possible}
         />
 
         <div id="mister-p" className="scroll-mt-16">
-          <MisterPChatCard goals={chatGoals} initialThreads={initialThreads} />
+          <MisterPChatCard journeys={chatJourneys} initialThreads={initialThreads} />
         </div>
 
         <EscapeHatch />

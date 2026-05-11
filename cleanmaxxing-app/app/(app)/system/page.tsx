@@ -60,15 +60,24 @@ export default async function SystemPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  // Fetch the user's active focus_areas. Stored on survey_responses
-  // under question_key='focus_areas' — same source the primary-action
-  // picker reads from.
-  const { data: focusRow } = await supabase
-    .from('survey_responses')
-    .select('response_value')
-    .eq('user_id', user.id)
-    .eq('question_key', 'focus_areas')
-    .maybeSingle();
+  // Fetch the user's active focus_areas + age. Age is needed to
+  // resolve cardio's tier (promotes from tier-3 to tier-2 at 35+),
+  // matching /today's tier-aware behavior so both surfaces tell the
+  // same story.
+  const [{ data: focusRow }, { data: userRow }] = await Promise.all([
+    supabase
+      .from('survey_responses')
+      .select('response_value')
+      .eq('user_id', user.id)
+      .eq('question_key', 'focus_areas')
+      .maybeSingle(),
+    supabase
+      .from('users')
+      .select('age')
+      .eq('id', user.id)
+      .maybeSingle(),
+  ]);
+  const userAge = (userRow as { age: number | null } | null)?.age ?? null;
 
   const rawFocus = (focusRow?.response_value as unknown) ?? null;
   const focusAreas: string[] = Array.isArray(rawFocus)
@@ -101,6 +110,22 @@ export default async function SystemPage() {
   for (const d of docs) {
     if (isTier(d.priority_tier)) byTier[d.priority_tier].push(d);
   }
+
+  // Cardio promotes from tier-3 to tier-2 at age 35+. Mirrors the
+  // age-aware tier resolution in lib/today/journeys.ts (tierForJourney)
+  // so /today and /system tell the same story for the same user.
+  // Reason: VO2max decline accelerates past 35; cardio's downstream
+  // effects on sleep + stress + recovery + all-cause mortality become
+  // more leverage. The static metadata in content/povs/_metadata.json
+  // is the default for users under 35 / users without age on file.
+  if (userAge !== null && userAge >= 35) {
+    const cardioIdx = byTier['tier-3'].findIndex((d) => d.slug === '23-cardio');
+    if (cardioIdx >= 0) {
+      const [cardioRow] = byTier['tier-3'].splice(cardioIdx, 1);
+      byTier['tier-2'].push(cardioRow);
+    }
+  }
+
   for (const tier of TIER_ORDER) {
     byTier[tier].sort((a, b) => cleanTitle(a.title).localeCompare(cleanTitle(b.title)));
   }

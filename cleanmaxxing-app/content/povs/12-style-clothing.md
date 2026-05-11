@@ -59,6 +59,26 @@ __Accent colors__
 
 Use sparingly and primarily near the upper body to draw attention upward\. Color near the face adds visual energy; color in the lower half of the outfit is usually just noise unless deliberately coordinated\.
 
+__Skin undertone — the foundation under the palette__
+
+The safe palette above works on almost every man, but the optimal palette is undertone\-specific\. To identify your undertone: look at the veins on the inside of your wrist in natural light\. Predominantly green veins indicate a warm undertone \(yellow, peachy, golden skin\); predominantly blue or purple veins indicate a cool undertone \(pink, red, blue\-toned skin\); a mix indicates neutral\. A second test: silver jewelry tends to flatter cool undertones, gold flatters warm, both work on neutral\.
+
+For warm undertones \(green\-vein read, gold\-jewelry flatter\): the strongest neutrals are off\-white, cream, camel, olive, brown, warm grey, and rust\. Warm versions of navy and burgundy work well\. Pure white and cool greys can read clinical or pale against warm skin\. Accent colors in the warm family — burnt orange, mustard, terracotta, forest green — pair cleanly\.
+
+For cool undertones \(blue\-vein read, silver\-jewelry flatter\): the strongest neutrals are pure white, true black, cool grey, navy, and charcoal\. Cool jewel tones — sapphire blue, emerald, amethyst, true red — make the face read alive\. Earth tones with warm undertones \(camel, mustard, terracotta\) can dull cool skin and pull color out of the face\.
+
+For neutral undertones: most palettes work\. The advantage is flexibility; the trap is failing to commit to a register\. Pick warm or cool as a base direction and stay consistent across an outfit rather than mixing both within one look\.
+
+__Hair color and eye color — the second layer__
+
+After undertone, hair color and eye color do two specific things\. Hair color sets a baseline contrast against any garment near the face\. Very dark hair against an all\-dark outfit reads heavy without a brighter mid\-layer or a lighter shoe to break the column; very light hair against an all\-light outfit washes out\. The fix is a contrast piece somewhere in the visible silhouette — a darker jacket on a fair\-haired man wearing light layers, a lighter shirt on a dark\-haired man in dark outerwear\.
+
+Eye color is the lower\-frequency lever, but real when used deliberately\. Wearing the eye color \(or its complement\) in a piece near the face — a shirt, a sweater, an inner layer, a scarf — makes the eyes read more vividly\. Blue eyes are amplified by royal blue, navy, or warm orange\-rust accents \(complement\); green eyes by olive, forest, or burgundy \(complement\); brown eyes are flattered by warm mid\-tones — camel, rust, deep cream — that share the brown family\. This is a once\-or\-twice\-per\-outfit move, not a uniform; the point is occasional emphasis, not making every outfit a color statement\.
+
+__Contrast level — the integrating principle__
+
+Your natural contrast — the visual gap between your hair, skin, and eyes — should match the contrast of your outfit\. High natural contrast \(very dark hair against very light skin, dark eyes against light skin, or the reverse\) supports high\-contrast outfits — black with white, navy with cream, dark suit with light shirt\. Medium contrast \(brown hair, medium skin, hazel eyes\) wants medium contrast outfits — tonal pairings, soft contrasts, gradual shifts in shade\. Low contrast \(blonde hair on fair skin, all\-light coloring; or dark hair on dark skin, all\-deep coloring\) supports low\-contrast outfits — monochrome, tonal layering within a single color family, soft transitions\. The miscast look — high\-contrast outfit on a low\-contrast face — is what makes some men look "off" in a way they cannot articulate; the fix is dropping the outfit's contrast to match\.
+
 __Building a Simple, Effective Wardrobe__
 
 You do not need fifty outfits\. You need repeatable winners that cover the majority of real\-life situations:
@@ -193,6 +213,186 @@ A three\-quarter angle rather than straight\-on adds visual depth and naturally 
 Photos set the online ceiling for your appearance\. Improving how you photograph directly affects perception on dating apps, professional profiles, and any social presence\. The skill gap between knowing nothing about photography and applying these principles is large — and entirely closeable with practice\.
 
 *Photos are a skill, not a reflection of your true looks\. Depth, angles, lighting, and controlled tension are what separate a good photo from a flat one — not just genetics\.*
+
+__The Component Library — Per-Garment Decision Rules__
+
+The framework above (body → archetype → tribe → personal taste) sets the strategy. This library sets the tactics — what specific garment to buy in each category once the strategy is locked. Each entry leads with the default position, then names the primary segmentation axis (the one variable that matters most), then the secondary modifiers, then the hard rules. Where a rule depends on a captured variable — wrist_size, dress_code_context, balding pattern, leg_length, build, frame_density, face_shape, age — the report generator should bind to it directly rather than guess.
+
+__Sneakers and shoes — the highest-signal floor item__
+
+Shoes are first in the ROI hierarchy for a reason. Bad shoes drag down a good outfit; good shoes make a basic outfit look intentional. The default menu, in rough order of versatility: clean white or off-white leather sneaker, retro runner or terrace sneaker, brown suede loafer, minimal black leather sneaker, Chelsea boot or lace-up boot, brown suede or leather derby.
+
+Primary axis is dress_code_context. Corporate biases hard toward leather — Goodyear-welted derby or oxford, loafers when culture allows, monk straps for variation, Chelsea boots in cooler months. Business casual is the modal case where clean leather sneakers and loafers both work. Creative and casual_wfh open the door to expressive sneakers (Sambas, Gazelles, retro runners, designer collabs). Blue collar concentrates the shoe budget on the off-work pair — leather sneakers or boots that hold up; everyday is workwear. Mixed wants one pair that ladders both directions, usually a minimal leather sneaker or a clean loafer.
+
+Secondary axis is age plus body. Under-30 tolerates more expressive silhouettes — chunkier skate shoes, retro runners, statement sneakers. 30s upgrade into cleaner sneakers, loafers, and the first quality boots. 40+ avoids overtly teenage silhouettes unless styled with clear intent; they read costume on a 45-year-old. Body matters at the extremes: stocky and heavyset builds look top-heavy in tiny low-profile sneakers; shorter men get swamped by giant chunky soles unless the pants below are wide enough to balance them; athletic builds look best in clean trainers, suede sneakers, loafers, and boots.
+
+Hard rule: athletic running shoes belong with athletic clothes, errands, or athleisure. They do not belong with jeans and a button-down — the silhouette mismatch is the most common avoidable style error in the 32-45 cohort.
+
+*The single highest-ROI replacement most men can make is swapping their everyday running shoes for one clean leather sneaker and one pair of brown leather loafers. The outfit unlock from this alone is larger than any other under-$300 swap available.*
+
+__Eyewear — Glasses and Sunglasses, Beyond Frame Optimization__
+
+This entry extends the standalone Glasses framework above with the full age + body + baldness branching. Eyewear sits on the face and interacts directly with facial proportions; the right pick adds structure and the wrong pick adds nothing or actively detracts. Sunglasses are the more underrated lever because most men own one cheap pair and treat them as utility, when they could be doing real architectural work.
+
+Primary axis is face_shape, carried over from hair_assessments when available. Round faces want rectangular, square, or geometric frames that add angle. Square faces want rounder, panto, aviator, or softened-rectangle frames that take edge off. Long faces want medium-to-tall lenses and avoid tiny narrow frames that elongate further. Oval faces work with almost everything. Wide faces avoid narrow frames that squeeze the temples — the temple compression reads as ill-fitted regardless of how good the frame is otherwise.
+
+The frame-style menu, with what each reads as: thin metal — intellectual, subtle, classic, age-friendly. Thick acetate — confident, stylish, adds structure (the highest-leverage option for most men). Clear frames — modern but skew try-hard; works on younger men, reads incongruent past 35. Round frames — artsy, academic, vintage; commits to a vector. Aviators — masculine, classic, can read dated if too shiny or oversized. Geometric — fashion-forward and current.
+
+Age segmentation. Under-30 tolerates clear, tinted, chunky, experimental frames. 30s prioritize quality, fit, facial harmony. 40+ looks excellent in bold acetate or refined metal — what they should avoid is the flimsy default-prescription rectangular office frame, which drags down even a strong outfit.
+
+Sunglasses: the all-around safe picks are wayfarer, square acetate, aviator, clubmaster, rounded square. Very small sunglasses are trend-dependent and risky; oversized work only if the rest of the outfit supports the drama. The baldness coordination rule fires here — when hair_balding_severity is 3+ or hair_balding_pattern is front_and_vertex / diffuse, sunglasses become near-daily architecture, and the silhouette pick should be acetate (square, wayfarer, aviator) rather than thin-metal or rimless. Same logic for prescription glasses on the bald or balding user — medium-to-thick frames replace the face-framing the hair used to do. Vertex-only balding with an intact hairline doesn't trigger the architecture push; the frontal frame is still there.
+
+__Button-down shirts — frame the face, not the waist__
+
+Button-downs should frame the face and torso. They should not balloon at the waist or pull at the chest. Fit hierarchy: shoulder seam ends at the natural shoulder bone, chest does not pull, sleeves do not billow. Hem geometry decides tuckability — long curved hem is built to tuck; shorter straight hem is built to wear out.
+
+Buttons-open count: top one or two open for casual or date settings. Top button only when wearing a tie or hitting business register. Two open for night out, conditional on chest hair, grooming, and posture supporting the open look. Three or more buttons open enters statement territory and skews sleazy fast — almost never the right call past 30.
+
+Tuck vs untuck — see the standalone Shirt Tucking section above. Body fat is the inflection: higher body fat with a long-curved-hem shirt and correct pants rise tucks cleaner than letting the shirt hang shapelessly over the stomach. Shorter men (leg_length='short' especially) gain visible leg length from tucking with high-rise pants.
+
+Dress code interaction: corporate biases tucked, oxford or twill, point or spread collar, no button-down collar. Business casual tolerates both tucked and untucked depending on shirt cut; the OCBD (oxford button-down) is the casual-friendly default. Creative and casual_wfh open the door to linen, chambray, and prints; untucked dominates. Blue collar concentrates the button-down budget on off-work occasions.
+
+Hard rule: a shirt that requires constant adjustment is the wrong shirt. If the chest pulls, the shoulder rides, or the hem requires re-tucking twice an hour, the size or cut is wrong — no amount of styling fixes it.
+
+__Suits, ties, cufflinks — fit beats fabric beats brand__
+
+Most men look worse in suits because the fit is wrong, not because suits are bad. The single most important fit point is shoulders — a poorly-fitted shoulder is non-negotiable (per the Shoulder-Fit rule above; shoulder reshaping is not a viable alteration). Sleeves should show a quarter to half inch of shirt cuff. Pants want minimal break or a slight break; full break is dated and stocky.
+
+Lapel choice: notch lapel for business and most occasions; peak lapel for formal and double-breasted; shawl for evening and tuxedo. Avoid ultra-skinny lapels (dates the suit fast) and spray-on pants (cuts off circulation visually). Oversized cuts are intentionally fashion-forward and only work in a clear creative context.
+
+Tie width tracks lapel width. Slim tie with slim lapel reads younger and trendier; standard width is the safest cross-context choice. Bow ties only when personality, event, or dress code supports them — otherwise they read costume. Cufflinks belong on formal shirts with French cuffs; silver, gold, onyx, mother-of-pearl are the safe choices. Novelty cufflinks read corny outside genuinely playful events.
+
+Age segmentation. Under-25 keeps it minimum-viable: navy suit, white shirt, clean leather shoes, no cufflinks. 30s shifts the spend toward tailoring and fabric quality. 40+ wins with classic proportions over trends — the suit that looked sharp at 32 in a slim cut should be re-evaluated as the body changes.
+
+Dress code interaction: corporate is the obvious context, and the suit budget should be tier-2 (mid-quality + tailoring) per the Investment Hierarchy. Business casual rarely requires the full suit but benefits from owning one for occasions. Creative gets one well-cut suit in a non-grey-non-navy register (forest, tobacco, chocolate). Blue collar and casual_wfh buy one wedding-and-funerals suit and tailor it well; spending more is wasted.
+
+__Watches — match wrist, outfit formality, and personality__
+
+Wrist size is the primary axis here, captured directly via the assessment. The dial sizing rule:
+
+- Small wrist (under ~6.75" / 17cm): dress watches in the 36–39mm range. Most modern sport and diver silhouettes read oversized on small wrists; avoid anything 42mm+ unless deliberately rugged-styled.
+- Average wrist (~6.75–7.5" / 17–19cm): the design center. 38–41mm works for most cases; 42mm reads larger but still in-range for sport or diver intent.
+- Large wrist (over ~7.5" / 19cm): 40–43mm is the comfortable range. Smaller dress cases (sub-37mm) can read undersized; intentional oversized cases work here in a way they don't on most.
+
+Band biases the formality. Leather strap dresses up — date-night, business, dress occasions. Metal bracelet is versatile and slightly assertive — daily-driver. Rubber and silicone are sport, beach, gym, casual only. NATO and fabric are casual / preppy / rugged.
+
+Desired-look variants map cleanly to archetype. Wealthy-understated reads as simple dress watch, leather strap, sub-40mm — quiet rather than loud. Athletic and rugged read as dive watch or field watch, 40-42mm, on rubber or NATO. Executive reads as steel bracelet, clean dial, mid-size. Creative and eclectic read as vintage, smaller case, leather strap.
+
+Hard rule: a giant watch (44mm+) on an average or small wrist no longer reads "powerful" the way it did in the 2010s. It mostly reads as overcompensation. The trend has turned toward proportional sizing — match the wrist.
+
+__Shorts — length above the knee, almost always__
+
+Shorts should hit above the knee. Long baggy cargo shorts age men badly and are one of the most common 30s-and-up wardrobe failures.
+
+Inseam by intent:
+
+- 5-inch: youthful, athletic, shows leg. Reads young — strongest on lean and muscular legs under 35.
+- 7-inch: the modern safe default. Hits just above the knee on most heights; works on most builds.
+- 9-inch: conservative, better for taller men, leaner cut.
+- Below knee: avoid unless the context is intentional surf or skate styling.
+
+leg_length and body modifiers. leg_length='short' (long-torso, short-legs) benefits from 5–7" to make the leg read longer — same logic as high-rise trousers, applied to shorts. leg_length='long' (short-torso, long-legs) is the only case where 9" stays balanced; otherwise the long-leg silhouette gets stilt-like. build='heavyset' or frame_density='soft' wants 7–9" with structure (not clingy) and darker color. build='slight' or frame_density='lean' looks best in 5–7" with a slight taper.
+
+Hard rule: cargo pockets below the knee on an adult man rarely work outside explicit utility contexts. The bulk reads adolescent.
+
+__Jeans — clean denim beats distressed denim__
+
+The default rotation for adult men is dark wash straight or slim-straight, medium wash relaxed straight for casual, black straight or slim-straight for going-out, light wash for daytime casual. Build the wardrobe around clean denim — distressing dates fast.
+
+Distressing tolerance by age:
+
+- Under 25: distressed denim works in casual / street contexts.
+- 25–35: very light distressing only, casual context only.
+- 35+: usually avoid holes. The exception is a man with a fully-committed alt or rocker identity where the wardrobe coherently supports the read.
+
+Fit. Skinny jeans are mostly dated unless the user has a clear rocker / alt / heritage aesthetic the rest of the outfit supports. Slim-straight and relaxed-straight are the safer modern defaults. Wider pants require intentional shoes (more substantial — lower-profile sneakers or boots) and intentional top proportions (tucked or fitted) — they don't work as a thoughtless choice.
+
+Dress code interaction: corporate doesn't wear jeans except Friday casual, and the right pair is dark wash straight in a non-stretch fabric. Business casual and below open the full palette. Casual_wfh and creative get the most latitude.
+
+__Hats — style or sun protection, not insecurity cover__
+
+Hats need to add something — style, sun protection, function. They cannot read as cover, especially when worn indoors or constantly.
+
+The cap menu and what each reads as: dad cap — safest casual option, near-universal. Forward baseball cap — casual, sporty, safe. Backward cap — youthful, gym, streetwear; works under 30 or with deliberately casual outfits, otherwise reads adolescent. Fitted cap — streetwear, sports. Trucker hat — casual, outdoorsy, ironic. Beanie — cold weather, casual, works well on bald and balding users. Flat cap — older skewing, English heritage register. Bucket hat — beach, festival, streetwear; trend-dependent. Wide-brim — actual sun protection.
+
+Baldness coordination (mirror of the report-prompt rule). When hair_balding_severity is 3+ or hair_balding_pattern is front_and_vertex / diffuse, hats are a legitimately high-leverage accessory. The default picks here are dad cap, fitted cap, beanie, flat cap — chosen for the user's archetype and climate. The hard constraint is that the full outfit must still read as deliberate without the hat. Hat-as-permanent-cover is the insecurity tell. Take it off indoors.
+
+Sun protection: a baseball cap protects scalp and forehead, but not ears or neck. Wide-brim and bucket hats cover more. Cap-plus-sunscreen is strictly better than either alone on sunny days. The skin-cancer case for hat use is genuinely high-ROI on the bald or thinning user.
+
+__Jackets and coats — outerwear is a silhouette multiplier__
+
+Outerwear is one of the highest-leverage attractiveness moves available because it creates silhouette over almost any base outfit. The core menu, with what each reads as: denim jacket — casual, youthful, rugged. Bomber — athletic, masculine, versatile. Field jacket — rugged, mature, masculine. Harrington — clean, classic, understated. Leather jacket — high impact, but fit must be excellent or it reads costume. Overcoat — mature, elegant, status-signaling, winter floor. Rain jacket — functional; works when minimal and fitted, fails when boxy or shiny. Windbreaker — sporty / casual, can read cheap if shiny or oversized.
+
+Body segmentation. build='heavyset' or frame_density='soft' wants structured jackets, darker colors, V-front silhouettes — avoid cropped puffy shapes that emphasize midsection mass. build='slight' or 'athletic' with frame_density='lean' wins with bombers, denim jackets, leather jackets — fitted silhouettes that show the frame. Height matters: shorter men avoid long coats that swallow the legs unless the proportions are managed (high-rise pants below, mid-thigh cut on the coat, not knee-length); taller men own overcoats and field jackets as showcase pieces.
+
+Climate and dress code. Corporate wants the overcoat as the formal floor. Business casual and below get the full menu. Creative and casual_wfh tolerate more experimental pieces — leather, vintage, statement outerwear. The baldness coordination rule also applies here: structured collars (notch lapel, blazer collar, stand-up overcoat collar) do head-framing work for the bald / heavily-balding user that hooded or collarless silhouettes do not.
+
+__Bags — match formality, do not undermine the outfit__
+
+The bag is one of the easiest places to drag down an otherwise-adult outfit. A college-style backpack with a tailored outfit reads incongruent every time.
+
+The menu by formality:
+
+- Backpack (nylon / synthetic): school, commute, tech, casual contexts.
+- Leather backpack: adult casual and business casual; the safe upgrade from synthetic.
+- Messenger bag: urban, professional, slightly academic.
+- Tote (canvas or leather): creative, city, fashion-forward; works well in creative contexts.
+- Crossbody / sling: casual, streetwear, travel.
+- Fanny pack / hip bag: festival, travel, streetwear contexts only; risky in polished settings.
+- Briefcase or portfolio: formal business; pairs with the suit.
+
+Age and dress code interaction. Under-25 in casual_wfh: backpack, sling, tote are all in-bounds. 25–35 stepping into business casual or corporate: leather backpack or messenger as the upgrade target. 35+ in any office context: structured leather or canvas; commuting nylon technical packs are fine for the commute itself but read better when they're not the visible bag at meetings.
+
+__Fitness attire — show the work without performing__
+
+Gym clothes should display the physique without looking like they were chosen to display the physique. The defaults: fitted performance tee, 5–7" workout shorts, clean trainers, tapered joggers, minimal branding.
+
+Tank tops segment hard by build and frame_density. build='athletic' with frame_density='lean' or 'dense' looks the part. build='slight' often does too, when the goal is intentional minimalism. build='heavyset' or frame_density='soft' looks better in a fitted tee — the tank emphasizes upper-arm width and lateral chest in a way that doesn't flatter the soft layer. Huge armholes (the "stringer" style) are bodybuilding-context only; outside the gym they read costume.
+
+Joggers should be tapered, not skin-tight. Pair with clean sneakers. Avoid sagging, shiny, or overly thin fabric — all three read cheap.
+
+Branding rule: minimal. One small logo is fine; head-to-toe brand-coverage reads as advertising rather than dressing.
+
+__Swim trunks — mid-thigh to above the knee__
+
+Most men should land their swim trunks at mid-thigh to just above the knee. Below-the-knee board shorts are dated outside actual surfing.
+
+Inseam by intent and body:
+
+- 5-inch: confident, athletic, stylish; strongest on lean / muscular legs.
+- 7-inch: the modal safe default.
+- 9-inch: conservative; works for taller men who need additional balance.
+- Board shorts below knee: avoid unless surfing.
+
+build='heavyset' wants structured 7-inch trunks in darker colors or vertical pattern — the structured cut creates a silhouette where loose board shorts collapse it. build='slight' with frame_density='lean' or muscular builds with low body fat can wear 5-inch with confidence. Shorter men (leg_length='short') avoid long board shorts, which compress the leg further.
+
+Tight swimwear (speedo-style): only works when the setting supports it — European resort, swim training, very confident physique. In most American casual contexts, fitted trunks are the right read; tight briefs are unforced-error territory.
+
+__Undershirts, tank tops, V-necks — functional, not the outfit__
+
+Undershirts are functional. They should not become the outfit unless body and styling support it.
+
+Under a dress shirt, wear an undershirt when sweating, transparency, or deodorant stains are visible concerns. The right one is thin, close-fitting, light gray or skin-tone, deep V-neck if the shirt is worn open. White crew neck visible under an open-collared shirt is one of the most common avoidable errors — the contrast band reads as accidental, never intentional.
+
+Wife beater / ribbed tank — looks masculine on build='athletic' or 'slight' with frame_density='lean' or 'dense'. Reads sloppy on build='heavyset' or frame_density='soft', or with poor posture. Best context outside that: lounge, gym-adjacent, beach, or layered under an overshirt where it's a visible textural detail rather than the headline.
+
+V-neck tees. Shallow V is fine on most men. Deep V is dated and risky — it reads early-2010s. Crew neck is the safer modern default and the right floor.
+
+__Quarter zips, popped collars, polos — the suburban-business-casual triangle__
+
+Three pieces that share a register and overlap in failure modes.
+
+Quarter zip: a good fit for business casual, golf, finance, and the clean suburban look. Works best with good posture, fitted pants, and clean shoes. Fails when paired with generic jeans and bad shoes — the quarter zip alone is not enough lift to carry a sloppy lower half. Dress code: strong in corporate (Friday casual) and business_casual; weak in creative (reads as the corporate uniform it actually is); fine in casual_wfh.
+
+Popped collar: mostly out of style as a deliberate move. Works on functional outerwear where the collar fights wind or weather — coat collar up against the cold, jacket collar popped on a leather jacket for warmth. Almost never works on a polo as a styling choice; reads as try-hard.
+
+Polos. Strong for athletic and preppy archetypes. Fit should hug the arm lightly without pulling at stomach — the cling-at-waist failure mode is common on build='heavyset' or frame_density='soft', and the fix is a structured polo (heavier fabric, looser cut) or skipping the polo for a fitted button-down. Avoid giant front logos; small chest logo only. Color rules from the framework above apply: skin undertone, eye color, and contrast level all inform polo color picks.
+
+__Color contacts — high-variance, usually low-ROI__
+
+Colored contacts are a risky move. Done well, they can be striking; done poorly, they reduce attractiveness significantly. The success cases are narrow: subtle enhancement close to natural eye color, photoshoots, nightlife, costume / fashion looks for users with already-strong grooming and styling. The failure cases are wider: unnatural ice blue on warm or dark features, visibly-moving or opaque lenses, using contacts as a substitute for actually working on skin, hair, and grooming. The default position for most men is to skip them — the ROI on improving sleep, skincare, and weight management is much higher than the ROI on artificial eye color, and the downside risk is bigger.
+
+*The component library is not a shopping list — it is a decision tree. The right pick in each category depends on the user's body, age, dress code, and the rest of the outfit. The hard part is not knowing the menu; the hard part is matching the menu to the man.*
 
 __The Investment Hierarchy — Where to Spend, Where to Save__
 

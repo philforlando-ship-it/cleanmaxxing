@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { SkincareAssessmentInputSchema } from '@/lib/skincare/types';
 import { saveSkincareAssessment } from '@/lib/skincare/service';
-import { generateAndSaveSkincareReport } from '@/lib/skincare/generate-report';
+import { streamSkincareReport } from '@/lib/skincare/generate-report';
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -39,10 +39,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  let result;
   try {
-    await generateAndSaveSkincareReport(supabase, user.id, assessment);
+    result = await streamSkincareReport(supabase, user.id, assessment);
   } catch (err) {
-    console.error('skincare_report_generation_failed', err);
+    console.error('skincare_report_prep_failed', err);
     return NextResponse.json(
       {
         error:
@@ -51,6 +52,5 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-
-  return NextResponse.json({ ok: true });
+  return result.toTextStreamResponse();
 }

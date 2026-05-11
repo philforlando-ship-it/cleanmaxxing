@@ -141,17 +141,17 @@ export default async function PovsIndexPage() {
       <main className="mx-auto max-w-2xl px-6 py-12">
         <h1 className="text-3xl font-semibold tracking-tight">Your POVs</h1>
         <p className="mt-4 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          You haven&rsquo;t accepted any goals yet, so there are no POVs to
-          show here. The POV docs are the backing material for individual
-          goals — pick a few from the library and their docs will show up
-          here as reference.
+          You haven&rsquo;t started any journeys yet, so there are no POVs
+          to show here. POV docs are the backing material for the journey
+          plans — start a journey from /today and the relevant docs will
+          show up here as reference.
         </p>
         <div className="mt-6">
           <Link
-            href="/goals/library"
+            href="/today"
             className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
           >
-            Browse the library
+            Back to Today
           </Link>
         </div>
       </main>

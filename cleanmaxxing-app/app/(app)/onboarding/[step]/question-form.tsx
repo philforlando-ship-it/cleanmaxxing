@@ -10,6 +10,10 @@ type Props = {
   initialValue: string | null;
   initialDetail?: string | null;
   isLast: boolean;
+  // Cap for the focus_areas multi-choice question — resolved from the
+  // user's premium status server-side. Other multi-choice questions
+  // continue to use question.maxSelections from the static config.
+  focusAreasCap: number;
 };
 
 const MOTIVATION_DETAIL_TRIGGER = 'something-specific-bothering-me';
@@ -20,7 +24,12 @@ export function QuestionForm({
   initialValue,
   initialDetail,
   isLast,
+  focusAreasCap,
 }: Props) {
+  const isFocusAreas = question.key === 'focus_areas';
+  const effectiveMaxSelections = isFocusAreas
+    ? focusAreasCap
+    : question.maxSelections;
   const router = useRouter();
   const [value, setValue] = useState<string>(() => {
     if (initialValue) return initialValue;
@@ -70,8 +79,8 @@ export function QuestionForm({
       const n = Number(v);
       if (n < (question.min ?? 1) || n > (question.max ?? 10)) return 'Pick a value on the scale.';
     }
-    if (question.type === 'multi-choice' && question.maxSelections && multi.length > question.maxSelections) {
-      return `Pick up to ${question.maxSelections}.`;
+    if (question.type === 'multi-choice' && effectiveMaxSelections && multi.length > effectiveMaxSelections) {
+      return `Pick up to ${effectiveMaxSelections}.`;
     }
     return null;
   }
@@ -129,9 +138,14 @@ export function QuestionForm({
       <h1 className="text-2xl font-semibold leading-tight tracking-tight">
         {question.prompt}
       </h1>
-      {question.helper && (
-        <p className="mt-2 text-sm text-zinc-500">{question.helper}</p>
-      )}
+      {(() => {
+        const helper = isFocusAreas
+          ? `Pick up to ${focusAreasCap}.`
+          : question.helper;
+        return helper ? (
+          <p className="mt-2 text-sm text-zinc-500">{helper}</p>
+        ) : null;
+      })()}
 
       <div className="mt-8 flex-1">
         {question.type === 'number' && (
@@ -242,7 +256,7 @@ export function QuestionForm({
                     if (checked) {
                       setMulti(multi.filter((v) => v !== opt.value));
                     } else {
-                      if (question.maxSelections && multi.length >= question.maxSelections) return;
+                      if (effectiveMaxSelections && multi.length >= effectiveMaxSelections) return;
                       setMulti([...multi, opt.value]);
                     }
                   }}
@@ -256,9 +270,9 @@ export function QuestionForm({
                 </button>
               );
             })}
-            {question.maxSelections && (
+            {effectiveMaxSelections && (
               <p className="mt-1 text-xs text-zinc-500">
-                {multi.length} / {question.maxSelections} selected
+                {multi.length} / {effectiveMaxSelections} selected
               </p>
             )}
           </div>

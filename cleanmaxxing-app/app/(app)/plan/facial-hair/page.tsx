@@ -134,8 +134,8 @@ export default async function FacialHairPlanPage({ searchParams }: Props) {
             </p>
             <p className="mt-2 text-[13px] text-zinc-500 dark:text-zinc-400">
               {hasBaselinePhoto
-                ? 'Premium users: once your plan is written, you can try any of the 12 reference styles on your onboarding baseline photo.'
-                : 'Premium users get an extra: try any of the 12 styles on your face. Capture a baseline photo at /photos first to enable it.'}
+                ? 'Pro users: once your plan is written, you can try any of the 12 reference styles on your onboarding baseline photo.'
+                : 'Pro users get an extra: try any of the 12 styles on your face. Capture a baseline photo at /photos first to enable it.'}
             </p>
           </>
         )}

@@ -7,6 +7,7 @@ import type {
   ArmLength,
   Build,
   ClosetAuditSelections,
+  DressCodeContext,
   FrameDensity,
   LegLength,
   ShoulderWidth,
@@ -14,6 +15,7 @@ import type {
   StyleAssessment,
   StyleAssessmentInput,
   StyleReportInputModifiers,
+  WristSize,
 } from './types';
 import { deriveFrameEstimate } from './types';
 
@@ -111,6 +113,8 @@ export async function saveStyleAssessment(
     frame_density: input.frame_density,
     skin_undertone: input.skin_undertone,
     eye_color: input.eye_color,
+    wrist_size: input.wrist_size,
+    dress_code_context: input.dress_code_context,
     frame_estimate,
     current_archetype: input.current_archetype,
     target_archetype: input.target_archetype,
@@ -371,6 +375,9 @@ function rowToAssessment(row: unknown): StyleAssessment {
     frame_density: (r.frame_density as FrameDensity | null) ?? null,
     skin_undertone: (r.skin_undertone as SkinUndertone | null) ?? null,
     eye_color: (r.eye_color as StyleAssessment['eye_color']) ?? null,
+    wrist_size: (r.wrist_size as WristSize | null) ?? null,
+    dress_code_context:
+      (r.dress_code_context as DressCodeContext | null) ?? null,
     frame_estimate: r.frame_estimate as StyleAssessment['frame_estimate'],
     current_archetype:
       r.current_archetype as StyleAssessment['current_archetype'],

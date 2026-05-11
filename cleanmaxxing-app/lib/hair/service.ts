@@ -5,20 +5,21 @@
 // to decide whether to surface the call-to-action.
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { GOAL_TEMPLATES } from '@/content/goal-templates';
 import type {
+  BaldingPattern,
+  BaldingSeverity,
   CurrentRoutine,
   CutFamily,
+  EarProminence,
+  GrayingLevel,
   HairAssessment,
   HairAssessmentInput,
+  HeadShape,
+  HeadSize,
   ReportInputModifiers,
   Stage2Path,
 } from './types';
 import { CUT_FAMILIES } from './types';
-
-// The Pattern D goal that the Stage 2 "Treat" branch links to. Stable
-// template id from content/goal-templates.ts.
-const HAIR_LOSS_GOAL_TEMPLATE_ID = 'hair-loss-start-plan';
 
 export async function getHairAssessment(
   supabase: SupabaseClient,
@@ -66,6 +67,12 @@ export async function saveHairAssessment(
     hair_type_strand: input.hair_type_strand,
     hair_type_pattern: input.hair_type_pattern,
     hair_type_density: input.hair_type_density,
+    head_shape: input.head_shape,
+    head_size: input.head_size,
+    graying_level: input.graying_level,
+    ear_prominence: input.ear_prominence,
+    balding_pattern: input.balding_pattern,
+    balding_severity: input.balding_severity,
     current_routine: input.current_routine,
     hair_goal_text: input.hair_goal_text,
     updated_at: new Date().toISOString(),
@@ -435,111 +442,27 @@ export async function logHairRoutineForToday(
   return { count: totalCount, isComplete };
 }
 
-// Stage 2 — lock in the user's path. For 'treat', also tries to link or
-// create the Pattern D hair-loss-start-plan goal. Returns a flag the
-// caller can surface in the UI when the link failed (e.g. POV doc
-// lookup miss) — locking in the path itself still succeeds even if the
-// goal handoff doesn't, because the path is the user's decision and
-// shouldn't be blocked by a downstream ops issue.
+// Stage 2 — lock in the user's path. Pre-Tier-3, the 'treat' path
+// also created a hair-loss-start-plan goal in the legacy goals
+// table as a state marker. That marker retired with the goals
+// system (Tier 3 cleanup, 2026-05-10) — stage_2_path itself is now
+// the single source of truth for the user's chosen path, and the
+// stage_2_pattern_d_goal_id column was dropped alongside the goals
+// table.
 export async function lockInStage2(
   supabase: SupabaseClient,
   userId: string,
   path: Stage2Path,
-): Promise<{ patternDGoalId: string | null; linkFailed: boolean }> {
-  let patternDGoalId: string | null = null;
-  let linkFailed = false;
-
-  if (path === 'treat') {
-    try {
-      patternDGoalId = await ensureHairLossGoal(supabase, userId);
-    } catch (err) {
-      console.error('hair_stage_2_pattern_d_link_failed', err);
-      linkFailed = true;
-    }
-  }
-
+): Promise<void> {
   const { error } = await supabase
     .from('hair_assessments')
     .update({
       stage_2_path: path,
       stage_2_locked_in_at: new Date().toISOString(),
-      stage_2_pattern_d_goal_id: patternDGoalId,
       updated_at: new Date().toISOString(),
     })
     .eq('user_id', userId);
   if (error) throw error;
-
-  return { patternDGoalId, linkFailed };
-}
-
-// Find an existing active hair-loss-start-plan goal for the user, or
-// create one. Returns the goal id. Throws if pov_docs lookup misses or
-// the insert fails (the caller catches and degrades gracefully).
-//
-// This bypasses /api/goals/add because the Stage 2 Treat handoff is
-// intentional same-domain stacking with the Pattern A hair plan — that
-// endpoint's domain-overlap check would correctly flag it as a duplicate
-// concern, but for THIS flow it's by design.
-async function ensureHairLossGoal(
-  supabase: SupabaseClient,
-  userId: string,
-): Promise<string> {
-  const template = GOAL_TEMPLATES[HAIR_LOSS_GOAL_TEMPLATE_ID];
-  if (!template) {
-    throw new Error(
-      `Goal template ${HAIR_LOSS_GOAL_TEMPLATE_ID} not found in registry.`,
-    );
-  }
-
-  // Existing active goal? Link to it instead of creating a duplicate.
-  const { data: existing } = await supabase
-    .from('goals')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('status', 'active')
-    .eq('source_slug', template.source_slug)
-    .maybeSingle();
-  if (existing) return (existing as { id: string }).id;
-
-  // Resolve tier + category from pov_docs (same path /api/goals/add uses).
-  const { data: doc } = await supabase
-    .from('pov_docs')
-    .select('priority_tier, category')
-    .eq('slug', template.source_slug)
-    .maybeSingle();
-  if (!doc) {
-    throw new Error(
-      `pov_docs has no row for ${template.source_slug} — cannot resolve tier.`,
-    );
-  }
-  const docRow = doc as {
-    priority_tier: string | null;
-    category: string | null;
-  };
-  if (!docRow.priority_tier) {
-    throw new Error(
-      `pov_docs row for ${template.source_slug} missing priority_tier.`,
-    );
-  }
-
-  const { data: inserted, error: insErr } = await supabase
-    .from('goals')
-    .insert({
-      user_id: userId,
-      title: template.title,
-      description: template.description,
-      category: docRow.category,
-      priority_tier: docRow.priority_tier,
-      goal_type: template.goal_type,
-      source_slug: template.source_slug,
-      baseline_stage: 'new',
-      status: 'active',
-      source: 'system_suggested',
-    })
-    .select('id')
-    .single();
-  if (insErr) throw insErr;
-  return (inserted as { id: string }).id;
 }
 
 // Coerce a Supabase row into the HairAssessment shape. The jsonb
@@ -560,6 +483,12 @@ function rowToAssessment(row: unknown): HairAssessment {
     hair_type_strand: r.hair_type_strand as HairAssessment['hair_type_strand'],
     hair_type_pattern: r.hair_type_pattern as HairAssessment['hair_type_pattern'],
     hair_type_density: r.hair_type_density as HairAssessment['hair_type_density'],
+    head_shape: coerceHeadShape(r.head_shape),
+    head_size: coerceHeadSize(r.head_size),
+    graying_level: coerceGrayingLevel(r.graying_level),
+    ear_prominence: coerceEarProminence(r.ear_prominence),
+    balding_pattern: coerceBaldingPattern(r.balding_pattern),
+    balding_severity: coerceBaldingSeverity(r.balding_severity),
     current_routine: coerceRoutine(r.current_routine),
     hair_goal_text: (r.hair_goal_text as string | null) ?? null,
     report_text: (r.report_text as string | null) ?? null,
@@ -573,8 +502,6 @@ function rowToAssessment(row: unknown): HairAssessment {
     stage_1_completed_at: (r.stage_1_completed_at as string | null) ?? null,
     stage_2_path: coerceStage2Path(r.stage_2_path),
     stage_2_locked_in_at: (r.stage_2_locked_in_at as string | null) ?? null,
-    stage_2_pattern_d_goal_id:
-      (r.stage_2_pattern_d_goal_id as string | null) ?? null,
     stage_3_recommendation_text:
       (r.stage_3_recommendation_text as string | null) ?? null,
     stage_3_generated_at: (r.stage_3_generated_at as string | null) ?? null,
@@ -612,6 +539,66 @@ function rowToAssessment(row: unknown): HairAssessment {
 
 function coerceStage2Path(value: unknown): Stage2Path | null {
   if (value === 'treat' || value === 'monitor' || value === 'transition') {
+    return value;
+  }
+  return null;
+}
+
+function coerceHeadShape(value: unknown): HeadShape | null {
+  if (value === 'round' || value === 'oval' || value === 'oblong') {
+    return value;
+  }
+  return null;
+}
+
+function coerceHeadSize(value: unknown): HeadSize | null {
+  if (value === 'small' || value === 'average' || value === 'large') {
+    return value;
+  }
+  return null;
+}
+
+function coerceGrayingLevel(value: unknown): GrayingLevel | null {
+  if (
+    value === 'none' ||
+    value === 'scattered' ||
+    value === 'peppered' ||
+    value === 'salt_and_pepper' ||
+    value === 'mostly_gray'
+  ) {
+    return value;
+  }
+  return null;
+}
+
+function coerceEarProminence(value: unknown): EarProminence | null {
+  if (value === 'low' || value === 'average' || value === 'prominent') {
+    return value;
+  }
+  return null;
+}
+
+function coerceBaldingPattern(value: unknown): BaldingPattern | null {
+  if (
+    value === 'none' ||
+    value === 'front' ||
+    value === 'vertex' ||
+    value === 'front_and_vertex' ||
+    value === 'diffuse'
+  ) {
+    return value;
+  }
+  return null;
+}
+
+function coerceBaldingSeverity(value: unknown): BaldingSeverity | null {
+  if (
+    value === 0 ||
+    value === 1 ||
+    value === 2 ||
+    value === 3 ||
+    value === 4
+  ) {
     return value;
   }
   return null;

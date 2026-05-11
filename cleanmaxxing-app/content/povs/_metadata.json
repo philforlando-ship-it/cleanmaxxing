@@ -66,5 +66,8 @@
   "56-identity-beyond-appearance": { "priority_tier": "tier-4",            "category": "perception-identity",    "age_segments": ["18-24", "25-32", "33-40"] },
   "57-skin-conditions":           { "priority_tier": "conditional-tier-1", "category": "biological-foundation",  "age_segments": ["18-24", "25-32", "33-40"], "parent_focus_area": "skincare" },
   "58-hair-systems-prosthetics":  { "priority_tier": "conditional-tier-1", "category": "grooming-refinement",    "age_segments": ["18-24", "25-32", "33-40"], "parent_focus_area": "hair" },
+  "59-off-track-recovery":        { "priority_tier": "meta",               "category": "system",                 "age_segments": ["18-24", "25-32", "33-40"], "parent_focus_area": "body_composition" },
+  "60-longevity-stack":           { "priority_tier": "advanced",           "category": "biological-foundation",  "age_segments": ["25-32", "33-40"] },
+  "61-hair-styling-products":     { "priority_tier": "tier-2",             "category": "grooming-refinement",    "age_segments": ["18-24", "25-32", "33-40"], "parent_focus_area": "hair" },
   "clavicular-framework-evaluation": { "priority_tier": "meta",            "category": "context",                "age_segments": ["18-24", "25-32", "33-40"] }
 }

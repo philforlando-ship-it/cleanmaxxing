@@ -4,8 +4,9 @@
 // the nutrition prescription. Live signal: last 7 days strength
 // session count.
 
-import { generateText } from 'ai';
+import { streamText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
+import type { StreamTextResult, ToolSet } from 'ai';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { kindForAnthropicModel, logCostEvent } from '@/lib/cost-events/log';
 import { povFor } from '@/lib/content/pov';
@@ -14,7 +15,8 @@ import { getCardioAssessment } from '@/lib/cardio/service';
 import { getNutritionAssessment } from '@/lib/nutrition/service';
 import { getSleepState } from '@/lib/sleep/service';
 import { getCurrentFatigueState } from '@/lib/weekly-reflection/service';
-import { getHrvTrend } from '@/lib/vital/wearable-signals';
+import { getHrvTrend, getRhrSignals } from '@/lib/vital/wearable-signals';
+import { isPremium as resolveIsPremium } from '@/lib/billing/is-premium';
 import {
   CURRENT_SPLIT_LABEL,
   DAYS_PER_WEEK_LABEL,
@@ -37,11 +39,13 @@ import { getRecommendedExercises } from './recommended-exercises';
 const REPORT_MODEL = 'claude-sonnet-4-6';
 const POV_SLUG = '19-strength-training';
 
-export async function generateAndSaveStrengthReport(
+// Streaming entrypoint — see lib/nutrition/generate-report.ts for the
+// pattern + rationale.
+export async function streamStrengthReport(
   supabase: SupabaseClient,
   userId: string,
   assessment: StrengthAssessment,
-): Promise<{ report_text: string }> {
+): Promise<StreamTextResult<ToolSet, never>> {
   const profile = await getUserProfile(supabase, userId);
 
   const [
@@ -52,7 +56,7 @@ export async function generateAndSaveStrengthReport(
     sleepState,
     feedbackSummary,
     fatigueState,
-    hrvSignal,
+    userIsPremium,
   ] = await Promise.all([
     supabase.from('users').select('age').eq('id', userId).maybeSingle(),
     getRecentStrengthSessionCount(supabase, userId, 7),
@@ -61,8 +65,21 @@ export async function generateAndSaveStrengthReport(
     getSleepState(supabase, userId),
     getStrengthFeedbackSummary(supabase, userId, 7),
     getCurrentFatigueState(supabase, userId),
-    getHrvTrend(supabase, userId),
+    resolveIsPremium(userId),
   ]);
+
+  // Wearable signals are Pro-gated. Free users get nulls and the
+  // prompt's existing "no signal" branch handles it without any
+  // template-level tier branching.
+  const [hrvSignal, rhrSignals] = userIsPremium
+    ? await Promise.all([
+        getHrvTrend(supabase, userId),
+        getRhrSignals(supabase, userId),
+      ])
+    : [
+        { trend: null, recent_avg_ms: null, baseline_avg_ms: null },
+        { rolling_avg_rhr_14d: null, baseline_rhr: null },
+      ];
 
   const modifiers: StrengthReportInputModifiers = {
     training_experience: profile.training_experience,
@@ -85,6 +102,8 @@ export async function generateAndSaveStrengthReport(
     fatigue_level: fatigueState?.level ?? null,
     fatigue_source: fatigueState?.source ?? null,
     hrv_trend: hrvSignal.trend,
+    rhr_rolling_avg_14d: rhrSignals.rolling_avg_rhr_14d,
+    rhr_baseline: rhrSignals.baseline_rhr,
     sleep_rolling_avg_hours: sleepState.rollingAvgHours,
     sleep_rolling_count: sleepState.rollingCount,
     selected_exercise_slugs: assessment.selected_exercise_slugs,
@@ -118,30 +137,36 @@ export async function generateAndSaveStrengthReport(
 
   const userPrompt = formatAssessmentForPrompt(assessment, modifiers);
 
-  const { text, usage } = await generateText({
+  return streamText({
     model: anthropic(REPORT_MODEL),
     system,
     prompt: userPrompt,
     temperature: 0.5,
+    onFinish: async ({ text, usage }) => {
+      logCostEvent({
+        user_id: userId,
+        kind: kindForAnthropicModel(REPORT_MODEL),
+        tokens_input: usage?.inputTokens,
+        tokens_output: usage?.outputTokens,
+        feature: 'strength_report',
+      });
+      await saveStrengthReport(supabase, userId, {
+        report_text: text.trim(),
+        report_model: REPORT_MODEL,
+        report_input_modifiers: modifiers,
+      });
+    },
   });
+}
 
-  logCostEvent({
-    user_id: userId,
-    kind: kindForAnthropicModel(REPORT_MODEL),
-    tokens_input: usage?.inputTokens,
-    tokens_output: usage?.outputTokens,
-    feature: 'strength_report',
-  });
-
-  const reportText = text.trim();
-
-  await saveStrengthReport(supabase, userId, {
-    report_text: reportText,
-    report_model: REPORT_MODEL,
-    report_input_modifiers: modifiers,
-  });
-
-  return { report_text: reportText };
+export async function generateAndSaveStrengthReport(
+  supabase: SupabaseClient,
+  userId: string,
+  assessment: StrengthAssessment,
+): Promise<{ report_text: string }> {
+  const result = await streamStrengthReport(supabase, userId, assessment);
+  const text = await result.text;
+  return { report_text: text.trim() };
 }
 
 function formatAssessmentForPrompt(
@@ -254,6 +279,20 @@ function formatAssessmentForPrompt(
   modifierLines.push(
     `- hrv_trend (sleep_logs.hrv_rmssd 7-day vs 28-day baseline; passive evidence layer; directional only, NEVER cite the number): ${
       modifiers.hrv_trend ?? 'no signal — insufficient data or no wearable'
+    }`,
+  );
+  modifierLines.push(
+    `- rhr_rolling_avg_14d (sleep_logs.resting_heart_rate 14-day rolling avg in bpm; Pro-gated — may be null for free users): ${
+      modifiers.rhr_rolling_avg_14d == null
+        ? 'no signal — insufficient data, no wearable, or free tier'
+        : String(modifiers.rhr_rolling_avg_14d)
+    }`,
+  );
+  modifierLines.push(
+    `- rhr_baseline (earliest 14-day RHR window — the user's starting point): ${
+      modifiers.rhr_baseline == null
+        ? 'no baseline'
+        : String(modifiers.rhr_baseline)
     }`,
   );
 

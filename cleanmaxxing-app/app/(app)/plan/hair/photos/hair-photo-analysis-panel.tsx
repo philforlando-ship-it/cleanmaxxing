@@ -115,7 +115,7 @@ export function HairPhotoAnalysisPanel({ sessions, isPremium }: Props) {
               'Both sessions need a Front or Top-down photo to compare.',
           );
         } else if (err.error === 'premium_required') {
-          setError('This is a Premium feature.');
+          setError('This is a Pro feature.');
         } else if (err.error === 'session_not_completed') {
           setError('Both sessions must be marked complete first.');
         } else {
@@ -179,7 +179,7 @@ export function HairPhotoAnalysisPanel({ sessions, isPremium }: Props) {
           Observational read
         </h3>
         <span className="text-[11px] uppercase tracking-wider text-zinc-500">
-          Premium · Optional
+          Pro · Optional
         </span>
       </div>
       <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">

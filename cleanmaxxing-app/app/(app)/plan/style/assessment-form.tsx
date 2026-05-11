@@ -16,6 +16,10 @@ import { useState, useTransition } from 'react';
 import { CMSpinner } from '@/components/cm-logo';
 import { useRouter } from 'next/navigation';
 import {
+  StreamingPlanPreview,
+  consumeTextStream,
+} from '@/components/streaming-plan-preview';
+import {
   ARCHETYPE_FEASIBILITY_HINT,
   ARCHETYPE_HINT,
   ARCHETYPE_LABEL,
@@ -24,6 +28,8 @@ import {
   BUILD_LABEL,
   BUILDS,
   CLOSET_STATE_LABEL,
+  DRESS_CODE_CONTEXT_LABEL,
+  DRESS_CODE_CONTEXTS,
   EYE_COLOR_LABEL,
   EYE_COLORS,
   FRAME_DENSITIES,
@@ -34,16 +40,20 @@ import {
   SHOULDER_WIDTHS,
   SKIN_UNDERTONE_LABEL,
   SKIN_UNDERTONES,
+  WRIST_SIZE_LABEL,
+  WRIST_SIZES,
   type ArmLength,
   type Build,
   type ClosetState,
   type CurrentArchetype,
+  type DressCodeContext,
   type EyeColor,
   type FrameDensity,
   type LegLength,
   type ShoulderWidth,
   type SkinUndertone,
   type StyleArchetype,
+  type WristSize,
 } from '@/lib/style/types';
 import {
   FEASIBILITY_TIER_LABEL,
@@ -81,6 +91,8 @@ export type StyleAssessmentInitialValues = {
   frame_density: FrameDensity | null;
   skin_undertone: SkinUndertone | null;
   eye_color: EyeColor | null;
+  wrist_size: WristSize | null;
+  dress_code_context: DressCodeContext | null;
   current_archetype: CurrentArchetype;
   target_archetype: StyleArchetype;
   closet_state: ClosetState;
@@ -105,6 +117,7 @@ export function StyleAssessmentForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [streamingText, setStreamingText] = useState<string | null>(null);
 
   const [shoulderWidth, setShoulderWidth] = useState<ShoulderWidth | null>(
     initialValues?.shoulder_width ?? null,
@@ -125,6 +138,13 @@ export function StyleAssessmentForm({
   const [eyeColor, setEyeColor] = useState<EyeColor | null>(
     initialValues?.eye_color ?? null,
   );
+  const [wristSize, setWristSize] = useState<WristSize | null>(
+    initialValues?.wrist_size ?? null,
+  );
+  const [dressCodeContext, setDressCodeContext] =
+    useState<DressCodeContext | null>(
+      initialValues?.dress_code_context ?? null,
+    );
   const [currentArchetype, setCurrentArchetype] =
     useState<CurrentArchetype | null>(
       initialValues?.current_archetype ?? null,
@@ -149,6 +169,8 @@ export function StyleAssessmentForm({
     if (!legLength) return setError('Pick a leg length.');
     if (!skinUndertone) return setError('Pick a skin undertone.');
     if (!eyeColor) return setError('Pick an eye color.');
+    if (!wristSize) return setError('Pick a wrist size.');
+    if (!dressCodeContext) return setError('Pick a dress code.');
     if (!currentArchetype) return setError('Pick a current archetype.');
     if (!targetArchetype) return setError('Pick a target archetype.');
     if (!closetState) return setError('Pick your closet state.');
@@ -161,6 +183,8 @@ export function StyleAssessmentForm({
       leg_length: legLength,
       skin_undertone: skinUndertone,
       eye_color: eyeColor,
+      wrist_size: wristSize,
+      dress_code_context: dressCodeContext,
       current_archetype: currentArchetype,
       target_archetype: targetArchetype,
       closet_state: closetState,
@@ -180,12 +204,18 @@ export function StyleAssessmentForm({
           };
           throw new Error(body.error ?? `Save failed (${res.status})`);
         }
+        await consumeTextStream(res, setStreamingText);
         router.push('/plan/style');
         router.refresh();
       } catch (err) {
+        setStreamingText(null);
         setError((err as Error).message);
       }
     });
+  }
+
+  if (streamingText !== null) {
+    return <StreamingPlanPreview text={streamingText} />;
   }
 
   return (
@@ -325,6 +355,44 @@ export function StyleAssessmentForm({
 
       <Question
         number={8}
+        title="Wrist size"
+        helper="The honest read so Mister P sizes watch recs to your frame. Use a flexible tape if you have one — under 6.75 in / 17 cm is small, 6.75–7.5 in is average, over 7.5 in is large. Eyeball it if you don't."
+      >
+        <div className="space-y-2">
+          {WRIST_SIZES.map((w) => (
+            <RadioRow
+              key={w}
+              checked={wristSize === w}
+              onChange={() => setWristSize(w)}
+              disabled={pending}
+              label={WRIST_SIZE_LABEL[w]}
+              name="wrist_size"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={9}
+        title="Where do your clothes mostly need to land?"
+        helper="The work environment your wardrobe actually serves. Two clean-minimalists in finance vs. WFH need different shoes / outerwear / shirts — this is the axis the report uses to bias formality. Pick the one closest to your weekly average."
+      >
+        <div className="space-y-2">
+          {DRESS_CODE_CONTEXTS.map((d) => (
+            <RadioRow
+              key={d}
+              checked={dressCodeContext === d}
+              onChange={() => setDressCodeContext(d)}
+              disabled={pending}
+              label={DRESS_CODE_CONTEXT_LABEL[d]}
+              name="dress_code_context"
+            />
+          ))}
+        </div>
+      </Question>
+
+      <Question
+        number={10}
         title="What are you dressing as today?"
         helper="The honest current read — what your wardrobe actually looks like, not what you'd like it to be. 'No clear archetype yet' is a fine answer."
       >
@@ -344,7 +412,7 @@ export function StyleAssessmentForm({
       </Question>
 
       <Question
-        number={9}
+        number={11}
         title="What are you moving toward?"
         helper="Pick the one closest to who you want to look like in a year. Each option is tagged with the honest per-user read — strong fit, workable, or fights your frame — based on the body data you just entered. Not a hard gate, but worth weighing before you commit."
       >
@@ -374,7 +442,7 @@ export function StyleAssessmentForm({
       </Question>
 
       <Question
-        number={10}
+        number={12}
         title="What's the state of your closet?"
         helper="Drives whether the plan focuses on auditing what you have or building from scratch."
       >
@@ -393,7 +461,7 @@ export function StyleAssessmentForm({
       </Question>
 
       <Question
-        number={11}
+        number={13}
         title="Anything you want Mister P to know? (optional)"
         helper="One line. Specific situation, a stuck point, a budget reality."
       >

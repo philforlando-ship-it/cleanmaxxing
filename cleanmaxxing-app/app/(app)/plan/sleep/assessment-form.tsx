@@ -12,6 +12,10 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { CMSpinner } from '@/components/cm-logo';
 import {
+  StreamingPlanPreview,
+  consumeTextStream,
+} from '@/components/streaming-plan-preview';
+import {
   BIGGEST_BLOCKER_LABEL,
   PRIMARY_CONCERN_LABEL,
   SCHEDULE_CONSISTENCY_LABEL,
@@ -81,6 +85,7 @@ export function SleepAssessmentForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [streamingText, setStreamingText] = useState<string | null>(null);
 
   const [primaryConcerns, setPrimaryConcerns] = useState<
     SleepPrimaryConcern[]
@@ -174,12 +179,18 @@ export function SleepAssessmentForm({
           };
           throw new Error(body.error ?? `Save failed (${res.status})`);
         }
+        await consumeTextStream(res, setStreamingText);
         router.push('/plan/sleep');
         router.refresh();
       } catch (err) {
+        setStreamingText(null);
         setError((err as Error).message);
       }
     });
+  }
+
+  if (streamingText !== null) {
+    return <StreamingPlanPreview text={streamingText} />;
   }
 
   return (

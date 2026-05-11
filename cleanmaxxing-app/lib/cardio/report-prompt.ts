@@ -164,6 +164,12 @@ Modifier handling — apply these without narrating them back:
 
 - **modality_preference includes 'swimming'** → Zone 2 swimming is excellent low-impact aerobic work. Name that pace calibration is harder in water (talk test doesn't work) — use perceived effort: comfortable rhythm with clear breathing effort.
 
+- **modality_preference includes 'elliptical_stair_machine'** (migration 0101) → low-impact gym cardio bucket covering both elliptical and stair machine. Treat the two as different stimuli even though they share a modality slot:
+  - Elliptical = steady-state Zone 2. Talk-test calibration works. Best for the knee_pain cohort that wants 30–40 min aerobic work without joint cost. Same Zone 2 outcome as cycling or rowing; pick whichever the user finds least monotonous.
+  - Stair machine = high-RPE muscular endurance with strong glute/quad emphasis. Default it to interval-style use (e.g., 30s hard / 60s easy at moderate level) rather than steady-state — sustained stair work reads more like leg endurance training than cardio. Watch the recovery cost when the user is also lifting heavy lower-body 2+ times per week.
+  - Equipment requirement: full_gym OR classes_studio (stair machines + ellipticals aren't in most homes). If equipment_access doesn't include either, name the friction — they'll need a gym to actually do this.
+  - For knee_pain users specifically, this is a top-3 recommendation (alongside cycling and rowing). Lead with it when they pick it.
+
 - **C1 — equipment_access (multi-select array — drives modality recommendations)**: name 1-3 specific modalities that fit what the user actually has across the FULL set of equipment they listed. Don't recommend modalities they can't run.
   - includes 'full_gym' → all modalities on the table
   - includes 'home_treadmill' → incline walking + running + treadmill HIIT (Norwegian 4×4 works on a treadmill)
@@ -195,7 +201,7 @@ Modifier handling — apply these without narrating them back:
   - 'very_active' (construction / warehouse / trades / heavy labor) → name explicitly: "your day job is doing the daily-movement layer for you. The cardio prescription downweights — heart-health framing remains, but you don't need to stack volume." For 'very_active' + age 45+, recommend 1-2 Zone 2 sessions weekly + 1 HIIT max for VO2max specifically. For 'very_active' + age under 35, step count + 1 cardio session weekly is sufficient.
 
 - **injury_constraints (modality exclusions)**:
-  - 'knee_pain' → exclude running and high-impact running drills. Substitute incline walking, cycling, rowing, swimming, or elliptical. Name explicitly: "with knee pain on file, running stays off — cycling and rowing give the same Zone 2 outcome."
+  - 'knee_pain' → exclude running and high-impact running drills. Substitute incline walking, cycling, rowing, swimming, or elliptical_stair_machine (lead with elliptical specifically — it's the canonical knee-friendly aerobic answer). Name explicitly: "with knee pain on file, running stays off — cycling, rowing, and the elliptical give the same Zone 2 outcome."
   - 'back_pain' (lower or mid) → exclude rowing under heavy load (form breakdown under fatigue is a back-injury risk for sustained sets). Recommend cycling, walking, or pool work. If user has access to rowing only, prescribe shorter sessions (20 min max) at strict form-first intensity.
   - 'hip_pain' → exclude running and stair-climbing. Cycling (with bike fit attention) and swimming work. Walking on flat is usually fine; hills aggravate.
   - 'respiratory_condition' (asthma, COPD, etc.) → no HIIT first. Build Zone 2 base for at least 8 weeks; only consider HIIT after a clean asymptomatic stretch and (per the escalation criteria) a physician check-in. Recommend the modality the user already tolerates without breathing distress.

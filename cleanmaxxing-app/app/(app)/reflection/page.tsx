@@ -34,14 +34,11 @@ import { getCheckpointState } from '@/lib/checkpoint/service';
 import { getQuarterlySurveyState } from '@/lib/quarterly-survey/service';
 import { getCurrentWeeklyLetter } from '@/lib/weekly-letter/service';
 import { pickSelfAcceptanceNudge } from '@/lib/self-acceptance/risk-signals';
-import { getStalestGoal } from '@/lib/check-in/service';
-import { templateBySlug } from '@/content/goal-templates';
 import { WeeklyLetterCard } from '@/app/(app)/today/weekly-letter-card';
 import { WeeklyReflectionCard } from '@/app/(app)/today/weekly-reflection-card';
 import { MonthlyCheckpointCard } from '@/app/(app)/today/monthly-checkpoint-card';
 import { QuarterlySurveyCard } from '@/app/(app)/today/quarterly-survey-card';
 import { SelfAcceptanceNudgeCard } from '@/app/(app)/today/self-acceptance-nudge-card';
-import { StaleGoalCard } from '@/app/(app)/today/stale-goal-card';
 import { ProcessOutcomeChart } from '@/app/(app)/today/process-outcome-chart';
 
 export default async function ReflectionPage() {
@@ -64,7 +61,6 @@ export default async function ReflectionPage() {
     quarterlyState,
     weeklyLetter,
     selfAcceptanceNudge,
-    staleGoal,
     activeJourneys,
     profileRow,
   ] = await Promise.all([
@@ -73,7 +69,6 @@ export default async function ReflectionPage() {
     getQuarterlySurveyState(supabase, user.id),
     getCurrentWeeklyLetter(supabase, user.id),
     pickSelfAcceptanceNudge(supabase, user.id),
-    getStalestGoal(supabase, user.id, timezone),
     getActiveJourneysForReflection(supabase, user.id),
     supabase
       .from('user_profile')
@@ -91,13 +86,17 @@ export default async function ReflectionPage() {
   // fires when ALL pending surfaces are absent AND there's no
   // reflection history yet.
   // Phase F: stuck-confidence signal retired in favor of the
-  // directional_flag question on the reflection itself.
+  // directional_flag question on the reflection itself. Goals-era
+  // stale-goal nudge retired in Sub-ship B (2026-05-10) — no users
+  // on the goals model anymore. Monthly checkpoint kept, but its
+  // goal-tracking content was stripped in the same ship; it's now
+  // a slim month-in reflection (days-since-start + confidence delta
+  // + "what preoccupied you" prompt).
   const hasAnyPending =
     weeklyLetter !== null ||
     selfAcceptanceNudge !== null ||
     checkpointState.status === 'eligible' ||
-    quarterlyState.status === 'eligible' ||
-    staleGoal !== null;
+    quarterlyState.status === 'eligible';
   const hasReflectionHistory = reflectionState.history.length > 0;
   const hasAnyContent = hasAnyPending || hasReflectionHistory;
 
@@ -153,17 +152,13 @@ export default async function ReflectionPage() {
             />
           )}
 
-          {selfAcceptanceNudge && (() => {
-            const tmpl = templateBySlug(selfAcceptanceNudge.recommendedSlug);
-            const title = tmpl?.title ?? 'this short read';
-            return (
-              <SelfAcceptanceNudgeCard
-                patternLabel={selfAcceptanceNudge.intro}
-                recommendedSlug={selfAcceptanceNudge.recommendedSlug}
-                recommendedTitle={title}
-              />
-            );
-          })()}
+          {selfAcceptanceNudge && (
+            <SelfAcceptanceNudgeCard
+              patternLabel={selfAcceptanceNudge.intro}
+              recommendedSlug={selfAcceptanceNudge.recommendedSlug}
+              recommendedTitle={selfAcceptanceNudge.recommendedTitle}
+            />
+          )}
 
           <div id="weekly-reflection" className="scroll-mt-16">
             <WeeklyReflectionCard
@@ -180,8 +175,6 @@ export default async function ReflectionPage() {
           {quarterlyState.status === 'eligible' && (
             <QuarterlySurveyCard prior={quarterlyState.prior} />
           )}
-
-          {staleGoal && <StaleGoalCard staleGoal={staleGoal} />}
 
           {/* Phase F: render the v2 process+outcome chart. Replaces
               ConfidenceTrendChart on this surface. The chart shows

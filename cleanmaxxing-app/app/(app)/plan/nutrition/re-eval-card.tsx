@@ -12,6 +12,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { CMSpinner } from '@/components/cm-logo';
 
 type Props = {
   // ISO timestamp of the most recent generation OR re-eval, whichever
@@ -91,6 +92,7 @@ export function NutritionReEvalCard({ lastEvaluatedAt }: Props) {
             ? 'Mister P is rewriting your plan…'
             : 'Re-evaluate now'}
         </button>
+        {pending && <CMSpinner size="xs" />}
       </div>
     </section>
   );

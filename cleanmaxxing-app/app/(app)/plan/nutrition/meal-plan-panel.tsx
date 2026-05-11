@@ -8,6 +8,7 @@
 import { useState, useTransition } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { CMSpinner } from '@/components/cm-logo';
 
 type PlanSummary = {
   id: string;
@@ -72,6 +73,7 @@ export function MealPlanPanel({ initialPlan, hasComputedTargets }: Props) {
               ? 'Re-roll'
               : 'Generate this week'}
         </button>
+        {pending && <CMSpinner size="xs" />}
       </div>
       <p className="mt-1 text-[12px] text-zinc-500 dark:text-zinc-400">
         Built off your calorie + macro targets, fasting protocol, and food
