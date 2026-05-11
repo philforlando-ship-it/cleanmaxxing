@@ -35,6 +35,7 @@ import {
   StrengthAssessmentForm,
   type StrengthAssessmentInitialValues,
 } from './assessment-form';
+import { AsymmetryProgrammingPanel } from './asymmetry-panel';
 import { ExerciseLibraryPanel } from './exercise-library-panel';
 import { EquipmentListCard } from './equipment-list-card';
 import { WarmupMobilityPanel } from './warmup-mobility-panel';
@@ -256,6 +257,10 @@ export default async function StrengthPlanPage({ searchParams }: Props) {
                 ) : null;
               })()
             : null}
+
+          <AsymmetryProgrammingPanel
+            asymmetryConcern={assessment.asymmetry_concern}
+          />
 
           <ExerciseLibraryPanel
             equipmentAccess={assessment.equipment_access}
