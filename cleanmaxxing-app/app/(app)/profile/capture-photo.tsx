@@ -1,13 +1,20 @@
 'use client';
 
 // Client-side capture flow for a progress photo. Shows the consent
-// copy, accepts a file from the camera (mobile) or file picker
-// (desktop), previews it client-side before upload so the user can
-// see what they're actually sending, and then POSTs to the upload
-// API. No bytes leave the device until the user clicks Upload.
+// copy, captures via the in-browser camera (with face-oval / body
+// overlay + baseline ghost during the live preview, so the user can
+// line up before they shoot), previews the captured frame with the
+// post-capture baseline ghost toggle, then POSTs to the upload API.
+// No bytes leave the device until the user clicks Upload. Falls
+// back to a file picker if getUserMedia is unavailable or denied.
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CameraCapture } from '@/components/camera-capture';
+import {
+  FaceOvalOverlay,
+  FullBodyOverlay,
+} from '@/components/photo-overlays';
 
 type Slot = 'baseline' | 'progress_30d' | 'progress_90d' | 'progress_180d';
 type Category = 'face' | 'body';
@@ -47,38 +54,40 @@ export function CapturePhoto({
   angle = 'front',
 }: Props) {
   const router = useRouter();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
+  const [pendingBlob, setPendingBlob] = useState<Blob | File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showGhost, setShowGhost] = useState(true);
   const hasGhost = slot !== 'baseline' && Boolean(baselineUrl);
 
-  function onPick(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0] ?? null;
-    if (!f) return;
+  function onCapture(blob: Blob) {
     setError(null);
-    setFile(f);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(URL.createObjectURL(f));
+    setPendingBlob(blob);
+    setPreviewUrl(URL.createObjectURL(blob));
   }
 
   function cancel() {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setFile(null);
+    setPendingBlob(null);
     setPreviewUrl(null);
     setError(null);
-    if (inputRef.current) inputRef.current.value = '';
   }
 
   async function upload() {
-    if (!file) return;
+    if (!pendingBlob) return;
     setUploading(true);
     setError(null);
     try {
       const form = new FormData();
-      form.append('file', file);
+      // Filename helps debugging in storage; processPhotoUpload
+      // re-encodes server-side so extension is informational only.
+      const filename =
+        pendingBlob instanceof File
+          ? pendingBlob.name
+          : `${category}-${slot}-${angle}.jpg`;
+      form.append('file', pendingBlob, filename);
       form.append('slot', slot);
       form.append('category', category);
       form.append('angle', angle);
@@ -91,7 +100,7 @@ export function CapturePhoto({
         throw new Error(body.error ?? `Upload failed (${res.status})`);
       }
       if (previewUrl) URL.revokeObjectURL(previewUrl);
-      setFile(null);
+      setPendingBlob(null);
       setPreviewUrl(null);
       router.refresh();
     } catch (err) {
@@ -136,27 +145,15 @@ export function CapturePhoto({
               from the corresponding card on this page.
             </p>
           </div>
-          {hasGhost && baselineUrl && (
-            <div className="mt-4">
-              <p className="text-xs uppercase tracking-wider text-zinc-500">
-                Baseline reference
-              </p>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={baselineUrl}
-                alt="Baseline reference"
-                className="mt-2 max-h-48 w-full rounded-lg object-contain opacity-60"
-              />
-            </div>
-          )}
           <div className="mt-5">
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-              capture="user"
-              onChange={onPick}
-              className="block w-full text-sm text-zinc-700 file:mr-4 file:rounded-lg file:border-0 file:bg-zinc-900 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-zinc-800 dark:text-zinc-300 dark:file:bg-zinc-100 dark:file:text-zinc-900"
+            <CameraCapture
+              facingMode="user"
+              overlay={
+                category === 'body' ? <FullBodyOverlay /> : <FaceOvalOverlay />
+              }
+              referencePhotoUrl={hasGhost ? baselineUrl : null}
+              onCapture={onCapture}
+              disabled={uploading}
             />
           </div>
           {error && (

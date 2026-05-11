@@ -1,16 +1,27 @@
 'use client';
 
-// Single-angle hair photo capture. Adapted from the existing
-// CapturePhoto pattern (file picker + preview + upload) but scoped to
-// one HairPhotoAngle at a time, with the existing photo (if any) shown
-// inline so the user knows the slot is filled.
+// Single-angle hair photo capture, Stage 5 quarterly anchor.
 //
-// 25 MB cap, JPEG/PNG/WebP — same as progress photos. The route does
-// the actual size + mime validation; we keep the input filter narrow
-// to surface obvious mistakes early.
+// 2026-05-11: switched from bare <input type="file" capture> to the
+// CameraCapture component with per-angle alignment overlay + previous
+// session photo as a faint ghost behind the live preview. The ghost
+// is the load-bearing change — Stage 5's value (AI compare-across-
+// sessions) only works if framing matches between sessions, and the
+// old flow gave the user zero help lining up.
+//
+// 25 MB cap, JPEG/PNG/WebP/HEIC — same as progress photos. The route
+// does the actual size + mime validation; CameraCapture's canvas
+// output is always JPEG so HEIC only matters on the file fallback.
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CameraCapture } from '@/components/camera-capture';
+import {
+  CrownOverlay,
+  FaceOvalOverlay,
+  HairlineOverlay,
+  SideProfileOverlay,
+} from '@/components/photo-overlays';
 import {
   HAIR_PHOTO_ANGLE_HINT,
   HAIR_PHOTO_ANGLE_LABEL,
@@ -24,6 +35,24 @@ type Props = {
   existingSignedUrl: string | null;
 };
 
+// Map each angle to the alignment overlay that fits its framing.
+function overlayFor(angle: HairPhotoAngle): React.ReactNode {
+  switch (angle) {
+    case 'front':
+    case 'styled':
+      return <FaceOvalOverlay />;
+    case 'hairline':
+      return <HairlineOverlay />;
+    case 'crown':
+    case 'top_down':
+      return <CrownOverlay />;
+    case 'side_left':
+      return <SideProfileOverlay />;
+    case 'side_right':
+      return <SideProfileOverlay mirror />;
+  }
+}
+
 export function HairPhotoCapture({
   angle,
   sessionId,
@@ -31,37 +60,36 @@ export function HairPhotoCapture({
   existingSignedUrl,
 }: Props) {
   const router = useRouter();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
+  const [pendingBlob, setPendingBlob] = useState<Blob | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function onPick(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0] ?? null;
-    if (!f) return;
+  function onCapture(blob: Blob) {
     setError(null);
-    setFile(f);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(URL.createObjectURL(f));
+    setPendingBlob(blob);
+    setPreviewUrl(URL.createObjectURL(blob));
   }
 
-  function cancel() {
+  function cancelPreview() {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setFile(null);
+    setPendingBlob(null);
     setPreviewUrl(null);
     setError(null);
-    if (inputRef.current) inputRef.current.value = '';
   }
 
   async function upload() {
-    if (!file) return;
+    if (!pendingBlob) return;
     setUploading(true);
     setError(null);
     try {
       const form = new FormData();
-      form.append('file', file);
+      // Name the part 'hair-{angle}.jpg' — the route reads form.file
+      // and runs it through processPhotoUpload regardless of name,
+      // but a meaningful filename helps when debugging storage.
+      form.append('file', pendingBlob, `hair-${angle}.jpg`);
       form.append('angle', angle);
       form.append('session_id', sessionId);
       const res = await fetch('/api/plan/hair/photos/upload', {
@@ -73,7 +101,7 @@ export function HairPhotoCapture({
         throw new Error(body.error ?? `Upload failed (${res.status})`);
       }
       if (previewUrl) URL.revokeObjectURL(previewUrl);
-      setFile(null);
+      setPendingBlob(null);
       setPreviewUrl(null);
       router.refresh();
     } catch (err) {
@@ -154,11 +182,11 @@ export function HairPhotoCapture({
             </button>
             <button
               type="button"
-              onClick={cancel}
+              onClick={cancelPreview}
               disabled={uploading}
               className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
             >
-              Cancel
+              Retake
             </button>
           </div>
         </>
@@ -166,13 +194,12 @@ export function HairPhotoCapture({
 
       {!previewUrl && (
         <div className="mt-3">
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-            capture="user"
-            onChange={onPick}
-            className="block w-full text-xs text-zinc-700 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-zinc-900 hover:file:bg-zinc-200 dark:text-zinc-300 dark:file:bg-zinc-800 dark:file:text-zinc-100 dark:hover:file:bg-zinc-700"
+          <CameraCapture
+            facingMode="user"
+            overlay={overlayFor(angle)}
+            referencePhotoUrl={existingSignedUrl}
+            onCapture={onCapture}
+            disabled={uploading}
           />
         </div>
       )}
