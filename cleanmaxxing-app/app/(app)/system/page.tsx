@@ -148,7 +148,18 @@ export default async function SystemPage() {
 
       {focusAreas.length > 0 && (
         <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
-          Active focus areas: {focusAreas.join(', ').replace(/_/g, ' ')}
+          Active focus areas:{' '}
+          {focusAreas
+            .map((fa) => {
+              const label = (
+                FOCUS_AREA_LABEL as Record<string, string | undefined>
+              )[fa];
+              // Fallback for legacy survey slugs not in the canonical
+              // FOCUS_AREA_LABEL map (e.g., 'fitness', 'skin',
+              // 'grooming' from older onboarding vocabulary).
+              return label ?? fa.replace(/_/g, ' ');
+            })
+            .join(', ')}
         </p>
       )}
 
