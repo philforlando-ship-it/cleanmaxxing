@@ -64,7 +64,8 @@ export default async function SettingsPage() {
           </div>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
             Compare what&rsquo;s on the free plan against what Pro
-            unlocks — all ten journeys, cross-journey logic, wearable
+            unlocks — all eight core journeys plus advanced protocols
+            (GLP-1, TRT, peptides), cross-journey logic, wearable
             integration, photo-aware Mister P, and the AI vision
             features.
           </p>

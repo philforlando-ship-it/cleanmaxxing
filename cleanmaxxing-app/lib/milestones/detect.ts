@@ -58,12 +58,15 @@ function groupStrengthByWeek(
   return buckets;
 }
 
-// `isPremium` gates the Pro-tier milestones (body-fat brackets, RHR
-// trained-band, protocol anniversaries, VO2max progression). Free
-// users get the behavioral / state milestones — protein-floor,
-// strength-consistency, hair stage 4, weight 5lb below start, sleep
-// consistency, wardrobe reeval — but not the wearable-derived or
-// protocol-tenure ones, which is what the Pro pricing claims.
+// `isPremium` gates the Pro-tier milestones (RHR trained-band,
+// VO2max progression, protocol anniversaries). Body-fat brackets
+// were ungated 2026-05-11 — self-report, no wearable cost, no AI
+// call per firing; they belong on the free side alongside the other
+// depth-of-tracking framework readings (protein-floor, strength-
+// consistency). Free users get: protein-floor, strength-consistency,
+// hair stage 4, weight 5lb below start, sleep consistency, wardrobe
+// reeval, body-fat brackets. Pro adds the wearable-derived and
+// protocol-tenure ones.
 export async function detectAndRecordMilestones(
   supabase: SupabaseClient,
   userId: string,
@@ -256,18 +259,22 @@ export async function detectAndRecordMilestones(
     { threshold: 15, key: STATIC_TRIGGER_KEYS.BODY_FAT_BELOW_15 },
     { threshold: 12, key: STATIC_TRIGGER_KEYS.BODY_FAT_BELOW_12 },
   ];
-  if (isPremium) {
-    for (const bracket of brackets) {
-      if (
-        detectBodyFatBelow({
-          bf_pct_self_estimate: profile.bf_pct_self_estimate,
-          threshold: bracket.threshold,
-        })
-      ) {
-        await recordMilestoneIfNew(supabase, userId, bracket.key, {
-          bf_pct_self_estimate: profile.bf_pct_self_estimate,
-        });
-      }
+  // Ungated 2026-05-11 — body-fat brackets are self-report (categorical
+  // bf_pct_self_estimate field), no wearable cost, no per-firing AI
+  // call. Gating them as Pro was an over-collection of value into the
+  // paid tier; they parallel the free protein-floor + strength-
+  // consistency milestones (depth-of-tracking framework readings) and
+  // belong on the free side.
+  for (const bracket of brackets) {
+    if (
+      detectBodyFatBelow({
+        bf_pct_self_estimate: profile.bf_pct_self_estimate,
+        threshold: bracket.threshold,
+      })
+    ) {
+      await recordMilestoneIfNew(supabase, userId, bracket.key, {
+        bf_pct_self_estimate: profile.bf_pct_self_estimate,
+      });
     }
   }
 

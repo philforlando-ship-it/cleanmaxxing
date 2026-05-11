@@ -55,11 +55,18 @@ const GROUPS: FeatureGroup[] = [
     heading: 'Journeys',
     rows: [
       {
-        label: 'Active journeys',
+        label: 'Core journeys',
         description:
-          'Hair, body composition, strength, cardio, sleep, skincare, style, facial hair, GLP-1, TRT. Full assessment + personalized report on each.',
+          'Hair, body composition, strength, cardio, sleep, skincare, style, facial hair. Full assessment + personalized report on each. Pattern A: a stage-gated plan you work through over weeks and months.',
         free: '3 of your choice',
-        premium: 'All 10',
+        premium: 'All 8',
+      },
+      {
+        label: 'Advanced protocols',
+        description:
+          'GLP-1, TRT, peptides. Pattern D: Considering / On Protocol / Off-ramp tracking for advanced-tools territory. Both tiers get the full protocol surface — assessment, event logging, intervention end. Pro adds the 3-month anniversary milestone and the wearable signal layering on top.',
+        free: 'Full tracking',
+        premium: '+ Anniversaries + wearable layer',
       },
       {
         label: 'Plan re-evaluation',
@@ -97,9 +104,9 @@ const GROUPS: FeatureGroup[] = [
       {
         label: 'Milestone tracking',
         description:
-          'Free covers weight thresholds and sleep consistency. Pro adds RHR trained-band, VO2max progression, body-fat brackets, and protocol anniversaries.',
-        free: 'Basic',
-        premium: 'Full',
+          'Free covers weight thresholds, sleep consistency, protein-floor autopilot, strength consistency, wardrobe re-eval, hair Stage 4, and body-fat brackets. Pro adds RHR trained-band, VO2max progression, and protocol anniversaries (GLP-1 / nutrition / strength).',
+        free: 'Self-report',
+        premium: '+ Wearable & tenure',
       },
     ],
   },
@@ -123,9 +130,9 @@ const GROUPS: FeatureGroup[] = [
       {
         label: 'Cross-journey awareness in answers',
         description:
-          'Mister P answers from every journey you have active. Free covers your 3 picks; Pro spans all 10 — so the more you track, the more connections he can see (cardio fatigue affecting strength, GLP-1 reshaping nutrition, hair density influencing style, etc.).',
-        free: '3 journeys',
-        premium: 'All 10',
+          'Mister P answers from every journey you have active. Free covers your 3 core picks; Pro spans all 8 core + active advanced protocols — so the more you track, the more connections he can see (cardio fatigue affecting strength, GLP-1 reshaping nutrition, hair density influencing style, etc.).',
+        free: '3 core',
+        premium: 'All 8 core + protocols',
       },
     ],
   },
@@ -207,12 +214,14 @@ export default async function PricingPage() {
       {/* Hero */}
       <section className="max-w-3xl">
         <h1 className="text-4xl font-semibold tracking-tight text-zinc-900 sm:text-5xl dark:text-zinc-100">
-          Three journeys free. Ten on Pro.
+          Three core journeys free. All eight plus advanced protocols on Pro.
         </h1>
         <p className="mt-6 text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
           The more journeys you track, the more Mister P sees the
-          connections between them. Free covers 3; Pro unlocks all 10
-          plus the wearable + vision features that feed the picture.
+          connections between them. Free covers 3 of the 8 core journeys;
+          Pro unlocks all 8 plus the advanced protocols (GLP-1, TRT,
+          peptides) and the wearable + vision features that feed the
+          picture.
         </p>
       </section>
 
@@ -325,7 +334,8 @@ export default async function PricingPage() {
               Upgrade to Pro.
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-              All ten journeys, the cross-journey logic, wearable
+              All eight core journeys plus the advanced protocols
+              (GLP-1, TRT, peptides), the cross-journey logic, wearable
               integration, photo-aware Mister P, unlimited chat, and
               the AI vision features. Cancel anytime from the billing
               page; your three free journeys stay yours either way.
@@ -378,8 +388,9 @@ export default async function PricingPage() {
 // Renders a feature-matrix cell. Booleans collapse to a check (true)
 // or a thin dash (false). Strings render verbatim — used for limit-
 // based rows ("3 of your choice", "10 / month") and tier-quality rows
-// ("Basic", "Limited"). The `emphasized` flag bumps text weight on
-// the Pro column so the "All 10" / "Unlimited" reads as the headline.
+// ("Self-report", "Unlimited"). The `emphasized` flag bumps text weight
+// on the Pro column so headline values ("All 8", "Unlimited") read as
+// the headline.
 function FeatureCell({
   value,
   emphasized = false,
