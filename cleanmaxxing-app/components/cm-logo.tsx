@@ -1,5 +1,10 @@
 // Cleanmaxxing brand assets. Three source PNGs:
-//   /cleanmaxxing-logo.png  — full mark + wordmark stacked (homepage hero)
+//   /cleanmaxxing-logo.png  — full mark + wordmark stacked (homepage
+//                             hero) — preprocessed via
+//                             scripts/strip-logo-bg.ts (white bg →
+//                             alpha 0, mark → opaque black, edges
+//                             semi-transparent for anti-aliasing).
+//                             Renders cleanly on any background.
 //   /cleanmaxxing-logo2.png — CM monogram only (nav, spinner) — has
 //                             true alpha transparency (preprocessed
 //                             via PIL: white bg → alpha 0, black mark
@@ -11,9 +16,9 @@
 //   /cleanmaxxing-logo3.png — CLEANMAXXING wordmark only (nav)
 //
 // Dark-mode handling differs by asset:
-//   - logo2.png (transparent bg): just apply `dark:invert` to flip
-//     the black mark → white. No blend-mode needed.
-//   - logo.png + logo3.png (opaque white bg): keep the legacy
+//   - logo.png + logo2.png (transparent bg): just apply `dark:invert`
+//     to flip the black mark → white. No blend-mode needed.
+//   - logo3.png (opaque white bg): keep the legacy
 //     `mix-blend-multiply dark:invert dark:mix-blend-screen` so the
 //     white bg disappears against page chrome.
 
@@ -76,12 +81,15 @@ type LogoProps = {
 };
 
 // Full stacked logo (CM + wordmark). Used on the homepage hero.
+// Uses MARK_FILTER (no blend-mode) because logo.png has true alpha
+// transparency now — the strip-logo-bg.ts preprocessor ran the same
+// pipeline that logo2.png went through.
 export function CleanmaxxingLogo({ size = 'md', className = '' }: LogoProps) {
   return (
     <img
       src="/cleanmaxxing-logo.png"
       alt="Cleanmaxxing"
-      className={`${FULL_DIM[size]} w-auto ${BLEND_FILTER} ${className}`}
+      className={`${FULL_DIM[size]} w-auto ${MARK_FILTER} ${className}`}
     />
   );
 }
