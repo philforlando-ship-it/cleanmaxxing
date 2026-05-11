@@ -25,6 +25,8 @@ import { requirePremium } from '@/lib/billing/is-premium';
 import { generateTryOnImage } from '@/lib/hair/try-on/generate';
 import { buildFacialHairTryOnPrompt } from '@/lib/facial-hair/try-on/prompt';
 import { countFacialHairTryOnsLast24h } from '@/lib/facial-hair/try-on/service';
+import { processPhotoUpload } from '@/lib/photos/process-upload';
+import { trimTryOnHistory } from '@/lib/photos/try-on-retention';
 
 const BUCKET = 'progress-photos';
 const SIGNED_URL_TTL_SECONDS = 60 * 60;
@@ -132,12 +134,17 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Run the OpenAI PNG through the same processor user uploads use:
+  // sharp resize → JPEG q85 → EXIF strip + auto-rotate. ~75% storage
+  // savings vs raw PNG.
+  const processed = await processPhotoUpload(result.imageBuffer);
+
   const timestamp = Date.now();
-  const storagePath = `${userId}/facial-hair-tryons/${targetStyle}-${timestamp}.png`;
+  const storagePath = `${userId}/facial-hair-tryons/${targetStyle}-${timestamp}.${processed.ext}`;
   const { error: uploadErr } = await service.storage
     .from(BUCKET)
-    .upload(storagePath, result.imageBuffer, {
-      contentType: 'image/png',
+    .upload(storagePath, processed.buffer, {
+      contentType: processed.contentType,
       upsert: false,
     });
   if (uploadErr) {
@@ -173,6 +180,18 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
+
+  // Trim older try-ons of this same style down to TRY_ON_KEEP_PER_KEY
+  // newest. Per-style retention so a user exploring multiple styles
+  // keeps a useful history per style. Best-effort.
+  await trimTryOnHistory(service, {
+    table: 'facial_hair_try_ons',
+    keyColumn: 'target_style',
+    keyValue: targetStyle,
+    userId,
+  }).catch((err) =>
+    console.error('facial_hair_try_on_retention_failed', err),
+  );
 
   const { data: signed } = await service.storage
     .from(BUCKET)

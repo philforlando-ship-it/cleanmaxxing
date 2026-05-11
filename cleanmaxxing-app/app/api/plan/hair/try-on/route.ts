@@ -25,6 +25,8 @@ import { getHairAssessment } from '@/lib/hair/service';
 import { generateTryOnImage } from '@/lib/hair/try-on/generate';
 import { buildTryOnPrompt } from '@/lib/hair/try-on/prompt';
 import { countTryOnsLast24h } from '@/lib/hair/try-on/service';
+import { processPhotoUpload } from '@/lib/photos/process-upload';
+import { trimTryOnHistory } from '@/lib/photos/try-on-retention';
 
 const BUCKET = 'progress-photos';
 const SIGNED_URL_TTL_SECONDS = 60 * 60;
@@ -130,13 +132,18 @@ export async function POST() {
     );
   }
 
-  // Save the generated image to storage + persist the row.
+  // Run the OpenAI PNG through the same processor user uploads use:
+  // sharp resize → JPEG q85 → EXIF strip + auto-rotate. Cuts the
+  // saved file ~75% (~2MB PNG → ~400KB JPEG) without quality loss
+  // a user would notice.
+  const processed = await processPhotoUpload(result.imageBuffer);
+
   const timestamp = Date.now();
-  const storagePath = `${userId}/hair-tryons/${assessment.stage_1_cut_family}-${timestamp}.png`;
+  const storagePath = `${userId}/hair-tryons/${assessment.stage_1_cut_family}-${timestamp}.${processed.ext}`;
   const { error: uploadErr } = await service.storage
     .from(BUCKET)
-    .upload(storagePath, result.imageBuffer, {
-      contentType: 'image/png',
+    .upload(storagePath, processed.buffer, {
+      contentType: processed.contentType,
       upsert: false,
     });
   if (uploadErr) {
@@ -174,6 +181,17 @@ export async function POST() {
       { status: 500 },
     );
   }
+
+  // Trim older try-ons of this same cut down to TRY_ON_KEEP_PER_KEY
+  // newest. Per-cut retention so a user exploring many cut families
+  // keeps a useful history per family. Best-effort — failure to trim
+  // doesn't fail the user's request, just logs.
+  await trimTryOnHistory(service, {
+    table: 'hair_try_ons',
+    keyColumn: 'cut_family',
+    keyValue: assessment.stage_1_cut_family,
+    userId,
+  }).catch((err) => console.error('hair_try_on_retention_failed', err));
 
   // Mint a signed URL so the client can render the image without a
   // round-trip through a separate "get my try-ons" endpoint.

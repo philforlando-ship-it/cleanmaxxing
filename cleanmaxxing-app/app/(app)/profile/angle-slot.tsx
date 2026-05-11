@@ -104,7 +104,7 @@ export function AngleSlot({
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
         capture="user"
         onChange={onPick}
         className="hidden"
