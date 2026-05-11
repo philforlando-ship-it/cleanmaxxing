@@ -26,7 +26,10 @@ import {
   FacialStructureAssessmentForm,
   type FacialStructureAssessmentInitialValues,
 } from './assessment-form';
-import { computePrimaryLever } from '@/lib/facial-structure/primary-lever';
+import {
+  computePrimaryLever,
+  resolvePrimaryLever,
+} from '@/lib/facial-structure/primary-lever';
 import {
   FacialStructureStage1Card,
   FacialStructureStage2Card,
@@ -177,21 +180,24 @@ export default async function FacialStructurePlanPage({ searchParams }: Props) {
           </footer>
 
           {(() => {
-            const lever = computePrimaryLever(assessment);
+            const computed = computePrimaryLever(assessment);
+            const resolved = resolvePrimaryLever(assessment);
             return (
               <>
                 <FacialStructureStage1Card
-                  primaryLever={lever}
+                  computedLever={computed}
+                  overrideLever={assessment.primary_lever_override}
+                  resolvedLever={resolved}
                   acknowledgedAt={assessment.stage_1_acknowledged_at}
                 />
                 <FacialStructureStage2Card
-                  primaryLever={lever}
+                  primaryLever={resolved}
                   stage1Ack={assessment.stage_1_acknowledged_at}
                   stage2Started={assessment.stage_2_started_at}
                   stage2Completed={assessment.stage_2_completed_at}
                 />
                 <FacialStructureStage3Card
-                  primaryLever={lever}
+                  primaryLever={resolved}
                   stage2Completed={assessment.stage_2_completed_at}
                   stage3Ack={assessment.stage_3_acknowledged_at}
                 />

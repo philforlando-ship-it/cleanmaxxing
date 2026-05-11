@@ -24,6 +24,14 @@ import { useRouter } from 'next/navigation';
 import type { PrimaryLever } from '@/lib/facial-structure/primary-lever';
 import { PRIMARY_LEVER_LABEL } from '@/lib/facial-structure/primary-lever';
 
+const ALL_LEVERS: PrimaryLever[] = [
+  'body_comp',
+  'puff_diagnostic',
+  'posture_neck',
+  'cosmetic_patternd',
+  'framing',
+];
+
 type StageAction = 'ack' | 'start' | 'complete';
 
 async function callStage(stage: 1 | 2 | 3 | 4, action: StageAction) {
@@ -66,14 +74,52 @@ function useStageCall() {
 // ============================================================
 
 export function FacialStructureStage1Card({
-  primaryLever,
+  computedLever,
+  overrideLever,
+  resolvedLever,
   acknowledgedAt,
 }: {
-  primaryLever: PrimaryLever;
+  computedLever: PrimaryLever;
+  overrideLever: PrimaryLever | null;
+  resolvedLever: PrimaryLever;
   acknowledgedAt: string | null;
 }) {
   const { pending, error, run } = useStageCall();
+  const router = useRouter();
+  const [overridePending, startOverrideTransition] = useTransition();
+  const [overrideError, setOverrideError] = useState<string | null>(null);
+  const [showLeverPicker, setShowLeverPicker] = useState(false);
   if (acknowledgedAt) return null;
+
+  function setOverride(lever: PrimaryLever | null) {
+    setOverrideError(null);
+    startOverrideTransition(async () => {
+      try {
+        const res = await fetch(
+          '/api/plan/facial-structure/lever-override',
+          {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ lever }),
+          },
+        );
+        if (!res.ok) {
+          const body = (await res.json().catch(() => ({}))) as {
+            error?: string;
+            message?: string;
+          };
+          throw new Error(
+            body.message ?? body.error ?? `Request failed (${res.status})`,
+          );
+        }
+        setShowLeverPicker(false);
+        router.refresh();
+      } catch (err) {
+        setOverrideError((err as Error).message);
+      }
+    });
+  }
+
   return (
     <section className="mt-8 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
       <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
@@ -82,14 +128,81 @@ export function FacialStructureStage1Card({
       <h2 className="mt-1 text-base font-medium text-zinc-900 dark:text-zinc-100">
         Your primary lever:{' '}
         <span className="font-semibold">
-          {PRIMARY_LEVER_LABEL[primaryLever]}
+          {PRIMARY_LEVER_LABEL[resolvedLever]}
         </span>
+        {overrideLever && (
+          <span className="ml-2 rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+            Override
+          </span>
+        )}
       </h2>
       <p className="mt-2 text-[14px] leading-relaxed text-zinc-700 dark:text-zinc-300">
         The plan above names one move. Acknowledge that you read it and
         Stage 2 unlocks — the lever-specific work, sized to what you
         actually said.
       </p>
+
+      <div className="mt-3 text-[12px] text-zinc-500 dark:text-zinc-400">
+        {showLeverPicker ? (
+          <div className="rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-950/60">
+            <p className="text-zinc-700 dark:text-zinc-300">
+              Pick the lever you want Stage 2 to surface. The compute is
+              mechanical; the report has nuance — when they disagree,
+              you decide.
+            </p>
+            <div className="mt-2 space-y-1.5">
+              {ALL_LEVERS.map((lever) => (
+                <label
+                  key={lever}
+                  className="flex cursor-pointer items-center gap-2"
+                >
+                  <input
+                    type="radio"
+                    name="lever-override"
+                    checked={resolvedLever === lever}
+                    onChange={() =>
+                      setOverride(lever === computedLever ? null : lever)
+                    }
+                    disabled={overridePending}
+                  />
+                  <span className="text-zinc-700 dark:text-zinc-300">
+                    {PRIMARY_LEVER_LABEL[lever]}
+                    {lever === computedLever && (
+                      <span className="ml-1.5 text-zinc-500 dark:text-zinc-400">
+                        (computed)
+                      </span>
+                    )}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {overrideError && (
+              <p className="mt-2 text-red-600 dark:text-red-400">
+                {overrideError}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => setShowLeverPicker(false)}
+              disabled={overridePending}
+              className="mt-2 text-[12px] underline decoration-dotted underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-300"
+            >
+              Done
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowLeverPicker(true)}
+            className="underline decoration-dotted underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-300"
+          >
+            {overrideLever
+              ? 'Change lever (override is on)'
+              : 'Disagree with the lever? Pick a different one.'}
+          </button>
+        )}
+      </div>
+
       {error && (
         <p className="mt-3 text-[12px] text-red-600 dark:text-red-400">
           {error}

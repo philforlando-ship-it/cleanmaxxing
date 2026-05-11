@@ -6,6 +6,19 @@
 
 import Link from 'next/link';
 import {
+  Apple,
+  Brush,
+  Dumbbell,
+  HeartPulse,
+  Mic,
+  Moon,
+  Scissors,
+  Shirt,
+  Smile,
+  Sparkles,
+  type LucideIcon,
+} from 'lucide-react';
+import {
   JOURNEYS,
   STATUS_CTA,
   STATUS_LABEL,
@@ -13,9 +26,36 @@ import {
   statusFromAssessment,
   tierForJourney,
   type JourneyConfig,
+  type JourneySlug,
   type JourneyStatus,
 } from '@/lib/today/journeys';
 import type { TierKey } from '@/lib/hierarchy/tiers';
+
+// Per-slug icon mapping. Kept local to the grid because the journey
+// config is read by non-UI surfaces (Mister P prompt, /system) that
+// shouldn't depend on a specific icon library.
+//   hair          → Scissors (haircut)
+//   style         → Shirt (clothing)
+//   body_comp     → Apple (nutrition / body comp anchor)
+//   strength      → Dumbbell (lifting)
+//   cardio        → HeartPulse (cardiovascular activity)
+//   sleep         → Moon (night / rest)
+//   skincare      → Sparkles (the glow signal)
+//   facial_hair      → Brush (grooming, distinct from hair's Scissors)
+//   facial_structure → Smile (face shape / jaw line context)
+//   presentation     → Mic (voice / carriage / public-facing presence)
+const JOURNEY_ICONS: Record<JourneySlug, LucideIcon> = {
+  hair: Scissors,
+  style: Shirt,
+  body_composition: Apple,
+  strength: Dumbbell,
+  cardio: HeartPulse,
+  sleep: Moon,
+  skincare: Sparkles,
+  facial_hair: Brush,
+  facial_structure: Smile,
+  presentation: Mic,
+};
 
 // User-visible tier label. Maps the canonical tier-N keys onto the
 // "Tier N" copy pattern used in /system and now on /today's grid.
@@ -103,25 +143,43 @@ function JourneyTile({
   const bgClass = isPicked
     ? 'bg-zinc-50 dark:bg-zinc-800/60'
     : 'bg-white dark:bg-zinc-900';
+  const Icon = JOURNEY_ICONS[journey.slug];
 
   return (
     <li
       className={`rounded-lg border border-zinc-200 ${bgClass} p-4 dark:border-zinc-700`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <h3 className="text-[15px] font-medium text-zinc-900 dark:text-zinc-100">
-            {journey.label}
-          </h3>
-          {/* Status line carries the framework tier as a left-anchored
-              prefix. Surfaces what /system explains in detail without
-              re-cluttering the tile with a separate badge. The tier
-              comes from the resolved (age-aware) value, not the static
-              JourneyConfig — cardio shows Tier 2 for users 35+ even
-              though the config still lists tier-3 as the default. */}
-          <p className="mt-1 text-[12px] text-zinc-500 dark:text-zinc-400">
-            {tierLabelFor(tier)} · {STATUS_LABEL[status]}
-          </p>
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          {/* Per-journey icon. Subtle visual anchor at the top-left of
+              each tile — fills the empty space picked journeys vs
+              unpicked otherwise leave bare, and gives the grid a
+              skimmable visual identity (Scissors = hair, Apple = body
+              comp, etc.) instead of an undifferentiated wall of text. */}
+          <span
+            aria-hidden="true"
+            className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${
+              isPicked
+                ? 'bg-zinc-200/70 text-zinc-700 dark:bg-zinc-700/60 dark:text-zinc-200'
+                : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+            }`}
+          >
+            <Icon className="h-4 w-4" strokeWidth={1.75} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-[15px] font-medium text-zinc-900 dark:text-zinc-100">
+              {journey.label}
+            </h3>
+            {/* Status line carries the framework tier as a left-anchored
+                prefix. Surfaces what /system explains in detail without
+                re-cluttering the tile with a separate badge. The tier
+                comes from the resolved (age-aware) value, not the static
+                JourneyConfig — cardio shows Tier 2 for users 35+ even
+                though the config still lists tier-3 as the default. */}
+            <p className="mt-1 text-[12px] text-zinc-500 dark:text-zinc-400">
+              {tierLabelFor(tier)} · {STATUS_LABEL[status]}
+            </p>
+          </div>
         </div>
         {isPicked && (
           <span className="rounded-full border border-zinc-300 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-zinc-700 dark:border-zinc-600 dark:text-zinc-300">

@@ -8,7 +8,9 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
+  CHIN_JAW_CONCERN_VALUES,
   POSTURAL_PATTERN_VALUES,
+  type ChinJawConcern,
   type FacialStructureAssessment,
   type FacialStructureAssessmentInput,
   type FacialStructureReportInputModifiers,
@@ -59,13 +61,21 @@ export async function saveFacialStructureAssessment(
     (p): p is PosturalPattern =>
       (POSTURAL_PATTERN_VALUES as ReadonlyArray<string>).includes(p),
   );
+  // Same sanitization for chin_jaw_concern (multi-select since mig
+  // 0113). Empty arrays would fail the DB check; Zod enforces non-empty
+  // upstream, so by the time we get here the input is valid — this
+  // just narrows the type.
+  const cleanedConcerns = input.chin_jaw_concern.filter(
+    (c): c is ChinJawConcern =>
+      (CHIN_JAW_CONCERN_VALUES as ReadonlyArray<string>).includes(c),
+  );
 
   const row = {
     user_id: userId,
     body_fat_estimate: input.body_fat_estimate,
     face_first_distribution: input.face_first_distribution,
     postural_pattern: cleanedPostural,
-    chin_jaw_concern: input.chin_jaw_concern,
+    chin_jaw_concern: cleanedConcerns,
     facial_puff_baseline: input.facial_puff_baseline,
     cosmetic_procedure_openness: input.cosmetic_procedure_openness,
     notes: input.notes,

@@ -16,6 +16,7 @@ import { requirePremium } from '@/lib/billing/is-premium';
 import { getUserProfile } from '@/lib/profile/service';
 import { getSkincareAssessment } from '@/lib/skincare/service';
 import { getHairAssessment } from '@/lib/hair/service';
+import { getFacialStructureAssessment } from '@/lib/facial-structure/service';
 import {
   PROCEDURAL_FIT_MODEL,
   PROCEDURAL_FIT_SYSTEM_PROMPT,
@@ -111,12 +112,14 @@ export async function POST() {
     profile,
     skincareAssessment,
     hairAssessment,
+    facialStructureAssessment,
     { data: ageFeelRow },
   ] = await Promise.all([
     supabase.from('users').select('age').eq('id', userId).maybeSingle(),
     getUserProfile(supabase, userId),
     getSkincareAssessment(supabase, userId),
     getHairAssessment(supabase, userId),
+    getFacialStructureAssessment(supabase, userId),
     supabase
       .from('survey_responses')
       .select('response_value')
@@ -151,6 +154,18 @@ export async function POST() {
       (skincareAssessment as { retinoid_started_at?: string | null } | null)
         ?.retinoid_started_at != null,
     currentInterventions: profile.current_interventions,
+    facialStructureBodyFat:
+      facialStructureAssessment?.body_fat_estimate ?? null,
+    facialStructureFaceFirstDistribution:
+      facialStructureAssessment?.face_first_distribution ?? null,
+    facialStructurePosturalPatterns:
+      facialStructureAssessment?.postural_pattern ?? [],
+    facialStructureChinJawConcern:
+      facialStructureAssessment?.chin_jaw_concern ?? null,
+    facialStructurePuffBaseline:
+      facialStructureAssessment?.facial_puff_baseline ?? null,
+    facialStructureCosmeticOpenness:
+      facialStructureAssessment?.cosmetic_procedure_openness ?? null,
   };
 
   // Download the baseline face photo. Service client bypass the auth

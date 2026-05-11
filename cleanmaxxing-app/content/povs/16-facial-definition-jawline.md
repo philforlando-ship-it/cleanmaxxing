@@ -43,6 +43,14 @@ __The Illusion Layer — Hair and Facial Hair__
 
 Facial hair and hairstyle do not change bone structure, but they significantly change how that structure is perceived\. Facial hair adds contrast and shadow to the lower face\. A well\-shaped beard can create the illusion of a sharper jawline or more projected chin, and it defines the boundary between the face and neck more clearly\. Hair on the head influences the upper frame of the face — adjusting how wide or narrow it appears, which indirectly affects how prominent the jaw and cheekbones seem\. These are illusion tools\. They do not create structure, but they guide the eye in ways that enhance perceived structure\.
 
+__Balding and Bald Men — Facial Structure Carries Disproportionate Weight__
+
+For men with significant balding \(severity 3+\) or fully bald men, facial structure is meaningfully more important than it is for a full\-density user\. The hair used to do part of the upper face\-frame work — softening the hairline, contributing to overall facial proportions, providing a visual top to the head\. When that softening is gone, the face's own architecture — jaw line, chin\-to\-neck transition, cheekbone visibility, facial puff baseline, posture's effect on the perceived jaw — has to carry the whole visual story\.
+
+Two practical consequences\. First, the leverage of every lever in this document goes up for this cohort\. Body fat at 17% reads differently on a bald man with a defined jaw than on a bald man with submental fullness\. Posture's effect on the chin\-to\-neck line is the difference between "intentionally bald" and "looking older than the age"\. Neck training is doing structural work that hair used to camouflage\. Second, the framing layer — eyewear, beard cadence, tanning\-for\-contrast — also gains weight, but it cannot substitute for the underlying structure\. Style \(POV 12\) and facial hair \(POV 09\) cover the framing tactics; this document is where the underlying levers live\.
+
+The cleanmaxxing posture: bald and balding men should not view this as bad news\. The opposite — it means the levers in this document return more for them than for the user with a full head of hair\. The work is exactly the same: body fat, sleep / puff diagnostic, posture, neck training, framing\-via\-facial\-hair where density allows\. The return on each lever is just higher\.
+
 __The Leanness Tradeoff__
 
 One of the least discussed but most important aspects of facial definition is that more definition is not always more attractive\. As body fat decreases, facial definition increases up to a point\. Beyond that point, further fat loss reduces facial fullness in a way that makes the face look hollow, tired, and older\. This is especially noticeable in the cheeks and under\-eye area\.

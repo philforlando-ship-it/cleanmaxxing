@@ -78,7 +78,7 @@ export type FacialStructureAssessmentInitialValues = {
   body_fat_estimate: FacialStructureBodyFat;
   face_first_distribution: FaceFirstDistribution;
   postural_pattern: PosturalPattern[];
-  chin_jaw_concern: ChinJawConcern;
+  chin_jaw_concern: ChinJawConcern[];
   facial_puff_baseline: FacialPuffBaseline;
   cosmetic_procedure_openness: CosmeticProcedureOpenness;
   notes: string | null;
@@ -106,8 +106,8 @@ export function FacialStructureAssessmentForm({
   const [postural, setPostural] = useState<PosturalPattern[]>(
     initialValues?.postural_pattern ?? [],
   );
-  const [concern, setConcern] = useState<ChinJawConcern | null>(
-    initialValues?.chin_jaw_concern ?? null,
+  const [concern, setConcern] = useState<ChinJawConcern[]>(
+    initialValues?.chin_jaw_concern ?? [],
   );
   const [puff, setPuff] = useState<FacialPuffBaseline | null>(
     initialValues?.facial_puff_baseline ?? null,
@@ -118,6 +118,23 @@ export function FacialStructureAssessmentForm({
   const [notes, setNotes] = useState(initialValues?.notes ?? '');
 
   const isEditing = initialValues !== undefined;
+
+  function toggleConcern(value: ChinJawConcern) {
+    setConcern((prev) => {
+      const has = prev.includes(value);
+      // 'no_specific_concern' is mutually exclusive with everything else
+      // (same pattern as postural_pattern's 'none_apparent' / 'unsure').
+      // Picking it clears all other concerns; picking any specific
+      // concern clears 'no_specific_concern'.
+      if (value === 'no_specific_concern') {
+        return has ? [] : [value];
+      }
+      const filtered = prev.filter((c) => c !== 'no_specific_concern');
+      return has
+        ? filtered.filter((c) => c !== value)
+        : [...filtered, value];
+    });
+  }
 
   function togglePostural(value: PosturalPattern) {
     setPostural((prev) => {
@@ -141,7 +158,7 @@ export function FacialStructureAssessmentForm({
     if (!bodyFat) return setError('Pick a body-fat estimate.');
     if (!distribution) return setError('Pick a distribution.');
     if (postural.length === 0) return setError('Pick at least one option for posture.');
-    if (!concern) return setError('Pick a chin/jaw concern.');
+    if (concern.length === 0) return setError('Pick at least one chin/jaw concern.');
     if (!puff) return setError('Pick your facial puff baseline.');
     if (!openness) return setError('Pick your cosmetic procedure openness.');
 
@@ -243,17 +260,16 @@ export function FacialStructureAssessmentForm({
       <Question
         number={4}
         title="Where is the structural concern?"
-        helper="Chin vs jaw is a system. Side profile is chin; front-on is jaw line. Submental fullness is the under-chin area."
+        helper="Multi-select. Chin vs jaw is a system. Side profile is chin; front-on is jaw line. Submental fullness is the under-chin area. No specific concern clears the others."
       >
         <div className="space-y-2">
           {CONCERNS.map((c) => (
-            <RadioRow
+            <CheckRow
               key={c}
-              checked={concern === c}
-              onChange={() => setConcern(c)}
+              checked={concern.includes(c)}
+              onChange={() => toggleConcern(c)}
               disabled={pending}
               label={CHIN_JAW_CONCERN_LABEL[c]}
-              name="concern"
             />
           ))}
         </div>

@@ -216,7 +216,7 @@ function formatAssessmentForPrompt(
 - Face-first distribution self-test: ${FACE_FIRST_DISTRIBUTION_LABEL[assessment.face_first_distribution]}
 - Postural pattern (multi-select):
 ${posturalLines}
-- Chin / jaw concern: ${CHIN_JAW_CONCERN_LABEL[assessment.chin_jaw_concern]}
+- Chin / jaw concern (multi-select, 'no_specific_concern' is exclusive): ${assessment.chin_jaw_concern.map((c) => CHIN_JAW_CONCERN_LABEL[c]).join('; ')}
 - Facial puff baseline: ${FACIAL_PUFF_BASELINE_LABEL[assessment.facial_puff_baseline]}
 - Cosmetic procedure openness: ${COSMETIC_PROCEDURE_OPENNESS_LABEL[assessment.cosmetic_procedure_openness]}
 
@@ -228,5 +228,5 @@ ${assessment.notes ? `"${assessment.notes}"` : '(nothing volunteered)'}
 ${modifierLines.join('\n')}
 --- END MODIFIERS ---
 
-Write the four-section facial structure plan now. 280 words maximum. Use the exact H2 headings specified in the system prompt. Anchor on a SINGLE primary lever in "The next move". Do not narrate modifiers back. Do not name specific cosmetic procedure providers or clinics. Apply the cosmetic_procedure_openness gate strictly. If age < 30 AND chin_jaw_concern relates to fullness AND openness is 'actively_considering', explicitly warn against buccal fat removal.`;
+Write the four-section facial structure plan now. 280 words maximum. Use the exact H2 headings specified in the system prompt. Anchor on a SINGLE primary lever in "The next move". Do not narrate modifiers back. Do not name specific cosmetic procedure providers or clinics. Apply the cosmetic_procedure_openness gate strictly. If age < 30 AND chin_jaw_concern *includes* 'submental_fullness' or 'overall_softness' AND openness is 'actively_considering', explicitly warn against buccal fat removal.`;
 }

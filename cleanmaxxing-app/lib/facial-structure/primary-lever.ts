@@ -23,6 +23,18 @@ export type PrimaryLever =
   | 'cosmetic_patternd'
   | 'framing';
 
+// Resolve the effective primary lever — override wins when set,
+// computed otherwise. Centralized so every read site (Stage cards,
+// any future drift detector) goes through the same resolution.
+export function resolvePrimaryLever(
+  assessment: import('./types').FacialStructureAssessment,
+): PrimaryLever {
+  if (assessment.primary_lever_override) {
+    return assessment.primary_lever_override;
+  }
+  return computePrimaryLever(assessment);
+}
+
 const LEAN_BFS: ReadonlyArray<FacialStructureAssessment['body_fat_estimate']> = [
   'under_12',
   '12_to_15',
@@ -30,7 +42,7 @@ const LEAN_BFS: ReadonlyArray<FacialStructureAssessment['body_fat_estimate']> = 
 ];
 
 const STRUCTURAL_CONCERNS: ReadonlyArray<
-  FacialStructureAssessment['chin_jaw_concern']
+  FacialStructureAssessment['chin_jaw_concern'][number]
 > = ['chin_projection_side', 'jaw_definition_front'];
 
 export function computePrimaryLever(
@@ -69,8 +81,8 @@ export function computePrimaryLever(
     return 'posture_neck';
   }
 
-  const hasStructuralDeficit = STRUCTURAL_CONCERNS.includes(
-    assessment.chin_jaw_concern,
+  const hasStructuralDeficit = assessment.chin_jaw_concern.some((c) =>
+    STRUCTURAL_CONCERNS.includes(c),
   );
   const cleanPosture =
     !hasForwardHead &&

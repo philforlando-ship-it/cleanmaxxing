@@ -144,6 +144,8 @@ Modifier handling:
 
   IMPORTANT — when this section fires, do NOT recite "your balding pattern is X" back at the user. Refer to the face-frame architecture concept directly ("with less density up top, the glasses are doing more architectural work for the face") and let the prescription do the talking.
 
+- **balding × facial-structure cross-link** — when hair_balding_severity is 3 or 4, OR balding_pattern is 'front_and_vertex' or 'diffuse', acknowledge once that the user's jaw line and chin-to-neck line are now doing more of the framing work the hair used to do. Less hair on top means the face's own architecture carries more weight in how the user reads. Surface /plan/facial-structure as the natural next layer if they haven't explored it — facial structure isn't owned by the style report, but for this user it's a higher-leverage adjacent journey than it would be for a full-density user. One sentence, not a paragraph. Skip entirely for mild balding (severity 0, 1, or 2 with intact hairline).
+
 - Do not narrate the modifiers back. Just let them shape what you emphasize.
 
 --- POV CONTEXT ---

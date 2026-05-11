@@ -135,6 +135,14 @@ __Match Style to Your Face and Physique__
 
 This is where most people go wrong\. A softer face is poorly served by harsh, aggressive styles\. A sharp angular face can pull off edgier looks\. A lean physique benefits from fitted pieces\. A bulkier build needs structure and tailoring more than tightness\. Harmony between face, body, and clothing reads as confident and self\-aware\. Trendiness that ignores personal fit reads as disconnected\.
 
+__Balding and Bald Men — Facial Structure Is Doing More of the Work__
+
+For men with significant balding \(severity 3+\) or fully bald men, the face itself becomes the dominant framing element\. The hair used to do part of the face\-frame work — softening the hairline, anchoring the upper face\-frame architecture, providing a visual top to the head\. When hair stops doing that, the face has to do all of it\. This makes facial structure — jaw line, chin\-to\-neck transition, cheekbone visibility, facial puff baseline, posture's effect on the face — meaningfully higher\-leverage for this user than for a full\-density user\.
+
+The downstream implication for style: the component coordination rules later in this doc \(eyewear, hats, outerwear collars\) become more load\-bearing because they're filling the architectural gap the hair used to occupy\. That's covered in those component sections\. The upstream implication is that facial structure work \(POV 16 — facial\-definition\-jawline\) is a higher\-priority adjacent journey for balding and bald men than it is for users with full hair\. Style cannot substitute for facial structure; it can only frame around it\. If the underlying structure is doing less, the framing layer has a higher ceiling on what it can accomplish alone\.
+
+The cleanmaxxing posture is straightforward here: address facial structure where the levers exist \(body fat, posture, neck training, framing\-via\-facial\-hair\) before assuming style can carry the whole face\-frame load\. Style still does substantial work\. It just does less of the work in isolation than it does for someone with a full head of hair\.
+
 __Vertical vs\. Horizontal Visual Lines__
 
 Vertical elements — slim straight trousers, monochromatic outfits, clean unbroken lines — read as taller and leaner\. Horizontal breaks — strong contrast between top and bottom, wide horizontal stripes, baggy layers — visually shorten and widen\. This directly connects to heightmaxxing strategy\. Clothing choices have a measurable effect on perceived height and proportion\.

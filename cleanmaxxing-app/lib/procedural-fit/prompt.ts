@@ -115,7 +115,16 @@ export const PROCEDURAL_FIT_MODEL = 'claude-sonnet-4-6';
 
 export const PROCEDURAL_FIT_SYSTEM_PROMPT = `You are Cleanmaxxing's procedural-fit reader. Your job is to look at one photo of the user's face plus a short snapshot of their current state, and tell them which cosmetic procedures (if any) would meaningfully help — and which they should skip. You are grounded in POV 28 (cosmetic-procedures): subtle, structural, long-term thinking; foundations before procedures; surgeon-quality matters more than any other variable; bad work is visible forever, good work is invisible.
 
-You will receive a single front-facing face photo and a brief plain-text snapshot of the user's structured state (age, age-feel, budget tier, hair journey state, skincare baseline). You read both and produce a structured recommendation.
+You will receive a single front-facing face photo and a brief plain-text snapshot of the user's structured state (age, age-feel, budget tier, hair journey state, skincare baseline, and — when present — a facial-structure assessment block with body-fat self-estimate, face-first distribution, postural patterns, chin/jaw concern, puff baseline, and cosmetic procedure openness). You read both and produce a structured recommendation.
+
+When the facial-structure assessment block is present, treat it as a self-reported sharpening of what you see in the photo:
+  - facial_structure_body_fat: gates whether the face is downstream of the cut. 'over_25' or '20_to_25' = foundations_check should anchor on body composition, not procedures. 'under_12' through '15_to_20' = lean enough that procedures could meaningfully add — but face-first distributors may still get sharp at higher BF.
+  - face_first_distribution: 'face_softer_than_body' users typically have residual facial softness at lean body fat — chin / jaw concerns may still be partially body-comp, not structural. 'face_sharper_than_body' users are the strongest candidates for structural reads at non-extreme leanness.
+  - postural_patterns: 'forward_head' in the list means ~1 inch of chin-neck definition is being compressed by posture, not structure. Posture work (not procedures) is the lever.
+  - chin_jaw_concern: 'chin_projection_side' routes to chin_filler / chin_implant primary lever consideration. 'jaw_definition_front' routes to body comp + masseter (if visibly prominent) + framing. 'submental_fullness' in a lean user = puff diagnostic; in a non-lean user = cut. 'overall_softness' almost always = cut as foundations, not procedure.
+  - puff_baseline: 'persistent' or 'most_mornings' in a lean user = upstream variables (sleep / sodium / alcohol). foundations_check should anchor on the puff audit before any procedure.
+  - cosmetic_procedure_openness: 'not_open' means the analysis should weight conservatism heavily and primary_lever=null is the most likely correct answer. 'curious_about_options' and 'actively_considering' = the user wants the read. 'already_done' = frame as longevity / touch-up / second-procedure context.
+  - When cosmetic_procedure_openness is 'actively_considering' AND age < 30 AND chin_jaw_concern is in (submental_fullness, overall_softness): include buccal_fat_removal in not_yet array with an explicit age + regret-pattern reason per POV 28's documented warning.
 
 These are face/head shots only. If the photo doesn't clearly have the user's face/head as its subject (e.g. a chest shot, a hand, a screenshot, anything else), set refused=true with a one-sentence refusal_reason describing what you saw instead and return empty arrays.
 
@@ -255,6 +264,20 @@ export type ProceduralFitInputState = {
   skincareBaselineEstablished: boolean;
   skincareRetinoidStarted: boolean;
   currentInterventions: string[];
+  // Facial-structure assessment snapshot (Task 4 of facial-structure
+  // post-Slice-3 work, 2026-05-11). All nullable — the analysis still
+  // works without them but the recommendation is sharper when present.
+  // Each field matches the assessment column exactly so the prompt can
+  // reason about them without an extra translation layer.
+  facialStructureBodyFat: string | null;
+  facialStructureFaceFirstDistribution: string | null;
+  facialStructurePosturalPatterns: string[];
+  // Multi-select since facial-structure mig 0113. Null means no
+  // assessment on file (vs. empty array — Zod requires at least one
+  // concern when assessment exists).
+  facialStructureChinJawConcern: string[] | null;
+  facialStructurePuffBaseline: string | null;
+  facialStructureCosmeticOpenness: string | null;
 };
 
 export function formatProceduralFitState(
@@ -279,6 +302,49 @@ export function formatProceduralFitState(
     lines.push(
       `current_interventions: ${state.currentInterventions.join(', ')}`,
     );
+  }
+  // Facial structure snapshot (Task 4 of facial-structure
+  // post-Slice-3 work). Renders only when at least one field is set —
+  // the assessment may not exist for every user yet.
+  const hasFacialStructure =
+    state.facialStructureBodyFat !== null ||
+    state.facialStructureFaceFirstDistribution !== null ||
+    state.facialStructurePosturalPatterns.length > 0 ||
+    (state.facialStructureChinJawConcern?.length ?? 0) > 0 ||
+    state.facialStructurePuffBaseline !== null ||
+    state.facialStructureCosmeticOpenness !== null;
+  if (hasFacialStructure) {
+    lines.push('');
+    lines.push('--- facial structure assessment ---');
+    if (state.facialStructureBodyFat) {
+      lines.push(`facial_structure_body_fat: ${state.facialStructureBodyFat}`);
+    }
+    if (state.facialStructureFaceFirstDistribution) {
+      lines.push(
+        `face_first_distribution: ${state.facialStructureFaceFirstDistribution}`,
+      );
+    }
+    if (state.facialStructurePosturalPatterns.length > 0) {
+      lines.push(
+        `postural_patterns: ${state.facialStructurePosturalPatterns.join(', ')}`,
+      );
+    }
+    if (
+      state.facialStructureChinJawConcern &&
+      state.facialStructureChinJawConcern.length > 0
+    ) {
+      lines.push(
+        `chin_jaw_concern: ${state.facialStructureChinJawConcern.join(', ')}`,
+      );
+    }
+    if (state.facialStructurePuffBaseline) {
+      lines.push(`puff_baseline: ${state.facialStructurePuffBaseline}`);
+    }
+    if (state.facialStructureCosmeticOpenness) {
+      lines.push(
+        `cosmetic_procedure_openness: ${state.facialStructureCosmeticOpenness}`,
+      );
+    }
   }
   return lines.join('\n');
 }

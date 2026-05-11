@@ -45,6 +45,15 @@ export type ChinJawConcern =
   | 'overall_softness'
   | 'no_specific_concern';
 
+export const CHIN_JAW_CONCERN_VALUES: ReadonlyArray<ChinJawConcern> = [
+  'chin_projection_side',
+  'jaw_definition_front',
+  'chin_neck_transition',
+  'submental_fullness',
+  'overall_softness',
+  'no_specific_concern',
+];
+
 export type FacialPuffBaseline =
   | 'rarely'
   | 'few_days_per_month'
@@ -62,7 +71,10 @@ export type FacialStructureAssessment = {
   body_fat_estimate: FacialStructureBodyFat;
   face_first_distribution: FaceFirstDistribution;
   postural_pattern: PosturalPattern[];
-  chin_jaw_concern: ChinJawConcern;
+  // Multi-select since mig 0113 (was single-select in 0110). Form
+  // enforces exclusivity for 'no_specific_concern' the same way
+  // postural_pattern handles 'none_apparent' / 'unsure'.
+  chin_jaw_concern: ChinJawConcern[];
   facial_puff_baseline: FacialPuffBaseline;
   cosmetic_procedure_openness: CosmeticProcedureOpenness;
   notes: string | null;
@@ -229,14 +241,18 @@ export const FacialStructureAssessmentInputSchema = z.object({
       'unsure',
     ]),
   ),
-  chin_jaw_concern: z.enum([
-    'chin_projection_side',
-    'jaw_definition_front',
-    'chin_neck_transition',
-    'submental_fullness',
-    'overall_softness',
-    'no_specific_concern',
-  ]),
+  chin_jaw_concern: z
+    .array(
+      z.enum([
+        'chin_projection_side',
+        'jaw_definition_front',
+        'chin_neck_transition',
+        'submental_fullness',
+        'overall_softness',
+        'no_specific_concern',
+      ]),
+    )
+    .min(1),
   facial_puff_baseline: z.enum([
     'rarely',
     'few_days_per_month',
