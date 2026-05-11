@@ -61,6 +61,7 @@ type NutritionRow = {
   created_at: string;
   goal_direction: string | null;
   goal_weight_lbs: number | null;
+  report_input_modifiers: { current_weight_lbs?: number } | null;
 };
 
 type DatedRow = { created_at: string };
@@ -102,7 +103,9 @@ export async function computeAllJourneyPhases(
       .maybeSingle(),
     supabase
       .from('nutrition_assessments')
-      .select('created_at, goal_direction, goal_weight_lbs')
+      .select(
+        'created_at, goal_direction, goal_weight_lbs, report_input_modifiers',
+      )
       .eq('user_id', userId)
       .maybeSingle(),
     supabase
@@ -173,14 +176,20 @@ export async function computeAllJourneyPhases(
     performed_on: string;
   }>;
   if (strengthDates.length > 0) {
-    out.strength = computeStrengthPhase(strengthDates.length);
+    out.strength = computeStrengthPhase(
+      strengthDates.map((r) => r.performed_on),
+      nowMs,
+    );
   }
 
   const cardioDates = (cardioWorkoutRows ?? []) as Array<{
     performed_on: string;
   }>;
   if (cardioDates.length > 0) {
-    out.cardio = computeCardioPhase(cardioDates.length);
+    out.cardio = computeCardioPhase(
+      cardioDates.map((r) => r.performed_on),
+      nowMs,
+    );
   }
 
   const sleepHours = ((sleepRows ?? []) as Array<{ hours: number | string }>)
@@ -287,7 +296,35 @@ function computeBodyCompositionPhase(
   nowMs: number,
 ): ComputedJourneyState {
   const assessmentMs = new Date(nutrition.created_at).getTime();
-  const eightWeeksOld = nowMs - assessmentMs >= 8 * 7 * DAYS_MS;
+  const ageMs = nowMs - assessmentMs;
+  const threeWeeksOld = ageMs >= 3 * 7 * DAYS_MS;
+  const eightWeeksOld = ageMs >= 8 * 7 * DAYS_MS;
+
+  // Drift takes precedence — same priority order style uses. For users
+  // on a cut or holding maintenance, weight more than 5 lb above the
+  // anchor (goal_weight if set, else start_weight from the assessment
+  // snapshot) is the defended-floor breach. Three-week assessment age
+  // floor prevents firing during the normal first-month bounce while
+  // a user is still settling in. Users on gain_muscle / recomp are
+  // deliberately excluded — weight gain there is the intent, not drift.
+  const startWeight =
+    nutrition.report_input_modifiers?.current_weight_lbs ?? null;
+  const anchorWeight = nutrition.goal_weight_lbs ?? startWeight ?? null;
+  const goalCares =
+    nutrition.goal_direction === 'lose_fat' ||
+    nutrition.goal_direction === 'maintain';
+  if (
+    goalCares &&
+    threeWeeksOld &&
+    anchorWeight &&
+    currentWeightLbs &&
+    currentWeightLbs > anchorWeight + 5
+  ) {
+    return {
+      phase: 'drifting',
+      source: 'weight_5lb_above_anchor_3wks',
+    };
+  }
 
   // Explicit maintain intent + sustained over 8 wks of assessment age.
   if (nutrition.goal_direction === 'maintain' && eightWeeksOld) {
@@ -312,20 +349,63 @@ function computeBodyCompositionPhase(
   return { phase: 'implementing', source: 'nutrition_assessment_active' };
 }
 
-function computeStrengthPhase(sessionsLast12Wks: number): ComputedJourneyState {
-  // Avg >=3 sessions/wk over 12 wks = 36+ sessions in the window.
-  // training_experience dropped per Slice 1 default — pure cadence.
-  if (sessionsLast12Wks >= 36) {
+function computeStrengthPhase(
+  workoutDates: string[],
+  nowMs: number,
+): ComputedJourneyState {
+  // Drift: zero sessions in last 21 days AND >=1 session in the
+  // window before that (days 21-84). Catches the "fell out of the
+  // groove" case but ignores users who haven't started yet (zero
+  // sessions anywhere = implementing, not drifting).
+  const cutoff21Ms = nowMs - 21 * DAYS_MS;
+  const cutoff84Ms = nowMs - 84 * DAYS_MS;
+  let sessionsLast21 = 0;
+  let sessionsDays21To84 = 0;
+  let sessionsLast84 = 0;
+  for (const d of workoutDates) {
+    const ms = new Date(`${d}T00:00:00Z`).getTime();
+    if (Number.isNaN(ms)) continue;
+    if (ms >= cutoff84Ms) sessionsLast84 += 1;
+    if (ms >= cutoff21Ms) sessionsLast21 += 1;
+    else if (ms >= cutoff84Ms) sessionsDays21To84 += 1;
+  }
+  if (sessionsLast21 === 0 && sessionsDays21To84 >= 1) {
+    return { phase: 'drifting', source: 'strength_21d_gap' };
+  }
+  // Maintenance: avg >=3 sessions/wk over 12 wks = 36+ sessions in
+  // the window. training_experience dropped per Slice 1 default —
+  // pure cadence.
+  if (sessionsLast84 >= 36) {
     return { phase: 'maintaining', source: 'strength_12wks_36plus_sessions' };
   }
   return { phase: 'implementing', source: 'strength_workouts_active' };
 }
 
-function computeCardioPhase(sessionsLast12Wks: number): ComputedJourneyState {
-  // v1 simplification: 1+ session/wk over 12 wks. The proper
-  // adherence-vs-prescribed signal needs a cardio_prescriptions table
-  // that doesn't exist yet — revisit when it does.
-  if (sessionsLast12Wks >= 12) {
+function computeCardioPhase(
+  workoutDates: string[],
+  nowMs: number,
+): ComputedJourneyState {
+  // Drift: zero sessions in last 21 days AND >=1 session in the prior
+  // window. Same shape as strength.
+  const cutoff21Ms = nowMs - 21 * DAYS_MS;
+  const cutoff84Ms = nowMs - 84 * DAYS_MS;
+  let sessionsLast21 = 0;
+  let sessionsDays21To84 = 0;
+  let sessionsLast84 = 0;
+  for (const d of workoutDates) {
+    const ms = new Date(`${d}T00:00:00Z`).getTime();
+    if (Number.isNaN(ms)) continue;
+    if (ms >= cutoff84Ms) sessionsLast84 += 1;
+    if (ms >= cutoff21Ms) sessionsLast21 += 1;
+    else if (ms >= cutoff84Ms) sessionsDays21To84 += 1;
+  }
+  if (sessionsLast21 === 0 && sessionsDays21To84 >= 1) {
+    return { phase: 'drifting', source: 'cardio_21d_gap' };
+  }
+  // Maintenance: 1+ session/wk over 12 wks. Proper adherence-vs-
+  // prescribed signal needs a cardio_prescriptions table that doesn't
+  // exist yet — revisit when it does.
+  if (sessionsLast84 >= 12) {
     return { phase: 'maintaining', source: 'cardio_12wks_12plus_sessions' };
   }
   return { phase: 'implementing', source: 'cardio_workouts_active' };

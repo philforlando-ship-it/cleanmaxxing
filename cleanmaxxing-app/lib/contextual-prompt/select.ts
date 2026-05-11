@@ -11,8 +11,9 @@
 //   2. process_adherence_declining  (slow-burn signal — Phase F replacement for the legacy confidence-declining detector)
 //   3. sleep_deficit_7d  (substrate-level — affects every other journey; C1 from May 7 brain dump)
 //   4. cross_journey_dependency  (I1 — makes platform architecture visible; free sees one teaser, Pro sees full set)
-//   5. glp1_hydration  (modifier-driven, gentle reminder)
-//   6. sleep_variance_high  (recovery context for active lifters)
+//   5. journey_drift_detected  (Slice 3 of maintenance reflection — surfaces phase='drifting' journeys)
+//   6. glp1_hydration  (modifier-driven, gentle reminder)
+//   7. sleep_variance_high  (recovery context for active lifters)
 //
 // skipped_check_ins retired in Tier 3 cleanup (2026-05-10) along
 // with the goals system — the check_ins table it read no longer
@@ -37,16 +38,19 @@ import {
   detectCardioCutConflict,
   detectFatigueStrugglingSoftensStrength,
   detectGlp1Active,
+  detectJourneyDriftDetected,
   detectNutritionOffTrack,
   detectProcessAdherenceDeclining,
   detectSleepDeficit7d,
   detectSleepVarianceHigh,
+  type DriftingJourneyRow,
 } from './prompts';
 import {
   copyActivityChangeNutritionStale,
   copyCardioCutConflict,
   copyFatigueSoftensStrength,
   copyGlp1Hydration,
+  copyJourneyDriftDetected,
   copyNutritionOffTrack,
   copyProcessAdherenceDeclining,
   copySleepDeficit7d,
@@ -95,6 +99,9 @@ export async function selectContextualPrompt(
     cardioAssessment,
     hasStrengthPlan,
     fatigueState,
+    // Slice 3 of maintenance reflection: surface a card for any
+    // journey whose phase has flipped to 'drifting'.
+    { data: driftingRowsRaw },
   ] = await Promise.all([
     getWeeklyReflectionState(supabase, userId),
     getProtocolRollup(supabase, userId, 'glp1'),
@@ -131,6 +138,11 @@ export async function selectContextualPrompt(
     getCardioAssessment(supabase, userId),
     hasStrengthAssessment(supabase, userId).then((r) => r.hasReport),
     getCurrentFatigueState(supabase, userId),
+    supabase
+      .from('journey_states')
+      .select('journey_slug, entered_at, source')
+      .eq('user_id', userId)
+      .eq('phase', 'drifting'),
   ]);
 
   const recentSleepHours = ((sleepRows ?? []) as Array<{
@@ -251,6 +263,23 @@ export async function selectContextualPrompt(
       if (activityStale.fires) {
         return copyActivityChangeNutritionStale(activityStale.direction);
       }
+    }
+  }
+
+  // ===== journey_drift_detected (Slice 3 of maintenance reflection) =====
+  // Reads journey_states rows where phase='drifting'. Each row was
+  // written by lib/journey-state/persist.ts when a per-journey drift
+  // condition fired in compute.ts (body comp 5lb above range,
+  // strength 21d gap, cardio 21d gap, style bf-tier crossed). Most
+  // recent drift wins when multiple are active — the freshest signal
+  // is the most actionable.
+  if (canFire('journey_drift_detected', primaryActionKind)) {
+    const driftingRows = (driftingRowsRaw ?? []) as DriftingJourneyRow[];
+    const result = detectJourneyDriftDetected({
+      driftingJourneys: driftingRows,
+    });
+    if (result.fires && result.primary) {
+      return copyJourneyDriftDetected(result.primary.journey_slug);
     }
   }
 

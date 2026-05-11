@@ -106,6 +106,14 @@ type PickerState = {
   // off — acceptable for a soft prompt.
   isSunday: boolean;
   weeklyReflectionPending: boolean;
+  // Slice 4 of maintenance reflection (2026-05-11): journeys whose
+  // phase has flipped to 'maintaining'. Drives bucket 8b — a calm
+  // primary action for users past graduation on at least one journey
+  // who have nothing more urgent firing.
+  maintainingJourneys: Array<{
+    journey_slug: string;
+    entered_at: string;
+  }>;
 };
 
 // =====================
@@ -140,6 +148,7 @@ export async function gatherPickerState(
     { count: strengthCount7d },
     { count: nutritionCount3d },
     weeklyReflection,
+    { data: maintainingRowsRaw },
   ] = await Promise.all([
     getUserProfile(supabase, userId),
     supabase
@@ -190,6 +199,11 @@ export async function gatherPickerState(
       .eq('user_id', userId)
       .gte('date', threeDaysAgo.slice(0, 10)),
     getWeeklyReflectionState(supabase, userId),
+    supabase
+      .from('journey_states')
+      .select('journey_slug, entered_at')
+      .eq('user_id', userId)
+      .eq('phase', 'maintaining'),
   ]);
 
   // Pull the intervention type onto the concerning-events rows so the
@@ -268,6 +282,11 @@ export async function gatherPickerState(
     (userRow as { tracking_paused_at: string | null } | null)
       ?.tracking_paused_at ?? null;
 
+  const maintainingJourneys = (maintainingRowsRaw ?? []) as Array<{
+    journey_slug: string;
+    entered_at: string;
+  }>;
+
   return {
     steppedAway: trackingPausedAt != null,
     focusAreas,
@@ -292,6 +311,7 @@ export async function gatherPickerState(
     hasAnyAssessment,
     isSunday: new Date().getDay() === 0,
     weeklyReflectionPending: weeklyReflection.current === null,
+    maintainingJourneys,
   };
 }
 
@@ -323,6 +343,7 @@ export function pickFromState(state: PickerState): PrimaryAction {
     bucket6_planStaleRefresh,
     bucket7_patternDConsidering,
     bucket8_circuitBreaker,
+    bucket8b_journeyMaintenance,
   ];
   for (const bucket of buckets) {
     const action = bucket(state);
@@ -794,6 +815,104 @@ function bucket8_circuitBreaker(state: PickerState): PrimaryAction | null {
     cta_href: '/today',
   };
 }
+
+// Slice 4 of maintenance reflection (2026-05-11). Fires when at least
+// one journey is in maintaining phase and no higher-priority bucket
+// has matched. Replaces what would have been all_quiet with a calm,
+// validating primary action that names the journey and surfaces the
+// cadence framing. The freshest graduation wins when multiple
+// journeys are maintaining — most-recent entered_at is most likely
+// to be the user's most recent achievement.
+function bucket8b_journeyMaintenance(
+  state: PickerState,
+): PrimaryAction | null {
+  if (state.maintainingJourneys.length === 0) return null;
+  const fresh = [...state.maintainingJourneys].sort((a, b) =>
+    b.entered_at.localeCompare(a.entered_at),
+  )[0];
+  const copy = MAINTENANCE_BUCKET_COPY[fresh.journey_slug];
+  if (!copy) return null;
+  return {
+    kind: 'journey_maintenance',
+    journey_topic: copy.topic,
+    title: copy.title,
+    body: copy.body,
+    cta_label: copy.cta_label,
+    cta_href: copy.cta_href,
+  };
+}
+
+// Per-slug copy for the maintenance bucket. Voice rules: calm,
+// validating, cadence-oriented. POV 54 vocabulary — defended floor,
+// the work shifts, drift is expected. NEVER frame as "you're done" —
+// maintenance is its own outcome that continues.
+const MAINTENANCE_BUCKET_COPY: Record<
+  string,
+  {
+    topic: PrimaryAction['journey_topic'];
+    title: string;
+    body: string;
+    cta_label: string;
+    cta_href: string;
+  }
+> = {
+  hair: {
+    topic: 'hair',
+    title: 'Hair is in maintenance — the routine is yours.',
+    body: 'Plan stays quiet from here. A monthly density photo is the cadence; the climb-back protocol is one click away if anything shifts.',
+    cta_label: 'Open hair plan',
+    cta_href: '/plan/hair',
+  },
+  style: {
+    topic: 'style',
+    title: 'Style is in maintenance — the closet is set.',
+    body: 'Quarterly closet edit is the cadence. If body comp moves enough to cross a silhouette tier, the app will surface a re-plan automatically.',
+    cta_label: 'Open style plan',
+    cta_href: '/plan/style',
+  },
+  body_composition: {
+    topic: 'nutrition',
+    title: 'Body comp is in maintenance — holding the range.',
+    body: 'The weekly reflection picks up process adherence. Monthly weigh-in is the read; 12-week re-eval is the formal recalibration.',
+    cta_label: 'Open nutrition plan',
+    cta_href: '/plan/nutrition',
+  },
+  strength: {
+    topic: 'strength',
+    title: 'Strength is in maintenance — the cadence holds.',
+    body: 'Three months of consistency in. The work compounds quietly from here — same sessions, lower attention cost.',
+    cta_label: 'Open strength plan',
+    cta_href: '/plan/strength',
+  },
+  cardio: {
+    topic: 'cardio',
+    title: 'Cardio is in maintenance — the engine is built.',
+    body: 'The aerobic floor is set. Weekly active minutes is the primary read; modality refresh quarterly keeps it varied without losing adaptation.',
+    cta_label: 'Open cardio plan',
+    cta_href: '/plan/cardio',
+  },
+  sleep: {
+    topic: 'sleep',
+    title: 'Sleep is in maintenance — the rhythm is stable.',
+    body: 'Four weeks of consistent timing. Defend the wake-time anchor; the rest is downstream.',
+    cta_label: 'Open sleep plan',
+    cta_href: '/plan/sleep',
+  },
+  skincare: {
+    topic: 'skincare',
+    title: 'Skincare is in maintenance — the routine is set.',
+    body: 'Subtractive changes only from here. Adding steps is rarely the right move — your skin has the inputs it needs.',
+    cta_label: 'Open skincare plan',
+    cta_href: '/plan/skincare',
+  },
+  facial_hair: {
+    topic: 'facial_hair',
+    title: 'Facial hair is in maintenance — the cadence holds.',
+    body: 'Your upkeep cadence is keeping the shape. Monthly density check is the rest of the work.',
+    cta_label: 'Open facial-hair plan',
+    cta_href: '/plan/facial-hair',
+  },
+};
 
 function bucket9_allQuiet(): PrimaryAction {
   return {

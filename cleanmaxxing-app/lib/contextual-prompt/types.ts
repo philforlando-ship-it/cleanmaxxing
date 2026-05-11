@@ -8,6 +8,7 @@ export type ContextualPromptKind =
   | 'nutrition_off_track'
   | 'process_adherence_declining'
   | 'cross_journey_dependency'
+  | 'journey_drift_detected'
   | 'glp1_hydration'
   | 'sleep_deficit_7d'
   | 'sleep_variance_high';
@@ -53,6 +54,12 @@ export const PRIMARY_ACTION_INCOMPATIBILITIES: Record<
   // user has opted out (stepped_away) or hit the engagement
   // circuit-breaker.
   cross_journey_dependency: ['stepped_away', 'circuit_breaker'],
+  // Journey drift (Slice 3 of maintenance reflection). Reads
+  // journey_states rows with phase='drifting'. Suppressed alongside
+  // the engagement-off signals — the user has either opted out or
+  // hit the circuit-breaker; piling on with "your strength has drifted"
+  // is unhelpful when they've already disengaged.
+  journey_drift_detected: ['stepped_away', 'circuit_breaker'],
   // Modifier nudges coexist freely with most Area 1 actions —
   // they're informational, not judgmental. Suppress only when
   // stepped away (the user has explicitly opted out).

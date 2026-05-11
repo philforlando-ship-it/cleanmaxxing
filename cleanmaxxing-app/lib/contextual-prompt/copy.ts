@@ -149,3 +149,57 @@ export function copySleepVarianceHigh(sdHours: number): ContextualPrompt {
     body: `Standard deviation around ${sdHours.toFixed(1)} hours over the last seven nights. The strength prescription assumes recovery — go easier on heavy days while sleep finds its baseline.`,
   };
 }
+
+// Journey drift (Slice 3 of maintenance reflection). Per-slug copy
+// because the right framing differs — strength drift is about
+// re-entry dose, body comp drift is about scale-vs-defended-range
+// honesty, style drift is about silhouette tier crossing. Voice
+// rules: drift is expected, climb-back not restart, no shame.
+
+import type { JourneySlug } from '@/lib/journey-state/compute';
+
+const DRIFT_COPY: Record<JourneySlug, { title: string; body: string }> = {
+  hair: {
+    title: 'Hair plan drift detected.',
+    body: 'Something in the routine has shifted enough that the plan reads stale. Worth a quick review — the climb back is small.',
+  },
+  style: {
+    title: 'Your silhouette tier has changed — closet is drifting.',
+    body: 'Body fat crossed a tier the plan was built around. The pieces still work, but the cuts and proportions read differently now. Re-run style when you have a few minutes.',
+  },
+  body_composition: {
+    title: 'Weight has been above your defended range for 3+ weeks.',
+    body: 'Drift is expected. The right move is sized to the gap — small habits return for 2–4 lb, a mini-cut for 6–10, a full re-eval for 10+. You are not restarting.',
+  },
+  strength: {
+    title: 'Three weeks since your last strength session.',
+    body: 'The platform you built doesn\'t disappear in three weeks, but the cadence does. Re-entry is half-volume for one to two weeks before chasing where you left off.',
+  },
+  cardio: {
+    title: 'Three weeks since your last cardio session.',
+    body: 'The aerobic floor compresses faster than strength does. Re-enter at 50% volume for one to two weeks — Zone 2 only — before the higher-intensity work returns.',
+  },
+  sleep: {
+    title: 'Sleep rhythm has drifted from baseline.',
+    body: 'The timing window slipped. One week of strict adherence to your anchor wake time pulls the rest back into line — bed time follows the wake time, not the other way around.',
+  },
+  skincare: {
+    title: 'Skincare plan is reading stale.',
+    body: 'Something in skin context shifted (season, stress, new product). Most drift here is subtractive — return to baseline first, then re-introduce.',
+  },
+  facial_hair: {
+    title: 'Facial hair upkeep cadence has slipped.',
+    body: 'A trim + edge cleanup resets most of this. Return to your cadence the next session — do not double up to compensate.',
+  },
+};
+
+export function copyJourneyDriftDetected(
+  slug: JourneySlug,
+): ContextualPrompt {
+  const copy = DRIFT_COPY[slug];
+  return {
+    kind: 'journey_drift_detected',
+    title: copy.title,
+    body: copy.body,
+  };
+}

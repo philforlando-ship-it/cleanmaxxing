@@ -28,6 +28,9 @@ import { ConsiderOtcCard } from './consider-otc-card';
 import { ApneaScreeningCard } from './apnea-screening-card';
 import { SleepDeficitCard } from './sleep-deficit-card';
 import { detectSleepDeficit7d } from '@/lib/contextual-prompt/prompts';
+import { getJourneyPhase } from '@/lib/journey-state/read';
+import { getMaintenanceContent } from '@/lib/journey-state/maintenance-content';
+import { MaintenanceView } from '@/components/journey/maintenance-view';
 
 type Props = {
   searchParams: Promise<{ edit?: string }>;
@@ -44,13 +47,19 @@ export default async function SleepPlanPage({ searchParams }: Props) {
   // Pull assessment + sleep state + active commitments + most-recent
   // weekly review in parallel. SleepState powers the pre-form data
   // preview. Commitments + review render below the report.
-  const [assessment, sleepState, commitments, mostRecentReview] =
-    await Promise.all([
-      getSleepAssessment(supabase, user.id),
-      getSleepState(supabase, user.id),
-      listActiveCommitments(supabase, user.id),
-      getMostRecentWeeklyReview(supabase, user.id),
-    ]);
+  const [
+    assessment,
+    sleepState,
+    commitments,
+    mostRecentReview,
+    journeyState,
+  ] = await Promise.all([
+    getSleepAssessment(supabase, user.id),
+    getSleepState(supabase, user.id),
+    listActiveCommitments(supabase, user.id),
+    getMostRecentWeeklyReview(supabase, user.id),
+    getJourneyPhase(supabase, user.id, 'sleep'),
+  ]);
   const hasReport = assessment?.report_text != null;
   const showForm = !assessment || !hasReport || editParam;
 
@@ -97,6 +106,16 @@ export default async function SleepPlanPage({ searchParams }: Props) {
           </p>
         )}
       </header>
+
+      {journeyState && journeyState.phase !== 'implementing' && (
+        <div className="mt-8">
+          <MaintenanceView
+            phase={journeyState.phase}
+            enteredAt={journeyState.entered_at}
+            content={getMaintenanceContent('sleep')}
+          />
+        </div>
+      )}
 
       {/* Pre-form data preview — only shown when there's no plan yet AND
           the user has logged at least one night. Honest about whether

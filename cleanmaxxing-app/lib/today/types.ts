@@ -18,6 +18,7 @@ export type PrimaryActionKind =
   | 'plan_stale_refresh'       // bucket 6 — assessment stale, refresh CTA
   | 'pattern_d_considering'    // bucket 7 — relevant focus area, no protocol row
   | 'circuit_breaker'          // bucket 8 — too-many-active-journeys
+  | 'journey_maintenance'      // bucket 8b — at least one journey is in maintaining phase
   | 'all_quiet';               // bucket 9 — default
 
 export type PrimaryAction = {

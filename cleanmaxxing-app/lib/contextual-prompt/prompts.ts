@@ -278,3 +278,38 @@ export function detectSleepVarianceHigh(args: {
   const sd = Math.sqrt(variance);
   return { fires: sd > 1.5, sdHours: sd };
 }
+
+// =====================
+// journey_drift_detected (Slice 3 of maintenance reflection)
+// =====================
+
+// Surfaces a /today card for any journey whose journey_states.phase
+// is 'drifting'. One detector handles the union — drift signals are
+// per-journey (body comp 5lb above range, strength 21d gap, cardio
+// 21d gap, style bf-tier crossed) but the surface treatment is the
+// same: name the journey, point at /plan/[slug], no shame framing.
+//
+// When multiple journeys are drifting, prefer the one with the most
+// recent entered_at — the freshest drift signal is the most likely
+// to still be actionable. The copy is templated per-slug so the
+// /today card knows which journey to name.
+
+import type { JourneySlug } from '@/lib/journey-state/compute';
+
+export type DriftingJourneyRow = {
+  journey_slug: JourneySlug;
+  entered_at: string;
+  source: string | null;
+};
+
+export function detectJourneyDriftDetected(args: {
+  driftingJourneys: DriftingJourneyRow[];
+}): { fires: boolean; primary: DriftingJourneyRow | null } {
+  if (args.driftingJourneys.length === 0) {
+    return { fires: false, primary: null };
+  }
+  const sorted = [...args.driftingJourneys].sort((a, b) =>
+    b.entered_at.localeCompare(a.entered_at),
+  );
+  return { fires: true, primary: sorted[0] };
+}

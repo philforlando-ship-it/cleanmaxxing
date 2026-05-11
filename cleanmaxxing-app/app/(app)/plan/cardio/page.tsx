@@ -27,6 +27,9 @@ import { AlcoholRecoveryCallout } from '@/components/alcohol-recovery-callout';
 import { CardioMobilityPanel } from './cardio-mobility-panel';
 import { RecommendedModalitiesPanel } from './recommended-modalities-panel';
 import { cardioStaticMobility } from '@/lib/strength/warmup-mobility';
+import { getJourneyPhase } from '@/lib/journey-state/read';
+import { getMaintenanceContent } from '@/lib/journey-state/maintenance-content';
+import { MaintenanceView } from '@/components/journey/maintenance-view';
 
 type Props = {
   searchParams: Promise<{ edit?: string }>;
@@ -49,12 +52,14 @@ export default async function CardioPlanPage({ searchParams }: Props) {
     nutritionAssessment,
     strengthPresence,
     { data: userRow },
+    journeyState,
   ] = await Promise.all([
     getCardioAssessment(supabase, user.id),
     getRecentCardioSessionCount(supabase, user.id, 7),
     getNutritionAssessment(supabase, user.id),
     hasStrengthAssessment(supabase, user.id),
     supabase.from('users').select('age').eq('id', user.id).maybeSingle(),
+    getJourneyPhase(supabase, user.id, 'cardio'),
   ]);
   const userAge =
     (userRow as { age: number | null } | null)?.age ?? null;
@@ -128,6 +133,16 @@ export default async function CardioPlanPage({ searchParams }: Props) {
           </p>
         )}
       </header>
+
+      {journeyState && journeyState.phase !== 'implementing' && (
+        <div className="mt-8">
+          <MaintenanceView
+            phase={journeyState.phase}
+            enteredAt={journeyState.entered_at}
+            content={getMaintenanceContent('cardio')}
+          />
+        </div>
+      )}
 
       {/* Pre-form data preview — when there's no plan yet AND the user
           has at least one cardio session in the last 7 days. */}

@@ -1,338 +1,335 @@
+// / — primary homepage. Horizontal-coach positioning, 18–55 audience,
+// leads on the cross-journey architecture and the ten things that
+// separate Cleanmaxxing from the vertical-specialist stack (Hims /
+// Whoop / Levels / MacroFactor). Replaces the earlier loss-aversion
+// "the window closed" homepage, which now lives at /for-the-window
+// as a segmented variant for paid acquisition into the 30s–40s body
+// anxiety funnel.
+//
+// Static server component — no auth gating. CTAs point at /signup
+// for anonymous flow; logged-in users following the link still land
+// on signup but the auth layer redirects them through to the app.
+
+/* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { CleanmaxxingLogo } from '@/components/cm-logo';
 
 export const metadata: Metadata = {
-  title: 'Cleanmaxxing — look and feel sharper at 35, 40, 45',
+  title: 'Cleanmaxxing — one coach across eight journeys',
   description:
-    'A structured plan for men in their 30s and 40s. Daily check-ins, weekly reflection, and a chat assistant grounded in a 200k+ word evidence library.',
+    'Hair, style, body composition, strength, cardio, sleep, skincare, facial hair. One coordinated plan, not eight apps that don’t talk to each other.',
   openGraph: {
-    title: 'Cleanmaxxing — for men in their 30s and 40s',
+    title: 'Cleanmaxxing — one coach across eight journeys',
     description:
-      'A structured plan, daily check-ins, weekly reflection, a chat assistant grounded in a 200k+ word evidence library.',
+      'The horizontal coach for men 18–55 who’ve tried the vertical apps. Eight coordinated journeys, honest content on GLP-1 / TRT / peptides, wearable-aware coaching. $9.99/mo.',
     type: 'website',
   },
 };
 
-const PILLARS = [
+const HORIZONTAL = [
   {
-    number: '01',
-    title: 'Built for limited evenings',
-    body: 'The plan assumes you have a job, a partner, kids, and not a lot of weeknight bandwidth. Daily check-ins are ten seconds. The Sunday reflection is about two minutes. Mister P is there when you have a question, not a homework assignment.',
+    title: 'One coach, eight journeys.',
+    body: 'Hair, style, body composition, strength, cardio, sleep, skincare, facial hair. Each with a full assessment, a personalized report, and a structured stage-gated plan you work through over months. All coordinated by one system that sees the whole picture.',
   },
   {
-    number: '02',
-    title: 'Process + outcomes',
-    body: 'The plan organizes around journeys \u2014 hair, body composition, sleep, skincare, strength, style, cardio, facial hair. Each one is a structured weekly rhythm, not a one-off goal. What compounds is consistency over years. That\u2019s what the app tracks.',
+    title: 'Cross-journey dependency awareness.',
+    body: 'When your training volume changes, your nutrition plan adjusts. When your sleep slips, your strength prescription adapts. When you add cardio, your fatigue budget recalibrates. ChatGPT can’t do this — it has no memory. The vertical apps can’t — they only see their slice.',
   },
   {
-    number: '03',
-    title: 'Honest about what works',
-    body: 'When a supplement isn\u2019t worth the money, the app says so. When the right answer is "don\u2019t bother fixing this," it says that too. Sometimes the most useful thing it can say is stop.',
+    title: 'Built for 18 to 55, not just 25-year-olds.',
+    body: 'Most men’s-improvement apps quietly assume a lean 25-year-old with no joint issues and full hair. Cleanmaxxing has age-cohort cut imagery, age-50+ protein adjustments, a cardio tier-flip at 35+, and balding-friendly cut recommendations with mature-cohort photos. The older end of the audience is served, not patronized.',
   },
 ];
 
-export default function Home() {
+const COACHING = [
+  {
+    title: 'Self-acceptance built into the voice.',
+    body: 'We never tell men they need to fix themselves. The work is framed as additive — building from where you are, not correcting what’s wrong with you. Different trust profile than the manosphere-adjacent alternatives. Different regulatory posture than the "you have low T, buy our pills" funnels.',
+  },
+  {
+    title: 'GLP-1, TRT, and peptides — handled honestly.',
+    body: 'Three-phase guidance: Considering, On Protocol, and Off-Ramp. Nobody else does the Off-Ramp work; it’s the hardest phase and the one where users actually need help, and most apps just abandon you there.',
+  },
+  {
+    title: 'Process-vs-outcome reflection.',
+    body: 'Weekly check-ins ask "did you do the process?" not "are you happy with your results?" That decouples effort from genetics and timing — which is what compounds, and what most check-in systems get backwards.',
+  },
+  {
+    title: 'Off-track recovery, not streak shaming.',
+    body: 'When adherence drops, the system fires a recovery card with a four-step restart protocol and the identity move framed as "speed of restart, not streak length." Most apps either shame you (Duolingo-style guilt) or go silent at the exact moment you’d otherwise quit. We help you come back.',
+  },
+];
+
+const TOOLS = [
+  {
+    title: 'Wearable signals that change your plan.',
+    body: 'HRV trend, resting heart rate trained-band, VO2max progression — read by the report prompts and used to shift what we recommend. Whoop gives you a number. We give you a different plan.',
+  },
+  {
+    title: 'Mister P remembers where you are.',
+    body: 'The chat assistant knows your assessments, your active stages, what you’ve tried, what’s stuck. Continuous personalization instead of ChatGPT’s fresh-conversation amnesia. Reachable from anywhere in the app via Ctrl+K.',
+  },
+  {
+    title: 'AI photo analysis shipped, not promised.',
+    body: 'Hair photo capture with cut-family visualization — see yourself in four to six density-appropriate styles before you commit. Facial-hair density-by-area mapping. Body baseline plus 30 / 90 / 180-day progress photos with self-comparison framing. Real features, wired into the journeys today.',
+  },
+];
+
+type Feature = (typeof HORIZONTAL)[number];
+
+function FeatureCard({ feature }: { feature: Feature }) {
+  return (
+    <li className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+      <h3 className="text-lg font-semibold leading-snug text-zinc-900 dark:text-zinc-100">
+        {feature.title}
+      </h3>
+      <p className="mt-3 flex-1 font-serif text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+        {feature.body}
+      </p>
+    </li>
+  );
+}
+
+export default function WhyCleanmaxxingPage() {
   return (
     <main className="flex flex-1 flex-col">
       {/* Hero */}
       <section className="mx-auto w-full max-w-3xl px-6 py-24 text-center sm:py-32 sm:text-left">
         <div className="mb-10 flex justify-center">
-          <CleanmaxxingLogo size="xl" />
+          <img
+            src="/cleanmaxxing-logo2.png"
+            alt="Cleanmaxxing"
+            className="h-24 w-auto mix-blend-multiply dark:invert dark:mix-blend-screen"
+          />
         </div>
         <h1 className="text-4xl font-semibold tracking-tight text-zinc-900 sm:text-6xl dark:text-zinc-100">
-          Look and feel sharper at 35, 40, 45.
+          One coach across eight journeys.
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
-          A structured plan for men in their 30s and 40s. Daily check-ins,
-          weekly reflection, and a chat assistant grounded in a 200k+ word
-          evidence library.
+          Hair, style, body composition, strength, cardio, sleep, skincare,
+          facial hair. Cleanmaxxing reads what&rsquo;s happening in all of them
+          and coordinates the plan so they reinforce each other instead of
+          competing for your time.
         </p>
-        <div className="mt-10 flex flex-wrap items-center gap-4">
+        <div className="mt-10 flex flex-wrap items-center gap-4 sm:justify-start">
           <Link
             href="/signup"
-            className="rounded-full bg-zinc-900 px-6 py-3 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="rounded-full bg-emerald-600 px-6 py-3 text-sm font-medium text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400"
           >
-            Sign up free
+            Start your 14-day trial
           </Link>
           <Link
-            href="/login"
+            href="/pricing"
             className="text-sm font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
           >
-            Log in &rarr;
+            See the plan comparison &rarr;
           </Link>
         </div>
         <p className="mt-4 text-xs text-zinc-500">
-          Free to use. No credit card, no payment to start.
+          No card. Three journeys free if you&rsquo;d rather not commit.
         </p>
       </section>
 
-      {/* Sub-hero — "the window closed" */}
+      {/* The problem with vertical specialists */}
       <section className="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950/40">
         <div className="mx-auto w-full max-w-3xl px-6 py-24">
           <div className="space-y-5 font-serif text-[18px] leading-relaxed text-zinc-800 dark:text-zinc-200">
-            <p>
-              You used to be able to skip a workout for two months and bounce
-              back. Eat whatever was on the table. Sleep four hours and still
-              look fine in photos.
+            <p className="not-italic font-sans text-sm font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+              The problem
             </p>
             <p className="text-2xl font-semibold not-italic tracking-tight text-zinc-900 dark:text-zinc-100">
-              That window closed.
+              Every men&rsquo;s improvement app solves one thing.
+            </p>
+            <ul className="not-italic font-sans space-y-1 text-[15px] text-zinc-700 dark:text-zinc-300">
+              <li className="flex items-baseline justify-between gap-4 border-b border-zinc-200 py-2 dark:border-zinc-800">
+                <span>Hims wants to own your hair.</span>
+                <span className="font-mono text-xs text-zinc-500">~$30/mo</span>
+              </li>
+              <li className="flex items-baseline justify-between gap-4 border-b border-zinc-200 py-2 dark:border-zinc-800">
+                <span>Whoop wants to own your recovery.</span>
+                <span className="font-mono text-xs text-zinc-500">~$30/mo</span>
+              </li>
+              <li className="flex items-baseline justify-between gap-4 border-b border-zinc-200 py-2 dark:border-zinc-800">
+                <span>Levels wants to own your glucose.</span>
+                <span className="font-mono text-xs text-zinc-500">~$20/mo</span>
+              </li>
+              <li className="flex items-baseline justify-between gap-4 py-2">
+                <span>MacroFactor wants to own your food.</span>
+                <span className="font-mono text-xs text-zinc-500">~$10/mo</span>
+              </li>
+            </ul>
+            <p>
+              None of them know the others exist. So you end up with four
+              dashboards that don&rsquo;t talk, four bills that hit $80&ndash;90
+              a month combined, and four narrow recommendations that quietly
+              contradict each other when you try to stack them.
             </p>
             <p>
-              The good news: most of what actually moves the needle in your
-              30s and 40s is unsexy, evidence-based, and time-efficient. The
-              bad news: nobody is laying it out for you. Cleanmaxxing does.
+              When you start training harder, no one tells you to adjust your
+              protein. When your sleep slips for two weeks, your strength plan
+              doesn&rsquo;t notice. When you start a GLP-1, none of your other
+              apps adapt.
+            </p>
+            <p className="not-italic font-semibold text-zinc-900 dark:text-zinc-100">
+              That&rsquo;s what we built Cleanmaxxing to fix.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Three pillars */}
+      {/* The horizontal approach */}
       <section className="mx-auto w-full max-w-6xl px-6 py-24">
-        <h2 className="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
-          What it&rsquo;s built around.
+        <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+          One coach
+        </p>
+        <h2 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
+          The horizontal approach.
         </h2>
-
         <ul className="mt-12 grid gap-5 lg:grid-cols-3">
-          {PILLARS.map((pillar) => (
-            <li
-              key={pillar.number}
-              className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900"
-            >
-              <span className="font-mono text-xs text-zinc-500">
-                {pillar.number}
-              </span>
-              <h3 className="mt-3 text-lg font-semibold leading-snug text-zinc-900 dark:text-zinc-100">
-                {pillar.title}
-              </h3>
-              <p className="mt-3 flex-1 font-serif text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-                {pillar.body}
-              </p>
-            </li>
+          {HORIZONTAL.map((f) => (
+            <FeatureCard key={f.title} feature={f} />
           ))}
         </ul>
-
-        <blockquote className="mt-14 border-l-2 border-zinc-300 pl-6 font-serif text-[17px] italic leading-relaxed text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
-          There are four levers that actually move how a man feels about
-          himself: therapy, relationships, purpose, and physical attributes.
-          Cleanmaxxing owns the fourth. It&rsquo;s the one that produces
-          measurable progress in months rather than years. The other three
-          matter, often more, and we&rsquo;re not trying to compete with them.
-        </blockquote>
       </section>
 
-      {/* What we own — product features */}
+      {/* Coaching that respects you */}
+      <section className="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950/40">
+        <div className="mx-auto w-full max-w-6xl px-6 py-24">
+          <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+            Voice posture
+          </p>
+          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
+            Coaching that respects you.
+          </h2>
+          <ul className="mt-12 grid gap-5 sm:grid-cols-2">
+            {COACHING.map((f) => (
+              <FeatureCard key={f.title} feature={f} />
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* Tools that actually work */}
+      <section className="mx-auto w-full max-w-6xl px-6 py-24">
+        <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+          Tools, shipped
+        </p>
+        <h2 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
+          Tools that actually work.
+        </h2>
+        <ul className="mt-12 grid gap-5 lg:grid-cols-3">
+          {TOOLS.map((f) => (
+            <FeatureCard key={f.title} feature={f} />
+          ))}
+        </ul>
+      </section>
+
+      {/* Pricing teaser */}
       <section className="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950/40">
         <div className="mx-auto w-full max-w-3xl px-6 py-24">
-          <h2 className="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
-            A structured plan, a direct assistant, a weekly rhythm.
+          <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+            Pricing
+          </p>
+          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
+            <span className="text-emerald-700 dark:text-emerald-400">
+              $9.99 a month.
+            </span>{' '}
+            One app. All eight journeys.
           </h2>
-
-          <dl className="mt-12 space-y-10">
-            <div>
-              <dt className="text-sm font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
-                A guided starting plan
-              </dt>
-              <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-                A short onboarding picker, not a form, identifies the
-                journeys that fit your starting point — hair, body
-                composition, sleep, skincare, strength, style, cardio,
-                facial hair. Your picks shape priority; the foundation
-                tiers (sleep, body comp, skin) anchor regardless. Ranked
-                by what moves the needle for a man in his 30s or 40s,
-                rather than what sounds impressive.
-              </dd>
-            </div>
-
-            <div>
-              <dt className="text-sm font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
-                Mister P, the assistant
-              </dt>
-              <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-                Direct, a little dry, willing to tell you something
-                isn&rsquo;t worth your time. He&rsquo;s grounded in a
-                200k+ word corpus and he sees your active
-                journeys, your check-in history, and your reflection
-                notes. The answer you get is calibrated to where you
-                actually are. He won&rsquo;t sell you supplements, vendor
-                links, or cycle protocols.
-              </dd>
-            </div>
-
-            <div>
-              <dt className="text-sm font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
-                Daily check-ins, weekly reflection
-              </dt>
-              <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-                Ten seconds on the daily check-in. Two minutes on Sunday
-                on the weekly reflection — process adherence per active
-                journey, plus a few outcome questions on what actually
-                changed. Not a self-rating, not a global score. The chart
-                tracks the trend over time. No streaks, no fire emojis.
-              </dd>
-            </div>
-
-            <div>
-              <dt className="text-sm font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
-                Step away when you need to
-              </dt>
-              <dd className="mt-3 font-serif text-[16px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-                One tap pauses tracking without losing your journeys or
-                progress. Taking a break is a legitimate choice, sometimes
-                the right one, and we say so. Most products in this
-                category hide that option. We surface it.
-              </dd>
-            </div>
-          </dl>
+          <p className="mt-6 font-serif text-[18px] leading-relaxed text-zinc-800 dark:text-zinc-200">
+            The vertical-specialist stack &mdash; Hims plus Whoop plus Levels
+            plus MacroFactor &mdash; runs $80&ndash;90 a month for four narrow
+            slices. We&rsquo;re one app, one price, all eight journeys.
+          </p>
+          <p className="mt-4 font-serif text-[18px] leading-relaxed text-zinc-800 dark:text-zinc-200">
+            Three journeys are free forever if you&rsquo;d rather not commit.
+            The 14-day trial of the full Pro tier requires no card.
+          </p>
+          <div className="mt-10">
+            <Link
+              href="/pricing"
+              className="inline-flex items-center rounded-full border border-zinc-300 px-5 py-2.5 text-sm font-medium text-zinc-800 hover:bg-white dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900"
+            >
+              See the full plan comparison &rarr;
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* Brand lines — not medical, no hierarchy */}
+      {/* Who Cleanmaxxing is for */}
       <section className="mx-auto w-full max-w-3xl px-6 py-24">
-        <div className="grid gap-8 md:grid-cols-2">
-          <div className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-            <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-              Not medical.
-            </h3>
-            <p className="mt-3 font-serif text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-              Cleanmaxxing is not a medical or therapeutic service. We
-              don&rsquo;t diagnose, we don&rsquo;t interpret labs, and we
-              don&rsquo;t advise on treatment. When a clinical question
-              comes up, we say so and point you to a physician.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-            <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-              Not a hierarchy of worth.
-            </h3>
-            <p className="mt-3 font-serif text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-              There&rsquo;s nothing wrong with wanting to look and feel
-              better. There&rsquo;s everything wrong with attaching your
-              worth as a person to where you rank on an attractiveness
-              ladder.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Read first — articles demonstrating the brand's posture */}
-      <section className="border-t border-zinc-200 bg-zinc-50 mx-auto w-full max-w-6xl px-6 py-24 dark:border-zinc-800 dark:bg-zinc-950/40">
-        <h2 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-          Three articles. The same posture.
+        <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+          Fit
+        </p>
+        <h2 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
+          Who Cleanmaxxing is for.
         </h2>
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          <div className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-900">
-            <h3 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-              Appearance is two things at once.
-            </h3>
-            <p className="mt-3 flex-1 font-serif text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-              The visual layer everyone optimizes for, and the second
-              layer almost no one names. Why most men over 30 hit a wall
-              doing pure-visual work, and what compounds with age instead.
-            </p>
-            <Link
-              href="/two-layers"
-              className="mt-6 inline-flex items-center text-sm font-medium text-zinc-900 underline underline-offset-4 dark:text-zinc-100"
-            >
-              Read the article &rarr;
-            </Link>
-          </div>
-          <div className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-900">
-            <h3 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-              Tom Brady&rsquo;s face and physique did more for his brand than seven rings.
-            </h3>
-            <p className="mt-3 flex-1 font-serif text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-              A case study in the halo effect. How appearance counteracted
-              the reasons people had to dislike Brady, and what Burrow and
-              Dart show about the same pattern in the next generation.
-            </p>
-            <Link
-              href="/tom-brady-face"
-              className="mt-6 inline-flex items-center text-sm font-medium text-zinc-900 underline underline-offset-4 dark:text-zinc-100"
-            >
-              Read the article &rarr;
-            </Link>
-          </div>
-          <div className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-900">
-            <h3 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-              Is Clav right?
-            </h3>
-            <p className="mt-3 flex-1 font-serif text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-              A critical read of Clavicular&rsquo;s framework. What holds
-              up, what&rsquo;s partially right, and what&rsquo;s wrong. A
-              second opinion on one of the most followed voices on men&rsquo;s
-              appearance.
-            </p>
-            <Link
-              href="/is-clav-right"
-              className="mt-6 inline-flex items-center text-sm font-medium text-zinc-900 underline underline-offset-4 dark:text-zinc-100"
-            >
-              Read the full breakdown &rarr;
-            </Link>
-          </div>
-        </div>
+        <p className="mt-6 font-serif text-[18px] leading-relaxed text-zinc-800 dark:text-zinc-200">
+          Men 18 to 55 who:
+        </p>
+        <ul className="mt-4 space-y-3 text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+          <li className="flex gap-3">
+            <span className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-400" />
+            <span>
+              Are already doing some of the work and want it coordinated
+              instead of fragmented across four apps.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <span className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-400" />
+            <span>
+              Want substance over slogans and useful plans over dashboards.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <span className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-400" />
+            <span>
+              Are willing to use the tools &mdash; assessments, logs, photos
+              &mdash; rather than wait for AI to read their mind.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <span className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-400" />
+            <span>
+              Want honest content on Rx-class compounds without a pharma sales
+              funnel.
+            </span>
+          </li>
+        </ul>
+
+        <p className="mt-10 font-serif text-[18px] leading-relaxed text-zinc-800 dark:text-zinc-200">
+          A bad fit for anyone looking for shortcuts, anyone who wants to be
+          told they&rsquo;re already perfect, or anyone who needs a streak
+          counter to stay motivated.
+        </p>
       </section>
 
       {/* Final CTA */}
-      <section className="border-t border-zinc-200 dark:border-zinc-800">
-        <div className="mx-auto w-full max-w-3xl px-6 py-24 text-center">
-          <h2 className="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
-            Start where you actually are.
+      <section className="border-t border-emerald-800 bg-emerald-900 dark:border-emerald-900 dark:bg-emerald-950">
+        <div className="mx-auto w-full max-w-3xl px-6 py-24 text-center sm:text-left">
+          <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            Start with three journeys free.
           </h2>
-          <p className="mt-5 mx-auto max-w-xl text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-            Free to use. Ten seconds a day to check in. No payment to
-            start, ever. Keep the parts that work, walk away if they
-            don&rsquo;t.
+          <p className="mt-4 text-lg leading-relaxed text-emerald-100 dark:text-emerald-200">
+            Or take the 14-day Pro trial to see all eight coordinated at once.
+            No card required to start.
           </p>
-          <div className="mt-10 flex items-center justify-center gap-4">
+          <div className="mt-10 flex flex-wrap items-center gap-4 sm:justify-start">
             <Link
               href="/signup"
-              className="rounded-full bg-zinc-900 px-6 py-3 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              className="rounded-full bg-white px-6 py-3 text-sm font-medium text-emerald-900 hover:bg-emerald-50"
             >
-              Sign up free
+              Start your trial
             </Link>
             <Link
               href="/login"
-              className="text-sm font-medium text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+              className="text-sm font-medium text-emerald-200 hover:text-white dark:text-emerald-300 dark:hover:text-white"
             >
-              Log in &rarr;
+              Already have an account? Log in &rarr;
             </Link>
           </div>
         </div>
       </section>
-
-      <footer className="border-t border-zinc-200 dark:border-zinc-800">
-        <div className="mx-auto w-full max-w-3xl px-6 py-10 text-center text-xs text-zinc-500">
-          <div className="flex flex-wrap items-center justify-center gap-5">
-            <Link
-              href="/mister-p"
-              className="hover:text-zinc-700 dark:hover:text-zinc-300"
-            >
-              Who is Mister P?
-            </Link>
-            <Link
-              href="/two-layers"
-              className="hover:text-zinc-700 dark:hover:text-zinc-300"
-            >
-              Two layers
-            </Link>
-            <Link
-              href="/tom-brady-face"
-              className="hover:text-zinc-700 dark:hover:text-zinc-300"
-            >
-              The Brady article
-            </Link>
-            <Link
-              href="/is-clav-right"
-              className="hover:text-zinc-700 dark:hover:text-zinc-300"
-            >
-              Is Clav right?
-            </Link>
-          </div>
-          <div className="mt-4">&copy; Cleanmaxxing. 18+ only.</div>
-        </div>
-      </footer>
     </main>
   );
 }

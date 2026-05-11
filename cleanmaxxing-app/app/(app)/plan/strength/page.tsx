@@ -26,6 +26,9 @@ import {
 } from '@/lib/strength/gear';
 import { getRecommendedExercises } from '@/lib/strength/recommended-exercises';
 import { AlcoholRecoveryCallout } from '@/components/alcohol-recovery-callout';
+import { getJourneyPhase } from '@/lib/journey-state/read';
+import { getMaintenanceContent } from '@/lib/journey-state/maintenance-content';
+import { MaintenanceView } from '@/components/journey/maintenance-view';
 import {
   getNutritionAssessment,
   hasNutritionAssessment,
@@ -68,6 +71,7 @@ export default async function StrengthPlanPage({ searchParams }: Props) {
     nutritionPresence,
     profile,
     nutritionAssessment,
+    journeyState,
   ] = await Promise.all([
     getStrengthAssessment(supabase, user.id),
     getRecentStrengthSessionCount(supabase, user.id, 7),
@@ -77,6 +81,7 @@ export default async function StrengthPlanPage({ searchParams }: Props) {
     // is moderate / heavy. Mirrors the cardio page's existing nutrition
     // load. Optional — the callout component handles null.
     getNutritionAssessment(supabase, user.id),
+    getJourneyPhase(supabase, user.id, 'strength'),
   ]);
   const hasReport = assessment?.report_text != null;
   const showForm = !assessment || !hasReport || editParam;
@@ -132,6 +137,16 @@ export default async function StrengthPlanPage({ searchParams }: Props) {
           </p>
         )}
       </header>
+
+      {journeyState && journeyState.phase !== 'implementing' && (
+        <div className="mt-8">
+          <MaintenanceView
+            phase={journeyState.phase}
+            enteredAt={journeyState.entered_at}
+            content={getMaintenanceContent('strength')}
+          />
+        </div>
+      )}
 
       {/* Pre-form data preview — when there's no plan yet AND the
           user has at least one strength session in the last 7 days. */}

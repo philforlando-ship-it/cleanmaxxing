@@ -74,6 +74,7 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
     initialProfile,
     { data: userRow },
     offTrackInputs,
+    journeyState,
   ] = await Promise.all([
     getNutritionAssessment(supabase, user.id),
     getRecentProteinSignal(supabase, user.id),
@@ -82,6 +83,7 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
     getUserProfile(supabase, user.id),
     supabase.from('users').select('age').eq('id', user.id).maybeSingle(),
     getNutritionOffTrackInputs(supabase, user.id),
+    getJourneyPhase(supabase, user.id, 'body_composition'),
   ]);
   // Backfill weight/height from the onboarding survey if the profile
   // columns are still null (pre-dates the onboarding-submit mirror).
@@ -158,6 +160,16 @@ export default async function NutritionPlanPage({ searchParams }: Props) {
           </p>
         )}
       </header>
+
+      {journeyState && journeyState.phase !== 'implementing' && (
+        <div className="mt-8">
+          <MaintenanceView
+            phase={journeyState.phase}
+            enteredAt={journeyState.entered_at}
+            content={getMaintenanceContent('body_composition')}
+          />
+        </div>
+      )}
 
       <BmrCalculatorPanel result={bmrResult} />
 

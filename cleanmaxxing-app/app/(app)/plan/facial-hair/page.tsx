@@ -28,6 +28,9 @@ import {
   type FacialHairAssessmentInitialValues,
 } from './assessment-form';
 import { FacialHairTryOnPanel } from './try-on-panel';
+import { getJourneyPhase } from '@/lib/journey-state/read';
+import { getMaintenanceContent } from '@/lib/journey-state/maintenance-content';
+import { MaintenanceView } from '@/components/journey/maintenance-view';
 import { GrowoutCard } from './growout-card';
 import { MinoxidilConsideringCard } from './minoxidil-considering-card';
 
@@ -86,6 +89,7 @@ export default async function FacialHairPlanPage({ searchParams }: Props) {
     premium,
     tryOnsByStyle,
     profile,
+    journeyState,
   ] = await Promise.all([
     getFacialHairAssessment(supabase, user.id),
     supabase
@@ -99,6 +103,7 @@ export default async function FacialHairPlanPage({ searchParams }: Props) {
     getPremiumStatus(user.id),
     listMostRecentTryOnsByStyle(supabase, user.id),
     getUserProfile(supabase, user.id),
+    getJourneyPhase(supabase, user.id, 'facial_hair'),
   ]);
   const hasReport = assessment?.report_text != null;
   const showForm = !assessment || !hasReport || editParam;
@@ -158,6 +163,16 @@ export default async function FacialHairPlanPage({ searchParams }: Props) {
           Mister P couldn&rsquo;t finish your plan last time. Submit again
           and we&rsquo;ll try once more.
         </p>
+      )}
+
+      {journeyState && journeyState.phase !== 'implementing' && (
+        <div className="mt-8">
+          <MaintenanceView
+            phase={journeyState.phase}
+            enteredAt={journeyState.entered_at}
+            content={getMaintenanceContent('facial_hair')}
+          />
+        </div>
       )}
 
       {showForm && (
