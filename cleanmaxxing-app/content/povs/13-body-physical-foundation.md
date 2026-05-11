@@ -289,3 +289,21 @@ One of the most common mistakes is attempting to spot\-reduce fat by increasing 
 
 __Abs are revealed, not created\. Training builds the muscle, diet determines whether it is visible\. The most effective approach combines consistent resistance training, including direct ab work, with a controlled calorie deficit\. The result is not just stronger abs — but visible ones\.__
 
+__Maintenance — Defending the Floor__
+
+Once the foundation is established — body composition in the range where the face is defined and the physique looks intentional, training consistent enough that the result is sustaining itself, sleep and posture habits running on their own — the work shifts. You are no longer trying to prove the system can build the result. Your job becomes defending the floor.
+
+This is not a lesser mode. Per POV 54, maintenance is a complete outcome — the point where the system becomes part of your life instead of a project you are trying to finish. Most men who engage with this seriously reach a defended baseline within twelve to twenty-four months. What happens after that is the real question.
+
+**The defended floor for this layer specifically.** Body composition stays inside a six-percentage-point range you have already proven you can hold. Training continues at a minimum of three quality sessions per week — not the maximal program, the maintainable one. Sleep does not regularly drop below seven hours for stretches longer than a week or two. Posture work continues as the resting state, not an active practice. Glutes and core retain enough strength that the silhouette and back hold up. Steps stay above seven thousand a day on average. None of these are improvement targets — they are the standards you keep.
+
+**Drift signals worth catching early.** Strength dropping session-over-session on lifts you used to progress on. Weight trending up beyond your defended range and staying there for more than two to three weeks (a single week is normal noise). Energy declining noticeably with no obvious life cause. Posture starting to feel like work again when it used to feel automatic. Daily steps trending below five thousand. Training sessions getting skipped without a reason that makes sense to you. Sleep regularly under seven hours for sustained periods. Any one of these in isolation is fine; two or three at once is the signal that the floor is drifting.
+
+**The climb-back protocol — not a restart.** When you notice drift, you are not starting over. You are climbing back. Identify which axis drifted. Return to the smallest version of the habit that produced the result the first time — three short workouts a week, the original protein target, the early-bed habit. Hold that for one to two weeks before evaluating. Reassess from baseline, not from panic. Only intensify if the drift persists past the climb-back window. Most drift resolves on its own when the baseline habits come back; what does not resolve usually has an upstream cause (sleep, stress, illness, a life-event spike) worth treating directly.
+
+**Recalibration cadence.** The weekly reflection's process-adherence question is the primary drift signal at this layer — if you mark "few or none" on training or sleep for two consecutive weeks, that is the floor speaking. The monthly weigh-in is the quieter signal for body composition. A quarterly read on overall presentation — photos, fit, how you feel walking into a room — catches the slower drift that weekly signals can miss. None of these are dashboards to obsess over; they are early-warning surfaces so a small drift does not become a six-month rebuild.
+
+Drift is expected. Travel, illness, work spikes, family stress, season changes — all of these will move you off the floor temporarily. That is not a failure mode of the system; it is the texture of the life the system was built to support. The goal is not to stay perfect. The goal is to keep the floor high enough that small regressions are easy to catch and easy to correct.
+
+When the floor is consistently defended for six to twelve months without active effort, the attention this once required can go elsewhere — relationships, work, performance, things that use the body the foundation built. Per POV 54, that redirection is the actual point.
+
