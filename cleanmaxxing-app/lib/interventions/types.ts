@@ -10,6 +10,7 @@
 export type InterventionType =
   | 'trt'
   | 'glp1'
+  | 'peptide'
   | 'finasteride'
   | 'minoxidil'
   | 'retinoid'
@@ -21,6 +22,7 @@ export type InterventionType =
 export const INTERVENTION_TYPES: ReadonlyArray<InterventionType> = [
   'trt',
   'glp1',
+  'peptide',
   'finasteride',
   'minoxidil',
   'retinoid',
@@ -33,6 +35,12 @@ export const INTERVENTION_TYPES: ReadonlyArray<InterventionType> = [
 export const INTERVENTION_TYPE_LABEL: Record<InterventionType, string> = {
   trt: 'TRT (Testosterone Replacement Therapy)',
   glp1: 'GLP-1 (semaglutide / tirzepatide)',
+  // Single 'peptide' type covers the GH secretagogue family
+  // (sermorelin, CJC-1295, ipamorelin, tesamorelin) — the specific
+  // compound, dose, and frequency get captured on the intervention
+  // row's free-text fields. Future ships may split this into multiple
+  // types if additional peptide categories warrant distinct tracking.
+  peptide: 'Peptide (GH secretagogue)',
   finasteride: 'Finasteride',
   minoxidil: 'Minoxidil',
   retinoid: 'Retinoid (tretinoin / retinol)',

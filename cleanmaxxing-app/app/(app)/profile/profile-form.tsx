@@ -37,6 +37,7 @@ const SKIN_TYPE_OPTIONS = [
 const INTERVENTION_LABELS: Record<Intervention, string> = {
   trt: 'TRT (testosterone replacement)',
   glp1: 'GLP-1 (Ozempic, Wegovy, Mounjaro)',
+  peptide: 'Peptide (sermorelin, CJC-1295 / ipamorelin, tesamorelin)',
   finasteride: 'Finasteride',
   minoxidil: 'Minoxidil',
   retinoid: 'Topical retinoid (tretinoin, adapalene)',

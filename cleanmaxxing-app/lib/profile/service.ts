@@ -37,6 +37,7 @@ export type RelationshipStatus = 'single' | 'dating' | 'partnered' | 'married';
 export type Intervention =
   | 'trt'
   | 'glp1'
+  | 'peptide'
   | 'finasteride'
   | 'minoxidil'
   | 'retinoid'
@@ -48,6 +49,7 @@ export type Intervention =
 export const INTERVENTIONS: ReadonlyArray<Intervention> = [
   'trt',
   'glp1',
+  'peptide',
   'finasteride',
   'minoxidil',
   'retinoid',
