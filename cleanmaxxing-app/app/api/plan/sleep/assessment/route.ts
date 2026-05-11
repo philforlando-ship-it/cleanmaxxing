@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { SleepAssessmentInputSchema } from '@/lib/sleep/types';
 import { saveSleepAssessment } from '@/lib/sleep/service';
-import { generateAndSaveSleepReport } from '@/lib/sleep/generate-report';
+import { streamSleepReport } from '@/lib/sleep/generate-report';
 import { reconcileCommitmentsForAssessment } from '@/lib/sleep/commitments';
 
 export async function POST(req: NextRequest) {
@@ -34,22 +34,8 @@ export async function POST(req: NextRequest) {
     assessment = await saveSleepAssessment(supabase, user.id, parsed.data);
   } catch (err) {
     console.error('sleep_assessment_save_failed', err);
-    // Diagnostic: include the raw Supabase/Postgres error code +
-    // message in the response so a failing save surfaces the real
-    // cause in the browser network tab. Safe to keep — these errors
-    // describe DB-level rejection (constraint violation, missing
-    // column, etc.) and don't leak data. Revert to a generic message
-    // once the underlying flake is identified + fixed.
-    const e = err as { code?: string; message?: string; details?: string };
     return NextResponse.json(
-      {
-        error: 'Could not save assessment',
-        debug: {
-          code: e.code ?? null,
-          message: e.message ?? null,
-          details: e.details ?? null,
-        },
-      },
+      { error: 'Could not save assessment' },
       { status: 500 },
     );
   }
@@ -68,10 +54,11 @@ export async function POST(req: NextRequest) {
     console.error('sleep_commitments_reconcile_failed', err);
   }
 
+  let result;
   try {
-    await generateAndSaveSleepReport(supabase, user.id, assessment);
+    result = await streamSleepReport(supabase, user.id, assessment);
   } catch (err) {
-    console.error('sleep_report_generation_failed', err);
+    console.error('sleep_report_prep_failed', err);
     return NextResponse.json(
       {
         error:
@@ -80,6 +67,5 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-
-  return NextResponse.json({ ok: true });
+  return result.toTextStreamResponse();
 }
