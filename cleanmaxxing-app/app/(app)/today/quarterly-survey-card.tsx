@@ -18,6 +18,9 @@ import type { QuarterlySurveyPrior } from '@/lib/quarterly-survey/service';
 
 type Props = {
   prior: QuarterlySurveyPrior;
+  // Dynamic cap on focus_areas selections. Free = 3, Pro/trial = 10
+  // (per lib/journeys/cap.ts, resolved server-side by the caller).
+  focusAreasCap: number;
 };
 
 // Mirrors the onboarding picker (lib/onboarding/questions.ts focus_areas
@@ -47,11 +50,10 @@ const MOTIVATION_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'not-sure-yet', label: 'Honestly, I’m not sure yet' },
 ];
 
-const MAX_FOCUS = 3;
-
 type View = 'intro' | 'form' | 'saved';
 
-export function QuarterlySurveyCard({ prior }: Props) {
+export function QuarterlySurveyCard({ prior, focusAreasCap }: Props) {
+  const MAX_FOCUS = focusAreasCap;
   const router = useRouter();
   const [view, setView] = useState<View>('intro');
   const [focusAreas, setFocusAreas] = useState<string[]>(prior.focusAreas);
@@ -135,7 +137,7 @@ export function QuarterlySurveyCard({ prior }: Props) {
           <label className="block text-sm font-medium text-zinc-900 dark:text-zinc-100">
             Which of these do you most want to improve now?
           </label>
-          <p className="mt-1 text-xs text-zinc-500">Pick up to 3. Your prior picks are pre-selected.</p>
+          <p className="mt-1 text-xs text-zinc-500">Pick up to {MAX_FOCUS}. Your prior picks are pre-selected.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {FOCUS_OPTIONS.map((opt) => {
               const selected = focusAreas.includes(opt.value);

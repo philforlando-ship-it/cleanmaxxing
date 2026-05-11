@@ -34,6 +34,8 @@ import { getCheckpointState } from '@/lib/checkpoint/service';
 import { getQuarterlySurveyState } from '@/lib/quarterly-survey/service';
 import { getCurrentWeeklyLetter } from '@/lib/weekly-letter/service';
 import { pickSelfAcceptanceNudge } from '@/lib/self-acceptance/risk-signals';
+import { getPremiumStatus } from '@/lib/billing/is-premium';
+import { journeyCapFor } from '@/lib/journeys/cap';
 import { WeeklyLetterCard } from '@/app/(app)/today/weekly-letter-card';
 import { WeeklyReflectionCard } from '@/app/(app)/today/weekly-reflection-card';
 import { MonthlyCheckpointCard } from '@/app/(app)/today/monthly-checkpoint-card';
@@ -63,6 +65,7 @@ export default async function ReflectionPage() {
     selfAcceptanceNudge,
     activeJourneys,
     profileRow,
+    premium,
   ] = await Promise.all([
     getWeeklyReflectionState(supabase, user.id),
     getCheckpointState(supabase, user.id),
@@ -75,7 +78,9 @@ export default async function ReflectionPage() {
       .select('current_weight_lbs')
       .eq('user_id', user.id)
       .maybeSingle(),
+    getPremiumStatus(user.id),
   ]);
+  const focusAreasCap = journeyCapFor(premium.isPremium);
 
   const currentWeightLbs =
     (profileRow.data?.current_weight_lbs as number | null | undefined) ?? null;
@@ -173,7 +178,10 @@ export default async function ReflectionPage() {
           )}
 
           {quarterlyState.status === 'eligible' && (
-            <QuarterlySurveyCard prior={quarterlyState.prior} />
+            <QuarterlySurveyCard
+              prior={quarterlyState.prior}
+              focusAreasCap={focusAreasCap}
+            />
           )}
 
           {/* Phase F: render the v2 process+outcome chart. Replaces

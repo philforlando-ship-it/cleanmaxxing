@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { saveQuarterlySurvey } from '@/lib/quarterly-survey/service';
+import { getPremiumStatus } from '@/lib/billing/is-premium';
+import { journeyCapFor, JOURNEY_CAP_PRO } from '@/lib/journeys/cap';
 
 // Focus-area enum mirrors the onboarding journey-picker (post-2026-05-07)
 // while keeping the legacy vocabulary accepted so historical answers
@@ -37,8 +39,11 @@ const MotivationEnum = z.enum([
   'not-sure-yet',
 ]);
 
+// Upper bound here is the Pro cap; we apply the Free cap runtime
+// after resolving the caller's premium status. The Zod ceiling stops
+// pathological payloads but doesn't enforce the Free/Pro split.
 const BodySchema = z.object({
-  focusAreas: z.array(FocusAreaEnum).min(1).max(3),
+  focusAreas: z.array(FocusAreaEnum).min(1).max(JOURNEY_CAP_PRO),
   motivationSegment: MotivationEnum,
   // Free text — trimmed + capped at 500 chars to bound DB row size.
   specificThing: z
@@ -69,6 +74,20 @@ export async function POST(req: Request) {
   if (!result.success) {
     return NextResponse.json(
       { error: 'Invalid body', details: result.error.issues },
+      { status: 400 },
+    );
+  }
+
+  // Apply the Free/Pro cap on focus_areas count. Pro/trial users get
+  // the 10-journey ceiling enforced by Zod above; Free is tightened
+  // here so a downgraded user is forced to trim selections on the
+  // next survey rather than being silently allowed to keep more than
+  // their tier permits.
+  const { isPremium } = await getPremiumStatus(user.id);
+  const cap = journeyCapFor(isPremium);
+  if (result.data.focusAreas.length > cap) {
+    return NextResponse.json(
+      { error: `Pick up to ${cap}.` },
       { status: 400 },
     );
   }
