@@ -15,27 +15,8 @@ import { BLOCKER_HINT } from '@/lib/sleep/blocker-hints';
 import type { NutritionOffTrackShape } from './prompts';
 import type { ContextualPrompt } from './types';
 
-export function copySkippedCheckIns(daysSince: number): ContextualPrompt {
-  if (daysSince >= 14) {
-    return {
-      kind: 'skipped_check_ins',
-      title: 'Two weeks since the last check-in.',
-      body: 'No judgment. Sometimes the answer is "the plan needs to change," sometimes it\'s "life is doing other things right now." Worth naming which one it is.',
-    };
-  }
-  if (daysSince >= 7) {
-    return {
-      kind: 'skipped_check_ins',
-      title: 'A week without a check-in.',
-      body: 'The check-in is a one-tap thing — when it slips for a week, it\'s usually less about willpower and more about something pulling attention. What\'s going on?',
-    };
-  }
-  return {
-    kind: 'skipped_check_ins',
-    title: `${daysSince} days since your last check-in.`,
-    body: 'Not a problem yet — daily logging is meant to bend, not break. Worth noticing if it stretches longer.',
-  };
-}
+// copySkippedCheckIns retired in Tier 3 cleanup (2026-05-10) — the
+// detector it backed reads from the dropped check_ins table.
 
 // Phase F replacement for the legacy copyConfidenceDeclining.
 // Composite signal: most of the user's active journeys have shown

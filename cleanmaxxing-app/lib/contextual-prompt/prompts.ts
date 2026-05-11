@@ -13,34 +13,8 @@ import type {
 
 const DAYS_MS = 24 * 60 * 60 * 1000;
 
-// =====================
-// skipped_check_ins
-// =====================
-
-// Fires when the user has gone 4+ consecutive days without a
-// check_in row. The detector returns the day count when firing
-// so the copy can say "4 days" or "10 days" specifically.
-export function detectSkippedCheckIns(args: {
-  // ISO date (YYYY-MM-DD) of the most recent check_in. Null if
-  // the user has never checked in.
-  latestCheckInDate: string | null;
-  // Today's app-day in the user's timezone, also YYYY-MM-DD.
-  todayAppDay: string;
-}): { fires: boolean; daysSince: number } {
-  if (!args.latestCheckInDate) {
-    // User has never checked in — don't fire here. The
-    // first-conversation / onboarding surfaces handle the cold-start
-    // case; this prompt is for active users who are slipping.
-    return { fires: false, daysSince: 0 };
-  }
-  const today = new Date(`${args.todayAppDay}T00:00:00Z`).getTime();
-  const last = new Date(`${args.latestCheckInDate}T00:00:00Z`).getTime();
-  if (Number.isNaN(today) || Number.isNaN(last)) {
-    return { fires: false, daysSince: 0 };
-  }
-  const daysSince = Math.floor((today - last) / DAYS_MS);
-  return { fires: daysSince >= 4, daysSince };
-}
+// detectSkippedCheckIns retired in Tier 3 cleanup (2026-05-10) —
+// the underlying check_ins table dropped alongside the goals system.
 
 // =====================
 // nutrition_off_track

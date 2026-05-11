@@ -19,7 +19,6 @@ type LetterContext = {
   reflectionNotes: string | null;
   reflectionDimsAvg: number | null;
   recentQuestions: string[];
-  daysCheckedInLast7: number;
 };
 
 export async function gatherLetterContext(
@@ -57,14 +56,6 @@ export async function gatherLetterContext(
 
   const sevenDaysAgo = new Date(now);
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const sinceIso = sevenDaysAgo.toISOString().slice(0, 10);
-
-  const { data: checkIns } = await supabase
-    .from('check_ins')
-    .select('id')
-    .eq('user_id', userId)
-    .gte('date', sinceIso);
-  const daysCheckedInLast7 = (checkIns ?? []).length;
 
   const { data: queryRows } = await supabase
     .from('mister_p_queries')
@@ -83,7 +74,6 @@ export async function gatherLetterContext(
     reflectionNotes,
     reflectionDimsAvg,
     recentQuestions,
-    daysCheckedInLast7,
   };
 }
 
@@ -94,13 +84,6 @@ function formatContextBlock(ctx: LetterContext): string {
   lines.push(`tenure: ${state.daysSinceOnboarding} days since onboarding`);
   if (state.specificThing) {
     lines.push(`specific_thing: ${state.specificThing}`);
-  }
-
-  lines.push(`days_checked_in_last_7: ${ctx.daysCheckedInLast7}`);
-  if (state.weeklyCompletionRate !== null) {
-    lines.push(
-      `weekly_goal_completion: ${Math.round(state.weeklyCompletionRate * 100)}%`,
-    );
   }
 
   if (state.workoutCountLast7 > 0) {

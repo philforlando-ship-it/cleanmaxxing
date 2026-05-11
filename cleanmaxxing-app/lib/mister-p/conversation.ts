@@ -20,9 +20,9 @@ export type ConversationPair = {
 
 // Global (unscoped) /today chat keeps a tight 8-pair window — the global
 // thread cuts across topics, so longer history pulls in context that
-// rarely recurs. Per-thread scopes (journey or goal) run deeper because
-// the topic stays stable across turns; 15 pairs gives enough continuity
-// for a user returning a week later without blowing the prompt's token
+// rarely recurs. Journey-scoped threads run deeper because the topic
+// stays stable across turns; 15 pairs gives enough continuity for a
+// user returning a week later without blowing the prompt's token
 // budget.
 const DEFAULT_LIMIT_GLOBAL = 8;
 const DEFAULT_LIMIT_PER_THREAD = 15;
@@ -34,30 +34,22 @@ export async function getRecentConversation(
   userId: string,
   options: {
     journeySlug?: string | null;
-    goalId?: string | null;
     limit?: number;
   } = {},
 ): Promise<ConversationPair[]> {
-  const { journeySlug = null, goalId = null, limit } = options;
-  const isScoped = journeySlug !== null || goalId !== null;
+  const { journeySlug = null, limit } = options;
   const effectiveLimit =
-    limit ?? (isScoped ? DEFAULT_LIMIT_PER_THREAD : DEFAULT_LIMIT_GLOBAL);
+    limit ?? (journeySlug !== null ? DEFAULT_LIMIT_PER_THREAD : DEFAULT_LIMIT_GLOBAL);
 
   let query = supabase
     .from('mister_p_queries')
     .select('question, answer, created_at')
     .eq('user_id', userId);
 
-  // Scope to the right thread. journey_slug takes precedence (current
-  // primary picker); goal_id is the legacy /goals/[id] path. When
-  // neither is set, the General thread loads — rows with BOTH
-  // scopes null — so scoped histories don't bleed into General.
   if (journeySlug) {
     query = query.eq('journey_slug', journeySlug);
-  } else if (goalId) {
-    query = query.eq('goal_id', goalId);
   } else {
-    query = query.is('journey_slug', null).is('goal_id', null);
+    query = query.is('journey_slug', null);
   }
 
   const { data, error } = await query

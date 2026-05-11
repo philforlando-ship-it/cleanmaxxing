@@ -7,13 +7,16 @@
 // empty Area 2 is better than filler.
 //
 // Priority order (commit):
-//   1. skipped_check_ins  (most urgent — disengagement signal)
-//   2. nutrition_off_track  (behavior-anchored single-journey signal — fires before three weekly reflections accumulate; A1 from May 10 brain dump)
-//   3. process_adherence_declining  (slow-burn signal — Phase F replacement for the legacy confidence-declining detector)
-//   4. sleep_deficit_7d  (substrate-level — affects every other journey; C1 from May 7 brain dump)
-//   5. cross_journey_dependency  (I1 — makes platform architecture visible; free sees one teaser, Pro sees full set)
-//   6. glp1_hydration  (modifier-driven, gentle reminder)
-//   7. sleep_variance_high  (recovery context for active lifters)
+//   1. nutrition_off_track  (behavior-anchored single-journey signal — fires before three weekly reflections accumulate; A1 from May 10 brain dump)
+//   2. process_adherence_declining  (slow-burn signal — Phase F replacement for the legacy confidence-declining detector)
+//   3. sleep_deficit_7d  (substrate-level — affects every other journey; C1 from May 7 brain dump)
+//   4. cross_journey_dependency  (I1 — makes platform architecture visible; free sees one teaser, Pro sees full set)
+//   5. glp1_hydration  (modifier-driven, gentle reminder)
+//   6. sleep_variance_high  (recovery context for active lifters)
+//
+// skipped_check_ins retired in Tier 3 cleanup (2026-05-10) along
+// with the goals system — the check_ins table it read no longer
+// exists.
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getProtocolRollup } from '@/lib/interventions/service';
@@ -36,7 +39,6 @@ import {
   detectGlp1Active,
   detectNutritionOffTrack,
   detectProcessAdherenceDeclining,
-  detectSkippedCheckIns,
   detectSleepDeficit7d,
   detectSleepVarianceHigh,
 } from './prompts';
@@ -47,7 +49,6 @@ import {
   copyGlp1Hydration,
   copyNutritionOffTrack,
   copyProcessAdherenceDeclining,
-  copySkippedCheckIns,
   copySleepDeficit7d,
   copySleepVarianceHigh,
 } from './copy';
@@ -80,7 +81,6 @@ export async function selectContextualPrompt(
     .slice(0, 10);
 
   const [
-    { data: latestCheckIn },
     reflectionState,
     glp1Rollup,
     { data: sleepRows },
@@ -96,13 +96,6 @@ export async function selectContextualPrompt(
     hasStrengthPlan,
     fatigueState,
   ] = await Promise.all([
-    supabase
-      .from('check_ins')
-      .select('date')
-      .eq('user_id', userId)
-      .order('date', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
     getWeeklyReflectionState(supabase, userId),
     getProtocolRollup(supabase, userId, 'glp1'),
     supabase
@@ -146,19 +139,7 @@ export async function selectContextualPrompt(
     .map((r) => r.total_hours)
     .filter((h): h is number => h != null);
 
-  // ===== Bucket 1 — skipped_check_ins =====
-  if (canFire('skipped_check_ins', primaryActionKind)) {
-    const result = detectSkippedCheckIns({
-      latestCheckInDate:
-        (latestCheckIn as { date: string } | null)?.date ?? null,
-      todayAppDay,
-    });
-    if (result.fires) {
-      return copySkippedCheckIns(result.daysSince);
-    }
-  }
-
-  // ===== Bucket 2 — nutrition_off_track (A1) =====
+  // ===== Bucket 1 — nutrition_off_track (A1) =====
   // Single-journey behavioral signal — fires when the user proved
   // engagement, has a 14+ day old plan, and the log has either gone
   // quiet or hit ratio collapsed. Pulls ahead of

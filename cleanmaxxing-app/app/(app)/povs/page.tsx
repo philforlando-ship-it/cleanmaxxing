@@ -1,13 +1,19 @@
-// POV index scoped to the user's own goals. Users see the docs behind
-// the goals they've actually picked, not the full 60-doc corpus — the
-// corpus exists for educational grounding, the viewer exists for depth
-// on what the user is working on right now.
+// POV index scoped to the user's active journeys (post-Tier-3,
+// 2026-05-10). Pre-retirement this filtered by accepted goals; now
+// it filters by focus_areas + the POVs each journey's anchor /
+// parent attribution covers. The corpus exists for educational
+// grounding, the viewer exists for depth on what the user is
+// working on right now.
 
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { povExists, povTitleFor } from '@/lib/content/pov';
 import { plainLanguageFor } from '@/lib/content/plain-language';
+import {
+  FOCUS_AREA_TO_POV_SLUG,
+  type FocusAreaSlug,
+} from '@/lib/hierarchy/tiers';
 import metadataRaw from '@/content/povs/_metadata.json';
 
 type TierKey =
@@ -98,19 +104,32 @@ export default async function PovsIndexPage() {
     .maybeSingle();
   const ageSegment = (profile?.age_segment as string | null) ?? null;
 
-  // Pull every source_slug the user has ever accepted, regardless of
-  // status. Completed and abandoned goals still get their POV listed —
-  // a user who just finished a goal may want to revisit the doc, and
-  // an abandoned goal's doc is still relevant reference material.
-  const { data: goalsRaw } = await supabase
-    .from('goals')
-    .select('source_slug')
-    .eq('user_id', user.id);
+  // Pull the user's active focus areas. Each focus area has a
+  // canonical anchor POV (FOCUS_AREA_TO_POV_SLUG); those anchors
+  // are the user's "started journeys" POV set. Pre-Tier-3 this read
+  // from the goals table; the goals system retired 2026-05-10.
+  const { data: focusRow } = await supabase
+    .from('survey_responses')
+    .select('response_value')
+    .eq('user_id', user.id)
+    .eq('question_key', 'focus_areas')
+    .maybeSingle();
 
   const userSlugs = new Set<string>();
-  for (const row of goalsRaw ?? []) {
-    const slug = (row as { source_slug: string | null }).source_slug;
-    if (slug && povExists(slug)) userSlugs.add(slug);
+  if (focusRow?.response_value) {
+    try {
+      const parsed = JSON.parse(focusRow.response_value as string);
+      if (Array.isArray(parsed)) {
+        for (const raw of parsed) {
+          if (typeof raw !== 'string') continue;
+          const anchor =
+            FOCUS_AREA_TO_POV_SLUG[raw as FocusAreaSlug];
+          if (anchor && povExists(anchor)) userSlugs.add(anchor);
+        }
+      }
+    } catch {
+      // ignore — survey_responses row will heal on next quarterly save
+    }
   }
 
   const sortedSlugs = Array.from(userSlugs).sort();

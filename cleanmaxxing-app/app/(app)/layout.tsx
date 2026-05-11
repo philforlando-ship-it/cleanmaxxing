@@ -31,7 +31,7 @@ export default async function AppLayout({
   // mounted in the nav needs it on every (app) page render.
   const [{ data: userRow }, generalPairs] = await Promise.all([
     supabase.from('users').select('timezone').eq('id', user.id).maybeSingle(),
-    getRecentConversation(supabase, user.id, { goalId: null }),
+    getRecentConversation(supabase, user.id, { journeySlug: null }),
   ]);
   const currentTimezone =
     (userRow?.timezone as string | null) ?? 'America/New_York';

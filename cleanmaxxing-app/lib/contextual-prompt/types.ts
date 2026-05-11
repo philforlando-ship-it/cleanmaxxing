@@ -5,7 +5,6 @@
 import type { PrimaryActionKind } from '@/lib/today/types';
 
 export type ContextualPromptKind =
-  | 'skipped_check_ins'
   | 'nutrition_off_track'
   | 'process_adherence_declining'
   | 'cross_journey_dependency'
@@ -44,9 +43,6 @@ export const PRIMARY_ACTION_INCOMPATIBILITIES: Record<
   ContextualPromptKind,
   ReadonlyArray<PrimaryActionKind>
 > = {
-  // Both communicate "engagement is off" — let Area 1's
-  // circuit-breaker do the heavy lifting; don't double up.
-  skipped_check_ins: ['stepped_away', 'circuit_breaker'],
   // Behavioral signal (actual nutrition_logs adherence). Suppressed
   // alongside the engagement-off signals like the other "you're
   // slipping" detectors.

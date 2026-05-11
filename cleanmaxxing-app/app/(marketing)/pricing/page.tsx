@@ -6,16 +6,19 @@
 //
 // IMPORTANT — this page is FORWARD-LOOKING (2026-05-10 rewrite).
 // The matrix below reflects the INTENDED Free vs Pro split, which
-// is ahead of the actual enforcement. Several gates named here
-// (3-journey cap, 10-chat-queries-per-month cap, wearable Pro gate,
-// cross-journey Pro gate, photo-aware chat Pro gate) are not yet
-// implemented in the API routes / chat path / journey picker. The
-// page is the spec; the code catches up. When a gate ships, no
-// change is needed here unless the limit value moves.
+// is ahead of the actual enforcement. Some gates named here
+// (10-chat-queries-per-month cap, wearable Pro gate, photo-aware
+// chat Pro gate) are not yet implemented in the API routes / chat
+// path. The page is the spec; the code catches up. When a gate
+// ships, no change is needed here unless the limit value moves.
 //
 // Already-gated today (truth source = requirePremium calls in API
 // routes): facial analysis, hair cut try-on, hair photo trend
-// analysis, beard try-on.
+// analysis, beard try-on. Also gated: the 3-journey focus_areas cap
+// (lib/journeys/cap.ts; enforced in /api/onboarding/answer and
+// /api/quarterly-survey) and the cross-journey awareness in
+// Mister P answers (lib/mister-p/prompt.ts journey-state filter,
+// applied in /api/mister-p/ask when the caller isn't premium).
 
 import Link from 'next/link';
 import type { Metadata } from 'next';
@@ -26,7 +29,7 @@ import { BillingPlanPicker } from '@/app/(app)/settings/billing/billing-plan-pic
 export const metadata: Metadata = {
   title: 'Pricing — Cleanmaxxing',
   description:
-    'Three journeys free. Ten on Pro. The cross-journey logic is Pro only.',
+    'Three journeys free. Ten on Pro. The more journeys you track, the more Mister P sees the connections.',
 };
 
 // FeatureValue is either a boolean (rendered as check / dash) or a
@@ -120,9 +123,9 @@ const GROUPS: FeatureGroup[] = [
       {
         label: 'Cross-journey awareness in answers',
         description:
-          'Free Mister P answers each question in isolation. Pro Mister P reads how your strength, cardio, nutrition, sleep, and recovery interact — and answers from the whole picture.',
-        free: 'Limited',
-        premium: 'Full',
+          'Mister P answers from every journey you have active. Free covers your 3 picks; Pro spans all 10 — so the more you track, the more connections he can see (cardio fatigue affecting strength, GLP-1 reshaping nutrition, hair density influencing style, etc.).',
+        free: '3 journeys',
+        premium: 'All 10',
       },
     ],
   },
@@ -149,46 +152,11 @@ const GROUPS: FeatureGroup[] = [
     heading: 'Cross-journey orchestration',
     rows: [
       {
-        label: 'Strength ↔ cardio recovery balance',
+        label: 'Your journeys read each other',
         description:
-          'Lifting volume up → cardio dose adjusts. High cardio output → strength recovery accommodates. Both share recovery; Pro models the trade-off.',
-        free: false,
-        premium: true,
-      },
-      {
-        label: 'Nutrition ↔ strength + cardio',
-        description:
-          'Caloric deficit warning when strength volume is high. Protein floor scales with lifting load. Cardio output influences calorie targets.',
-        free: false,
-        premium: true,
-      },
-      {
-        label: 'Hair ↔ facial-hair coordination',
-        description:
-          'Cut recommendation factors current beard. Beard recommendation factors hair density, balding pattern, head shape, graying. Each plan reads the other.',
-        free: false,
-        premium: true,
-      },
-      {
-        label: 'Sleep ↔ training fatigue signal',
-        description:
-          'Bidirectional. Sleep deficit downweights tomorrow’s training intensity. Heavy training week tightens sleep recommendations.',
-        free: false,
-        premium: true,
-      },
-      {
-        label: 'Activity-change recalibration',
-        description:
-          'When weekly reflection shows your real activity has shifted, every active plan re-evaluates against the new baseline — not just the journey you flagged.',
-        free: false,
-        premium: true,
-      },
-      {
-        label: 'Cross-journey signals on /today',
-        description:
-          'When two of your journeys interact in a way worth naming — cardio on top of a cut, cardio fatigue downweighting strength, activity change making nutrition stale — /today surfaces it as a contextual prompt. Free sees the cardio-cut signal as a teaser; Pro sees the full set.',
-        free: '1 signal (cardio + cut)',
-        premium: 'Full set',
+          'Lifting volume changes the cardio dose. Cardio load adjusts the calorie target. Sleep deficit downweights tomorrow’s training. Hair recs read facial hair, and the reverse. The architecture is what makes Cleanmaxxing different from single-vertical tools — Free runs the orchestration on your self-report, Pro layers wearable HRV / RHR / activity load on top for objective recovery confirmation.',
+        free: 'Self-report',
+        premium: '+ Wearable signals',
       },
     ],
   },
@@ -242,9 +210,9 @@ export default async function PricingPage() {
           Three journeys free. Ten on Pro.
         </h1>
         <p className="mt-6 text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
-          The cross-journey logic — the part that makes this not just an
-          LLM wrapper — is Pro only. Free is enough to know if the
-          system works for you. Pro is the system.
+          The more journeys you track, the more Mister P sees the
+          connections between them. Free covers 3; Pro unlocks all 10
+          plus the wearable + vision features that feed the picture.
         </p>
       </section>
 

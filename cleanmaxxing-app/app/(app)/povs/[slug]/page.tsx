@@ -25,15 +25,11 @@ export default async function PovPage({ params }: Props) {
   const pov = await povFor(slug);
   if (!pov) notFound();
 
-  // Surface any of the user's active goals that trace back to this POV, so
-  // the reader knows "this is the backing doc for the X goal I'm running."
-  const { data: connectedGoalsRaw } = await supabase
-    .from('goals')
-    .select('id, title')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .eq('source_slug', slug);
-  const connectedGoals = connectedGoalsRaw ?? [];
+  // Pre-Tier-3 this surfaced the user's active goals anchored to this
+  // POV. The goals system retired 2026-05-10; the equivalent
+  // "anchored to one of your journeys" signal could be added back via
+  // FOCUS_AREA_TO_POV_SLUG / parentFocusAreaForPovSlug, but is left
+  // off for now — the POV page renders cleanly without the chip.
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -48,18 +44,6 @@ export default async function PovPage({ params }: Props) {
         <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
           {pov.title}
         </h1>
-        {connectedGoals.length > 0 && (
-          <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
-            Backing doc for your active{' '}
-            {connectedGoals.length === 1 ? 'goal' : 'goals'}:{' '}
-            {connectedGoals.map((g, i) => (
-              <span key={g.id}>
-                <span className="text-zinc-700 dark:text-zinc-300">{g.title}</span>
-                {i < connectedGoals.length - 1 && ', '}
-              </span>
-            ))}
-          </p>
-        )}
       </header>
 
       <article className="mt-8">

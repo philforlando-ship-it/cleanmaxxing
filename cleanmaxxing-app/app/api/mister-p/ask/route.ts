@@ -16,7 +16,9 @@ import {
   formatJourneyStateBlock,
   formatUserStateBlock,
   formatConversationHistoryBlock,
+  type JourneyFilterKey,
 } from '@/lib/mister-p/prompt';
+import { getPremiumStatus } from '@/lib/billing/is-premium';
 import {
   analyzeTopicCluster,
   shouldTriggerCircuitBreaker,
@@ -200,12 +202,65 @@ export async function POST(req: NextRequest) {
   // Mister P handle adaptive-intelligence questions (workout
   // soreness, skincare reactions, GLP-1 ongoing support, equipment
   // upgrade prompts) without going generic.
-  const [userState, journeyState] = await Promise.all([
+  //
+  // Cross-journey gate: Pro/trial users see every journey with a
+  // report; Free users only see the journeys in their focus_areas.
+  // The restriction is computed from survey_responses.focus_areas;
+  // active_protocols + photos are always emitted (they're universal
+  // context, not journey-specific). Pricing-page wording matches:
+  // Free Mister P sees state for the 3 journeys you picked; Pro sees
+  // all 10. Mapped focus_area → journey-state key: body_composition →
+  // nutrition; sleep has no journey-state line (lives in user-state);
+  // every other slug maps 1:1.
+  const [userState, journeyState, premium, focusAreasRow] = await Promise.all([
     getMisterPUserState(supabase, user.id),
     getMisterPJourneyState(supabase, user.id),
+    getPremiumStatus(user.id),
+    supabase
+      .from('survey_responses')
+      .select('response_value')
+      .eq('user_id', user.id)
+      .eq('question_key', 'focus_areas')
+      .maybeSingle(),
   ]);
   const userStateBlock = formatUserStateBlock(userState);
-  const journeyStateBlock = formatJourneyStateBlock(journeyState);
+
+  let journeyRestriction: ReadonlySet<JourneyFilterKey> | null = null;
+  if (!premium.isPremium) {
+    const FOCUS_TO_JOURNEY: Record<string, JourneyFilterKey> = {
+      hair: 'hair',
+      style: 'style',
+      body_composition: 'nutrition',
+      strength: 'strength',
+      cardio: 'cardio',
+      skincare: 'skincare',
+      facial_hair: 'facial_hair',
+      // 'sleep' intentionally omitted — sleep state lives in the
+      // user-state block, not the journey-state block.
+    };
+    const raw = focusAreasRow.data?.response_value as string | null | undefined;
+    const allowed = new Set<JourneyFilterKey>();
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          for (const v of parsed) {
+            const mapped = FOCUS_TO_JOURNEY[v as string];
+            if (mapped) allowed.add(mapped);
+          }
+        }
+      } catch {
+        // Malformed focus_areas row — treat as no allow-list. The
+        // journey block will render no per-journey lines but
+        // active_protocols + photos still emit.
+      }
+    }
+    journeyRestriction = allowed;
+  }
+  const journeyStateBlock = formatJourneyStateBlock(
+    journeyState,
+    journeyRestriction,
+  );
 
   // Rolling conversation history — scoped to the current thread.
   // journeySlug picks the journey-scoped thread; null picks the

@@ -286,11 +286,6 @@ export function formatUserStateBlock(state: MisterPUserState): string | null {
     );
   }
 
-  if (state.weeklyCompletionRate !== null) {
-    const pct = Math.round(state.weeklyCompletionRate * 100);
-    lines.push(`weekly_goal_completion_rate: ${pct}% over the last 7 days`);
-  }
-
   if (state.confidence) {
     const rows: string[] = [];
     for (const k of ['social', 'work', 'physical', 'appearance'] as const) {
@@ -375,12 +370,29 @@ ${lines.join('\n')}
 // just use the state to calibrate the answer.
 import type { MisterPJourneyState } from './journey-state';
 
+// Per-journey filter for the cross-journey block. When non-null, only
+// journeys whose key is in the set get emitted; active_protocols and
+// photos always emit (they're universal context, not journey-specific).
+// Used to gate the block by focus_areas for Free users — Pro/trial
+// callers pass null and see every journey with a report.
+export type JourneyFilterKey =
+  | 'hair'
+  | 'style'
+  | 'nutrition'
+  | 'strength'
+  | 'cardio'
+  | 'skincare'
+  | 'facial_hair';
+
 export function formatJourneyStateBlock(
   state: MisterPJourneyState,
+  restrictToJourneys: ReadonlySet<JourneyFilterKey> | null = null,
 ): string | null {
   const lines: string[] = [];
+  const allow = (key: JourneyFilterKey): boolean =>
+    restrictToJourneys === null || restrictToJourneys.has(key);
 
-  if (state.hair?.has_report) {
+  if (state.hair?.has_report && allow('hair')) {
     const parts: string[] = ['report ✓'];
     if (state.hair.density_state) {
       parts.push(`density_state=${state.hair.density_state}`);
@@ -418,11 +430,11 @@ export function formatJourneyStateBlock(
     lines.push(`hair: ${parts.join('; ')}`);
   }
 
-  if (state.style?.has_report) {
+  if (state.style?.has_report && allow('style')) {
     lines.push('style: report ✓');
   }
 
-  if (state.nutrition?.has_report) {
+  if (state.nutrition?.has_report && allow('nutrition')) {
     const parts: string[] = ['report ✓'];
     if (state.nutrition.goal_direction) {
       parts.push(`goal=${state.nutrition.goal_direction}`);
@@ -438,7 +450,7 @@ export function formatJourneyStateBlock(
     lines.push(`nutrition: ${parts.join('; ')}`);
   }
 
-  if (state.strength?.has_report) {
+  if (state.strength?.has_report && allow('strength')) {
     const parts: string[] = ['report ✓'];
     if (state.strength.primary_goal) {
       parts.push(`primary_goal=${state.strength.primary_goal}`);
@@ -460,7 +472,7 @@ export function formatJourneyStateBlock(
     lines.push(`strength: ${parts.join('; ')}`);
   }
 
-  if (state.cardio?.has_report) {
+  if (state.cardio?.has_report && allow('cardio')) {
     const parts: string[] = ['report ✓'];
     if (state.cardio.modality_preference.length > 0) {
       parts.push(`modality=${state.cardio.modality_preference.join('+')}`);
@@ -468,7 +480,7 @@ export function formatJourneyStateBlock(
     lines.push(`cardio: ${parts.join('; ')}`);
   }
 
-  if (state.skincare?.has_report) {
+  if (state.skincare?.has_report && allow('skincare')) {
     const parts: string[] = ['report ✓'];
     parts.push(
       state.skincare.baseline_established
@@ -486,7 +498,7 @@ export function formatJourneyStateBlock(
     lines.push(`skincare: ${parts.join('; ')}`);
   }
 
-  if (state.facial_hair?.has_report) {
+  if (state.facial_hair?.has_report && allow('facial_hair')) {
     const parts: string[] = ['report ✓'];
     if (state.facial_hair.growout_test_active) {
       const days = state.facial_hair.growout_test_started_days_ago;

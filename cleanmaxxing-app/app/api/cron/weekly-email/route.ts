@@ -85,10 +85,7 @@ export async function GET(req: NextRequest) {
     const email = authUser.user.email;
 
     try {
-      const data = await computeWeeklyEmailData(
-        service as unknown as Parameters<typeof computeWeeklyEmailData>[0],
-        profile.id as string
-      );
+      const data = await computeWeeklyEmailData();
       const rendered = renderWeeklyEmail(data, appUrl);
 
       if (dryRun || !resend) {

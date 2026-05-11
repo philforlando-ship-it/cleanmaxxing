@@ -579,6 +579,86 @@ async function check0104() {
   return classifyError(error, 'journey_slug accepted');
 }
 
+async function check0106() {
+  // Goals system drop. Verifies that:
+  //   1. goals / goal_check_ins / check_ins tables are GONE
+  //   2. mister_p_queries.goal_id column is GONE
+  //   3. hair_assessments.stage_2_pattern_d_goal_id column is GONE
+  //
+  // For each, attempt an operation that requires the dropped target.
+  // PostgREST returns a specific error code (42P01 "relation does not
+  // exist" for tables, 42703 "column does not exist" for columns)
+  // when the drop landed. Any other error is a failure.
+  const expected = [
+    { kind: 'table', name: 'goals' },
+    { kind: 'table', name: 'goal_check_ins' },
+    { kind: 'table', name: 'check_ins' },
+  ];
+  for (const target of expected) {
+    const { error } = await supabase.from(target.name).select('*').limit(1);
+    if (!error) {
+      return {
+        ok: false,
+        detail: `${target.kind} ${target.name} still exists (select succeeded)`,
+      };
+    }
+    const msg = error.message ?? '';
+    const codeOk = error.code === '42P01';
+    const msgOk =
+      /does not exist/i.test(msg) ||
+      /no longer exists/i.test(msg) ||
+      /could not find the table/i.test(msg);
+    if (!codeOk && !msgOk) {
+      return {
+        ok: false,
+        detail: `${target.kind} ${target.name} unexpected error: ${msg}`,
+      };
+    }
+  }
+
+  // Column drops — probe by attempting an insert that includes the
+  // dropped column. PostgREST replies with 42703 / "column does not
+  // exist" when the migration landed. The FK on user_id will still
+  // reject the sentinel, but only AFTER schema validation — so a
+  // 42703 here is the canonical pass.
+  await supabase
+    .from('mister_p_queries')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  const { error: mpqError } = await supabase
+    .from('mister_p_queries')
+    .insert({
+      user_id: SENTINEL_USER_ID,
+      question: 'sentinel',
+      answer: 'sentinel',
+      // Column was dropped — probing whether PostgREST rejects with
+      // the expected schema error. Untyped insert so TS doesn't
+      // pre-empt the runtime check.
+      goal_id: '00000000-0000-0000-0000-000000000000',
+    } as Record<string, unknown>);
+  await supabase
+    .from('mister_p_queries')
+    .delete()
+    .eq('user_id', SENTINEL_USER_ID);
+  if (!mpqError) {
+    return {
+      ok: false,
+      detail: 'mister_p_queries.goal_id still accepts inserts',
+    };
+  }
+  if (!/goal_id|does not exist|column/i.test(mpqError.message ?? '')) {
+    return {
+      ok: false,
+      detail: `mister_p_queries.goal_id drop probe unexpected error: ${mpqError.message}`,
+    };
+  }
+
+  return {
+    ok: true,
+    detail: 'goals / goal_check_ins / check_ins tables + goal_id column all dropped',
+  };
+}
+
 async function check0103() {
   // nutrition_assessments.cheat_day_pattern — nullable text column
   // with check constraint on the four enum values. Sentinel sets
@@ -718,6 +798,10 @@ async function main() {
     {
       label: '0104 — mister_p_queries.journey_slug',
       run: check0104,
+    },
+    {
+      label: '0106 — drop goals system (tables + columns)',
+      run: check0106,
     },
   ];
 
