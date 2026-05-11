@@ -16,6 +16,8 @@ type Observation = {
   dimension:
     | 'skin'
     | 'facial_fullness'
+    | 'jawline_definition'
+    | 'chin_projection'
     | 'beard'
     | 'hair'
     | 'undereye'
@@ -44,6 +46,8 @@ type Props = {
 const DIMENSION_LABEL: Record<Observation['dimension'], string> = {
   skin: 'Skin',
   facial_fullness: 'Facial fullness',
+  jawline_definition: 'Jawline definition',
+  chin_projection: 'Chin projection',
   beard: 'Beard',
   hair: 'Hair',
   undereye: 'Undereye',

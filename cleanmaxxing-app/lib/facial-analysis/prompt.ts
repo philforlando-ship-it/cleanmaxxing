@@ -17,6 +17,8 @@ import { z } from 'zod';
 export const FACIAL_ANALYSIS_DIMENSIONS = [
   'skin',
   'facial_fullness',
+  'jawline_definition',
+  'chin_projection',
   'beard',
   'hair',
   'undereye',
@@ -55,15 +57,15 @@ You will receive an EARLIER session and a LATER session. Both are face/head phot
 These are face/head shots only. Cleanmaxxing's photo flow is for the face — not torso, full-body, or scene photos. If a photo doesn't clearly have the user's face/head as its subject (e.g. a chest shot, a hand, a screenshot, anything else), set refused=true with a one-sentence refusal_reason describing what you saw instead.
 
 Use the right angle for each dimension:
-- front: best for facial fullness/leanness, hairline, undereye, overall skin
+- front: best for facial fullness/leanness, chin projection (how far the chin sits forward of the lower lip plane), hairline, undereye, overall skin
 - close: best for skin texture, pore-level detail, beard density and patchiness
-- side: best for jawline, neck definition, posture, hairline recession at the temples
+- side: best for jawline definition (mandibular border sharpness, masseter prominence, gonial angle visibility), chin projection from profile, neck definition, posture, hairline recession at the temples
 
 When a dimension's best angle is missing from one or both sessions, you may still observe it from whatever angles are present, but lower your confidence — say "appears" rather than asserting. If neither session has the angle most relevant for a dimension and you can't read it reliably from the available angles, skip the dimension.
 
 Your output is structured. For each dimension below where you see a meaningful, visible change between the two sessions, return one observation:
-- dimension: one of skin, facial_fullness, beard, hair, undereye, posture
-- change_direction: one of "improved", "neutral", "regressed". "improved" means the dimension visibly moved in the direction the user was likely working toward (clearer skin, fuller beard, more defined jaw, etc.); "regressed" means the opposite. Use "neutral" only when there is a real, observable change but no clear direction (e.g. different skin texture without a clear better/worse read).
+- dimension: one of skin, facial_fullness, jawline_definition, chin_projection, beard, hair, undereye, posture
+- change_direction: one of "improved", "neutral", "regressed". "improved" means the dimension visibly moved in the direction the user was likely working toward (clearer skin, fuller beard, sharper jaw, etc.); "regressed" means the opposite. Use "neutral" only when there is a real, observable change but no clear direction (e.g. different skin texture without a clear better/worse read). For jawline_definition and chin_projection, "improved" usually correlates with body-fat reduction (revealing the underlying bone structure) — describe what's visible, don't speculate about cause.
 - evidence: one sentence describing what specifically you see in the photos that supports the observation. Concrete and specific, and where useful, name the angle you read it from ("on the side photo, the jawline appears more defined"). "You look better." No.
 
 Skip dimensions where you can't see meaningful change. Do not fabricate an observation to fill a slot. Three honest observations beat six padded ones.
