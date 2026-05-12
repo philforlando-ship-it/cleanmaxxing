@@ -510,28 +510,20 @@ function ExerciseRow({
         Primary: {exercise.primary_muscles.join(', ')}
       </p>
 
-      {/* Single-row image crop. Each source infographic is 4 stacked
-          rows; show one quarter via background-position. The container
-          aspect ratio matches the row's geometry (the source images
-          are ~1024x768 → each row is ~1024x192 → ~5.33:1). A few
-          catalog entries ship without a reference image — those skip
-          the block entirely rather than show a broken frame. */}
-      {exercise.image_path && exercise.image_row && (
-        <div
-          className="mt-3 w-full overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900"
-          style={{ aspectRatio: '1024 / 192' }}
-        >
-          <div
-            aria-label={`${exercise.label} reference`}
-            role="img"
-            style={{
-              width: '100%',
-              height: '100%',
-              backgroundImage: `url('${exercise.image_path}')`,
-              backgroundSize: '100% 400%',
-              backgroundPosition: `0% ${((exercise.image_row - 1) / 3) * 100}%`,
-              backgroundRepeat: 'no-repeat',
-            }}
+      {/* Single-exercise reference image (2026-05-12 — switched from
+          row-cropped multi-exercise infographics to one-image-per-
+          exercise PNGs). Source assets are roughly square; the
+          container uses object-contain so any odd aspect doesn't
+          distort the figure. A few catalog entries ship without an
+          upstream image and skip the block entirely. */}
+      {exercise.image_path && (
+        <div className="mt-3 w-full overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={exercise.image_path}
+            alt={`${exercise.label} reference`}
+            className="h-auto w-full object-contain"
+            loading="lazy"
           />
         </div>
       )}

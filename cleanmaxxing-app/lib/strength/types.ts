@@ -417,49 +417,143 @@ export type StrengthExercise = {
   primary_muscles: string[];
   // Form cues from the source infographic.
   key_points: string[];
-  // Path to the source infographic. Multiple exercises share the
-  // same image (4 per infographic) — the row position tells the
-  // user where to look in the image. Optional: a few catalog entries
-  // (e.g. cable curl, tibialis raise, standing cable crunch added
-  // post-Image-25) ship without a reference image; the library panel
-  // hides the image block when absent.
+  // Path to the reference image. 2026-05-12 switched from multi-row
+  // infographics (4 exercises sharing one image, row-cropped at render)
+  // to single-exercise PNGs in the same directory. Populated at module
+  // load via the SLUG_TO_IMAGE_FILE lookup below; a slug missing from
+  // the map renders with no image (the library panel hides the block).
   image_path?: string;
-  image_row?: 1 | 2 | 3 | 4;
 };
 
 const IMG_DIR = '/images/strength-training-workouts';
-const IMG = `${IMG_DIR}/ChatGPT Image May 5, 2026, 02_56_01 PM`;
 
-// 2026-05-07 catalog expansion (Images 11-25). Each UUID is a single
-// 4-row infographic in the same shape as the existing ChatGPT-named
-// images. Two of these only fill 2-3 rows of their grid; row indices
-// match the visible content in the image.
-const IMG_11 = `${IMG_DIR}/0406e97e-4187-41a4-bad1-1c751f83af7b.png`;
-const IMG_12 = `${IMG_DIR}/091995ed-85de-482b-ade4-6b673e94cdbc.png`;
-const IMG_13 = `${IMG_DIR}/3fbd62aa-c2e3-4564-bcc0-f4dae53b0b87.png`;
-const IMG_14 = `${IMG_DIR}/499ceee7-0e4f-4776-8381-b100670523d2.png`;
-const IMG_15 = `${IMG_DIR}/5b0b95a7-f814-47c2-8c08-453e06035d26.png`;
-const IMG_16 = `${IMG_DIR}/6c609f20-0a44-4eb0-a632-14f992682dbf.png`;
-const IMG_17 = `${IMG_DIR}/7568d949-0c81-4894-b36a-cf2978f7a87f.png`;
-const IMG_18 = `${IMG_DIR}/8864a8fe-3dff-47ef-b0ef-a6c3891f18e9.png`;
-const IMG_19 = `${IMG_DIR}/8907f282-bc80-4831-990d-b3dac5ae71ed.png`;
-const IMG_20 = `${IMG_DIR}/9405ce31-963d-4ccb-ae94-2dff200b2069.png`;
-const IMG_21 = `${IMG_DIR}/97a39455-8f8e-417b-9c78-ee623f83d264.png`;
-const IMG_22 = `${IMG_DIR}/a0e1884d-037f-45b6-aec1-55207daed96d.png`;
-const IMG_23 = `${IMG_DIR}/a105e721-a16b-42d1-a0ae-38e141c9c62f.png`;
-const IMG_24 = `${IMG_DIR}/a4a07b74-51f6-4c82-805c-b920f3e8bfdb.png`;
-const IMG_25 = `${IMG_DIR}/b4ad1cb6-b3e0-4c87-a68a-ea42c1d070ed.png`;
-// Catalog round-up + gap-fill batch infographics (May 7 2026).
-// IMG_26: kettlebell swing / box jump / landmine press / copenhagen plank
-// IMG_27: nordic curl / tibialis raise / incline push-up / assisted pull-up
-// IMG_28: farmer's carry / step-up / lateral lunge / rear delt fly
-// IMG_29: standing cable crunch / cable curl (rows 1-2; rows 3-4 empty)
-const IMG_26 = `${IMG_DIR}/484d0cf9-54e8-4d08-8cf6-b69ca594c600.png`;
-const IMG_27 = `${IMG_DIR}/120a8fd3-8b4a-497d-9a02-771c7a2d4cea.png`;
-const IMG_28 = `${IMG_DIR}/28a7d492-6f95-40e2-98be-1e7958ea3ca7.png`;
-const IMG_29 = `${IMG_DIR}/94ff74e5-af2b-41bd-bc33-e130d649f6f4.png`;
+// Slug → image filename. Each entry is a single-exercise PNG sitting
+// in IMG_DIR. Names follow the upstream asset convention (Title_Case,
+// with a few quirks the source files carry — "Pullup" not "Pull_Up",
+// "Stepup" not "Step_Up", "_D" / "_R" / "_BS" suffixes for the
+// Dumbbell / Rope / Belt-Squat variants, etc.). Slugs not in the map
+// resolve to no image — acceptable for any catalog entry that ships
+// without an upstream asset.
+const SLUG_TO_IMAGE_FILE: Record<string, string> = {
+  barbell_back_squat: 'Barbell_Back_Squat.png',
+  flat_barbell_bench_press: 'Flat_Barbell_Bench_Press.png',
+  deadlift: 'Deadlift.png',
+  barbell_row: 'Barbell_Row.png',
+  standing_overhead_barbell_press: 'Standing_Overhead_Barbell_Press.png',
+  overhand_pull_up: 'Overhand_Pullup.png',
+  incline_dumbbell_press: 'Incline_Dumbbell_Press.png',
+  cable_flye: 'Cable_Flye.png',
+  romanian_deadlift: 'Romanian_Deadlift.png',
+  split_squat: 'Split_Squat.png',
+  hack_squat: 'Hack_Squat.png',
+  high_bar_squat: 'High_Bar_Squat.png',
+  seated_leg_curl: 'Seated_Leg_Curl.png',
+  belt_squat: 'Belt_Squat.png',
+  front_foot_elevated_smith_lunge: 'Front_Foot_Elevated_Smith_Machine_Lunge.png',
+  lying_leg_curl: 'Lying_Leg_Curl.png',
+  good_morning: 'Good_Morning.png',
+  reverse_nordic: 'Reverse_Nordic.png',
+  dumbbell_reverse_lunge: 'Dumbbell_Reverse_Lunge.png',
+  heel_elevated_bw_squat: 'HeelElevated_Bodyweight_Squat.png',
+  dumbbell_lateral_raise: 'Dumbbell_Lateral_Raise.png',
+  cable_lateral_raise: 'Cable_Lateral_Raise.png',
+  cable_y_raise: 'Cable_YRaise.png',
+  super_rom_lateral_raise: 'Super_Rom_Lateral_Raise.png',
+  weighted_dip: 'Weighted_Dip.png',
+  underhand_pulldown: 'Underhand_Pulldown.png',
+  lat_pulldown: 'Lat_Pulldown.png',
+  chest_supported_row: 'ChestSupported_Row.png',
+  deficit_barbell_bent_over_row: 'Deficit_Barbell_BentOver_Row.png',
+  cable_facepull: 'Cable_Facepull.png',
+  preacher_curl: 'Preacher_Curl.png',
+  seated_incline_dumbbell_curl: 'Seated_Incline_Dumbbell_Curl.png',
+  barbell_skull_crusher: 'Barbell_Skull_Crusher.png',
+  ez_bar_behind_neck_tricep_extension:
+    'EZ_Bar_Behind_The_Neck_Tricep_Extension.png',
+  straight_leg_calf_raise_belt_squat: 'Straight_Leg_Calf_Raise_BS.png',
+  ab_wheel_rollout: 'Ab_Wheel_Rollout.png',
+  incline_cambered_bar_bench_press: 'Incline_Cambered_Bar_Bench_Press.png',
+  deficit_push_up: 'Deficit_PushUp.png',
+  lying_dumbbell_curl: 'Lying_Dumbbell_Curl.png',
+  stiff_leg_deadlift: 'StiffLeg_Deadlift.png',
+  leg_press: 'Leg_Press.png',
+  leg_extension: 'Leg_Extension.png',
+  pec_deck: 'Pec_Deck.png',
+  machine_shoulder_press: 'Machine_Shoulder_Press.png',
+  single_arm_dumbbell_row: 'Single_Arm_Dumbbell_Row.png',
+  seated_dumbbell_shoulder_press: 'Seated_Dumbbell_Shoulder_Press.png',
+  dumbbell_goblet_squat: 'Dumbbell_Goblet_Squat.png',
+  single_leg_dumbbell_rdl: 'Single_Leg_Dumbbell_RDL.png',
+  weighted_pull_up: 'Weighted_Pullup.png',
+  weighted_chin_up: 'Weighted_Chinup.png',
+  bodyweight_squat: 'Bodyweight_Squat.png',
+  pistol_squat: 'Pistol_Squat.png',
+  barbell_hip_thrust: 'Barbell_Hip_Thrust.png',
+  cable_kickback: 'Cable_Kickback.png',
+  bulgarian_split_squat: 'Bulgarian_Split_Squat.png',
+  cable_pull_through: 'Cable_Pull_Through.png',
+  hanging_leg_raise: 'Hanging_Leg_Raise.png',
+  cable_crunch: 'Cable_Crunch.png',
+  pallof_press: 'Pallof_Press.png',
+  standing_calf_raise: 'Standing_Calf_Raise.png',
+  seated_calf_raise: 'Seated_Calf_Raise.png',
+  triceps_pushdown_rope: 'Triceps_Pushdown_R.png',
+  overhead_triceps_extension_dumbbell: 'Overhead_Triceps_Extension_D.png',
+  straight_arm_pulldown: 'Straight_Arm_Pulldown.png',
+  hanging_windshield_wiper: 'Hanging_Windshield_Wiper.png',
+  reverse_crunch: 'Reverse_Crunch.png',
+  bodyweight_dip: 'Bodyweight_Dip.png',
+  smith_bench_press: 'Smith_Bench_Press.png',
+  smith_squat: 'Smith_Squat.png',
+  chin_up: 'Chinup.png',
+  dumbbell_pullover: 'Dumbbell_Pullover.png',
+  barbell_shrug: 'Barbell_Shrug.png',
+  hammer_curl_dumbbell: 'Hammer_Curl_D.png',
+  cable_woodchop: 'Cable_Woodchop.png',
+  plank: 'Plank.png',
+  side_plank: 'Side_Plank.png',
+  plank_with_shoulder_taps: 'Plank_With_Shoulder_Taps.png',
+  forearm_plank_with_leg_raise: 'Forearm_Plank_With_Leg_Raise.png',
+  standard_push_up: 'Standard_Pushup.png',
+  bodyweight_row: 'Bodyweight_Row.png',
+  bodyweight_glute_bridge: 'Bodyweight_Glute_Bridge.png',
+  bodyweight_split_squat: 'Bodyweight_Split_Squat.png',
+  flat_dumbbell_bench_press: 'Flat_Dumbbell_Bench_Press.png',
+  incline_barbell_bench_press: 'Incline_Barbell_Bench_Press.png',
+  decline_dumbbell_press: 'Decline_Dumbbell_Press.png',
+  decline_barbell_bench_press: 'Decline_Barbell_Bench_Press.png',
+  weighted_hanging_knee_raise: 'Weighted_Hanging_Knee_Raise.png',
+  dumbbell_side_bend: 'Dumbbell_Side_Bend.png',
+  bicycle_crunch: 'Bicycle_Crunch.png',
+  suitcase_carry: 'Suitcase_Carry.png',
+  wall_sit: 'Wall_Sit.png',
+  jump_squat: 'Jump_Squat.png',
+  weighted_decline_crunch: 'Weighted_Decline_Crunch.png',
+  machine_crunch: 'Machine_Crunch.png',
+  standing_dumbbell_curl: 'Standing_Dumbbell_Curl.png',
+  barbell_curl: 'Barbell_Curl.png',
+  seated_cable_row: 'Seated_Cable_Row.png',
+  cable_curl: 'Cable_Curl.png',
+  tibialis_raise: 'Tibialis_Raise.png',
+  standing_cable_crunch: 'Standing_Cable_Crunch.png',
+  farmers_carry: 'Farmers_Carry.png',
+  dumbbell_step_up: 'Stepup.png',
+  lateral_lunge: 'Lateral_Lunge.png',
+  rear_delt_fly: 'Rear_Delt_Fly.png',
+  nordic_curl: 'Nordic_Curl.png',
+  incline_push_up: 'Incline_Pushup.png',
+  assisted_pull_up: 'Assisted_Pullup.png',
+  kettlebell_swing: 'Kettlebell_Swing.png',
+  box_jump: 'Box_Jump.png',
+  landmine_press: 'Landmine_Press.png',
+  copenhagen_plank: 'Copenhagen_Plank.png',
+};
 
-export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
+// Internal catalog without image_path — STRENGTH_EXERCISES (below) is
+// the same array with image_path populated from SLUG_TO_IMAGE_FILE.
+const STRENGTH_EXERCISES_INTERNAL: ReadonlyArray<
+  Omit<StrengthExercise, 'image_path'>
+> = [
   // ============ Image 1
   {
     slug: 'barbell_back_squat',
@@ -474,8 +568,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Push hips back and down',
       'Drive through mid-foot',
     ],
-    image_path: `${IMG} (1).png`,
-    image_row: 1,
   },
   {
     slug: 'flat_barbell_bench_press',
@@ -490,8 +582,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower to mid-chest',
       'Press up without shrugging',
     ],
-    image_path: `${IMG} (1).png`,
-    image_row: 2,
   },
   {
     slug: 'deadlift',
@@ -506,8 +596,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Push floor away',
       'Stand tall without leaning back',
     ],
-    image_path: `${IMG} (1).png`,
-    image_row: 3,
   },
   {
     slug: 'barbell_row',
@@ -522,8 +610,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Pull elbows back',
       'Lower with control',
     ],
-    image_path: `${IMG} (1).png`,
-    image_row: 4,
   },
 
   // ============ Image 2
@@ -540,8 +626,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Finish with biceps by ears',
       'Avoid leaning back',
     ],
-    image_path: `${IMG} (2).png`,
-    image_row: 1,
   },
   {
     slug: 'overhand_pull_up',
@@ -556,8 +640,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Pull elbows down and back',
       'Control the descent',
     ],
-    image_path: `${IMG} (2).png`,
-    image_row: 2,
   },
   {
     slug: 'incline_dumbbell_press',
@@ -572,8 +654,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Shoulder blades back',
       'Lower with control',
     ],
-    image_path: `${IMG} (2).png`,
-    image_row: 3,
   },
   {
     slug: 'cable_flye',
@@ -588,8 +668,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Bring hands together in an arc',
       'Control the stretch',
     ],
-    image_path: `${IMG} (2).png`,
-    image_row: 4,
   },
 
   // ============ Image 3
@@ -606,8 +684,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Keep bar close',
       'Spine neutral',
     ],
-    image_path: `${IMG} (3).png`,
-    image_row: 1,
   },
   {
     slug: 'split_squat',
@@ -622,8 +698,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower straight down',
       'Drive through front heel',
     ],
-    image_path: `${IMG} (3).png`,
-    image_row: 2,
   },
   {
     slug: 'hack_squat',
@@ -638,8 +712,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Descend deep with control',
       'Drive through mid-foot',
     ],
-    image_path: `${IMG} (3).png`,
-    image_row: 3,
   },
   {
     slug: 'high_bar_squat',
@@ -654,8 +726,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Sit between the hips',
       'Drive through mid-foot',
     ],
-    image_path: `${IMG} (3).png`,
-    image_row: 4,
   },
 
   // ============ Image 4
@@ -672,8 +742,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Curl through full range',
       'Lower slowly with control',
     ],
-    image_path: `${IMG} (4).png`,
-    image_row: 1,
   },
   {
     slug: 'belt_squat',
@@ -688,8 +756,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Descend deep with control',
       'Drive through mid-foot',
     ],
-    image_path: `${IMG} (4).png`,
-    image_row: 2,
   },
   {
     slug: 'front_foot_elevated_smith_lunge',
@@ -704,8 +770,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower straight down',
       'Drive through front heel',
     ],
-    image_path: `${IMG} (4).png`,
-    image_row: 3,
   },
   {
     slug: 'lying_leg_curl',
@@ -720,8 +784,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Curl through full range',
       'Lower slowly with control',
     ],
-    image_path: `${IMG} (4).png`,
-    image_row: 4,
   },
 
   // ============ Image 5
@@ -738,8 +800,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Hinge hard at hips',
       'Keep spine neutral',
     ],
-    image_path: `${IMG} (5).png`,
-    image_row: 1,
   },
   {
     slug: 'reverse_nordic',
@@ -754,8 +814,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Keep torso straight',
       'Return under control',
     ],
-    image_path: `${IMG} (5).png`,
-    image_row: 2,
   },
   {
     slug: 'dumbbell_reverse_lunge',
@@ -770,8 +828,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Torso stays tall',
       'Drive through front heel',
     ],
-    image_path: `${IMG} (5).png`,
-    image_row: 3,
   },
   {
     slug: 'heel_elevated_bw_squat',
@@ -786,8 +842,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Let knees travel forward naturally',
       'Descend deep with control',
     ],
-    image_path: `${IMG} (5).png`,
-    image_row: 4,
   },
 
   // ============ Image 6
@@ -804,8 +858,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lead with elbows',
       'Avoid shrugging or swinging',
     ],
-    image_path: `${IMG} (6).png`,
-    image_row: 1,
   },
   {
     slug: 'cable_lateral_raise',
@@ -820,8 +872,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lead with elbow',
       'Avoid shrugging or swinging',
     ],
-    image_path: `${IMG} (6).png`,
-    image_row: 2,
   },
   {
     slug: 'cable_y_raise',
@@ -836,8 +886,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Keep shoulders down',
       'Move with control',
     ],
-    image_path: `${IMG} (6).png`,
-    image_row: 3,
   },
   {
     slug: 'super_rom_lateral_raise',
@@ -852,8 +900,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Control the negative',
       'Slight bend in elbows',
     ],
-    image_path: `${IMG} (6).png`,
-    image_row: 4,
   },
 
   // ============ Image 7
@@ -870,8 +916,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower until upper arms reach depth',
       'Press up without shrugging',
     ],
-    image_path: `${IMG} (7).png`,
-    image_row: 1,
   },
   {
     slug: 'underhand_pulldown',
@@ -886,8 +930,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Drive elbows down',
       'Control the return',
     ],
-    image_path: `${IMG} (7).png`,
-    image_row: 2,
   },
   {
     slug: 'lat_pulldown',
@@ -902,8 +944,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Pull elbows to ribs',
       'Control the way up',
     ],
-    image_path: `${IMG} (7).png`,
-    image_row: 3,
   },
   {
     slug: 'chest_supported_row',
@@ -918,8 +958,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Squeeze shoulder blades',
       'Lower with control',
     ],
-    image_path: `${IMG} (7).png`,
-    image_row: 4,
   },
 
   // ============ Image 8
@@ -936,8 +974,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Keep back flat and chest set',
       'Row elbows back then lower with control',
     ],
-    image_path: `${IMG} (8).png`,
-    image_row: 1,
   },
   {
     slug: 'cable_facepull',
@@ -952,8 +988,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Rotate so hands separate',
       'Control the return',
     ],
-    image_path: `${IMG} (8).png`,
-    image_row: 2,
   },
   {
     slug: 'preacher_curl',
@@ -968,8 +1002,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Curl up and squeeze',
       'Control the negative',
     ],
-    image_path: `${IMG} (8).png`,
-    image_row: 3,
   },
   {
     slug: 'seated_incline_dumbbell_curl',
@@ -984,8 +1016,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Curl without swinging',
       'Squeeze and lower slowly',
     ],
-    image_path: `${IMG} (8).png`,
-    image_row: 4,
   },
 
   // ============ Image 9
@@ -1002,8 +1032,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower bar toward forehead or just behind it',
       'Extend elbows under control',
     ],
-    image_path: `${IMG} (9).png`,
-    image_row: 1,
   },
   {
     slug: 'ez_bar_behind_neck_tricep_extension',
@@ -1018,8 +1046,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower bar behind head for stretch',
       'Extend without shrugging',
     ],
-    image_path: `${IMG} (9).png`,
-    image_row: 2,
   },
   {
     slug: 'straight_leg_calf_raise_belt_squat',
@@ -1034,8 +1060,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Drive through balls of feet',
       'Pause and squeeze at top',
     ],
-    image_path: `${IMG} (9).png`,
-    image_row: 3,
   },
   {
     slug: 'ab_wheel_rollout',
@@ -1050,8 +1074,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Do not let hips sag',
       'Squeeze abs to roll back',
     ],
-    image_path: `${IMG} (9).png`,
-    image_row: 4,
   },
 
   // ============ Image 10
@@ -1068,8 +1090,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Drive bar up and slightly back',
       'Full control throughout',
     ],
-    image_path: `${IMG} (10).png`,
-    image_row: 1,
   },
   {
     slug: 'deficit_push_up',
@@ -1084,8 +1104,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Elbows at 30–45 degrees',
       'Full range of motion',
     ],
-    image_path: `${IMG} (10).png`,
-    image_row: 2,
   },
   {
     slug: 'lying_dumbbell_curl',
@@ -1100,8 +1118,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Keep elbows fixed',
       'Full stretch at bottom',
     ],
-    image_path: `${IMG} (10).png`,
-    image_row: 3,
   },
   {
     slug: 'stiff_leg_deadlift',
@@ -1116,8 +1132,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Bar stays close to legs',
       'Stretch hamstrings then stand tall',
     ],
-    image_path: `${IMG} (10).png`,
-    image_row: 4,
   },
 
   // ============ Image 11 — Machine staples
@@ -1134,8 +1148,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Knees track over toes',
       'Drive through mid-foot',
     ],
-    image_path: IMG_11,
-    image_row: 1,
   },
   {
     slug: 'leg_extension',
@@ -1150,8 +1162,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Squeeze at top',
       'Lower slowly',
     ],
-    image_path: IMG_11,
-    image_row: 2,
   },
   {
     slug: 'pec_deck',
@@ -1166,8 +1176,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Bring arms together in an arc',
       'Control the stretch',
     ],
-    image_path: IMG_11,
-    image_row: 3,
   },
   {
     slug: 'machine_shoulder_press',
@@ -1182,8 +1190,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Press overhead smoothly',
       'Lower with control',
     ],
-    image_path: IMG_11,
-    image_row: 4,
   },
 
   // ============ Image 12 — Dumbbell staples
@@ -1200,8 +1206,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Pull elbow toward hip',
       'Lower with control',
     ],
-    image_path: IMG_12,
-    image_row: 1,
   },
   {
     slug: 'seated_dumbbell_shoulder_press',
@@ -1216,8 +1220,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Press overhead in a straight path',
       'Do not overarch low back',
     ],
-    image_path: IMG_12,
-    image_row: 2,
   },
   {
     slug: 'dumbbell_goblet_squat',
@@ -1232,8 +1234,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Sit between the hips',
       'Drive through mid-foot',
     ],
-    image_path: IMG_12,
-    image_row: 3,
   },
   {
     slug: 'single_leg_dumbbell_rdl',
@@ -1248,8 +1248,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Keep hips square',
       'Reach long and return with control',
     ],
-    image_path: IMG_12,
-    image_row: 4,
   },
 
   // ============ Image 13 — Weighted pull family + bodyweight squat
@@ -1266,8 +1264,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Pull elbows down and to sides',
       'Control the descent',
     ],
-    image_path: IMG_13,
-    image_row: 1,
   },
   {
     slug: 'weighted_chin_up',
@@ -1282,8 +1278,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Avoid kipping or swinging',
       'Control the descent',
     ],
-    image_path: IMG_13,
-    image_row: 2,
   },
   {
     slug: 'bodyweight_squat',
@@ -1298,8 +1292,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Knees track over toes',
       'Drive through midfoot and heels',
     ],
-    image_path: IMG_13,
-    image_row: 3,
   },
   {
     slug: 'pistol_squat',
@@ -1314,8 +1306,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Keep the standing leg stable',
       'Control the movement',
     ],
-    image_path: IMG_13,
-    image_row: 4,
   },
 
   // ============ Image 14 — Glute builders
@@ -1332,8 +1322,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Full hip extension',
       'Chin tucked, ribs down',
     ],
-    image_path: IMG_14,
-    image_row: 1,
   },
   {
     slug: 'cable_kickback',
@@ -1348,8 +1336,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Squeeze glute',
       'Don’t arch lower back',
     ],
-    image_path: IMG_14,
-    image_row: 2,
   },
   {
     slug: 'bulgarian_split_squat',
@@ -1364,8 +1350,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower under control',
       'Drive through front heel',
     ],
-    image_path: IMG_14,
-    image_row: 3,
   },
   {
     slug: 'cable_pull_through',
@@ -1380,8 +1364,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Squeeze glutes',
       'Don’t round back',
     ],
-    image_path: IMG_14,
-    image_row: 4,
   },
 
   // ============ Image 15 — Core foundations
@@ -1398,8 +1380,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Avoid swinging',
       'Lower slowly',
     ],
-    image_path: IMG_15,
-    image_row: 1,
   },
   {
     slug: 'cable_crunch',
@@ -1414,8 +1394,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Keep hips mostly still',
       'Control the negative',
     ],
-    image_path: IMG_15,
-    image_row: 2,
   },
   {
     slug: 'pallof_press',
@@ -1430,8 +1408,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Press straight out',
       'Hold with control',
     ],
-    image_path: IMG_15,
-    image_row: 3,
   },
   {
     slug: 'standing_calf_raise',
@@ -1446,8 +1422,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Squeeze at top',
       'Lower slowly',
     ],
-    image_path: IMG_15,
-    image_row: 4,
   },
 
   // ============ Image 16 — Calves + Tricep accessories
@@ -1464,8 +1438,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Squeeze at top',
       'Controlled tempo',
     ],
-    image_path: IMG_16,
-    image_row: 1,
   },
   {
     slug: 'triceps_pushdown_rope',
@@ -1480,8 +1452,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Squeeze triceps',
       'Control the return',
     ],
-    image_path: IMG_16,
-    image_row: 2,
   },
   {
     slug: 'overhead_triceps_extension_dumbbell',
@@ -1496,8 +1466,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Stretch fully',
       'Extend and squeeze',
     ],
-    image_path: IMG_16,
-    image_row: 3,
   },
   {
     slug: 'straight_arm_pulldown',
@@ -1512,8 +1480,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Pull to thighs',
       'Control the return',
     ],
-    image_path: IMG_16,
-    image_row: 4,
   },
 
   // ============ Image 17 — Advanced core (2 entries)
@@ -1530,8 +1496,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Move legs side to side',
       'Avoid swinging or using momentum',
     ],
-    image_path: IMG_17,
-    image_row: 1,
   },
   {
     slug: 'reverse_crunch',
@@ -1546,8 +1510,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Bring knees toward your chest',
       'Avoid using momentum',
     ],
-    image_path: IMG_17,
-    image_row: 2,
   },
 
   // ============ Image 18 — Dips, Smith, Chin-up
@@ -1564,8 +1526,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower until upper arms are parallel',
       'Press up and lock out',
     ],
-    image_path: IMG_18,
-    image_row: 1,
   },
   {
     slug: 'smith_bench_press',
@@ -1580,8 +1540,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Keep feet flat and maintain arch',
       'Lower with control and press up',
     ],
-    image_path: IMG_18,
-    image_row: 2,
   },
   {
     slug: 'smith_squat',
@@ -1596,8 +1554,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Sit back and down',
       'Drive through heels to stand',
     ],
-    image_path: IMG_18,
-    image_row: 3,
   },
   {
     slug: 'chin_up',
@@ -1612,8 +1568,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Squeeze shoulder blades',
       'Lower with control to full stretch',
     ],
-    image_path: IMG_18,
-    image_row: 4,
   },
 
   // ============ Image 19 — Back/arm variety + rotational core
@@ -1630,8 +1584,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower to stretch',
       'Pull back over chest',
     ],
-    image_path: IMG_19,
-    image_row: 1,
   },
   {
     slug: 'barbell_shrug',
@@ -1646,8 +1598,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Pause at top',
       'Avoid rolling shoulders',
     ],
-    image_path: IMG_19,
-    image_row: 2,
   },
   {
     slug: 'hammer_curl_dumbbell',
@@ -1662,8 +1612,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Curl without swinging',
       'Lower slowly',
     ],
-    image_path: IMG_19,
-    image_row: 3,
   },
   {
     slug: 'cable_woodchop',
@@ -1678,8 +1626,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Control both directions',
       'Pivot naturally if needed',
     ],
-    image_path: IMG_19,
-    image_row: 4,
   },
 
   // ============ Image 20 — Plank family
@@ -1696,8 +1642,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Brace core and glutes',
       'Do not sag hips',
     ],
-    image_path: IMG_20,
-    image_row: 1,
   },
   {
     slug: 'side_plank',
@@ -1712,8 +1656,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Keep body straight',
       'Hold with control',
     ],
-    image_path: IMG_20,
-    image_row: 2,
   },
   {
     slug: 'plank_with_shoulder_taps',
@@ -1728,8 +1670,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Minimize hip sway',
       'Alternate taps with control',
     ],
-    image_path: IMG_20,
-    image_row: 3,
   },
   {
     slug: 'forearm_plank_with_leg_raise',
@@ -1744,8 +1684,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lift one leg slightly off',
       'Alternate without losing tension',
     ],
-    image_path: IMG_20,
-    image_row: 4,
   },
 
   // ============ Image 21 — Bodyweight expansion
@@ -1762,8 +1700,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower chest under control',
       'Press without shrugging',
     ],
-    image_path: IMG_21,
-    image_row: 1,
   },
   {
     slug: 'bodyweight_row',
@@ -1778,8 +1714,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Drive elbows back',
       'Lower slowly',
     ],
-    image_path: IMG_21,
-    image_row: 2,
   },
   {
     slug: 'bodyweight_glute_bridge',
@@ -1794,8 +1728,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Drive through heels',
       'Squeeze glutes at top',
     ],
-    image_path: IMG_21,
-    image_row: 3,
   },
   {
     slug: 'bodyweight_split_squat',
@@ -1810,8 +1742,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower straight down',
       'Drive through front heel',
     ],
-    image_path: IMG_21,
-    image_row: 4,
   },
 
   // ============ Image 22 — Bench press variants (flat/incline/decline)
@@ -1828,8 +1758,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower dumbbells with control',
       'Press up without shrugging',
     ],
-    image_path: IMG_22,
-    image_row: 1,
   },
   {
     slug: 'incline_barbell_bench_press',
@@ -1844,8 +1772,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower bar to upper chest',
       'Press up and slightly back',
     ],
-    image_path: IMG_22,
-    image_row: 2,
   },
   {
     slug: 'decline_dumbbell_press',
@@ -1860,8 +1786,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower dumbbells evenly',
       'Press to lockout with control',
     ],
-    image_path: IMG_22,
-    image_row: 3,
   },
   {
     slug: 'decline_barbell_bench_press',
@@ -1876,8 +1800,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower to lower chest',
       'Press up in a steady path',
     ],
-    image_path: IMG_22,
-    image_row: 4,
   },
 
   // ============ Image 23 — Oblique-focused core
@@ -1894,8 +1816,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Raise knees to hip level',
       'Lower with control',
     ],
-    image_path: IMG_23,
-    image_row: 1,
   },
   {
     slug: 'dumbbell_side_bend',
@@ -1910,8 +1830,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Bend at the waist, not the hips',
       'Return to upright with control',
     ],
-    image_path: IMG_23,
-    image_row: 2,
   },
   {
     slug: 'bicycle_crunch',
@@ -1926,8 +1844,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Extend the other leg straight out',
       'Keep core engaged throughout',
     ],
-    image_path: IMG_23,
-    image_row: 3,
   },
   {
     slug: 'suitcase_carry',
@@ -1942,8 +1858,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Walk in a straight line',
       'Avoid leaning to the loaded side',
     ],
-    image_path: IMG_23,
-    image_row: 4,
   },
 
   // ============ Image 24 — Wall sit, jump squat, weighted core
@@ -1960,8 +1874,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Knees aligned over ankles',
       'Hold without shrugging',
     ],
-    image_path: IMG_24,
-    image_row: 1,
   },
   {
     slug: 'jump_squat',
@@ -1976,8 +1888,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Land softly with knees slightly bent',
       'Reset on every rep',
     ],
-    image_path: IMG_24,
-    image_row: 2,
   },
   {
     slug: 'weighted_decline_crunch',
@@ -1992,8 +1902,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Crunch up by contracting abs',
       'Lower with control, don’t drop',
     ],
-    image_path: IMG_24,
-    image_row: 3,
   },
   {
     slug: 'machine_crunch',
@@ -2008,8 +1916,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Squeeze at the bottom',
       'Return slowly with control',
     ],
-    image_path: IMG_24,
-    image_row: 4,
   },
 
   // ============ Image 25 — Curl staples + cable row (3 entries)
@@ -2026,8 +1932,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Squeeze at top',
       'Lower slowly',
     ],
-    image_path: IMG_25,
-    image_row: 1,
   },
   {
     slug: 'barbell_curl',
@@ -2042,8 +1946,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Curl with control',
       'Avoid leaning back',
     ],
-    image_path: IMG_25,
-    image_row: 2,
   },
   {
     slug: 'seated_cable_row',
@@ -2058,8 +1960,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Pull elbows back',
       'Control the stretch',
     ],
-    image_path: IMG_25,
-    image_row: 3,
   },
 
   // ============ Image 29 — Standing cable crunch + cable curl
@@ -2076,8 +1976,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Squeeze at the top',
       'Lower under tension',
     ],
-    image_path: IMG_29,
-    image_row: 2,
   },
   // Tibialis raise lives on Image 27 with the Nordic / push-up /
   // pull-up regression family; placed here for catalog ordering
@@ -2095,8 +1993,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Hold the squeeze briefly',
       'Lower with control',
     ],
-    image_path: IMG_27,
-    image_row: 2,
   },
   {
     slug: 'standing_cable_crunch',
@@ -2111,8 +2007,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Crunch by flexing the spine',
       'Resist the return',
     ],
-    image_path: IMG_29,
-    image_row: 1,
   },
 
   // ============ Image 28 — Carries + unilateral legs + rear delts
@@ -2129,8 +2023,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Walk in a straight line',
       'Keep shoulders packed',
     ],
-    image_path: IMG_28,
-    image_row: 1,
   },
   {
     slug: 'dumbbell_step_up',
@@ -2145,8 +2037,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Stand fully tall on top',
       'Lower under control',
     ],
-    image_path: IMG_28,
-    image_row: 2,
   },
   {
     slug: 'lateral_lunge',
@@ -2161,8 +2051,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Trail leg stays straight',
       'Push off to return',
     ],
-    image_path: IMG_28,
-    image_row: 3,
   },
   {
     slug: 'rear_delt_fly',
@@ -2177,8 +2065,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Raise arms to the sides',
       'Squeeze shoulder blades back',
     ],
-    image_path: IMG_28,
-    image_row: 4,
   },
 
   // ============ Image 27 — Posterior-chain BW + push/pull regressions
@@ -2195,8 +2081,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower forward as slowly as possible',
       'Catch with hands at the bottom',
     ],
-    image_path: IMG_27,
-    image_row: 1,
   },
   {
     slug: 'incline_push_up',
@@ -2211,8 +2095,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Lower chest to surface',
       'Press up without flaring elbows',
     ],
-    image_path: IMG_27,
-    image_row: 3,
   },
   {
     slug: 'assisted_pull_up',
@@ -2227,8 +2109,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Pull elbows down and back',
       'Control the descent',
     ],
-    image_path: IMG_27,
-    image_row: 4,
   },
 
   // ============ Image 26 — Plyo + landmine + adductor core
@@ -2245,8 +2125,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Snap hips to drive bell up',
       'Bell floats to chest height, no higher',
     ],
-    image_path: IMG_26,
-    image_row: 1,
   },
   {
     slug: 'box_jump',
@@ -2261,8 +2139,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Land in athletic stance',
       'Step down — never jump down',
     ],
-    image_path: IMG_26,
-    image_row: 2,
   },
   {
     slug: 'landmine_press',
@@ -2277,8 +2153,6 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Press out and up along the bar arc',
       'Lower under control',
     ],
-    image_path: IMG_26,
-    image_row: 3,
   },
   {
     slug: 'copenhagen_plank',
@@ -2293,10 +2167,19 @@ export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> = [
       'Drive top leg down into bench',
       'Keep hips stacked and high',
     ],
-    image_path: IMG_26,
-    image_row: 4,
   },
 ];
+
+// Decorate each catalog entry with its image_path looked up from
+// SLUG_TO_IMAGE_FILE. Slugs missing from the map (e.g. catalog
+// additions that haven't had an upstream image generated yet)
+// resolve to image_path: undefined and the library panel hides the
+// image block for that exercise.
+export const STRENGTH_EXERCISES: ReadonlyArray<StrengthExercise> =
+  STRENGTH_EXERCISES_INTERNAL.map((e) => {
+    const file = SLUG_TO_IMAGE_FILE[e.slug];
+    return file ? { ...e, image_path: `${IMG_DIR}/${file}` } : { ...e };
+  });
 
 // Subset of the catalog organized by primary muscle group — used by
 // the exercise reference panel for sectioned rendering.
