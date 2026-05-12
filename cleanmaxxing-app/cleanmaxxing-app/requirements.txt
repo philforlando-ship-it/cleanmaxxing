@@ -1,0 +1,3 @@
+# Vercel reads this for Python serverless functions in api/*.py.
+# Empty during de-risking — api/mfp/ping.py uses only stdlib.
+# Slice 2 production build will add: python-myfitnesspal
