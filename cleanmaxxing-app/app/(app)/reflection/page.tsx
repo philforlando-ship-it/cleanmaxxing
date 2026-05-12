@@ -43,7 +43,7 @@ import { WeeklyReflectionCard } from '@/app/(app)/today/weekly-reflection-card';
 import { MonthlyCheckpointCard } from '@/app/(app)/today/monthly-checkpoint-card';
 import { QuarterlySurveyCard } from '@/app/(app)/today/quarterly-survey-card';
 import { SelfAcceptanceNudgeCard } from '@/app/(app)/today/self-acceptance-nudge-card';
-import { ProcessOutcomeChart } from '@/app/(app)/today/process-outcome-chart';
+import { ProcessOutcomeChart } from './process-outcome-chart';
 
 export default async function ReflectionPage() {
   const user = await getUser();
@@ -84,7 +84,10 @@ export default async function ReflectionPage() {
     getPremiumStatus(user.id),
     getUpcomingCadenceEvents(supabase, user.id),
   ]);
-  const focusAreasCap = journeyCapFor(premium.isPremium);
+  // Journey cap on the quarterly-survey card. Only paying Pro
+  // subscribers (status === 'active') see the 10 ceiling; trial +
+  // free share the 3-journey cap per the 2026-05-11 policy change.
+  const focusAreasCap = journeyCapFor(premium.status === 'active');
 
   const currentWeightLbs =
     (profileRow.data?.current_weight_lbs as number | null | undefined) ?? null;

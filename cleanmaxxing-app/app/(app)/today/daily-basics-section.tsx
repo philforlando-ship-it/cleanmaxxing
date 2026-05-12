@@ -50,7 +50,6 @@ export function DailyBasicsSection({
   useEffect(() => {
     function handleHashCandidate(hash: string) {
       if (!SECTION_ANCHORS.includes(hash)) return false;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCollapsed(false);
       // Layout shift from the expansion can leave the anchor out of
       // view — re-scroll on the next frame.

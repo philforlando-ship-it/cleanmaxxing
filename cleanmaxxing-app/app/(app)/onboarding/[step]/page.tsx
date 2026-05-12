@@ -44,11 +44,13 @@ export default async function OnboardingStepPage({
     initialDetail = detail?.response_value ?? null;
   }
 
-  // Resolve the journey cap for the focus_areas picker. 14-day trial
-  // users are premium per getPremiumStatus, so onboarding sign-ups get
-  // the 10-journey ceiling during their trial.
-  const { isPremium } = await getPremiumStatus(user.id);
-  const focusAreasCap = journeyCapFor(isPremium);
+  // Resolve the journey cap for the focus_areas picker. Policy
+  // (2026-05-11): only paying subscribers (status === 'active') get
+  // the 10-journey ceiling. Trial users share the 3-journey free cap
+  // — matches the /pricing copy "Sign up and pick three journeys to
+  // start." After upgrading to Pro, the cap lifts to 10.
+  const { status } = await getPremiumStatus(user.id);
+  const focusAreasCap = journeyCapFor(status === 'active');
 
   return (
     <main className="mx-auto flex min-h-[100svh] max-w-xl flex-col px-6 py-10">

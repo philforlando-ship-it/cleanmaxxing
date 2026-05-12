@@ -49,11 +49,12 @@ export default async function OnboardingIntroPage() {
           <li className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
             <div className="flex items-baseline justify-between gap-3">
               <h2 className="text-base font-medium">Daily check-in</h2>
-              <span className="shrink-0 text-xs text-zinc-500">~10 seconds</span>
+              <span className="shrink-0 text-xs text-zinc-500">~30 seconds</span>
             </div>
             <p className="mt-1.5 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-              Tick which of your goals you moved forward on today. No score,
-              no rating, no streak. Missed days are fine.
+              A glance at what to do today, plus optional logs for sleep,
+              training, and food. No score, no rating, no streak. Missed
+              days are fine.
             </p>
           </li>
           <li className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">

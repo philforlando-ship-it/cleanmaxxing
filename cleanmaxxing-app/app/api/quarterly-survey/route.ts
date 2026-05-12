@@ -78,13 +78,14 @@ export async function POST(req: Request) {
     );
   }
 
-  // Apply the Free/Pro cap on focus_areas count. Pro/trial users get
-  // the 10-journey ceiling enforced by Zod above; Free is tightened
-  // here so a downgraded user is forced to trim selections on the
-  // next survey rather than being silently allowed to keep more than
-  // their tier permits.
-  const { isPremium } = await getPremiumStatus(user.id);
-  const cap = journeyCapFor(isPremium);
+  // Apply the Free/Pro cap on focus_areas count. Only paying Pro
+  // subscribers (status === 'active') get the 10-journey ceiling
+  // enforced by Zod above; trial + free are tightened to 3 here so
+  // a downgraded or trialing user is forced to trim selections on
+  // the next survey rather than silently keeping more than their
+  // tier permits. Policy aligned with /pricing copy 2026-05-11.
+  const { status } = await getPremiumStatus(user.id);
+  const cap = journeyCapFor(status === 'active');
   if (result.data.focusAreas.length > cap) {
     return NextResponse.json(
       { error: `Pick up to ${cap}.` },

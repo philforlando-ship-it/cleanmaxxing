@@ -1,11 +1,17 @@
-// Quick-prompt chips that hand the user off to /chat with a pre-filled
-// question in the right journey-scoped thread. Sit above each section
-// on /photos so users don't have to type the same 4 questions to read
-// progress.
+// Per-category chip row that sits under each section on /photos.
+// Two kinds of chips, both rendered in the same row but visually
+// distinct:
 //
-// The thread slug must match a JOURNEY slug from lib/today/journeys.ts
-// (the chat-card picker only mounts threads for the user's available
-// journeys). The 'general' sentinel routes to the unscoped chat.
+//   1. Mister P prompt chips (bordered) — hand the user off to /chat
+//      with a pre-filled question in the right journey-scoped thread.
+//   2. A journey-link chip (filled) — navigates the user directly to
+//      the relevant /plan/<journey> page. Different intent: "do the
+//      work" vs the prompt chips' "ask about the work."
+//
+// The thread slug on prompt chips must match a JOURNEY slug from
+// lib/today/journeys.ts (the chat-card picker only mounts threads for
+// the user's available journeys). The 'general' sentinel routes to
+// the unscoped chat.
 
 import Link from 'next/link';
 
@@ -21,6 +27,23 @@ type Chip = {
   // user hasn't picked the matching journey, /chat falls back to
   // General silently.
   thread: string;
+};
+
+// Per-category journey link — the "go to the plan" side of the row.
+// One link per photo category. Maps to whichever journey owns that
+// photo type. body→nutrition because body composition lives on
+// /plan/nutrition (see lib/today/journeys.ts: body_composition's
+// planPath).
+type JourneyLink = {
+  label: string;
+  href: string;
+};
+
+const JOURNEY_BY_CATEGORY: Record<ChatChipCategory, JourneyLink> = {
+  face: { label: 'Facial structure plan →', href: '/plan/facial-structure' },
+  body: { label: 'Nutrition plan →', href: '/plan/nutrition' },
+  hair: { label: 'Hair plan →', href: '/plan/hair' },
+  fit: { label: 'Style plan →', href: '/plan/style' },
 };
 
 const CHIPS_BY_CATEGORY: Record<ChatChipCategory, ReadonlyArray<Chip>> = {
@@ -79,10 +102,29 @@ const CHIPS_BY_CATEGORY: Record<ChatChipCategory, ReadonlyArray<Chip>> = {
   ],
 };
 
-export function MisterPChips({ category }: { category: ChatChipCategory }) {
+export function MisterPChips({
+  category,
+  isPremium,
+}: {
+  category: ChatChipCategory;
+  isPremium: boolean;
+}) {
   const chips = CHIPS_BY_CATEGORY[category];
+  const journey = JOURNEY_BY_CATEGORY[category];
   return (
-    <div className="mt-3 flex flex-wrap gap-2">
+    <div className="mt-3 flex flex-wrap items-center gap-2">
+      {/* "Pro" pill leads the row when the user is free — sets honest
+          expectations that the Mister P prompt chips will land in
+          chat WITHOUT photo attachment (Mister P attaches photos for
+          Pro users only). The journey-link chip at the end of the
+          row is NOT Pro-gated — it just navigates to the plan page,
+          so the pill applies to the prompt chips, not the journey
+          chip. */}
+      {!isPremium && (
+        <span className="inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+          Pro
+        </span>
+      )}
       {chips.map((chip) => {
         const href = `/chat?prefill=${encodeURIComponent(chip.prompt)}&thread=${encodeURIComponent(chip.thread)}`;
         return (
@@ -95,6 +137,15 @@ export function MisterPChips({ category }: { category: ChatChipCategory }) {
           </Link>
         );
       })}
+      {/* Journey-link chip — visually distinct (filled background,
+          no border) so the "navigate to the plan" intent reads
+          differently from the "ask Mister P" prompt chips. */}
+      <Link
+        href={journey.href}
+        className="inline-flex items-center rounded-full bg-zinc-900 px-3 py-1.5 text-[12px] font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+      >
+        {journey.label}
+      </Link>
     </div>
   );
 }

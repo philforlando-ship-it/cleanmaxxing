@@ -1,15 +1,10 @@
-// Phase D of the /today redesign — Area 3 progress visual.
-//
-// Two states:
-//   - Default: confidence trend chart (last 90 days). Quiet, no
-//     header decoration.
-//   - Milestone-active: when ≥1 milestone fired in the last 7 days,
-//     render the milestone fire(s) ABOVE the chart. Chart still
-//     visible below — less jarring than a full surface swap.
-//
-// The weekly-check-in counter ("X of Y days") retired with the
-// goals system on 2026-05-10 (Tier 3) — it was always derived from
-// goal_check_ins, which no longer exists.
+// Area 3 progress visual on /today. Originally Phase D of the redesign;
+// the ProcessOutcomeChart it used to embed was removed 2026-05-11 —
+// the same chart already renders on /reflection and the duplicate
+// pulled past-week material onto an action-shaped page. What stays is
+// the milestone fire surface: when ≥1 milestone fired in the last 7
+// days, render the fire(s) here. Component returns null when none
+// are active.
 //
 // Voice posture:
 // - Absolute / self-comparison framing only (locked from H1/H2
@@ -17,42 +12,21 @@
 // - No "Achievement unlocked" / confetti / emoji.
 // - Multiple recent milestones stack vertically, most recent first.
 
-import { ProcessOutcomeChart } from './process-outcome-chart';
-import type { WeeklyReflection } from '@/lib/weekly-reflection/service';
 import { copyForTriggerKey } from '@/lib/milestones/copy';
 import type { MilestoneRow } from '@/lib/milestones/types';
 
 type Props = {
   recentMilestones: MilestoneRow[];
-  confidenceHistory: WeeklyReflection[];
 };
 
-export function ProgressVisual({
-  recentMilestones,
-  confidenceHistory,
-}: Props) {
-  // Show nothing at all when there's no history AND no recent
-  // milestones — first-day users haven't earned an Area 3 yet.
-  if (
-    confidenceHistory.length === 0 &&
-    recentMilestones.length === 0
-  ) {
-    return null;
-  }
+export function ProgressVisual({ recentMilestones }: Props) {
+  if (recentMilestones.length === 0) return null;
 
   return (
-    <section className="space-y-4">
-      {recentMilestones.length > 0 && (
-        <div className="space-y-3">
-          {recentMilestones.map((m) => (
-            <MilestoneFire key={m.id} milestone={m} />
-          ))}
-        </div>
-      )}
-
-      {confidenceHistory.length > 0 && (
-        <ProcessOutcomeChart history={confidenceHistory} />
-      )}
+    <section className="space-y-3">
+      {recentMilestones.map((m) => (
+        <MilestoneFire key={m.id} milestone={m} />
+      ))}
     </section>
   );
 }

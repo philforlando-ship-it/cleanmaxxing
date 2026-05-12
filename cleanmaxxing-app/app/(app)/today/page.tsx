@@ -56,7 +56,6 @@ import { EscapeHatch } from './escape-hatch';
 import { detectAndRecordMilestones } from '@/lib/milestones/detect';
 import { listRecentMilestones } from '@/lib/milestones/service';
 import { syncJourneyStates } from '@/lib/journey-state/persist';
-import { getWeeklyReflectionState } from '@/lib/weekly-reflection/service';
 import { ProgressVisual } from './progress-visual';
 import { selectContextualPrompt } from '@/lib/contextual-prompt/select';
 import { ContextualPromptCard } from './contextual-prompt-card';
@@ -189,7 +188,6 @@ export default async function TodayPage({ searchParams }: Props) {
     profileCompletion,
     sleepState,
     misterPUserState,
-    reflectionState,
     recentMilestones,
     workoutState,
     nutritionState,
@@ -202,7 +200,6 @@ export default async function TodayPage({ searchParams }: Props) {
     getProfileCompletion(supabase, user.id),
     getSleepState(supabase, user.id),
     getMisterPUserState(supabase, user.id),
-    getWeeklyReflectionState(supabase, user.id),
     listRecentMilestones(supabase, user.id),
     // Slice 3 (2026-05-11): DailyBasicsSection consumes these. Fetched
     // in the same Promise.all so we don't add a round-trip.
@@ -1074,16 +1071,13 @@ export default async function TodayPage({ searchParams }: Props) {
             self-hiding most of the time anyway via the dismiss-then-
             reappear-on-phase-cross pattern. */}
 
-        {/* Phase D — Area 3 progress visual. Renders milestone fires
-            (when active in their 7-day window) above a confidence
-            trend chart + weekly check-in counter. Component
-            self-hides when there's no history and no recent
-            milestones (first-day users). Voice posture: absolute /
-            self-comparison only — no cohort framing. */}
-        <ProgressVisual
-          recentMilestones={recentMilestones}
-          confidenceHistory={reflectionState.history}
-        />
+        {/* Area 3 — milestone fires only as of 2026-05-11. The
+            ProcessOutcomeChart that lived here was removed because the
+            same chart already renders on /reflection and the duplicate
+            pulled past-week material onto an action-shaped page.
+            Component self-hides when no milestones are active. Voice
+            posture: absolute / self-comparison only — no cohort framing. */}
+        <ProgressVisual recentMilestones={recentMilestones} />
 
         <div id="mister-p" className="scroll-mt-16">
           <MisterPChatCard journeys={chatJourneys} initialThreads={initialThreads} />

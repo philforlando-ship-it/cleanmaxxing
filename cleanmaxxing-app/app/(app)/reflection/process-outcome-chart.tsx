@@ -1,7 +1,10 @@
 'use client';
 
-// Phase F process + outcome chart — replaces ConfidenceTrendChart
-// on /today's Area 3 and on /reflection.
+// Phase F process + outcome chart. Originally lived in
+// app/(app)/today/ and rendered on both /today's Area 3 and
+// /reflection. /today's instance was removed 2026-05-11 (see
+// progress-visual.tsx for the residual marker); the file moved to
+// /reflection/ on 2026-05-11 so it sits next to its only consumer.
 //
 // Shape A (per the user-confirmed design call): per-journey
 // heatmap of weekly tier (most_days / some_days / few_or_none)
@@ -43,20 +46,11 @@ export function ProcessOutcomeChart({ history }: Props) {
   // legacy ConfidenceTrendChart separately.
   const v2Rows = history.filter(hasV2Data);
 
-  if (v2Rows.length === 0) {
-    return (
-      <section className="rounded-xl border border-zinc-200 bg-zinc-50 px-5 py-4 dark:border-zinc-800 dark:bg-zinc-900/40">
-        <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          No reflections yet.
-        </p>
-        <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-400">
-          The chart fills in once you save your first weekly reflection.
-          Each week becomes a column showing your process adherence
-          across active journeys plus what changed in the world.
-        </p>
-      </section>
-    );
-  }
+  // Empty state retired 2026-05-11: a freshly-signed-up user has no
+  // reflections, and the explanatory copy that lived here was just
+  // noise on day 1. The chart materializes silently once the first
+  // weekly reflection lands. No reflections → render nothing.
+  if (v2Rows.length === 0) return null;
 
   // Identify which journey topics ever showed up. The heatmap
   // renders one row per topic that has at least one tier value

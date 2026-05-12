@@ -47,9 +47,12 @@ export async function POST(req: Request) {
     }
   }
 
-  // Server-side cap on focus_areas count. Free = 3, Pro/trial = 10 (per
-  // lib/journeys/cap.ts). The client picker enforces the same number,
-  // but a direct POST could otherwise slip past with any array length.
+  // Server-side cap on focus_areas count. Free + trial = 3, paying
+  // Pro = 10 (per lib/journeys/cap.ts; 2026-05-11 policy change —
+  // trial users now share the free cap so the /pricing copy "pick
+  // three to start" matches the in-product experience). The client
+  // picker enforces the same number, but a direct POST could
+  // otherwise slip past with any array length.
   if (question_key === 'focus_areas' && typeof response_value === 'string' && response_value.length > 0) {
     let parsed: unknown;
     try {
@@ -60,8 +63,8 @@ export async function POST(req: Request) {
     if (!Array.isArray(parsed)) {
       return NextResponse.json({ error: 'focus_areas must be an array.' }, { status: 400 });
     }
-    const { isPremium } = await getPremiumStatus(user.id);
-    const cap = journeyCapFor(isPremium);
+    const { status } = await getPremiumStatus(user.id);
+    const cap = journeyCapFor(status === 'active');
     if (parsed.length > cap) {
       return NextResponse.json(
         { error: `Pick up to ${cap}.` },

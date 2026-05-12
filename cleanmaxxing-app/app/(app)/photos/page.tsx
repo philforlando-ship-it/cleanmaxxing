@@ -20,7 +20,6 @@ import {
 } from './photo-milestone-grid';
 import { PhotoTimelinePanel, type TimelineItem } from './photo-timeline-panel';
 import { FitPhotoSection, type FitPhotoRow } from './fit-photo-section';
-import { MisterPProgressCta } from './mister-p-progress-cta';
 import {
   HairSessionsSection,
   type HairSession,
@@ -279,7 +278,7 @@ export default async function PhotosPage() {
           daysSinceOnboarding={daysSinceOnboarding}
           hasOnboarded={hasOnboarded}
         />
-        {faceRows.some((r) => r.signedUrl) && <MisterPChips category="face" />}
+        {faceRows.some((r) => r.signedUrl) && <MisterPChips category="face" isPremium={isPremium} />}
       </div>
 
       <div className="mt-16 border-t border-zinc-200 pt-12 dark:border-zinc-800">
@@ -291,7 +290,7 @@ export default async function PhotosPage() {
           daysSinceOnboarding={daysSinceOnboarding}
           hasOnboarded={hasOnboarded}
         />
-        {bodyRows.some((r) => r.signedUrl) && <MisterPChips category="body" />}
+        {bodyRows.some((r) => r.signedUrl) && <MisterPChips category="body" isPremium={isPremium} />}
       </div>
 
       {hairSessions.length > 0 && (
@@ -300,17 +299,13 @@ export default async function PhotosPage() {
             sessions={hairSessions}
             timezone={timezone}
           />
-          <MisterPChips category="hair" />
+          <MisterPChips category="hair" isPremium={isPremium} />
         </div>
       )}
 
-      <div className="mt-12">
-        <MisterPProgressCta isPremium={isPremium} />
-      </div>
-
       <div className="mt-16 border-t border-zinc-200 pt-12 dark:border-zinc-800">
         <FitPhotoSection rows={fitRows} timezone={timezone} />
-        {fitRows.length > 0 && <MisterPChips category="fit" />}
+        {fitRows.length > 0 && <MisterPChips category="fit" isPremium={isPremium} />}
       </div>
 
       <div className="mt-16 border-t border-zinc-200 pt-12 dark:border-zinc-800">
