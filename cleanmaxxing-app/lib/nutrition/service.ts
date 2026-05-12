@@ -308,7 +308,12 @@ function rowToAssessment(row: unknown): NutritionAssessment {
     urgency: r.urgency as NutritionAssessment['urgency'],
     eating_context:
       r.eating_context as NutritionAssessment['eating_context'],
-    what_tried: r.what_tried as NutritionAssessment['what_tried'],
+    // mig 0115 — column lifted from text → text[]. Defensive coerce
+    // for any read path that hasn't been migrated yet (or for DB
+    // adapters that return single-element arrays as scalars).
+    what_tried: Array.isArray(r.what_tried)
+      ? (r.what_tried as NutritionAssessment['what_tried'])
+      : ([r.what_tried] as NutritionAssessment['what_tried']),
     fasting_protocol:
       (r.fasting_protocol as NutritionAssessment['fasting_protocol']) ??
       'none',

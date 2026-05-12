@@ -28,7 +28,28 @@ export type NutritionWhatTried =
   | 'counted_macros'
   | 'restrictive_diet'
   | 'glp1_or_pharma'
+  // Deprecated in the picker as of mig 0115 — multi-select on the
+  // other four values replaces the "I tried multiple things" catchall.
+  // Kept in the enum so legacy rows (single 'multiple_things' value)
+  // round-trip cleanly until the user re-evaluates.
   | 'multiple_things';
+
+// Values still offered in the assessment picker post-mig 0115.
+// 'nothing_systematic' is exclusive (selecting it clears the rest;
+// selecting any other value clears it). The remaining three are
+// freely combinable. 'multiple_things' is omitted — see comment on
+// NutritionWhatTried.
+export const NUTRITION_WHAT_TRIED_PICKER_VALUES: ReadonlyArray<NutritionWhatTried> = [
+  'nothing_systematic',
+  'counted_macros',
+  'restrictive_diet',
+  'glp1_or_pharma',
+];
+
+export const NUTRITION_WHAT_TRIED_EXCLUSIVE_VALUES: ReadonlyArray<NutritionWhatTried> = [
+  'nothing_systematic',
+  'multiple_things',
+];
 
 export type FastingProtocol =
   | 'none'
@@ -93,7 +114,12 @@ export type NutritionAssessment = {
   goal_direction: GoalDirection;
   urgency: Urgency;
   eating_context: EatingContext;
-  what_tried: NutritionWhatTried;
+  // Multi-select since mig 0115. `nothing_systematic` and the legacy
+  // `multiple_things` are exclusive (single-element when present);
+  // counted_macros / restrictive_diet / glp1_or_pharma are freely
+  // combinable. Form enforces exclusivity client-side; the DB check
+  // validates non-empty + element membership only.
+  what_tried: NutritionWhatTried[];
   // v2 lifestyle modifiers
   fasting_protocol: FastingProtocol;
   alcohol_use: AlcoholUse;
@@ -572,13 +598,17 @@ export const NutritionAssessmentInputSchema = z.object({
     'mostly_liquid_or_shakes',
     'inconsistent',
   ]),
-  what_tried: z.enum([
-    'nothing_systematic',
-    'counted_macros',
-    'restrictive_diet',
-    'glp1_or_pharma',
-    'multiple_things',
-  ]),
+  what_tried: z
+    .array(
+      z.enum([
+        'nothing_systematic',
+        'counted_macros',
+        'restrictive_diet',
+        'glp1_or_pharma',
+        'multiple_things',
+      ]),
+    )
+    .min(1),
   fasting_protocol: z.enum([
     'none',
     'time_restricted_16_8',

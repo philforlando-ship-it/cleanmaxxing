@@ -23,6 +23,7 @@ import {
   GUT_SENSITIVITY_LABEL,
   MEAL_SERVICE_WILLINGNESS_LABEL,
   NUTRITION_WHAT_TRIED_LABEL,
+  NUTRITION_WHAT_TRIED_PICKER_VALUES,
   SNACKING_STYLE_LABEL,
   URGENCY_LABEL,
   type AlcoholUse,
@@ -63,13 +64,12 @@ const EATING_CONTEXTS: EatingContext[] = [
   'inconsistent',
 ];
 
-const WHAT_TRIEDS: NutritionWhatTried[] = [
-  'nothing_systematic',
-  'counted_macros',
-  'restrictive_diet',
-  'glp1_or_pharma',
-  'multiple_things',
-];
+// Mig 0115 — multi-select. nothing_systematic is exclusive (selecting
+// it clears the others; selecting any of the remaining three clears
+// it). multiple_things removed from the picker — multi-select replaces
+// the workaround it was. Picker values come from the shared constant.
+const WHAT_TRIEDS: ReadonlyArray<NutritionWhatTried> =
+  NUTRITION_WHAT_TRIED_PICKER_VALUES;
 
 const FASTING_PROTOCOLS: FastingProtocol[] = [
   'none',
@@ -125,7 +125,7 @@ export type NutritionAssessmentInitialValues = {
   goal_direction: GoalDirection;
   urgency: Urgency;
   eating_context: EatingContext;
-  what_tried: NutritionWhatTried;
+  what_tried: NutritionWhatTried[];
   fasting_protocol: FastingProtocol;
   alcohol_use: AlcoholUse;
   cannabis_use: CannabisUse;
@@ -178,9 +178,28 @@ export function NutritionAssessmentForm({
   const [eatingContext, setEatingContext] = useState<EatingContext | null>(
     initialValues?.eating_context ?? null,
   );
-  const [whatTried, setWhatTried] = useState<NutritionWhatTried | null>(
-    initialValues?.what_tried ?? null,
+  const [whatTried, setWhatTried] = useState<NutritionWhatTried[]>(
+    initialValues?.what_tried ?? [],
   );
+
+  // Q4 multi-select with one exclusive option. Toggling
+  // 'nothing_systematic' clears everything else; toggling any other
+  // value while 'nothing_systematic' is selected clears it. Mirrors
+  // the chin_jaw_concern pattern on facial-structure (mig 0113).
+  function toggleWhatTried(value: NutritionWhatTried) {
+    if (value === 'nothing_systematic') {
+      setWhatTried((prev) =>
+        prev.includes('nothing_systematic') ? [] : ['nothing_systematic'],
+      );
+      return;
+    }
+    setWhatTried((prev) => {
+      const withoutExclusive = prev.filter((v) => v !== 'nothing_systematic');
+      return withoutExclusive.includes(value)
+        ? withoutExclusive.filter((v) => v !== value)
+        : [...withoutExclusive, value];
+    });
+  }
   const [fastingProtocol, setFastingProtocol] = useState<FastingProtocol | null>(
     initialValues?.fasting_protocol ?? null,
   );
@@ -241,7 +260,8 @@ export function NutritionAssessmentForm({
     if (!goal) return setError('Pick a goal direction.');
     if (!urgency) return setError('Pick an urgency.');
     if (!eatingContext) return setError('Pick an eating context.');
-    if (!whatTried) return setError('Pick what you have tried.');
+    if (whatTried.length === 0)
+      return setError('Pick at least one thing you have tried (or "Nothing systematic").');
     if (!fastingProtocol) return setError('Pick a fasting protocol (or "None").');
     if (!alcoholUse) return setError('Pick alcohol use level.');
     if (!cannabisUse) return setError('Pick cannabis use level.');
@@ -422,17 +442,16 @@ export function NutritionAssessmentForm({
       <Question
         number={4}
         title="What have you already tried?"
-        helper="So Mister P doesn't open with 'have you tried protein?' when you've done eight different diets."
+        helper="Pick all that apply. So Mister P doesn't open with 'have you tried protein?' when you've done eight different diets. ‘Nothing systematic’ is a complete answer on its own — picking it clears the rest."
       >
         <div className="space-y-2">
           {WHAT_TRIEDS.map((w) => (
-            <RadioRow
+            <CheckboxRow
               key={w}
-              checked={whatTried === w}
-              onChange={() => setWhatTried(w)}
+              checked={whatTried.includes(w)}
+              onChange={() => toggleWhatTried(w)}
               disabled={pending}
               label={NUTRITION_WHAT_TRIED_LABEL[w]}
-              name="what_tried"
             />
           ))}
         </div>
@@ -766,6 +785,48 @@ function Question({
       )}
       <div className="mt-4">{children}</div>
     </div>
+  );
+}
+
+function CheckboxRow({
+  checked,
+  onChange,
+  disabled,
+  label,
+  hint,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  disabled: boolean;
+  label: string;
+  hint?: string;
+}) {
+  return (
+    <label
+      className={
+        checked
+          ? 'flex cursor-pointer items-start gap-3 rounded-md border border-zinc-900 bg-zinc-50 px-3 py-2 dark:border-zinc-100 dark:bg-zinc-800'
+          : 'flex cursor-pointer items-start gap-3 rounded-md border border-zinc-200 px-3 py-2 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900'
+      }
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        disabled={disabled}
+        className="mt-0.5 h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700"
+      />
+      <span className="flex-1">
+        <span className="block text-sm text-zinc-900 dark:text-zinc-100">
+          {label}
+        </span>
+        {hint && (
+          <span className="mt-0.5 block text-[12px] text-zinc-500 dark:text-zinc-400">
+            {hint}
+          </span>
+        )}
+      </span>
+    </label>
   );
 }
 

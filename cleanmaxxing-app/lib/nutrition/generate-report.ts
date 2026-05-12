@@ -481,7 +481,13 @@ function formatAssessmentForPrompt(
 - Goal direction: ${GOAL_DIRECTION_LABEL[assessment.goal_direction]}
 - Urgency: ${URGENCY_LABEL[assessment.urgency]}
 - Eating context: ${EATING_CONTEXT_LABEL[assessment.eating_context]}
-- What they have tried: ${NUTRITION_WHAT_TRIED_LABEL[assessment.what_tried]}
+- What they have tried: ${
+    assessment.what_tried.length > 0
+      ? assessment.what_tried
+          .map((w) => NUTRITION_WHAT_TRIED_LABEL[w])
+          .join('; ')
+      : 'not specified'
+  }
 - Fasting protocol: ${FASTING_PROTOCOL_LABEL[assessment.fasting_protocol]}
 - Alcohol use: ${ALCOHOL_USE_LABEL[assessment.alcohol_use]}
 - Cannabis use: ${CANNABIS_USE_LABEL[assessment.cannabis_use]}
