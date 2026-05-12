@@ -97,12 +97,12 @@ export default function WhyCleanmaxxingPage() {
       <section className="mx-auto w-full max-w-3xl px-6 py-24 text-center sm:py-32 sm:text-left">
         <div className="mb-10 flex justify-center">
           <img
-            src="/cleanmaxxing-logo2.png"
+            src="/cleanmaxxing-logo3.png"
             alt="Cleanmaxxing"
-            className="h-24 w-auto dark:invert"
+            className="h-12 w-auto max-w-full sm:h-16 dark:invert"
           />
         </div>
-        <h1 className="text-4xl font-semibold tracking-tight text-zinc-900 sm:text-6xl dark:text-zinc-100">
+        <h1 className="text-4xl font-semibold tracking-tight text-emerald-700 sm:text-6xl dark:text-emerald-400">
           One coach across ten journeys.
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
