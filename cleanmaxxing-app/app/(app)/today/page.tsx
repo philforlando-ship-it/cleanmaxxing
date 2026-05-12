@@ -67,6 +67,7 @@ import { hasNutritionAssessment } from '@/lib/nutrition/service';
 import { hasCardioAssessment } from '@/lib/cardio/service';
 import { getStyleAssessment } from '@/lib/style/service';
 import { JourneysGrid } from './journeys-grid';
+import { AdvancedToolsPanel } from './advanced-tools-panel';
 import { sortJourneys } from '@/lib/today/journeys';
 import { getSkincareLogState } from '@/lib/skincare/log-service';
 import { getFacialHairAssessment } from '@/lib/facial-hair/service';
@@ -894,6 +895,17 @@ export default async function TodayPage({ searchParams }: Props) {
               presentation: { hasAssessment: true, hasReport: true },
             }}
           />
+        )}
+
+        {/* Advanced-tools discovery panel (shipped 2026-05-12).
+            Surfaces /plan/trt, /plan/glp1, /plan/peptides, and
+            /plan/procedures — Pro-only Pattern D pharma + the
+            procedural-fit hub. Sits below JourneysGrid so the
+            10-journey roster keeps primary visual weight.
+            Hidden when stepped away; the pages themselves enforce
+            the Pro gate. */}
+        {!steppedAway && (
+          <AdvancedToolsPanel isPremium={userIsPremium} />
         )}
 
         {/* FirstRunCard deleted 2026-05-11 — its bullets described the

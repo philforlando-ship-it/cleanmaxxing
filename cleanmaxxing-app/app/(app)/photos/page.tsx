@@ -11,6 +11,7 @@
 // Server component so signed URLs are minted at request time and
 // don't travel through long-lived client caches.
 
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getPremiumStatus } from '@/lib/billing/is-premium';
@@ -267,6 +268,14 @@ export default async function PhotosPage() {
         Reference points across six months. Face photos can power a
         Pro qualitative observational read; full-body photos are
         for your own visual comparison only.
+      </p>
+      <p className="mt-3 text-xs text-zinc-500">
+        <Link
+          href="/privacy/photos"
+          className="underline underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-300"
+        >
+          How your photos are used →
+        </Link>
       </p>
 
       <div className="mt-12">

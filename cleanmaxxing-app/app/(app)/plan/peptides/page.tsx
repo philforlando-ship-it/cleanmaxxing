@@ -32,6 +32,8 @@ import { PEPTIDES_TOPIC } from '@/lib/pattern-d/topics/peptides';
 import { ConsideringSection } from '@/components/pattern-d/considering-section';
 import { OnProtocolSection } from '@/components/pattern-d/on-protocol-section';
 import { OffRampSection } from '@/components/pattern-d/off-ramp-section';
+import { getPremiumStatus } from '@/lib/billing/is-premium';
+import { AdvancedPlanProGate } from '@/components/billing/advanced-plan-pro-gate';
 
 const PEPTIDES_API_BASE = '/api/plan/pattern-d/peptides';
 
@@ -45,6 +47,21 @@ export default async function PeptidesPlanPage({ searchParams }: Props) {
 
   const user = await getUser();
   if (!user) redirect('/login');
+
+  // Hard Pro gate (2026-05-12). Pattern D pharma plans are Pro-only
+  // features; free users see a teaser + the anchor POV.
+  const { isPremium } = await getPremiumStatus(user.id);
+  if (!isPremium) {
+    return (
+      <AdvancedPlanProGate
+        title="Peptide protocol"
+        description="Considering / On Protocol / Off-ramp shell for GH secretagogues (sermorelin, CJC-1295 + ipamorelin, tesamorelin). Covers candidacy, realistic outcomes, lab cadence, side-effect profile, and where the hype outpaces the evidence."
+        povSlug="04-peptides"
+        povTitle="Peptides POV"
+      />
+    );
+  }
+
   const supabase = await createClient();
 
   const [allInterventions, profile] = await Promise.all([

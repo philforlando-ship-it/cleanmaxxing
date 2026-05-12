@@ -167,6 +167,12 @@ export function buildSystemPromptFull(
   // shape as the POV linking instructions in the main prompt — both
   // tell the model how to reference a specific surface.
   prompt += '\n\n' + buildJourneyMapBlock();
+  // Advanced-tools plan map (TRT, GLP-1, peptides, procedures).
+  // These pages are NOT in the focus-area journey picker — they're
+  // Pattern D pharma shells and a procedural-fit hub that the user
+  // reaches via direct URL or chat referral. Without this block the
+  // model defaults to "there's no plan for that, just a POV doc."
+  prompt += '\n\n' + buildAdvancedPlansBlock();
   if (userStateBlock) prompt += '\n\n' + userStateBlock;
   // Journey-state block sits right after user state. Both are "here's
   // who the user is" context. Order matters for LLM anchoring — when
@@ -208,6 +214,37 @@ Cleanmaxxing structures self-improvement work into ten journeys. Use this map wh
 
 ${lines}
 --- END CLEANMAXXING JOURNEY MAP ---`;
+}
+
+// Advanced-tools plan map. These plans live outside the focus-area
+// journey picker because they're not "pick this and we'll guide you"
+// surfaces — they're protocol-specific shells (Considering / On
+// Protocol / Off-ramp) for pharma + a procedural-fit hub for
+// cosmetic procedures. Users reach them via direct URL or via
+// Mister P chat referral.
+//
+// Why this block matters: without it the model concludes that
+// peptides/TRT/GLP-1 are "POV-only" topics because retrieval surfaces
+// the POV doc and nothing in the prompt names the structured plan.
+// Confirmed gap 2026-05-12 when a user asked "how do I access the
+// peptides journey" and Mister P answered "there isn't one."
+//
+// Voice rules carried into this block:
+//   - Don't push these as recommendations (echoes each topic config's
+//     `focusAreaGate: null` decision — surfacing "Considering TRT?"
+//     unprompted is wrong).
+//   - When the user asks about one of these topics, link to BOTH the
+//     plan page (actionable) and the POV (deeper read), prefer plan
+//     page first if the question is "how do I work through this."
+export function buildAdvancedPlansBlock(): string {
+  return `--- ADVANCED TOOLS PLAN MAP ---
+These plans are NOT in the focus-area journey picker. They're reachable via direct URL and via your chat referrals. When the user asks how to engage with one of these topics — "how do I work on TRT," "is there a peptides plan," "where's the GLP-1 walk-through" — link them to the plan page using a markdown link. The matching POV doc is a deeper read; link to it as a supplementary reference, not the primary answer. NEVER push these as recommendations or surface them unprompted in unrelated answers — they're advanced-tools territory and the user has to choose to engage.
+
+- TRT protocol → /plan/trt — Considering / On Protocol / Off-ramp shell for testosterone replacement. Medical screening gate at the Considering view. Anchor POV: [Testosterone & steroids](/povs/03-testosterone-steroids).
+- GLP-1 protocol → /plan/glp1 — Considering / On Protocol / Off-ramp shell for semaglutide / tirzepatide. Anchor POV: [GLP-1s](/povs/02-glp1s).
+- Peptide protocol → /plan/peptides — Considering / On Protocol / Off-ramp shell for GH secretagogues (sermorelin / CJC-1295 + ipamorelin / tesamorelin). Anchor POV: [Peptides](/povs/04-peptides). Note: BPC-157, TB-500, GHK-Cu, 5-amino-1MQ, melanotan, selank/semax are NOT covered by this plan today — they're POV-only (POV 04 covers them, POV 40 has the deeper read).
+- Procedures → /plan/procedures — Considering content for cosmetic procedures (hair transplant, jawline filler, etc.) plus a Pro-gated procedural-fit check that produces a personalized read on which procedures would meaningfully help. Anchor POV: [Cosmetic procedures](/povs/28-cosmetic-procedures).
+--- END ADVANCED TOOLS PLAN MAP ---`;
 }
 
 // Render a height-in-inches value as feet-inches notation. 75 → 6'3".

@@ -27,6 +27,8 @@ import { ConsideringSection } from '@/components/pattern-d/considering-section';
 import { OnProtocolSection } from '@/components/pattern-d/on-protocol-section';
 import { OffRampSection } from '@/components/pattern-d/off-ramp-section';
 import { Glp1ScreeningGate } from './screening-gate';
+import { getPremiumStatus } from '@/lib/billing/is-premium';
+import { AdvancedPlanProGate } from '@/components/billing/advanced-plan-pro-gate';
 
 const GLP1_SCREENING_KEY = 'glp1_screening_v1';
 
@@ -42,6 +44,21 @@ export default async function Glp1PlanPage({ searchParams }: Props) {
 
   const user = await getUser();
   if (!user) redirect('/login');
+
+  // Hard Pro gate (2026-05-12). Pattern D pharma plans are Pro-only
+  // features; free users see a teaser + the anchor POV.
+  const { isPremium } = await getPremiumStatus(user.id);
+  if (!isPremium) {
+    return (
+      <AdvancedPlanProGate
+        title="GLP-1 protocol"
+        description="The Considering view covers candidacy, expected outcomes, side-effect profile, and the muscle-loss risk if protein and training don't come along. On Protocol tracks dose, weight trajectory, side effects, and the protein floor. Off-ramp is the pre-stop reading for users winding down."
+        povSlug="02-glp1s"
+        povTitle="GLP-1s POV"
+      />
+    );
+  }
+
   const supabase = await createClient();
 
   const [allInterventions, profile, { data: screeningRow }] = await Promise.all([

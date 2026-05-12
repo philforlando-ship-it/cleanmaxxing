@@ -119,6 +119,14 @@ export default async function HairPhotosPage() {
           URLs. JPEG / PNG / WebP, up to 25 MB per photo. You can delete
           individual photos any time.
         </p>
+        <p className="mt-3 text-xs text-zinc-500">
+          <Link
+            href="/privacy/photos"
+            className="underline underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-300"
+          >
+            How your photos are used →
+          </Link>
+        </p>
       </header>
 
       <section className="mt-10">

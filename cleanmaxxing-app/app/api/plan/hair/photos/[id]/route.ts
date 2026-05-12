@@ -2,6 +2,13 @@
 // Delete a single hair photo (removes both the DB row and the storage
 // file). User can delete from any session, open or completed. Best-
 // effort storage cleanup — the DB row is the source of truth.
+//
+// Cascade: any hair_photo_analyses rows that reference the photo's
+// session (on either side of the comparison) are deleted alongside.
+// Matches the /privacy/photos commitment that deleting a photo also
+// removes the AI observations derived from it. Granularity is per-
+// session because hair_photo_analyses references session_id, not the
+// individual photo row.
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
@@ -46,6 +53,18 @@ export async function DELETE(
       { status: 500 },
     );
   }
+
+  // Cascade derived analyses tied to this photo's session.
+  await supabase
+    .from('hair_photo_analyses')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('before_session_id', photo.session_id);
+  await supabase
+    .from('hair_photo_analyses')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('after_session_id', photo.session_id);
 
   return NextResponse.json({ ok: true });
 }

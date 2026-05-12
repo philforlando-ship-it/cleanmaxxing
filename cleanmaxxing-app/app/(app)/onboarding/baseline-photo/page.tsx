@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { CapturePhoto } from '@/app/(app)/profile/capture-photo';
@@ -110,9 +111,21 @@ export default async function OnboardingBaselinePhotoPage() {
             ? 'Front baseline is in. Optional extras below — close-up, side profile, full-body front. Each one improves what Mister P can do later. All optional, skip anything you don’t want.'
             : 'One front-facing photo of your face becomes your reference point in 30, 90, and 180 days. The comparison is for you to see. Stored privately, deletable any time.'}
         </p>
+        <p className="mt-3 text-xs text-zinc-500">
+          <Link
+            href="/privacy/photos"
+            className="underline underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-300"
+          >
+            How your photos are used →
+          </Link>
+        </p>
 
         {/* Phase 1 — front face capture (gated). Disappears once
-            captured; replaced by the extras flow below. */}
+            captured; replaced by the extras flow below. The consent
+            notice is contemporaneous with capture: BIPA-style states
+            require a clear notice at the moment of biometric data
+            collection. Phase 2 extras don't need a separate notice
+            because the user has already crossed the threshold. */}
         {!hasFaceFront && (
           <>
             <div className="mt-8">
@@ -122,6 +135,20 @@ export default async function OnboardingBaselinePhotoPage() {
                 angle="front"
               />
             </div>
+
+            <p className="mt-4 text-xs leading-relaxed text-zinc-500">
+              By capturing or uploading, you acknowledge that your
+              photos will be stored privately and processed as
+              described in our{' '}
+              <Link
+                href="/privacy/photos"
+                className="underline underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-300"
+              >
+                AI photo policy
+              </Link>
+              . Capture is optional — you can skip and use the app
+              without any photos.
+            </p>
 
             <div className="mt-10 flex items-center justify-between gap-3">
               <BaselinePhotoSkipButton />

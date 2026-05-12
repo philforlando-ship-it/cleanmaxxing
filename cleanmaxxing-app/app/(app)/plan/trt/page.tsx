@@ -27,6 +27,8 @@ import { ConsideringSection } from '@/components/pattern-d/considering-section';
 import { OnProtocolSection } from '@/components/pattern-d/on-protocol-section';
 import { OffRampSection } from '@/components/pattern-d/off-ramp-section';
 import { TrtScreeningGate } from './screening-gate';
+import { getPremiumStatus } from '@/lib/billing/is-premium';
+import { AdvancedPlanProGate } from '@/components/billing/advanced-plan-pro-gate';
 
 const TRT_API_BASE = '/api/plan/pattern-d/trt';
 const TRT_SCREENING_KEY = 'trt_screening_v1';
@@ -41,6 +43,21 @@ export default async function TrtPlanPage({ searchParams }: Props) {
 
   const user = await getUser();
   if (!user) redirect('/login');
+
+  // Hard Pro gate (2026-05-12). Pattern D pharma plans are Pro-only
+  // features; free users see a teaser + the anchor POV.
+  const { isPremium } = await getPremiumStatus(user.id);
+  if (!isPremium) {
+    return (
+      <AdvancedPlanProGate
+        title="TRT protocol"
+        description="The Considering view walks through the medical eligibility gate, what TRT actually changes vs the hype, and what to ask a prescriber. On Protocol tracks lab cadence, dose, side effects, and prescriber check-ins. Off-ramp is the pre-stop reading for users coming off."
+        povSlug="03-testosterone-steroids"
+        povTitle="Testosterone & Steroids POV"
+      />
+    );
+  }
+
   const supabase = await createClient();
 
   const [allInterventions, profile, { data: screeningRow }] = await Promise.all([

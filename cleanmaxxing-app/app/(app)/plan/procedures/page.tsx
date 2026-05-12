@@ -16,10 +16,29 @@ import { PROCEDURES_CONSIDERING } from '@/lib/procedural-fit/considering-content
 import { getLatestProceduralFitAnalysis } from '@/lib/procedural-fit/service';
 import { RunFitCheckButton } from './run-fit-check-button';
 import { ProceduralFitResult } from './procedural-fit-result';
+import { AdvancedPlanProGate } from '@/components/billing/advanced-plan-pro-gate';
 
 export default async function ProceduresPlanPage() {
   const user = await getUser();
   if (!user) redirect('/login');
+
+  // Hard Pro gate (2026-05-12). Procedures is part of the
+  // advanced-tools tier (alongside TRT / GLP-1 / peptides) and is
+  // Pro-only. The legacy in-page UpgradeNotice for just the
+  // fit-check is now redundant — the whole page never renders for
+  // free users.
+  const { isPremium } = await getPremiumStatus(user.id);
+  if (!isPremium) {
+    return (
+      <AdvancedPlanProGate
+        title="Cosmetic procedures"
+        description="The framework view covers Botox, fillers, hair transplant, jawline filler, and structural surgery — when each is genuinely worth it, when it isn't, what's overhyped, and what to ask before consenting. The personalized procedural-fit check then reads your baseline face photo and reports which procedures (if any) would meaningfully help."
+        povSlug="28-cosmetic-procedures"
+        povTitle="Cosmetic procedures POV"
+      />
+    );
+  }
+
   const supabase = await createClient();
 
   // Baseline face photo presence — gates the run CTA. Same hard

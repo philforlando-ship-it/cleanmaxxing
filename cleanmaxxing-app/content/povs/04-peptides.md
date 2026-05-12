@@ -13,7 +13,7 @@ Peptides are short chains of amino acids that act as biological signals — more
 
 __The Core POV__
 
-Peptides are advanced tools with marginal gains for most people, and disproportionate hype relative to their real\-world impact\. They are not beginner tools\. They are not necessary for 95% of people\. They are most often used as shortcuts before fundamentals have been addressed\. When the foundation is already strong, a well\-chosen peptide stack may produce a small additional edge\. When the foundation is weak, the same stack produces no meaningful change\.
+Peptides are a legitimate optimization layer for the right user — not a shortcut, not snake oil\. The category covers real compounds with real mechanisms, and a well\-chosen single compound can produce a meaningful if subtle effect in a specific area: an injury that resolves faster, recovery that bounces back harder, skin that improves at the margin\. The hype runs ahead of the controlled human evidence for most compounds outside the GLP\-1 family, and the sourcing reality is genuinely uncertain, so the honest framing is "advanced tool with a specific job" rather than "necessary supplement\." When the foundation is already strong, the right compound for the right goal can be worth running\. When the foundation is weak, the same compound produces no meaningful change — but that is a sequencing problem, not a reason to dismiss the category\.
 
 __The Full Peptide Landscape — Categories and What They Do__
 
@@ -71,14 +71,15 @@ __Who Might Actually Benefit__
 
 The narrow legitimate use case is someone who is already lean, training consistently with a dialed\-in program, eating controlled calories, sleeping well, and looking for a marginal additional edge in a specific area — typically injury recovery, where BPC\-157 has the strongest practical case, or subtle body composition optimization as a complement to an already\-strong fat loss protocol\.
 
-__Who Should Not Touch Them__
+__Where the Sequence Argument Applies__
 
-- Anyone new to structured training and nutrition — fix the foundation first
-- Anyone still carrying significant body fat — diet and training will outperform any peptide stack
-- Anyone whose sleep, skin, or grooming is not already dialed in — address those first
-- Anyone who is not comfortable with self\-injection and research chemical sourcing
+For these profiles, the case for peptides right now is weak — not because the category is off\-limits, but because the upside is dwarfed by what fundamentals would deliver in the same window:
 
-That is most people asking about peptides\.
+- New to structured training and nutrition — months of consistent training will move appearance and performance far more than any peptide could
+- Still carrying significant body fat — a calorie deficit \(with or without a GLP\-1, which is its own conversation\) will produce visible change a recovery peptide cannot match
+- Sleep, skin, or grooming not yet dialed in — those are larger appearance levers and they are free
+
+This is a sequencing argument, not a prohibition\. The right time to revisit peptides is once the larger levers are no longer the bottleneck\. The separate gating question is comfort with self\-injection and research\-chemical sourcing, which is real and covered below\.
 
 __If You Still Meet the Criteria — How a First Protocol Actually Looks__
 
@@ -170,5 +171,5 @@ None of this changes the doc's overall position. Peptides remain a niche tool wi
 
 __Tier Placement__
 
-__Peptides are not a looksmax cheat code\. They are a niche tool with limited upside and real uncertainty\. GLP\-1s are the only peptide\-adjacent compounds with genuinely strong evidence for dramatic results — and they are prescription medications, not research chemicals\. Everything else in this category is marginal optimization on top of a strong foundation, or a distraction from building one\. Most people asking about peptides would get ten times better results from getting lean, fixing their hair, improving skin, and dressing better\.__
+__Peptides are a real category with real applications — not a magic bullet, not a forbidden zone, and not a substitute for fundamentals\. The strongest cases are targeted and concrete: BPC\-157 for a specific musculoskeletal injury, CJC\-1295 with Ipamorelin for recovery and subtle body\-composition support once the foundation is already in place, topical GHK\-Cu for skin, GLP\-1s when fat loss is the actual goal\. Evidence outside GLP\-1s is thinner than the marketing implies, sourcing carries genuine uncertainty, and most of the failure stories in this space come from stacking four compounds before evaluating any one of them — none of which makes the category wrong to engage with\. For someone with a specific goal, the fundamentals already addressed, and the willingness to run a single compound long enough to actually evaluate it, this is a legitimate optimization layer worth taking seriously\. For someone earlier in their progress, the same energy will produce far more change spent on training, nutrition, sleep, skin, and grooming first — that is a sequencing recommendation, not a verdict on peptides themselves\.__
 
