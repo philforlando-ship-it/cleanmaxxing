@@ -4,7 +4,9 @@ import { redirect } from 'next/navigation';
 import { StepAwayCard } from './step-away-card';
 import { PushNotificationsSection } from './push-notifications-section';
 import { HealthIntegrationCard } from './health-integration-card';
+import { MfpIntegrationCard } from './mfp-integration-card';
 import { getPremiumStatus } from '@/lib/billing/is-premium';
+import { isMfpConfigured } from '@/lib/mfp/credentials';
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -45,6 +47,24 @@ export default async function SettingsPage() {
   const vitalConfigured = Boolean(
     process.env.VITAL_API_KEY && process.env.VITAL_ENVIRONMENT,
   );
+
+  // MyFitnessPal credential storage. Single row per user (slice 1
+  // schema enforces unique on user_id), so .maybeSingle() is exact.
+  const { data: mfpRow } = await supabase
+    .from('mfp_integrations')
+    .select('mfp_username, status, connected_at, last_synced_at')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  const mfpConnected = Boolean(mfpRow);
+  const mfpUsername = (mfpRow?.mfp_username as string | null) ?? null;
+  const mfpStatus = (mfpRow?.status as
+    | 'active'
+    | 'auth_failed'
+    | 'disabled'
+    | null) ?? null;
+  const mfpConnectedAt = (mfpRow?.connected_at as string | null) ?? null;
+  const mfpLastSyncedAt = (mfpRow?.last_synced_at as string | null) ?? null;
+  const mfpConfigured = isMfpConfigured();
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -98,6 +118,16 @@ export default async function SettingsPage() {
           connectedAt={healthConnectedAt}
           lastSyncedAt={healthLastSyncedAt}
           vitalConfigured={vitalConfigured}
+          isPremium={premium.isPremium}
+        />
+
+        <MfpIntegrationCard
+          connected={mfpConnected}
+          username={mfpUsername}
+          status={mfpStatus}
+          connectedAt={mfpConnectedAt}
+          lastSyncedAt={mfpLastSyncedAt}
+          mfpConfigured={mfpConfigured}
           isPremium={premium.isPremium}
         />
 
