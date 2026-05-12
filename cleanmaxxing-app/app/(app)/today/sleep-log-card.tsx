@@ -12,6 +12,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { SleepLog } from '@/lib/sleep/service';
 import { appDayFor, previousAppDayFor } from '@/lib/date/app-day';
 
@@ -20,6 +21,12 @@ type Props = {
   rollingAvgHours: number | null;
   rollingCount: number;
   timezone: string;
+  // True when the user has an active wearable connection feeding
+  // sleep data via Junction (Fitbit / Oura / Whoop / Garmin / etc.).
+  // When false, the form surfaces a quiet "Sync from a wearable" link
+  // pointing at /settings; nothing renders when a sync source already
+  // exists, since the captured row already carries the provider tag.
+  hasWearableConnected: boolean;
 };
 
 const QUALITY_LABELS: Record<number, string> = {
@@ -65,6 +72,7 @@ export function SleepLogCard({
   rollingAvgHours,
   rollingCount,
   timezone,
+  hasWearableConnected,
 }: Props) {
   const router = useRouter();
   const lastNight = previousAppDayFor(timezone);
@@ -178,6 +186,17 @@ export function SleepLogCard({
         <h2 className="text-lg font-medium">Last night&rsquo;s sleep</h2>
         <span className="text-xs text-zinc-500">{headerLabel}</span>
       </div>
+      {!hasWearableConnected && (
+        <p className="mt-1 text-[12px] text-zinc-500 dark:text-zinc-400">
+          Have a Fitbit, Oura, Whoop, or Garmin?{' '}
+          <Link
+            href="/settings"
+            className="underline decoration-dotted underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-300"
+          >
+            Auto-fill from a wearable →
+          </Link>
+        </p>
+      )}
 
       <div className="mt-4 space-y-4">
           <div>

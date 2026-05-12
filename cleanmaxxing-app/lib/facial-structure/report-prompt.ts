@@ -67,6 +67,21 @@ Modifier handling:
 - **cosmetic_procedure_openness** — gates whether to name Pattern D at all. 'not_open' → never mention procedures, the report ends at lifestyle. 'curious_about_options' → mention procedure-as-future-option only if structural lever fires; otherwise skip. 'actively_considering' → procedure mention is warranted; deep-link to /plan/procedures for the actual analysis. 'already_done' → frame the longevity / touch-up window from POV 28 (most procedures need a refresh every 1-3 years).
 - **hair_density_state / hair_balding_pattern (hair journey)** — affects framing. Receding hairline + softer face = the cut needs to be the framing piece; the user should not let hair grow long to compensate. Read these without surfacing them as failures — POV 16 specifically says the framing layer is presentation, not core structure.
 - **facial_hair_current_state (facial hair journey)** — beard fills in jaw definition when density permits. Read this state; if the user has a beard already, frame as "your existing beard is doing structural work; keep the cadence." If patchy / not pursuing, do not push it.
+- **photo_features (when present)** — categorical observations extracted from the user's baseline photos. These are observational, not evaluative; trust them as objective signal alongside self-report. When the photo signal contradicts a self-report value, the photo usually wins (a face shown to the camera is more objective than a remembered impression) — but DO NOT call out the contradiction in a way that reads as a gotcha. Absorb the truth and let it shape the lever. Specific high-value rules:
+  - jawline_definition='high' overrides a stated 'jaw_definition_front' concern — the jaw IS visible; the concern is likely calibration. Lead with framing or posture rather than the cut.
+  - jawline_definition='low' AND body_fat_estimate sub-15% means leanness isn't unlocking definition. Lever shifts to framing OR cosmetic Pattern D when openness permits — the cut already happened.
+  - chin_projection='recessed' confirms a stated 'chin_projection_side' concern; if openness is curious/active and BF + posture are clean, name chin filler as the diagnostic (POV 28).
+  - chin_projection='projected' contradicting a 'chin_projection_side' concern means the user is misreading their own profile — reassure briefly without making it the headline.
+  - buccal_fullness='lean' with a 'submental_fullness' concern means the under-chin softness is not buccal-driven; route to puff diagnostic or posture.
+  - facial_puff_visible='high' even when self-reported puff is 'rarely'/'few_days' — the photo shows puff today; acknowledge variance without contradicting the self-report ("the photo caught a day with some puff; the self-report cadence still drives the diagnostic").
+  - posture_head_carriage='forward' even when postural_pattern omits forward_head means the user doesn't recognize it; surface gently ("the side photo shows forward head carriage; that's compressing the chin-neck line you're trying to read").
+  - asymmetry_flag='notable' — frame as "visible asymmetry; if it's been there your whole life, it's structural, not a target." Do not catastrophize.
+  - midface_balance='long' AND chin_projection='recessed' AND openness permits cosmetic: chin filler reads particularly well in long-lower-third faces (POV 28).
+  - midface_balance='short' with chin filler considering: caution against pushing the chin forward; would emphasize the short lower third.
+  - face_first_distribution_visual='face_first' is a stronger anchor than the self-report for the personal BF target; user reads sharp at 15-18%.
+  - face_first_distribution_visual='body_first' similarly recalibrates downward — user reads sharp at 12-14%.
+  - 'unreadable' values: skip; do not mention. The model already declined those.
+  - When photo_features is null, never recommend "run photo analysis" inline — the journey surface handles that.
 - **mewing** is mentioned ONLY IN 'What we're not doing right now' — never as a recommendation. POV 13: "posture correction alone delivers 80% of what people believe mewing accomplishes."
 
 Do not narrate the modifiers back. Just let them shape what you emphasize. Do not list the framework levers in the output — they shape your synthesis, they aren't section headings the user sees.

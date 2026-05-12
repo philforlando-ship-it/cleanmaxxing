@@ -7,6 +7,8 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { CameraIcon } from '@phosphor-icons/react/ssr';
+import { TileIcon } from './tile-icon';
 
 type Props = {
   isFirstSession: boolean;
@@ -53,28 +55,33 @@ export function HairPhotoDueCard({
 
   return (
     <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
-          Hair photos
-        </h2>
-        <span className="text-xs text-zinc-500 dark:text-zinc-400">
-          {isFirstSession
-            ? 'Baseline'
-            : isOverdue
-              ? `${Math.abs(daysUntil!)} ${Math.abs(daysUntil!) === 1 ? 'day' : 'days'} overdue`
-              : 'Due today'}
-        </span>
+      <div className="flex items-start gap-3">
+        <TileIcon icon={CameraIcon} tone="amber" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
+              Hair photos
+            </h2>
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+              {isFirstSession
+                ? 'Baseline'
+                : isOverdue
+                  ? `${Math.abs(daysUntil!)} ${Math.abs(daysUntil!) === 1 ? 'day' : 'days'} overdue`
+                  : 'Due today'}
+            </span>
+          </div>
+          <p className="mt-2 text-[13px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+            Same place, same light, same angles as last time. Open{' '}
+            <a
+              href="/plan/hair"
+              className="underline decoration-dotted underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100"
+            >
+              /plan/hair
+            </a>{' '}
+            for the protocol if you need a refresher.
+          </p>
+        </div>
       </div>
-      <p className="mt-2 text-[13px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-        Same place, same light, same angles as last time. Open{' '}
-        <a
-          href="/plan/hair"
-          className="underline decoration-dotted underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100"
-        >
-          /plan/hair
-        </a>{' '}
-        for the protocol if you need a refresher.
-      </p>
       {priorAnchorSignedUrl && (
         <div className="mt-3 flex items-start gap-3 rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-950/60">
           {/* eslint-disable-next-line @next/next/no-img-element */}

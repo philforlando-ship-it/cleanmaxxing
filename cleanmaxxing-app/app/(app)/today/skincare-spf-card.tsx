@@ -12,6 +12,8 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { SunIcon } from '@phosphor-icons/react/ssr';
+import { TileIcon } from './tile-icon';
 import type { SkincareLogState } from '@/lib/skincare/log-service';
 import { appDayFor } from '@/lib/date/app-day';
 
@@ -66,8 +68,9 @@ export function SkincareSpfCard({ state, timezone }: Props) {
     const hitText = existing.applied_spf ? 'On' : 'Skipped';
     return (
       <section className="rounded-xl border border-zinc-200 bg-white px-5 py-3 dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            <TileIcon icon={SunIcon} tone="amber" compact />
             <span className="font-medium text-zinc-700 dark:text-zinc-300">
               SPF
             </span>
@@ -94,13 +97,16 @@ export function SkincareSpfCard({ state, timezone }: Props) {
 
   return (
     <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-lg font-medium">SPF on today?</h2>
+      <div className="flex items-start gap-3">
+        <TileIcon icon={SunIcon} tone="amber" />
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg font-medium">SPF on today?</h2>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            Mineral or chemical, SPF 30+, before leaving the house. The one
+            skincare move that has to fire every day.
+          </p>
+        </div>
       </div>
-      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-        Mineral or chemical, SPF 30+, before leaving the house. The one
-        skincare move that has to fire every day.
-      </p>
 
       <div className="mt-4 space-y-4">
         <div>

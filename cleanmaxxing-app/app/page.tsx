@@ -15,21 +15,21 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Cleanmaxxing — one coach across eight journeys',
+  title: 'Cleanmaxxing — one coach across ten journeys',
   description:
-    'Hair, style, body composition, strength, cardio, sleep, skincare, facial hair. One coordinated plan, not eight apps that don’t talk to each other.',
+    'Hair, style, body composition, strength, cardio, sleep, skincare, facial hair, facial structure, presentation. One coordinated plan, not ten apps that don’t talk to each other.',
   openGraph: {
-    title: 'Cleanmaxxing — one coach across eight journeys',
+    title: 'Cleanmaxxing — one coach across ten journeys',
     description:
-      'The horizontal coach for men 18–55 who’ve tried the vertical apps. Eight coordinated journeys, honest content on GLP-1 / TRT / peptides, wearable-aware coaching. $9.99/mo.',
+      'The horizontal coach for men 18–55 who’ve tried the vertical apps. Ten coordinated journeys, honest content on GLP-1 / TRT / peptides, wearable-aware coaching. $9.99/mo.',
     type: 'website',
   },
 };
 
 const HORIZONTAL = [
   {
-    title: 'One coach, eight journeys.',
-    body: 'Hair, style, body composition, strength, cardio, sleep, skincare, facial hair. Each with a full assessment, a personalized report, and a structured stage-gated plan you work through over months. All coordinated by one system that sees the whole picture.',
+    title: 'One coach, ten journeys.',
+    body: 'Hair, style, body composition, strength, cardio, sleep, skincare, facial hair, facial structure, presentation. Each core journey has a full assessment, a personalized report, and a structured stage-gated plan you work through over months. All coordinated by one system that sees the whole picture.',
   },
   {
     title: 'Cross-journey dependency awareness.',
@@ -99,24 +99,30 @@ export default function WhyCleanmaxxingPage() {
           <img
             src="/cleanmaxxing-logo2.png"
             alt="Cleanmaxxing"
-            className="h-24 w-auto mix-blend-multiply dark:invert dark:mix-blend-screen"
+            className="h-24 w-auto dark:invert"
           />
         </div>
         <h1 className="text-4xl font-semibold tracking-tight text-zinc-900 sm:text-6xl dark:text-zinc-100">
-          One coach across eight journeys.
+          One coach across ten journeys.
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
           Hair, style, body composition, strength, cardio, sleep, skincare,
-          facial hair. Cleanmaxxing reads what&rsquo;s happening in all of them
-          and coordinates the plan so they reinforce each other instead of
-          competing for your time.
+          facial hair, facial structure, presentation. Cleanmaxxing reads
+          what&rsquo;s happening in all of them and coordinates the plan so
+          they reinforce each other instead of competing for your time.
         </p>
         <div className="mt-10 flex flex-wrap items-center gap-4 sm:justify-start">
           <Link
             href="/signup"
             className="rounded-full bg-emerald-600 px-6 py-3 text-sm font-medium text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400"
           >
-            Start your 14-day trial
+            Start your 14-day Pro trial
+          </Link>
+          <Link
+            href="/signup"
+            className="rounded-full border border-zinc-300 px-6 py-3 text-sm font-medium text-zinc-800 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          >
+            Start free
           </Link>
           <Link
             href="/pricing"
@@ -126,7 +132,8 @@ export default function WhyCleanmaxxingPage() {
           </Link>
         </div>
         <p className="mt-4 text-xs text-zinc-500">
-          No card. Three journeys free if you&rsquo;d rather not commit.
+          No card either way. The free plan keeps three journeys forever; the
+          14-day trial unlocks all ten plus advanced protocols.
         </p>
       </section>
 
@@ -234,12 +241,12 @@ export default function WhyCleanmaxxingPage() {
             <span className="text-emerald-700 dark:text-emerald-400">
               $9.99 a month.
             </span>{' '}
-            One app. All eight journeys.
+            One app. All ten journeys.
           </h2>
           <p className="mt-6 font-serif text-[18px] leading-relaxed text-zinc-800 dark:text-zinc-200">
             The vertical-specialist stack &mdash; Hims plus Whoop plus Levels
             plus MacroFactor &mdash; runs $80&ndash;90 a month for four narrow
-            slices. We&rsquo;re one app, one price, all eight journeys.
+            slices. We&rsquo;re one app, one price, all ten journeys.
           </p>
           <p className="mt-4 font-serif text-[18px] leading-relaxed text-zinc-800 dark:text-zinc-200">
             Three journeys are free forever if you&rsquo;d rather not commit.
@@ -311,15 +318,21 @@ export default function WhyCleanmaxxingPage() {
             Start with three journeys free.
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-emerald-100 dark:text-emerald-200">
-            Or take the 14-day Pro trial to see all eight coordinated at once.
-            No card required to start.
+            Or take the 14-day Pro trial to see all ten coordinated at once.
+            No card required either way.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-4 sm:justify-start">
             <Link
               href="/signup"
               className="rounded-full bg-white px-6 py-3 text-sm font-medium text-emerald-900 hover:bg-emerald-50"
             >
-              Start your trial
+              Start your 14-day Pro trial
+            </Link>
+            <Link
+              href="/signup"
+              className="rounded-full border border-emerald-300 px-6 py-3 text-sm font-medium text-emerald-100 hover:bg-emerald-800/40 dark:border-emerald-400 dark:text-emerald-100"
+            >
+              Start free
             </Link>
             <Link
               href="/login"

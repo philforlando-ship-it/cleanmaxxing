@@ -27,13 +27,12 @@ type Props = {
 
 const LINKS: Array<{ href: string; label: string; matchPrefix: string }> = [
   { href: '/today', label: 'Today', matchPrefix: '/today' },
-  // /log + /reflection added in Phase C of the /today redesign.
-  // /log centralizes daily logging surfaces (sleep, nutrition,
-  // workout, daily check-in). /reflection consolidates Pattern C
-  // surfaces (weekly letter, weekly reflection, monthly checkpoint,
-  // quarterly survey, self-acceptance nudges, stale-goal /
-  // stuck-confidence signals).
-  { href: '/log', label: 'Log', matchPrefix: '/log' },
+  // /reflection consolidates Pattern C surfaces (weekly letter,
+  // weekly reflection, monthly checkpoint, quarterly survey, the
+  // Coming-up cadence strip, self-acceptance nudges).
+  // /log retired in Slice 3 of the daily-check-in reframe
+  // (2026-05-11) — sleep / workout / nutrition logging moved
+  // inline on /today behind the DailyBasicsSection disclosure.
   { href: '/reflection', label: 'Reflection', matchPrefix: '/reflection' },
   { href: '/photos', label: 'Photos', matchPrefix: '/photos' },
   { href: '/profile', label: 'Profile', matchPrefix: '/profile' },

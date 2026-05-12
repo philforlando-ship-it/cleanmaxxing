@@ -45,19 +45,30 @@ export async function streamStyleReport(
 ): Promise<StreamTextResult<ToolSet, never>> {
   const profile = await getUserProfile(supabase, userId);
 
-  // Read user age and hair_assessments balding signal in parallel.
-  // The hair fields drive sunglasses / hats / glasses architecture
-  // recs — bald + balding users carry less face-frame from the hair
-  // and the eyewear / hat picks need to do that work instead. Mirror
-  // of facial-hair's reverse-D1/D2 read (2026-05-09).
-  const [{ data: userRow }, { data: hairRow }] = await Promise.all([
-    supabase.from('users').select('age').eq('id', userId).maybeSingle(),
-    supabase
-      .from('hair_assessments')
-      .select('balding_pattern, balding_severity, density_state')
-      .eq('user_id', userId)
-      .maybeSingle(),
-  ]);
+  // Read user age, hair_assessments balding signal, and facial_structure
+  // signal in parallel. The hair fields drive sunglasses / hats / glasses
+  // architecture recs — bald + balding users carry less face-frame from
+  // the hair and the eyewear / hat picks need to do that work instead.
+  // Mirror of facial-hair's reverse-D1/D2 read (2026-05-09). The
+  // facial_structure read (2026-05-11) lets collar / V-neck / accessory
+  // recs account for the face the wardrobe is framing — chin_jaw_concern
+  // entries like submental_fullness or chin_neck_transition shift collar
+  // bias; face_softer_than_body distribution biases toward more
+  // structured face-frame pieces.
+  const [{ data: userRow }, { data: hairRow }, { data: facialStructureRow }] =
+    await Promise.all([
+      supabase.from('users').select('age').eq('id', userId).maybeSingle(),
+      supabase
+        .from('hair_assessments')
+        .select('balding_pattern, balding_severity, density_state')
+        .eq('user_id', userId)
+        .maybeSingle(),
+      supabase
+        .from('facial_structure_assessments')
+        .select('chin_jaw_concern, face_first_distribution')
+        .eq('user_id', userId)
+        .maybeSingle(),
+    ]);
 
   const ageForFeasibility =
     (userRow as { age: number | null } | null)?.age ?? null;
@@ -72,6 +83,11 @@ export async function streamStyleReport(
       | null;
     balding_severity: 0 | 1 | 2 | 3 | 4 | null;
     density_state: string | null;
+  } | null;
+
+  const facialStructure = facialStructureRow as {
+    chin_jaw_concern: string[] | null;
+    face_first_distribution: string | null;
   } | null;
 
   // Phase 2b — compute per-user feasibility for the PICKED archetype
@@ -113,6 +129,10 @@ export async function streamStyleReport(
       assessment.shoulder_width && assessment.build
         ? pickedFeasibility.rationale
         : null,
+    facial_structure_chin_jaw_concern:
+      facialStructure?.chin_jaw_concern ?? null,
+    facial_structure_face_first_distribution:
+      facialStructure?.face_first_distribution ?? null,
   };
 
   const pov = await povFor(POV_SLUG);
@@ -229,6 +249,20 @@ function formatAssessmentForPrompt(
       modifiers.target_archetype_feasibility_rationale
         ? `"${modifiers.target_archetype_feasibility_rationale}"`
         : 'null'
+    }`,
+  );
+  modifierLines.push(
+    `- facial_structure_chin_jaw_concern (facial_structure_assessments — multi-select; gates collar / V-neck / accessory bias): ${
+      modifiers.facial_structure_chin_jaw_concern &&
+      modifiers.facial_structure_chin_jaw_concern.length > 0
+        ? modifiers.facial_structure_chin_jaw_concern.join(', ')
+        : 'null — facial-structure journey not taken'
+    }`,
+  );
+  modifierLines.push(
+    `- facial_structure_face_first_distribution (facial_structure_assessments — face_softer_than_body biases toward more structured face-frame pieces): ${
+      modifiers.facial_structure_face_first_distribution ??
+      'null — facial-structure journey not taken'
     }`,
   );
 

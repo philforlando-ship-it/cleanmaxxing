@@ -6,20 +6,20 @@
 
 import Link from 'next/link';
 import {
-  Apple,
-  Brush,
-  Dumbbell,
-  HeartPulse,
-  Mic,
-  Moon,
-  Scissors,
-  Shirt,
-  Smile,
-  Sparkles,
-  type LucideIcon,
-} from 'lucide-react';
+  BarbellIcon,
+  CarrotIcon,
+  DropIcon,
+  HairDryerIcon,
+  HeartbeatIcon,
+  MicrophoneIcon,
+  MoonIcon,
+  ScissorsIcon,
+  StarIcon,
+  TShirtIcon,
+  UserFocusIcon,
+} from '@phosphor-icons/react/ssr';
+import type { Icon } from '@phosphor-icons/react';
 import {
-  JOURNEYS,
   STATUS_CTA,
   STATUS_LABEL,
   sortJourneys,
@@ -31,30 +31,62 @@ import {
 } from '@/lib/today/journeys';
 import type { TierKey } from '@/lib/hierarchy/tiers';
 
-// Per-slug icon mapping. Kept local to the grid because the journey
-// config is read by non-UI surfaces (Mister P prompt, /system) that
-// shouldn't depend on a specific icon library.
-//   hair          → Scissors (haircut)
-//   style         → Shirt (clothing)
-//   body_comp     → Apple (nutrition / body comp anchor)
-//   strength      → Dumbbell (lifting)
-//   cardio        → HeartPulse (cardiovascular activity)
-//   sleep         → Moon (night / rest)
-//   skincare      → Sparkles (the glow signal)
-//   facial_hair      → Brush (grooming, distinct from hair's Scissors)
-//   facial_structure → Smile (face shape / jaw line context)
-//   presentation     → Mic (voice / carriage / public-facing presence)
-const JOURNEY_ICONS: Record<JourneySlug, LucideIcon> = {
-  hair: Scissors,
-  style: Shirt,
-  body_composition: Apple,
-  strength: Dumbbell,
-  cardio: HeartPulse,
-  sleep: Moon,
-  skincare: Sparkles,
-  facial_hair: Brush,
-  facial_structure: Smile,
-  presentation: Mic,
+// Per-slug icon mapping. Phosphor Duotone — the two-tone treatment
+// gives the grid a more designed visual identity than monoline icons,
+// and each pick is intentionally literal so users can skim:
+//   hair             → Scissors
+//   style            → TShirt (garment, not just apparel-as-abstraction)
+//   body_composition → Carrot (nutrition anchor, distinct from Barbell)
+//   strength         → Barbell (lifting)
+//   cardio           → Heartbeat (cardiovascular signal)
+//   sleep            → Moon
+//   skincare         → Drop (serum / hydration)
+//   facial_hair      → Hairdryer (grooming-tools cluster)
+//   facial_structure → UserFocus (face being framed — on-the-nose for the journey)
+//   presentation     → Microphone (voice / public-facing presence)
+//
+// SSR import path matters: `@phosphor-icons/react/dist/ssr` exports
+// server-renderable variants so these icons work inside server
+// components without a "use client" boundary.
+const JOURNEY_ICONS: Record<JourneySlug, Icon> = {
+  hair: ScissorsIcon,
+  style: TShirtIcon,
+  body_composition: CarrotIcon,
+  strength: BarbellIcon,
+  cardio: HeartbeatIcon,
+  sleep: MoonIcon,
+  skincare: DropIcon,
+  facial_hair: HairDryerIcon,
+  facial_structure: UserFocusIcon,
+  presentation: MicrophoneIcon,
+};
+
+// Per-tier icon accent color. Tier 1 (foundation) gets a calm blue,
+// Tier 2 (body) gets emerald, Tier 3 (aesthetic) gets amber, Tier
+// 4/5 (presence + finishing) get violet + rose. Subtle — the duotone
+// fill picks up the tint, but everything else (text, borders) stays
+// neutral so picked / unpicked distinction still reads.
+const TIER_ACCENT: Record<TierKey, { bg: string; icon: string }> = {
+  'tier-1': {
+    bg: 'bg-sky-100 dark:bg-sky-950/40',
+    icon: 'text-sky-700 dark:text-sky-300',
+  },
+  'tier-2': {
+    bg: 'bg-emerald-100 dark:bg-emerald-950/40',
+    icon: 'text-emerald-700 dark:text-emerald-300',
+  },
+  'tier-3': {
+    bg: 'bg-amber-100 dark:bg-amber-950/40',
+    icon: 'text-amber-700 dark:text-amber-300',
+  },
+  'tier-4': {
+    bg: 'bg-violet-100 dark:bg-violet-950/40',
+    icon: 'text-violet-700 dark:text-violet-300',
+  },
+  'tier-5': {
+    bg: 'bg-rose-100 dark:bg-rose-950/40',
+    icon: 'text-rose-700 dark:text-rose-300',
+  },
 };
 
 // User-visible tier label. Maps the canonical tier-N keys onto the
@@ -91,19 +123,89 @@ export function JourneysGrid({
   const sorted = sortJourneys(focusAreas, age);
   const pickedSlugs = new Set(focusAreas);
 
+  // Partition into foundation (tier-1) and everything beyond. The sort
+  // order coming in is "picked-first, tier-asc" so each group keeps
+  // its picked-first ordering after the partition. Foundation reads
+  // as the non-negotiables — every user benefits, no matter what
+  // they picked. Tier 2+ is where personal priority shapes what
+  // actually matters most.
+  const foundation = sorted.filter(
+    (j) => tierForJourney(j, age) === 'tier-1',
+  );
+  const beyond = sorted.filter((j) => tierForJourney(j, age) !== 'tier-1');
+
+  return (
+    // The wrapping <section> + page-level header give the journeys
+    // area its own visual identity on /today. Without it, the two
+    // tier boxes (Foundation / Beyond foundation) sat directly under
+    // the daily-log disclosure with only `space-y-6` separating them,
+    // and the two regions read as part of the same logging stack.
+    // Now Logs are clearly "today's inputs," Journeys are clearly
+    // "the longer-arc tracks." Extra top margin reinforces the break.
+    <section aria-labelledby="journeys-heading" className="mt-4">
+      <header className="mb-5 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+        <h2
+          id="journeys-heading"
+          className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100"
+        >
+          Your journeys
+        </h2>
+        <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+          The longer-arc work — assessments, plans, and per-journey
+          progress. Foundation first; the rest is shaped by what you
+          picked.
+        </p>
+      </header>
+      <div className="space-y-6">
+        <JourneyGroup
+          title="Foundation"
+          tagline="Tier 1. Non-negotiable for everyone — the floor that lets the rest of the work compound."
+          journeys={foundation}
+          assessments={assessments}
+          pickedSlugs={pickedSlugs}
+          age={age}
+        />
+        <JourneyGroup
+          title="Beyond foundation"
+          tagline="Tier 2+. Where personal priority shapes the order. A star marks what you picked at onboarding."
+          journeys={beyond}
+          assessments={assessments}
+          pickedSlugs={pickedSlugs}
+          age={age}
+        />
+      </div>
+    </section>
+  );
+}
+
+function JourneyGroup({
+  title,
+  tagline,
+  journeys,
+  assessments,
+  pickedSlugs,
+  age,
+}: {
+  title: string;
+  tagline: string;
+  journeys: ReadonlyArray<JourneyConfig>;
+  assessments: Record<JourneyConfig['slug'], AssessmentRollup>;
+  pickedSlugs: Set<string>;
+  age: number | null;
+}) {
+  if (journeys.length === 0) return null;
   return (
     <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
       <header>
         <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
-          Your journeys
+          {title}
         </h2>
         <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-400">
-          Foundation first. The Focus chip marks what you picked at
-          onboarding.
+          {tagline}
         </p>
       </header>
       <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-        {sorted.map((journey) => {
+        {journeys.map((journey) => {
           const rollup = assessments[journey.slug];
           const status = statusFromAssessment(
             rollup?.hasAssessment ?? false,
@@ -136,40 +238,56 @@ function JourneyTile({
   isPicked: boolean;
   tier: TierKey;
 }) {
-  // Picked journeys get a stronger visual treatment (the user's
-  // declared priority should read clearly above unpicked ones, even
-  // when both are surfaced). Background tone shifts; border keeps
-  // the same neutral.
-  const bgClass = isPicked
-    ? 'bg-zinc-50 dark:bg-zinc-800/60'
-    : 'bg-white dark:bg-zinc-900';
+  // Picked journeys get the strong card treatment: 2px dark border,
+  // shadow for elevation, brighter resting background. Unpicked stays
+  // calm so the picked set obviously reads as "yours" without
+  // needing the chip. Hover shifts background one step warmer on
+  // both. `Link` wraps the whole tile so the entire box is the
+  // click target.
+  const tileClass = isPicked
+    ? 'block rounded-lg border-2 border-zinc-900 bg-white p-4 shadow-md transition-colors hover:bg-zinc-50 dark:border-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800/60'
+    : 'block rounded-lg border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-800/60';
   const Icon = JOURNEY_ICONS[journey.slug];
+  const accent = TIER_ACCENT[tier];
 
   return (
-    <li
-      className={`rounded-lg border border-zinc-200 ${bgClass} p-4 dark:border-zinc-700`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-1 items-start gap-3">
-          {/* Per-journey icon. Subtle visual anchor at the top-left of
-              each tile — fills the empty space picked journeys vs
-              unpicked otherwise leave bare, and gives the grid a
-              skimmable visual identity (Scissors = hair, Apple = body
-              comp, etc.) instead of an undifferentiated wall of text. */}
+    <li className="contents">
+      <Link href={journey.planPath} className={tileClass}>
+        <div className="flex min-w-0 items-start gap-3">
+          {/* Per-journey icon. Phosphor duotone — the two-tone fill
+              picks up a tier-accent color (sky / emerald / amber) so
+              the grid reads as "foundation / body / aesthetic" at a
+              glance without a separate badge. */}
           <span
             aria-hidden="true"
-            className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${
-              isPicked
-                ? 'bg-zinc-200/70 text-zinc-700 dark:bg-zinc-700/60 dark:text-zinc-200'
-                : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
-            }`}
+            className={`mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${accent.bg} ${accent.icon}`}
           >
-            <Icon className="h-4 w-4" strokeWidth={1.75} />
+            <Icon size={22} weight="duotone" />
           </span>
           <div className="min-w-0 flex-1">
-            <h3 className="text-[15px] font-medium text-zinc-900 dark:text-zinc-100">
-              {journey.label}
-            </h3>
+            <div className="flex items-center gap-1.5">
+              <h3
+                className={
+                  isPicked
+                    ? 'text-[15px] font-semibold text-zinc-900 dark:text-zinc-100'
+                    : 'text-[15px] font-medium text-zinc-900 dark:text-zinc-100'
+                }
+              >
+                {journey.label}
+              </h3>
+              {/* Focus marker — replaces the old "Focus" chip with a
+                  filled star. Reads at a glance, takes no horizontal
+                  real estate, and pairs visually with the heavier
+                  border + shadow on the tile itself. */}
+              {isPicked && (
+                <StarIcon
+                  size={14}
+                  weight="fill"
+                  aria-label="Focus journey"
+                  className="text-amber-500 dark:text-amber-400"
+                />
+              )}
+            </div>
             {/* Status line carries the framework tier as a left-anchored
                 prefix. Surfaces what /system explains in detail without
                 re-cluttering the tile with a separate badge. The tier
@@ -181,22 +299,14 @@ function JourneyTile({
             </p>
           </div>
         </div>
-        {isPicked && (
-          <span className="rounded-full border border-zinc-300 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-zinc-700 dark:border-zinc-600 dark:text-zinc-300">
-            Focus
-          </span>
+        {status === 'none' && (
+          <p className="mt-2 text-[12px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+            {journey.blurb}
+          </p>
         )}
-      </div>
-      {status === 'none' && (
-        <p className="mt-2 text-[12px] leading-relaxed text-zinc-500 dark:text-zinc-400">
-          {journey.blurb}
-        </p>
-      )}
-      <Link
-        href={journey.planPath}
-        className="mt-3 inline-flex items-center text-[13px] font-medium text-zinc-900 underline decoration-dotted underline-offset-2 hover:text-zinc-700 dark:text-zinc-100 dark:hover:text-zinc-300"
-      >
-        {STATUS_CTA[status]} →
+        <span className="mt-3 inline-flex items-center text-[13px] font-medium text-zinc-900 underline decoration-dotted underline-offset-2 dark:text-zinc-100">
+          {STATUS_CTA[status]} →
+        </span>
       </Link>
     </li>
   );

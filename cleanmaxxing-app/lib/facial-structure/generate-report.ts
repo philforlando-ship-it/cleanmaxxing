@@ -31,6 +31,12 @@ import {
   type FacialStructureAssessment,
   type FacialStructureReportInputModifiers,
 } from './types';
+import type { PhotoFeatures } from './photo-baseline/types';
+import {
+  PHOTO_FEATURE_LABEL,
+  PHOTO_FEATURE_ORDER,
+  featureValueLabel,
+} from './photo-baseline/types';
 import { buildFacialStructureReportSystemPrompt } from './report-prompt';
 import { saveFacialStructureReport } from './service';
 
@@ -70,6 +76,7 @@ export async function streamFacialStructureReport(
     { data: sleepRows },
     { data: hairRow },
     { data: facialHairRow },
+    { data: photoFeaturesRow },
   ] = await Promise.all([
     supabase.from('users').select('age').eq('id', userId).maybeSingle(),
     supabase
@@ -87,6 +94,11 @@ export async function streamFacialStructureReport(
       .select('current_state')
       .eq('user_id', userId)
       .maybeSingle(),
+    supabase
+      .from('facial_structure_assessments')
+      .select('photo_features, photo_features_refused')
+      .eq('user_id', userId)
+      .maybeSingle(),
   ]);
 
   const sleepHours = ((sleepRows ?? []) as Array<{ hours: number | string }>)
@@ -97,6 +109,19 @@ export async function streamFacialStructureReport(
       ? Math.round(
           (sleepHours.reduce((a, b) => a + b, 0) / sleepHours.length) * 10,
         ) / 10
+      : null;
+
+  // Photo features are nullable + may be a JSONB blob from postgres.
+  // photo_features_refused=true means the model declined; treat the
+  // features as absent in that case.
+  const photoFeaturesRaw =
+    (photoFeaturesRow as {
+      photo_features: PhotoFeatures | null;
+      photo_features_refused: boolean | null;
+    } | null) ?? null;
+  const photo_features: PhotoFeatures | null =
+    photoFeaturesRaw && !photoFeaturesRaw.photo_features_refused
+      ? photoFeaturesRaw.photo_features
       : null;
 
   const modifiers: FacialStructureReportInputModifiers = {
@@ -114,6 +139,7 @@ export async function streamFacialStructureReport(
     facial_hair_current_state:
       (facialHairRow as { current_state: string | null } | null)
         ?.current_state ?? null,
+    photo_features,
   };
 
   const povs = await Promise.all(POV_SLUGS.map((slug) => povFor(slug)));
@@ -208,6 +234,34 @@ function formatAssessmentForPrompt(
       modifiers.facial_hair_current_state ?? 'not assessed'
     }`,
   );
+  if (modifiers.photo_features) {
+    const pf = modifiers.photo_features;
+    const featureLines = PHOTO_FEATURE_ORDER.filter(
+      (k) => k !== 'angles_used' && k !== 'notes',
+    )
+      .filter((k) => (pf[k] as string) !== 'unreadable')
+      .map(
+        (k) =>
+          `    - ${
+            PHOTO_FEATURE_LABEL[k as keyof typeof PHOTO_FEATURE_LABEL]
+          }: ${featureValueLabel(k, pf[k] as string)} (${pf[k]})`,
+      );
+    modifierLines.push(
+      `- photo_features (baseline photo analysis, angles=${pf.angles_used.join('+')}):`,
+    );
+    if (featureLines.length === 0) {
+      modifierLines.push('    - all dimensions unreadable');
+    } else {
+      modifierLines.push(...featureLines);
+    }
+    if (pf.notes) {
+      modifierLines.push(`    - notes: "${pf.notes}"`);
+    }
+  } else {
+    modifierLines.push(
+      '- photo_features: not run (the user hasn\'t analyzed photos yet)',
+    );
+  }
 
   return `Here is the user's facial structure assessment.
 

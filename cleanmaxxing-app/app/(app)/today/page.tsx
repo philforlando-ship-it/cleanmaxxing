@@ -3,27 +3,47 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { DevResetButton } from './dev-reset-button';
 import { MisterPChatCard, type ChatMessage } from './mister-p-chat-card';
-import { FirstRunCard } from './first-run-card';
 import { ProgressPhotoCard } from './progress-photo-card';
 import { ProfileCompletionCard } from './profile-completion-card';
 // Phase B (May 2026): plan-card imports removed — journey tiles now
-// covered by the PrimaryActionCard. Phase C: log cards moved to
-// /log; Pattern C cards (weekly letter, weekly reflection, monthly
-// checkpoint, quarterly survey, self-acceptance nudge, stale goal,
-// stuck confidence) moved to /reflection. Daily-note system
-// retired 2026-05-09 — Phase E contextual prompts handle
-// signal-based observations and Mister P chat handles open-ended
-// touchpoints. Imports below are the residual set: event-driven
-// daily-action tiles (hair routine / photo / sleep commitments /
-// recovery check), onboarding cards, profile completion, weekly
-// focus, Mister P chat surface.
+// covered by the PrimaryActionCard. Phase C: Pattern C cards (weekly
+// letter, weekly reflection, monthly checkpoint, quarterly survey,
+// self-acceptance nudge, stale goal, stuck confidence) moved to
+// /reflection. Slice 3 of the daily-check-in reframe (2026-05-11)
+// brought the log cards BACK to /today inside the DailyBasicsSection
+// disclosure once /log retired. Daily-note system retired
+// 2026-05-09 — Phase E contextual prompts handle signal-based
+// observations and Mister P chat handles open-ended touchpoints.
+// Imports below cover: event-driven daily-action tiles (hair routine /
+// photo / sleep commitments / recovery check), log cards (sleep /
+// workout / nutrition), onboarding cards, profile completion,
+// weekly focus, Mister P chat surface.
 import { HairRoutineCard } from './hair-routine-card';
 import { HairPhotoDueCard } from './hair-photo-due-card';
-import { FacialStructurePhotoCard } from './facial-structure-photo-card';
 import { SleepCommitmentsCard } from './sleep-commitments-card';
 import { RecoveryCheckCard } from './recovery-check-card';
 import { SkincareSpfCard } from './skincare-spf-card';
 import { FacialHairUpkeepCard } from './facial-hair-upkeep-card';
+// Slice 3 of the daily-check-in reframe (2026-05-11): /log retired.
+// Sleep / workout / nutrition log cards now live inline on /today
+// behind a collapsible DailyBasicsSection.
+import { SleepLogCard } from './sleep-log-card';
+import { NutritionLogCard } from './nutrition-log-card';
+import {
+  WorkoutLogCard,
+  type PlanExerciseDefault,
+} from './workout-log-card';
+import { DailyBasicsSection } from './daily-basics-section';
+import { getWorkoutState } from '@/lib/workout/service';
+import { getNutritionState } from '@/lib/nutrition/service';
+import { getStrengthAssessment } from '@/lib/strength/service';
+import { getRecommendedExercises } from '@/lib/strength/recommended-exercises';
+import {
+  STRENGTH_EXERCISES,
+  type StrengthExercise,
+} from '@/lib/strength/types';
+import { defaultSetsRepsFor } from '@/lib/strength/log-defaults';
+import { buildRecentWeightLookup } from '@/lib/workout/recent-weights';
 import {
   getYesterdayStrengthWorkout,
   hasFeedbackForWorkout,
@@ -106,9 +126,8 @@ type Props = {
 };
 
 export default async function TodayPage({ searchParams }: Props) {
-  await searchParams; // No-op — the only param we read here was
-  // ?welcome=1 for the daily-check-in spotlight, which moved to
-  // /log in Phase C. Awaiting still satisfies Next.js's
+  await searchParams; // No-op — the legacy ?welcome=1 spotlight
+  // is gone. Awaiting still satisfies Next.js's
   // searchParams-must-be-awaited contract.
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -172,6 +191,9 @@ export default async function TodayPage({ searchParams }: Props) {
     misterPUserState,
     reflectionState,
     recentMilestones,
+    workoutState,
+    nutritionState,
+    strengthAssessment,
     { data: photoRowsRaw },
     { data: healthIntegrationRow },
     { data: latestActivityRow },
@@ -182,6 +204,11 @@ export default async function TodayPage({ searchParams }: Props) {
     getMisterPUserState(supabase, user.id),
     getWeeklyReflectionState(supabase, user.id),
     listRecentMilestones(supabase, user.id),
+    // Slice 3 (2026-05-11): DailyBasicsSection consumes these. Fetched
+    // in the same Promise.all so we don't add a round-trip.
+    getWorkoutState(supabase, user.id),
+    getNutritionState(supabase, user.id, timezone),
+    getStrengthAssessment(supabase, user.id),
     supabase
       .from('progress_photos')
       .select('slot, angle, category, storage_path')
@@ -220,6 +247,48 @@ export default async function TodayPage({ searchParams }: Props) {
       )
       .order('date', { ascending: false }),
   ]);
+
+  // planExercises drives the "Insert from plan" dropdown in
+  // WorkoutLogCard. Mirrors /plan/strength precedence: explicit
+  // selected_exercise_slugs first, recommender fallback otherwise.
+  // Computation lifted from the retired /log/page.tsx in Slice 3
+  // (2026-05-11). Cap matches the dropdown's scannability budget;
+  // users can still free-text any exercise not in the list.
+  const PLAN_DROPDOWN_LIMIT = 16;
+  let planExercises: PlanExerciseDefault[] = [];
+  if (strengthAssessment) {
+    const selectedSlugs = strengthAssessment.selected_exercise_slugs ?? [];
+    let sourceExercises: StrengthExercise[];
+    if (selectedSlugs.length > 0) {
+      sourceExercises = STRENGTH_EXERCISES.filter((ex) =>
+        selectedSlugs.includes(ex.slug),
+      );
+    } else {
+      sourceExercises = getRecommendedExercises({
+        equipment_access: strengthAssessment.equipment_access,
+        injury_constraints: strengthAssessment.injury_constraints,
+        priority_muscles: strengthAssessment.priority_muscles,
+        secondary_objective: strengthAssessment.secondary_objective,
+        bodyweight_preference: strengthAssessment.bodyweight_preference,
+        equipment_owned: strengthAssessment.equipment_owned,
+      }).recommended;
+    }
+    const recentWeights = buildRecentWeightLookup(workoutState.recent);
+    planExercises = sourceExercises
+      .slice(0, PLAN_DROPDOWN_LIMIT)
+      .map((ex) => {
+        const defaults = defaultSetsRepsFor(ex);
+        const lastWeight = recentWeights.get(ex.label.trim().toLowerCase());
+        return {
+          slug: ex.slug,
+          label: ex.label,
+          default_sets: defaults.sets,
+          default_reps: defaults.reps,
+          default_weight_lbs: lastWeight ?? null,
+        };
+      });
+  }
+
   // Hair + style plan tile gating. Pulls focus areas (single onboarding
   // survey row), the hair assessment (full row — used both for the
   // hair plan CTA and the Stage 4 / Stage 5 daily-tile derivations),
@@ -239,7 +308,6 @@ export default async function TodayPage({ searchParams }: Props) {
     nutritionAssessmentState,
     cardioAssessmentState,
     facialStructureAssessmentState,
-    { data: facialStructureCadenceRow },
   ] = await Promise.all([
     supabase
       .from('survey_responses')
@@ -256,16 +324,6 @@ export default async function TodayPage({ searchParams }: Props) {
     hasNutritionAssessment(supabase, user.id),
     hasCardioAssessment(supabase, user.id),
     hasFacialStructureAssessment(supabase, user.id),
-    // Cadence read for the monthly photo tile. Only the three fields
-    // the tile gates on — kept separate from hasFacialStructureAssessment
-    // so the grid rollup stays a presence-only check.
-    supabase
-      .from('facial_structure_assessments')
-      .select(
-        'stage_1_acknowledged_at, last_facial_photo_logged_at, report_generated_at',
-      )
-      .eq('user_id', user.id)
-      .maybeSingle(),
   ]);
   // Focus-area flags remaining after Phase B cleanup. Style /
   // grooming / skin / body_composition flags were dropped because
@@ -384,42 +442,14 @@ export default async function TodayPage({ searchParams }: Props) {
     (hairStage5IsFirstSession ||
       (hairStage5DaysUntil !== null && hairStage5DaysUntil <= 0));
 
-  // Facial-structure monthly photo cadence (Task 2 of facial-structure
-  // post-Slice-3 work, 2026-05-11). Fires when:
-  //   - report exists (assessment was generated)
-  //   - Stage 1 acknowledged (user has explicitly engaged with the
-  //     lever; before this, the photo cadence hasn't started)
-  //   - last log is null (first session) OR >30 days ago
-  const facialStructureCadence = (facialStructureCadenceRow as {
-    stage_1_acknowledged_at: string | null;
-    last_facial_photo_logged_at: string | null;
-    report_generated_at: string | null;
-  } | null) ?? null;
-  const facialStructurePhotoIsFirstSession =
-    facialStructureCadence !== null &&
-    facialStructureCadence.report_generated_at !== null &&
-    facialStructureCadence.stage_1_acknowledged_at !== null &&
-    facialStructureCadence.last_facial_photo_logged_at === null;
-  const facialStructurePhotoDaysSinceLast =
-    facialStructureCadence?.last_facial_photo_logged_at
-      ? Math.floor(
-          (Date.now() -
-            new Date(
-              facialStructureCadence.last_facial_photo_logged_at,
-            ).getTime()) /
-            (24 * 60 * 60 * 1000),
-        )
-      : null;
-  const showFacialStructurePhotoCard =
-    !steppedAway &&
-    facialStructureCadence !== null &&
-    facialStructureCadence.report_generated_at !== null &&
-    facialStructureCadence.stage_1_acknowledged_at !== null &&
-    (facialStructurePhotoIsFirstSession ||
-      (facialStructurePhotoDaysSinceLast !== null &&
-        facialStructurePhotoDaysSinceLast >= 30));
+  // Facial-structure monthly photo cadence moved off /today in the
+  // 2026-05-11 cleanup. The primary-action picker still surfaces the
+  // cadence at the top of /today via pattern_a_overdue, but the
+  // actual log button now lives on /plan/facial-structure inside
+  // PhotoCadenceCard. Source of truth for the gate is now
+  // lib/today/primary-action-picker.ts (state.facialStructurePhotoDue).
 
-  // C6 (hair analog): mint a signed URL for the latest hair-session
+// C6 (hair analog): mint a signed URL for the latest hair-session
   // anchor when the photo-due tile will render AND a prior anchor
   // exists. First-session users have nothing to compare against, so
   // the thumbnail is skipped (the card shows "Baseline" framing).
@@ -759,12 +789,10 @@ export default async function TodayPage({ searchParams }: Props) {
         showHairRoutineTile && hairStage4 && hairStage4.target !== null,
       ) ||
       showHairPhotoDueTile ||
-      showFacialStructurePhotoCard ||
       show30dNudge ||
       show90dNudge ||
       show180dNudge ||
-      showBaselineNudge ||
-      isFirstRun);
+      showBaselineNudge);
   const isAllClear =
     !steppedAway &&
     primaryAction.kind === 'all_quiet' &&
@@ -779,8 +807,8 @@ export default async function TodayPage({ searchParams }: Props) {
             Today&rsquo;s Check-in
           </h1>
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            Your check-in for today. Log and Reflection are there when you
-            need them.
+            Your check-in for today. Reflection is there when you want
+            to step back.
           </p>
         </div>
         {isDev && <DevResetButton />}
@@ -801,6 +829,41 @@ export default async function TodayPage({ searchParams }: Props) {
           prompt={contextualPrompt}
           isPremium={userIsPremium}
         />
+
+        {/* Slice 3 of the daily-check-in reframe (2026-05-11) —
+            /log retired; the sleep / workout / nutrition log cards
+            live here behind a collapsible disclosure. Sits between
+            the primary action and the journey grid because logging
+            IS the check-in. Default expanded; user can collapse via
+            the chevron and the choice persists across visits. */}
+        {!steppedAway && (
+          <DailyBasicsSection>
+            {/* Anchor IDs let the Pattern-A-overdue primary-action
+                CTAs scroll directly to the relevant log card on
+                /today instead of routing through /plan/X.
+                scroll-mt-16 keeps the heading clear of the top nav
+                after the scroll lands. */}
+            <div id="sleep-log" className="scroll-mt-16">
+              <SleepLogCard
+                recent={sleepState.recent}
+                rollingAvgHours={sleepState.rollingAvgHours}
+                hasWearableConnected={healthIntegrationRow !== null}
+                rollingCount={sleepState.rollingCount}
+                timezone={timezone}
+              />
+            </div>
+            <div id="workout-log" className="scroll-mt-16">
+              <WorkoutLogCard
+                recent={workoutState.recent}
+                timezone={timezone}
+                planExercises={planExercises}
+              />
+            </div>
+            <div id="nutrition-log" className="scroll-mt-16">
+              <NutritionLogCard state={nutritionState} timezone={timezone} />
+            </div>
+          </DailyBasicsSection>
+        )}
 
         {/* All-journeys grid (May 8 redesign). Surfaces every journey
             regardless of focus_areas; ordering is picked-first, with
@@ -836,11 +899,14 @@ export default async function TodayPage({ searchParams }: Props) {
           />
         )}
 
-        {isFirstRun && !steppedAway && <FirstRunCard />}
-
-        {/* FirstConversationCard removed 2026-05-08 — see import-block
-            comment up top. WeeklyLetterCard / SelfAcceptanceNudgeCard
-            moved to /reflection in Phase C of the /today redesign. */}
+        {/* FirstRunCard deleted 2026-05-11 — its bullets described the
+            goals-era /today (daily check-in card, weekly 1–10 reflection,
+            "current focus" goal phase), all of which were retired in the
+            redesign. The current PrimaryActionCard + JourneysGrid +
+            nav-level Log/Reflection links carry the orienting work the
+            hint card used to do. FirstConversationCard removed
+            2026-05-08; WeeklyLetterCard / SelfAcceptanceNudgeCard moved
+            to /reflection in Phase C of the /today redesign. */}
 
         {!steppedAway && (
           <ProfileCompletionCard completion={profileCompletion} />
@@ -881,18 +947,20 @@ export default async function TodayPage({ searchParams }: Props) {
         )}
 
         {showHairRoutineTile && hairStage4 && hairStage4.target !== null && (
-          <HairRoutineCard
-            count={hairStage4.count}
-            target={hairStage4.target}
-            hasLoggedToday={hairStage4.hasLoggedToday}
-            isBaldTrack={
-              hairAssessment !== null &&
-              (hairAssessment.stage_1_cut_family === 'bald_track' ||
-                hairAssessment.stage_1_cut_family === 'clean_shave' ||
-                hairAssessment.density_state === 'shaved_or_buzzed' ||
-                hairAssessment.stage_2_path === 'transition')
-            }
-          />
+          <div id="hair-routine" className="scroll-mt-16">
+            <HairRoutineCard
+              count={hairStage4.count}
+              target={hairStage4.target}
+              hasLoggedToday={hairStage4.hasLoggedToday}
+              isBaldTrack={
+                hairAssessment !== null &&
+                (hairAssessment.stage_1_cut_family === 'bald_track' ||
+                  hairAssessment.stage_1_cut_family === 'clean_shave' ||
+                  hairAssessment.density_state === 'shaved_or_buzzed' ||
+                  hairAssessment.stage_2_path === 'transition')
+              }
+            />
+          </div>
         )}
 
         {showHairPhotoDueTile && (
@@ -900,13 +968,6 @@ export default async function TodayPage({ searchParams }: Props) {
             isFirstSession={hairStage5IsFirstSession}
             daysUntil={hairStage5DaysUntil}
             priorAnchorSignedUrl={priorHairAnchorSignedUrl}
-          />
-        )}
-
-        {showFacialStructurePhotoCard && (
-          <FacialStructurePhotoCard
-            isFirstSession={facialStructurePhotoIsFirstSession}
-            daysSinceLast={facialStructurePhotoDaysSinceLast}
           />
         )}
 
@@ -966,11 +1027,10 @@ export default async function TodayPage({ searchParams }: Props) {
             for reflection) and the chat has no tracking side effects
             (asking Mister P something isn't the same as
             self-surveillance). */}
-        {/* Sleep / nutrition / workout / daily-check-in log cards
-            moved to /log in Phase C. The passive-activity readout
-            (steps + weekly minutes) stays here for now — it's a
-            quiet readout, not a logger; it might move to Area 2 in
-            Phase E or to /log later. */}
+        {/* Sleep / nutrition / workout log cards live up top in
+            the DailyBasicsSection (Slice 3, 2026-05-11). The
+            passive-activity readout below stays where it is —
+            it's a quiet readout, not a logger. */}
         {!steppedAway && latestActivity && latestActivity.steps != null && (
           <div className="rounded-xl border border-zinc-200 bg-white px-5 py-3 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
             <div>

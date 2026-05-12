@@ -12,6 +12,8 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { HairDryerIcon } from '@phosphor-icons/react/ssr';
+import { TileIcon } from './tile-icon';
 import type { FacialHairGroomState } from '@/lib/facial-hair/groom-service';
 import type { TimeCommitment } from '@/lib/facial-hair/types';
 
@@ -60,20 +62,25 @@ export function FacialHairUpkeepCard({ state, timeCommitment }: Props) {
 
   return (
     <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="text-lg font-medium">Time for upkeep.</h2>
-        <span className="text-[11px] uppercase tracking-wider text-zinc-500">
-          {CADENCE_LABEL[timeCommitment]}
-        </span>
+      <div className="flex items-start gap-3">
+        <TileIcon icon={HairDryerIcon} tone="amber" />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 className="text-lg font-medium">Time for upkeep.</h2>
+            <span className="text-[11px] uppercase tracking-wider text-zinc-500">
+              {CADENCE_LABEL[timeCommitment]}
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            {overdueText}
+          </p>
+          <p className="mt-3 text-[13px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+            Cheek line, neckline, stray hairs. The shape matters more than the
+            length — a few minutes here is what separates intentional from
+            unkempt.
+          </p>
+        </div>
       </div>
-      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-        {overdueText}
-      </p>
-      <p className="mt-3 text-[13px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-        Cheek line, neckline, stray hairs. The shape matters more than the
-        length — a few minutes here is what separates intentional from
-        unkempt.
-      </p>
 
       {error && (
         <p className="mt-3 text-[12px] text-red-600 dark:text-red-400">

@@ -58,18 +58,49 @@ export async function POST(req: NextRequest) {
 
   // Rate limit. Mister P calls Sonnet on every turn — without a cap,
   // a misbehaving client (or a malicious one) can burn the Anthropic
-  // budget unbounded. Two windows:
+  // budget unbounded. Three windows:
   //   - 30 requests per hour (conversational pace; protects bursts)
   //   - 200 requests per day (longer-horizon cap; covers a sustained
   //     attack across hours without throttling power-users)
+  //   - 10 SUBSTANTIVE requests per calendar month FOR FREE USERS ONLY
+  //     (pricing differentiation; Pro / trial bypass it). The /pricing
+  //     matrix promises 10/month free, unlimited Pro.
+  //
+  // Fairness rule on the free monthly cap: only substantive answers
+  // count toward the 10. A query is "substantive" iff
+  //   - was_refused = false (the model didn't fire one of the
+  //     refusal phrases — out-of-scope, under-18, lab data,
+  //     hard-no compounds), AND
+  //   - the answer is at least MIN_SUBSTANTIVE_CHARS long (filters
+  //     out clarifying questions, brief acknowledgments, and stream
+  //     errors that wrote a partial answer before bailing).
+  // Errors that throw BEFORE onFinish never insert a row, so they're
+  // naturally free. The substantive query runs only for free users —
+  // premium gets a fast path with no extra DB read.
+  //
   // Counts use the same auth-scoped supabase client so they respect
-  // the user's RLS view of mister_p_queries (own rows only). Cheap —
-  // a single COUNT with a bounded time window.
+  // the user's RLS view of mister_p_queries (own rows only). The
+  // hourly + daily counts are cheap HEAD aggregates; the monthly
+  // substantive read pulls bounded row data (≤200 rows/day × 30
+  // days; near-cap free user typically ≤30 rows).
   const RATE_LIMIT_HOURLY = 30;
   const RATE_LIMIT_DAILY = 200;
+  const FREE_MONTHLY_LIMIT = 10;
+  const MIN_SUBSTANTIVE_CHARS = 150;
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const [{ count: hourCount }, { count: dayCount }] = await Promise.all([
+  // Calendar-month boundary in UTC — same convention as the rest of the
+  // app's monthly resets. A user near a timezone boundary may see the
+  // counter roll over slightly off-local-midnight; acceptable.
+  const monthStartUtc = new Date();
+  monthStartUtc.setUTCDate(1);
+  monthStartUtc.setUTCHours(0, 0, 0, 0);
+  const monthStart = monthStartUtc.toISOString();
+  const [
+    { count: hourCount },
+    { count: dayCount },
+    premium,
+  ] = await Promise.all([
     supabase
       .from('mister_p_queries')
       .select('id', { count: 'exact', head: true })
@@ -80,6 +111,7 @@ export async function POST(req: NextRequest) {
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .gte('created_at', oneDayAgo),
+    getPremiumStatus(user.id),
   ]);
   if ((hourCount ?? 0) >= RATE_LIMIT_HOURLY) {
     return NextResponse.json(
@@ -104,6 +136,32 @@ export async function POST(req: NextRequest) {
       },
       { status: 429 },
     );
+  }
+  if (!premium.isPremium) {
+    const { data: monthRows } = await supabase
+      .from('mister_p_queries')
+      .select('was_refused, answer')
+      .eq('user_id', user.id)
+      .gte('created_at', monthStart);
+    const substantiveCount = (monthRows ?? []).filter((row) => {
+      const r = row as { was_refused: boolean | null; answer: string | null };
+      if (r.was_refused === true) return false;
+      const answerText = r.answer ?? '';
+      return answerText.length >= MIN_SUBSTANTIVE_CHARS;
+    }).length;
+    if (substantiveCount >= FREE_MONTHLY_LIMIT) {
+      return NextResponse.json(
+        {
+          error: 'free_monthly_limit_reached',
+          limit: FREE_MONTHLY_LIMIT,
+          window: 'calendar_month',
+          message:
+            "You've used your 10 substantive Mister P queries for this month on the free plan. Brief clarifying questions and refusals don't count — only full answers do. Upgrade to Pro for unlimited chat, or come back when the counter resets at the start of next month.",
+          upgrade_href: '/pricing',
+        },
+        { status: 402 },
+      );
+    }
   }
 
   // Resolve thread scope. Unknown journey slugs fall back to the
@@ -212,10 +270,9 @@ export async function POST(req: NextRequest) {
   // all 10. Mapped focus_area → journey-state key: body_composition →
   // nutrition; sleep has no journey-state line (lives in user-state);
   // every other slug maps 1:1.
-  const [userState, journeyState, premium, focusAreasRow] = await Promise.all([
+  const [userState, journeyState, focusAreasRow] = await Promise.all([
     getMisterPUserState(supabase, user.id),
     getMisterPJourneyState(supabase, user.id),
-    getPremiumStatus(user.id),
     supabase
       .from('survey_responses')
       .select('response_value')
@@ -235,8 +292,11 @@ export async function POST(req: NextRequest) {
       cardio: 'cardio',
       skincare: 'skincare',
       facial_hair: 'facial_hair',
+      facial_structure: 'facial_structure',
       // 'sleep' intentionally omitted — sleep state lives in the
       // user-state block, not the journey-state block.
+      // 'presentation' intentionally omitted — content hub, no
+      // assessment / state worth surfacing in the journey block.
     };
     const raw = focusAreasRow.data?.response_value as string | null | undefined;
     const allowed = new Set<JourneyFilterKey>();
@@ -281,11 +341,17 @@ export async function POST(req: NextRequest) {
   );
 
   // If the user has uploaded photos, attach them as image content
-  // parts on the user message. Up to two images: baseline face +
-  // latest hair anchor (front or top_down). Mister P's system prompt
-  // tells him how to use them. Failure to download any single photo
-  // is non-fatal — we keep going with whatever loaded, falling back
-  // to text-only when nothing did.
+  // parts on the user message. Up to five images, ordered: baseline
+  // face / latest face progress / latest body / latest fit / latest
+  // hair anchor. Mister P's system prompt tells him how to use them.
+  // Failure to download any single photo is non-fatal — we keep going
+  // with whatever loaded, falling back to text-only when nothing did.
+  //
+  // Photo-aware chat is Pro-only. Free users get the same chat with
+  // no images attached — vision tokens are ~1700 input tokens per
+  // image regardless of whether the user asked about appearance, and
+  // /pricing markets photo-aware as a Pro feature. Skipping the
+  // download for free users also avoids the storage round-trip.
   const PHOTO_BUCKET = 'progress-photos';
   async function downloadIfPresent(path: string | null): Promise<Buffer | null> {
     if (!path) return null;
@@ -297,30 +363,27 @@ export async function POST(req: NextRequest) {
       return null;
     }
   }
-  // Photo attachment ordering matters — Mister P's prompt rules name
-  // them in this order so the model can reference each by index.
-  // Cap at 5 (baseline face / latest face progress / latest body /
-  // latest fit / latest hair anchor) to keep token cost predictable;
-  // an image is ~1700 tokens of input regardless of relevance.
-  const [
-    baselineFaceImage,
-    latestFaceProgressImage,
-    latestBodyProgressImage,
-    latestFitImage,
-    latestHairImage,
-  ] = await Promise.all([
-    downloadIfPresent(userState.baselineFacePhotoPath),
-    downloadIfPresent(userState.latestFaceProgressPhotoPath),
-    downloadIfPresent(userState.latestBodyProgressPhotoPath),
-    downloadIfPresent(userState.latestFitPhotoPath),
-    downloadIfPresent(userState.latestHairAnchorPhotoPath),
-  ]);
   const imagesToAttach: Buffer[] = [];
-  if (baselineFaceImage) imagesToAttach.push(baselineFaceImage);
-  if (latestFaceProgressImage) imagesToAttach.push(latestFaceProgressImage);
-  if (latestBodyProgressImage) imagesToAttach.push(latestBodyProgressImage);
-  if (latestFitImage) imagesToAttach.push(latestFitImage);
-  if (latestHairImage) imagesToAttach.push(latestHairImage);
+  if (premium.isPremium) {
+    const [
+      baselineFaceImage,
+      latestFaceProgressImage,
+      latestBodyProgressImage,
+      latestFitImage,
+      latestHairImage,
+    ] = await Promise.all([
+      downloadIfPresent(userState.baselineFacePhotoPath),
+      downloadIfPresent(userState.latestFaceProgressPhotoPath),
+      downloadIfPresent(userState.latestBodyProgressPhotoPath),
+      downloadIfPresent(userState.latestFitPhotoPath),
+      downloadIfPresent(userState.latestHairAnchorPhotoPath),
+    ]);
+    if (baselineFaceImage) imagesToAttach.push(baselineFaceImage);
+    if (latestFaceProgressImage) imagesToAttach.push(latestFaceProgressImage);
+    if (latestBodyProgressImage) imagesToAttach.push(latestBodyProgressImage);
+    if (latestFitImage) imagesToAttach.push(latestFitImage);
+    if (latestHairImage) imagesToAttach.push(latestHairImage);
+  }
 
   const result = streamText({
     model: anthropic('claude-sonnet-4-6'),

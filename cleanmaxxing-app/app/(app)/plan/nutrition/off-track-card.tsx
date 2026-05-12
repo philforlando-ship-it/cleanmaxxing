@@ -96,7 +96,7 @@ export function NutritionOffTrackCard({ shape }: Props) {
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <Link
-          href="/log"
+          href="/today"
           className="rounded-lg bg-amber-900 px-4 py-2 text-[13px] font-medium text-amber-50 hover:bg-amber-950 dark:bg-amber-200 dark:text-amber-950 dark:hover:bg-amber-100"
         >
           Log today

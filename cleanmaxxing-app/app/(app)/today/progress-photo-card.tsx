@@ -12,6 +12,8 @@
 
 import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
+import { CameraIcon } from '@phosphor-icons/react/ssr';
+import { TileIcon } from './tile-icon';
 
 type Variant = 'baseline' | 'progress_30d' | 'progress_90d' | 'progress_180d';
 
@@ -82,7 +84,10 @@ export function ProgressPhotoCard({
     return (
       <section className="rounded-xl border border-zinc-300 bg-zinc-50 p-6 dark:border-zinc-700 dark:bg-zinc-900">
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-lg font-medium">Capture a baseline photo</h2>
+          <div className="flex items-center gap-3">
+            <TileIcon icon={CameraIcon} tone="zinc" />
+            <h2 className="text-lg font-medium">Capture a baseline photo</h2>
+          </div>
           <button
             type="button"
             onClick={dismiss}
@@ -110,7 +115,10 @@ export function ProgressPhotoCard({
     return (
       <section className="rounded-xl border border-zinc-300 bg-zinc-50 p-6 dark:border-zinc-700 dark:bg-zinc-900">
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-lg font-medium">Thirty days in. Want a mid-point photo?</h2>
+          <div className="flex items-center gap-3">
+            <TileIcon icon={CameraIcon} tone="zinc" />
+            <h2 className="text-lg font-medium">Thirty days in. Want a mid-point photo?</h2>
+          </div>
           <button
             type="button"
             onClick={dismiss}
@@ -141,7 +149,10 @@ export function ProgressPhotoCard({
     return (
       <section className="rounded-xl border border-emerald-300 bg-emerald-50 p-6 dark:border-emerald-900 dark:bg-emerald-950/30">
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-lg font-medium">Ninety days in. Capture your progress photo.</h2>
+          <div className="flex items-center gap-3">
+            <TileIcon icon={CameraIcon} tone="emerald" />
+            <h2 className="text-lg font-medium">Ninety days in. Capture your progress photo.</h2>
+          </div>
           <button
             type="button"
             onClick={dismiss}
@@ -172,7 +183,10 @@ export function ProgressPhotoCard({
   return (
     <section className="rounded-xl border border-emerald-300 bg-emerald-50 p-6 dark:border-emerald-900 dark:bg-emerald-950/30">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-lg font-medium">Six months in. Capture your 180-day photo.</h2>
+        <div className="flex items-center gap-3">
+          <TileIcon icon={CameraIcon} tone="emerald" />
+          <h2 className="text-lg font-medium">Six months in. Capture your 180-day photo.</h2>
+        </div>
         <button
           type="button"
           onClick={dismiss}

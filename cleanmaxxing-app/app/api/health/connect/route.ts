@@ -1,8 +1,19 @@
 import { NextResponse } from 'next/server';
-import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 import { getVitalClient } from '@/lib/vital/client';
+import { requirePremium } from '@/lib/billing/is-premium';
 
 // Initiates a wearable connection via Junction (formerly Vital).
+//
+// Pro-gated: wearable integration is a Pro feature per /pricing.
+// requirePremium() returns 401 when unauthenticated and 402 when
+// authenticated-but-free; the settings card maps both to an upgrade
+// CTA. Existing free users with a prior connection (e.g. downgraded
+// from Pro) keep their data — webhook ingestion isn't per-user
+// gated, and the milestone reads (RHR / VO2max) already gate on
+// premium independently. This gate is on the connect *flow*, not
+// on already-flowing data, so downgrade is a soft loss rather than
+// a rug-pull.
 //
 // Flow:
 //   1. Find or create the Junction user that mirrors this user.
@@ -22,13 +33,9 @@ import { getVitalClient } from '@/lib/vital/client';
 // user sees — Junction handles that exclusion on its side.
 
 export async function POST() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
-  }
+  const auth = await requirePremium();
+  if (!auth.ok) return auth.response;
+  const userId = auth.userId;
 
   const vital = getVitalClient();
   if (!vital) {
@@ -50,7 +57,7 @@ export async function POST() {
   const { data: existing } = await service
     .from('health_integrations')
     .select('vital_user_id')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .limit(1)
     .maybeSingle();
 
@@ -66,7 +73,7 @@ export async function POST() {
     // we recover by looking up the existing Junction user via
     // getByClientUserId rather than failing the second attempt.
     try {
-      const created = await vital.user.create({ clientUserId: user.id });
+      const created = await vital.user.create({ clientUserId: userId });
       vitalUserId = created.userId;
     } catch (createErr) {
       const msg = createErr instanceof Error ? createErr.message : '';
@@ -82,7 +89,7 @@ export async function POST() {
         );
       }
       try {
-        const looked = await vital.user.getByClientUserId(user.id);
+        const looked = await vital.user.getByClientUserId(userId);
         vitalUserId = looked.userId;
       } catch (lookupErr) {
         return NextResponse.json(

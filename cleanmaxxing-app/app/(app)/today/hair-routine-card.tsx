@@ -11,6 +11,8 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { ScissorsIcon } from '@phosphor-icons/react/ssr';
+import { TileIcon } from './tile-icon';
 import {
   STAGE_4_TILE_DONE,
   STAGE_4_TILE_LOG_BUTTON,
@@ -59,10 +61,13 @@ export function HairRoutineCard({
   if (hasLoggedToday) {
     return (
       <section className="rounded-xl border border-zinc-200 bg-white px-5 py-3 dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {copy.title}
-          </span>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+          <div className="flex items-center gap-2">
+            <TileIcon icon={ScissorsIcon} tone="amber" compact />
+            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              {copy.title}
+            </span>
+          </div>
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
             {STAGE_4_TILE_DONE} · {progressLine(count, target)}
           </span>
@@ -73,17 +78,22 @@ export function HairRoutineCard({
 
   return (
     <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
-          {copy.title}
-        </h2>
-        <span className="text-xs text-zinc-500 dark:text-zinc-400">
-          {progressLine(count, target)}
-        </span>
+      <div className="flex items-start gap-3">
+        <TileIcon icon={ScissorsIcon} tone="amber" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
+              {copy.title}
+            </h2>
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+              {progressLine(count, target)}
+            </span>
+          </div>
+          <p className="mt-2 text-[13px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+            {copy.body}
+          </p>
+        </div>
       </div>
-      <p className="mt-2 text-[13px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-        {copy.body}
-      </p>
       {error && (
         <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>
       )}

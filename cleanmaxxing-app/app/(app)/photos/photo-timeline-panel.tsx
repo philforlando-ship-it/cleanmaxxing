@@ -66,6 +66,10 @@ export function PhotoTimelinePanel({ items, timezone }: Props) {
 
   const [aId, setAId] = useState<string | null>(null);
   const [bId, setBId] = useState<string | null>(null);
+  // Collapsed by default — the milestone grids + hair sessions above
+  // cover the common case; the timeline is the escape hatch for
+  // arbitrary-pair compare across categories or non-standard slots.
+  const [expanded, setExpanded] = useState(false);
 
   function onTileClick(id: string) {
     if (aId === id) {
@@ -121,20 +125,27 @@ export function PhotoTimelinePanel({ items, timezone }: Props) {
 
   return (
     <section>
-      <div className="flex items-baseline justify-between gap-3">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        className="flex w-full items-baseline justify-between gap-3 text-left"
+      >
         <h2 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
           Timeline
         </h2>
         <span className="text-xs text-zinc-500 dark:text-zinc-400">
-          {sorted.length} {sorted.length === 1 ? 'photo' : 'photos'}
+          {sorted.length} {sorted.length === 1 ? 'photo' : 'photos'}{' '}
+          <span className="ml-1 text-zinc-400">{expanded ? '▴' : '▾'}</span>
         </span>
-      </div>
-      <p className="mt-2 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-        Tap any two to compare side-by-side. Face, body, and hair photos
-        all show up here in date order — no slot restrictions.
+      </button>
+      <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+        Every photo you&rsquo;ve captured, in date order. Tap any two to
+        compare side-by-side across categories — useful when the milestone
+        grids above don&rsquo;t fit your question.
       </p>
 
-      {(a || b) && (
+      {expanded && (a || b) && (
         <div className="mt-5 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/60">
           <div className="flex items-baseline justify-between gap-3">
             <p className="text-[12px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
@@ -162,6 +173,7 @@ export function PhotoTimelinePanel({ items, timezone }: Props) {
         </div>
       )}
 
+      {expanded && (
       <ul className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4">
         {sorted.map((item) => {
           const isA = aId === item.id;
@@ -209,6 +221,7 @@ export function PhotoTimelinePanel({ items, timezone }: Props) {
           );
         })}
       </ul>
+      )}
     </section>
   );
 }

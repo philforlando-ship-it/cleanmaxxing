@@ -4,21 +4,31 @@
 // section adapts (anonymous → sign up; logged-in free → plan picker;
 // logged-in premium → manage-billing link).
 //
-// IMPORTANT — this page is FORWARD-LOOKING (2026-05-10 rewrite).
-// The matrix below reflects the INTENDED Free vs Pro split, which
-// is ahead of the actual enforcement. Some gates named here
-// (10-chat-queries-per-month cap, wearable Pro gate, photo-aware
-// chat Pro gate) are not yet implemented in the API routes / chat
-// path. The page is the spec; the code catches up. When a gate
-// ships, no change is needed here unless the limit value moves.
+// IMPORTANT — every row in this matrix matches what the code
+// actually enforces today.
 //
-// Already-gated today (truth source = requirePremium calls in API
-// routes): facial analysis, hair cut try-on, hair photo trend
-// analysis, beard try-on. Also gated: the 3-journey focus_areas cap
-// (lib/journeys/cap.ts; enforced in /api/onboarding/answer and
-// /api/quarterly-survey) and the cross-journey awareness in
-// Mister P answers (lib/mister-p/prompt.ts journey-state filter,
-// applied in /api/mister-p/ask when the caller isn't premium).
+// Truth source for the gated features:
+//   - 10 substantive Mister P queries / month for free users —
+//     enforced in /api/mister-p/ask (FREE_MONTHLY_LIMIT = 10).
+//     Refusals (was_refused) and very-short responses (under
+//     MIN_SUBSTANTIVE_CHARS) don't count; errors that abort before
+//     onFinish never insert a row.
+//   - Photo-aware chat — Pro-only; image attachment block in
+//     /api/mister-p/ask is wrapped in `if (premium.isPremium)`.
+//   - Cross-journey awareness in Mister P answers — filtered to
+//     focus_areas for free users via lib/mister-p/prompt.ts
+//     journey-state filter.
+//   - AI vision Pro gates: facial analysis, hair cut try-on, hair
+//     photo trend analysis, beard try-on — all use requirePremium().
+//   - Wearable connect — /api/health/connect is requirePremium();
+//     settings card swaps the connect button for an upgrade CTA when
+//     the user is free. Already-connected free users (downgrade case)
+//     keep their data flowing — milestone reads (RHR / VO2max) are
+//     independently gated on premium in lib/milestones/detect.ts.
+//   - 3-journey focus_areas cap — lib/journeys/cap.ts; enforced in
+//     /api/onboarding/answer and /api/quarterly-survey.
+//   - 3-month anniversary milestones for GLP-1 + peptides — Pro
+//     gate inside detectAndRecordMilestones in lib/milestones/detect.ts.
 
 import Link from 'next/link';
 import type { Metadata } from 'next';
@@ -57,14 +67,14 @@ const GROUPS: FeatureGroup[] = [
       {
         label: 'Core journeys',
         description:
-          'Hair, body composition, strength, cardio, sleep, skincare, style, facial hair. Full assessment + personalized report on each. Pattern A: a stage-gated plan you work through over weeks and months.',
+          'Hair, body composition, strength, cardio, sleep, skincare, style, facial hair, facial structure, presentation. Each one is a full assessment plus a personalized report and a multi-stage plan you work through over weeks and months.',
         free: '3 of your choice',
-        premium: 'All 8',
+        premium: 'All 10',
       },
       {
         label: 'Advanced protocols',
         description:
-          'GLP-1, TRT, peptides. Pattern D: Considering / On Protocol / Off-ramp tracking for advanced-tools territory. Both tiers get the full protocol surface — assessment, event logging, intervention end. Pro adds the 3-month anniversary milestone and the wearable signal layering on top.',
+          'GLP-1, TRT, peptides. Three phases: deciding whether to start, running the protocol, and coming off. Both tiers get the full protocol surface — assessment, event logging, ending an intervention. Pro adds the wearable signal layering on top, plus 3-month anniversary milestones for GLP-1 and peptides (TRT on the roadmap).',
         free: 'Full tracking',
         premium: '+ Anniversaries + wearable layer',
       },
@@ -78,7 +88,7 @@ const GROUPS: FeatureGroup[] = [
       {
         label: 'Stage-gated progression',
         description:
-          'Each journey moves through stages — cut → density action → product → daily habit → monitoring → maintenance.',
+          'Each journey moves through stages — assessment, an early decision or action, a daily-habit phase, then ongoing monitoring and maintenance. The exact shape varies by journey (a hair plan looks different from a style plan).',
         free: true,
         premium: true,
       },
@@ -90,7 +100,7 @@ const GROUPS: FeatureGroup[] = [
       {
         label: 'Daily check-ins on /today',
         description:
-          'Ten-second tiles for the habits each journey is tracking. Modifier-aware.',
+          'Ten-second tiles for the habits each journey is tracking. The tiles you see — and what they ask you — adapt to where you are in each plan.',
         free: true,
         premium: true,
       },
@@ -116,7 +126,7 @@ const GROUPS: FeatureGroup[] = [
       {
         label: 'Chat with the full content library',
         description:
-          'Grounded in 100,000+ words of authored evidence. Free covers a casual user’s monthly use; Pro is unlimited for power use.',
+          'Grounded in 180,000+ words of authored evidence. Free covers a casual user’s monthly use; Pro is unlimited for power use.',
         free: '10 queries / month',
         premium: 'Unlimited',
       },
@@ -130,9 +140,9 @@ const GROUPS: FeatureGroup[] = [
       {
         label: 'Cross-journey awareness in answers',
         description:
-          'Mister P answers from every journey you have active. Free covers your 3 core picks; Pro spans all 8 core + active advanced protocols — so the more you track, the more connections he can see (cardio fatigue affecting strength, GLP-1 reshaping nutrition, hair density influencing style, etc.).',
+          'Mister P answers from every journey you have active. Free covers your 3 core picks; Pro spans all 10 core + active advanced protocols — so the more you track, the more connections he can see (cardio fatigue affecting strength, GLP-1 reshaping nutrition, hair density influencing style, etc.).',
         free: '3 core',
-        premium: 'All 8 core + protocols',
+        premium: 'All 10 core + protocols',
       },
     ],
   },
@@ -142,7 +152,7 @@ const GROUPS: FeatureGroup[] = [
       {
         label: 'Connect any major wearable',
         description:
-          'Fitbit, Whoop, Oura, Garmin, Withings, Strava, and more via Junction. Sleep, steps, intensity minutes, active calories, RHR, HRV, and VO2max all flow in. Apple Watch / Apple Health needs a native iOS bridge that this web app doesn’t have yet.',
+          'Fitbit, Whoop, Oura, Garmin, Withings, Strava, and more via Junction. Sleep, steps, intensity minutes, active calories, RHR, HRV, and VO2max all flow in. Apple Watch / Apple Health support is on the iOS app roadmap.',
         free: false,
         premium: true,
       },
@@ -194,7 +204,7 @@ const GROUPS: FeatureGroup[] = [
       {
         label: 'Beard style try-on',
         description:
-          'Preview yourself with different facial-hair shapes — verdi, full short, stubble, anchor, etc. — at your current density. No regret-shaving required.',
+          'Preview yourself with different facial-hair shapes — light or heavy stubble, circle beard, corporate beard, short boxed, full beard, classic mustache, and more — at your current density. No regret-shaving required.',
         free: false,
         premium: true,
       },
@@ -214,12 +224,12 @@ export default async function PricingPage() {
       {/* Hero */}
       <section className="max-w-3xl">
         <h1 className="text-4xl font-semibold tracking-tight text-zinc-900 sm:text-5xl dark:text-zinc-100">
-          Three core journeys free. All eight plus advanced protocols on Pro.
+          Three core journeys free. All ten plus advanced protocols on Pro.
         </h1>
         <p className="mt-6 text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
           The more journeys you track, the more Mister P sees the
-          connections between them. Free covers 3 of the 8 core journeys;
-          Pro unlocks all 8 plus the advanced protocols (GLP-1, TRT,
+          connections between them. Free covers 3 of the 10 core journeys;
+          Pro unlocks all 10 plus the advanced protocols (GLP-1, TRT,
           peptides) and the wearable + vision features that feed the
           picture.
         </p>
@@ -334,7 +344,7 @@ export default async function PricingPage() {
               Upgrade to Pro.
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-              All eight core journeys plus the advanced protocols
+              All ten core journeys plus the advanced protocols
               (GLP-1, TRT, peptides), the cross-journey logic, wearable
               integration, photo-aware Mister P, unlimited chat, and
               the AI vision features. Cancel anytime from the billing
@@ -389,7 +399,7 @@ export default async function PricingPage() {
 // or a thin dash (false). Strings render verbatim — used for limit-
 // based rows ("3 of your choice", "10 / month") and tier-quality rows
 // ("Self-report", "Unlimited"). The `emphasized` flag bumps text weight
-// on the Pro column so headline values ("All 8", "Unlimited") read as
+// on the Pro column so headline values ("All 10", "Unlimited") read as
 // the headline.
 function FeatureCell({
   value,

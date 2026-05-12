@@ -8,6 +8,7 @@
 // for how each variable threads into the report.
 
 import { z } from 'zod';
+import type { PhotoFeatures } from './photo-baseline/types';
 
 export type FacialStructureBodyFat =
   | 'under_12'
@@ -102,6 +103,16 @@ export type FacialStructureAssessment = {
   // names a different lever than the deterministic compute (the
   // compute is mechanical; the prompt has nuance).
   primary_lever_override: PrimaryLeverValue | null;
+  // Mig 0114 — photo-derived baseline features. NULL until the user
+  // runs the photo analysis on /plan/facial-structure. Subsequent
+  // report generations read these as modifiers (see
+  // generate-report.ts). Refused/unreadable runs persist with
+  // photo_features_refused=true and a null photo_features.
+  photo_features: PhotoFeatures | null;
+  photo_features_at: string | null;
+  photo_features_model: string | null;
+  photo_features_refused: boolean | null;
+  photo_features_refusal_reason: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -139,6 +150,12 @@ export type FacialStructureReportInputModifiers = {
   hair_density_state: string | null;
   hair_balding_pattern: string | null;
   facial_hair_current_state: string | null;
+  // Mig 0114 — photo-derived baseline features. NULL when the user
+  // hasn't run photo analysis yet (or it refused). The report
+  // prompt reads these as observational signal alongside the
+  // self-report assessment values — photo signal usually wins on
+  // conflicts (more objective).
+  photo_features: PhotoFeatures | null;
 };
 
 // =====================

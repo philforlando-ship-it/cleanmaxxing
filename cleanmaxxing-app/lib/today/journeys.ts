@@ -1,6 +1,6 @@
 // Journey grid config for /today.
 //
-// All 8 journeys always surface on /today (they're not gated by
+// All 10 journeys always surface on /today (they're not gated by
 // focus_areas anymore). focus_areas dictates the *order* — picked
 // journeys come first, with the Cleanmaxxing pyramid tier breaking
 // ties in each group.

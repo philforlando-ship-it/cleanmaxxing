@@ -20,6 +20,15 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { resolvePrimaryLever, type PrimaryLever } from '@/lib/facial-structure/primary-lever';
+import type {
+  ChinJawConcern,
+  FaceFirstDistribution,
+  FacialPuffBaseline,
+  FacialStructureAssessment,
+  FacialStructureBodyFat,
+  CosmeticProcedureOpenness,
+} from '@/lib/facial-structure/types';
 
 export type MisterPJourneyState = {
   hair: HairJourneySnapshot | null;
@@ -29,6 +38,7 @@ export type MisterPJourneyState = {
   cardio: CardioJourneySnapshot | null;
   skincare: SkincareJourneySnapshot | null;
   facial_hair: FacialHairJourneySnapshot | null;
+  facial_structure: FacialStructureJourneySnapshot | null;
   // Active Pattern D / pharmacological protocols. Each entry is a
   // single intervention with its current status. Empty when none.
   active_protocols: ProtocolSnapshot[];
@@ -115,6 +125,25 @@ type FacialHairJourneySnapshot = {
   minoxidil_for_beard_started_days_ago: number | null;
 };
 
+type FacialStructureJourneySnapshot = {
+  has_report: boolean;
+  body_fat_estimate: FacialStructureBodyFat;
+  chin_jaw_concern: ChinJawConcern[];
+  face_first_distribution: FaceFirstDistribution;
+  facial_puff_baseline: FacialPuffBaseline;
+  cosmetic_procedure_openness: CosmeticProcedureOpenness;
+  // Resolved lever (override wins over computed). Lets chat answer
+  // "what should I be working on?" without re-running the decision tree.
+  primary_lever: PrimaryLever;
+  // Stage 1-4 progression. 0 = no acknowledgement yet, 4 = stage_4
+  // acknowledged. Maps directly to the Pattern A stage cards on
+  // /plan/facial-structure.
+  current_stage: 0 | 1 | 2 | 3 | 4;
+  // Monthly cadence — null if user has never logged a facial photo.
+  // 'days_ago' lets chat answer "am I overdue?" against the 30d cycle.
+  days_since_facial_photo: number | null;
+};
+
 type ProtocolSnapshot = {
   type: string;
   status: string;
@@ -148,6 +177,7 @@ export async function getMisterPJourneyState(
     { data: cardioRow },
     { data: skincareRow },
     { data: facialHairRow },
+    { data: facialStructureRow },
     { data: interventionRows },
   ] = await Promise.all([
     supabase
@@ -193,6 +223,11 @@ export async function getMisterPJourneyState(
       .select(
         'growout_test_started_at, growout_test_completed_at, minoxidil_for_beard_started_at, report_text',
       )
+      .eq('user_id', userId)
+      .maybeSingle(),
+    supabase
+      .from('facial_structure_assessments')
+      .select('*')
       .eq('user_id', userId)
       .maybeSingle(),
     supabase
@@ -353,6 +388,35 @@ export async function getMisterPJourneyState(
     };
   }
 
+  // Facial structure
+  let facial_structure: FacialStructureJourneySnapshot | null = null;
+  if (facialStructureRow) {
+    const r = facialStructureRow as FacialStructureAssessment;
+    // resolvePrimaryLever needs the full assessment row — postural_pattern
+    // and chin_jaw_concern arrays drive rules 3 and 4.
+    const lever = resolvePrimaryLever(r);
+    const stage: 0 | 1 | 2 | 3 | 4 = r.stage_4_acknowledged_at
+      ? 4
+      : r.stage_3_acknowledged_at
+        ? 3
+        : r.stage_2_completed_at
+          ? 2
+          : r.stage_1_acknowledged_at
+            ? 1
+            : 0;
+    facial_structure = {
+      has_report: r.report_text !== null,
+      body_fat_estimate: r.body_fat_estimate,
+      chin_jaw_concern: r.chin_jaw_concern,
+      face_first_distribution: r.face_first_distribution,
+      facial_puff_baseline: r.facial_puff_baseline,
+      cosmetic_procedure_openness: r.cosmetic_procedure_openness,
+      primary_lever: lever,
+      current_stage: stage,
+      days_since_facial_photo: daysSince(r.last_facial_photo_logged_at, now),
+    };
+  }
+
   // Interventions
   const active_protocols: ProtocolSnapshot[] = (interventionRows ?? []).map(
     (row) => {
@@ -409,6 +473,7 @@ export async function getMisterPJourneyState(
     cardio,
     skincare,
     facial_hair,
+    facial_structure,
     active_protocols,
     photos,
   };

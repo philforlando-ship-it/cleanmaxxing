@@ -15,12 +15,14 @@
 //     so dark:invert can flip the mark to white cleanly in dark mode
 //
 // Usage:
-//   npx tsx scripts/strip-logo-bg.ts
+//   npx tsx scripts/strip-logo-bg.ts                          (defaults to logo.png)
+//   npx tsx scripts/strip-logo-bg.ts public/cleanmaxxing-logo2.png
 
 import sharp from 'sharp';
 import path from 'path';
 
-const INPUT = path.resolve(process.cwd(), 'public/cleanmaxxing-logo.png');
+const argPath = process.argv[2] ?? 'public/cleanmaxxing-logo.png';
+const INPUT = path.resolve(process.cwd(), argPath);
 const OUTPUT = INPUT; // overwrite in place
 
 const THRESHOLD_HIGH = 245; // luminance ≥ this → fully transparent

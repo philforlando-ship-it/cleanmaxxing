@@ -36,6 +36,8 @@ import { getCurrentWeeklyLetter } from '@/lib/weekly-letter/service';
 import { pickSelfAcceptanceNudge } from '@/lib/self-acceptance/risk-signals';
 import { getPremiumStatus } from '@/lib/billing/is-premium';
 import { journeyCapFor } from '@/lib/journeys/cap';
+import { getUpcomingCadenceEvents } from '@/lib/cadence/upcoming';
+import { UpcomingCadenceStrip } from './upcoming-cadence-strip';
 import { WeeklyLetterCard } from '@/app/(app)/today/weekly-letter-card';
 import { WeeklyReflectionCard } from '@/app/(app)/today/weekly-reflection-card';
 import { MonthlyCheckpointCard } from '@/app/(app)/today/monthly-checkpoint-card';
@@ -66,6 +68,7 @@ export default async function ReflectionPage() {
     activeJourneys,
     profileRow,
     premium,
+    upcomingCadence,
   ] = await Promise.all([
     getWeeklyReflectionState(supabase, user.id),
     getCheckpointState(supabase, user.id),
@@ -79,6 +82,7 @@ export default async function ReflectionPage() {
       .eq('user_id', user.id)
       .maybeSingle(),
     getPremiumStatus(user.id),
+    getUpcomingCadenceEvents(supabase, user.id),
   ]);
   const focusAreasCap = journeyCapFor(premium.isPremium);
 
@@ -103,7 +107,8 @@ export default async function ReflectionPage() {
     checkpointState.status === 'eligible' ||
     quarterlyState.status === 'eligible';
   const hasReflectionHistory = reflectionState.history.length > 0;
-  const hasAnyContent = hasAnyPending || hasReflectionHistory;
+  const hasUpcoming = upcomingCadence.length > 0;
+  const hasAnyContent = hasAnyPending || hasReflectionHistory || hasUpcoming;
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -150,6 +155,8 @@ export default async function ReflectionPage() {
         </section>
       ) : (
         <div className="mt-8 space-y-6">
+          {hasUpcoming && <UpcomingCadenceStrip events={upcomingCadence} />}
+
           {weeklyLetter && (
             <WeeklyLetterCard
               weekStart={weeklyLetter.week_start}

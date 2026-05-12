@@ -132,6 +132,11 @@ const GLP1_THREE_MONTHS_COPY: MilestoneCopy = {
   body: 'You\'re in the window where the medication is doing its work. The next three months are when habit infrastructure either holds or doesn\'t — protein floor, training cadence, hunger tolerance. Spend this stretch building.',
 };
 
+const PEPTIDE_THREE_MONTHS_COPY: MilestoneCopy = {
+  title: 'Three months on the peptide protocol.',
+  body: 'Peptide adaptations show up on the months timeline, not weeks. You\'re past the window where most users quit too early — sleep depth, recovery, and body-comp downstream effects are where the signal lives. Keep the cadence; the next three months are where the read gets clear.',
+};
+
 // Returns copy for any trigger key. Falls back to a generic
 // placeholder for unknown keys (shouldn't happen — but a missing
 // copy entry shouldn't crash the surface).
@@ -139,6 +144,9 @@ export function copyForTriggerKey(triggerKey: string): MilestoneCopy {
   const category = categoryForTriggerKey(triggerKey);
   if (category === 'glp1_three_months_on_protocol') {
     return GLP1_THREE_MONTHS_COPY;
+  }
+  if (category === 'peptide_three_months_on_protocol') {
+    return PEPTIDE_THREE_MONTHS_COPY;
   }
   if (category === 'unknown') {
     return {

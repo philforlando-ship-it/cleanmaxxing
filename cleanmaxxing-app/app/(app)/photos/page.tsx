@@ -26,6 +26,7 @@ import {
   type HairSession,
   type HairSessionPhoto,
 } from './hair-sessions-section';
+import { MisterPChips } from './mister-p-chips';
 
 const BUCKET = 'progress-photos';
 const SIGNED_URL_TTL_SECONDS = 60 * 60; // 1 hour
@@ -278,6 +279,7 @@ export default async function PhotosPage() {
           daysSinceOnboarding={daysSinceOnboarding}
           hasOnboarded={hasOnboarded}
         />
+        {faceRows.some((r) => r.signedUrl) && <MisterPChips category="face" />}
       </div>
 
       <div className="mt-16 border-t border-zinc-200 pt-12 dark:border-zinc-800">
@@ -289,6 +291,7 @@ export default async function PhotosPage() {
           daysSinceOnboarding={daysSinceOnboarding}
           hasOnboarded={hasOnboarded}
         />
+        {bodyRows.some((r) => r.signedUrl) && <MisterPChips category="body" />}
       </div>
 
       {hairSessions.length > 0 && (
@@ -297,15 +300,17 @@ export default async function PhotosPage() {
             sessions={hairSessions}
             timezone={timezone}
           />
+          <MisterPChips category="hair" />
         </div>
       )}
 
       <div className="mt-12">
-        <MisterPProgressCta />
+        <MisterPProgressCta isPremium={isPremium} />
       </div>
 
       <div className="mt-16 border-t border-zinc-200 pt-12 dark:border-zinc-800">
         <FitPhotoSection rows={fitRows} timezone={timezone} />
+        {fitRows.length > 0 && <MisterPChips category="fit" />}
       </div>
 
       <div className="mt-16 border-t border-zinc-200 pt-12 dark:border-zinc-800">

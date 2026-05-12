@@ -22,6 +22,7 @@ import type { FacialStructureAssessment } from '@/lib/facial-structure/types';
 import { getJourneyPhase } from '@/lib/journey-state/read';
 import { getMaintenanceContent } from '@/lib/journey-state/maintenance-content';
 import { MaintenanceView } from '@/components/journey/maintenance-view';
+import { getPremiumStatus } from '@/lib/billing/is-premium';
 import {
   FacialStructureAssessmentForm,
   type FacialStructureAssessmentInitialValues,
@@ -36,6 +37,8 @@ import {
   FacialStructureStage3Card,
   FacialStructureStage4Card,
 } from './stage-cards';
+import { PhotoBaselinePanel } from './photo-baseline-panel';
+import { PhotoCadenceCard } from './photo-cadence-card';
 
 type Props = {
   searchParams: Promise<{ edit?: string }>;
@@ -49,12 +52,23 @@ export default async function FacialStructurePlanPage({ searchParams }: Props) {
   if (!user) redirect('/login');
   const supabase = await createClient();
 
-  const [assessment, journeyState] = await Promise.all([
-    getFacialStructureAssessment(supabase, user.id),
-    getJourneyPhase(supabase, user.id, 'facial_structure'),
-  ]);
+  const [assessment, journeyState, premiumStatus, baselineFrontRow] =
+    await Promise.all([
+      getFacialStructureAssessment(supabase, user.id),
+      getJourneyPhase(supabase, user.id, 'facial_structure'),
+      getPremiumStatus(user.id),
+      supabase
+        .from('progress_photos')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('category', 'face')
+        .eq('slot', 'baseline')
+        .eq('angle', 'front')
+        .maybeSingle(),
+    ]);
   const hasReport = assessment?.report_text != null;
   const showForm = !assessment || !hasReport || editParam;
+  const hasBaselineFront = baselineFrontRow.data != null;
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
@@ -178,6 +192,25 @@ export default async function FacialStructurePlanPage({ searchParams }: Props) {
               Edit answers
             </Link>
           </footer>
+
+          <PhotoBaselinePanel
+            isPremium={premiumStatus.isPremium}
+            hasBaselineFront={hasBaselineFront}
+            features={assessment.photo_features}
+            refused={assessment.photo_features_refused === true}
+            refusalReason={assessment.photo_features_refusal_reason}
+            lastRunAt={assessment.photo_features_at}
+          />
+
+          {/* Monthly photo cadence — the actual log button surface.
+              Replaces the standalone FacialStructurePhotoCard on /today.
+              The PrimaryActionCard at the top of /today now announces
+              when this is due and links here; the user takes the photo
+              off-app and confirms via the button below. */}
+          <PhotoCadenceCard
+            lastFacialPhotoLoggedAt={assessment.last_facial_photo_logged_at}
+            stage1AcknowledgedAt={assessment.stage_1_acknowledged_at}
+          />
 
           {(() => {
             const computed = computePrimaryLever(assessment);

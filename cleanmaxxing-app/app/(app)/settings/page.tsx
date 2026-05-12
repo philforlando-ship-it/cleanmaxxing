@@ -4,17 +4,21 @@ import { redirect } from 'next/navigation';
 import { StepAwayCard } from './step-away-card';
 import { PushNotificationsSection } from './push-notifications-section';
 import { HealthIntegrationCard } from './health-integration-card';
+import { getPremiumStatus } from '@/lib/billing/is-premium';
 
 export default async function SettingsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('subscription_status, tracking_paused_at')
-    .eq('id', user.id)
-    .maybeSingle();
+  const [{ data: profile }, premium] = await Promise.all([
+    supabase
+      .from('users')
+      .select('subscription_status, tracking_paused_at')
+      .eq('id', user.id)
+      .maybeSingle(),
+    getPremiumStatus(user.id),
+  ]);
 
   const status = (profile?.subscription_status as string | null) ?? 'trial';
   const paused = Boolean(profile?.tracking_paused_at);
@@ -64,7 +68,7 @@ export default async function SettingsPage() {
           </div>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
             Compare what&rsquo;s on the free plan against what Pro
-            unlocks — all eight core journeys plus advanced protocols
+            unlocks — all ten core journeys plus advanced protocols
             (GLP-1, TRT, peptides), cross-journey logic, wearable
             integration, photo-aware Mister P, and the AI vision
             features.
@@ -94,6 +98,7 @@ export default async function SettingsPage() {
           connectedAt={healthConnectedAt}
           lastSyncedAt={healthLastSyncedAt}
           vitalConfigured={vitalConfigured}
+          isPremium={premium.isPremium}
         />
 
         <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">

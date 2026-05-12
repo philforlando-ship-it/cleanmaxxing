@@ -96,6 +96,14 @@ type PickerState = {
   // Nutrition log activity in last 3 days. Null if no nutrition
   // assessment; otherwise count of nutrition_log rows.
   nutritionLogs3Days: number | null;
+  // Facial-structure monthly photo cadence. True when:
+  //   - the user has a generated report,
+  //   - Stage 1 lever has been acknowledged (cadence has started),
+  //   - AND last photo log is null OR >30 days ago.
+  // Same gate the standalone FacialStructurePhotoCard uses on /today;
+  // promoting it here surfaces the cadence in the primary-action slot
+  // rather than burying it at the bottom of the waterfall.
+  facialStructurePhotoDue: boolean;
   // For style-staleness check.
   styleStalenessReasons: string[];
   // For first-run detection — true when the user has selected focus
@@ -150,6 +158,7 @@ export async function gatherPickerState(
     { count: nutritionCount3d },
     weeklyReflection,
     { data: maintainingRowsRaw },
+    { data: facialStructureCadenceRow },
   ] = await Promise.all([
     getUserProfile(supabase, userId),
     supabase
@@ -205,6 +214,17 @@ export async function gatherPickerState(
       .select('journey_slug, entered_at')
       .eq('user_id', userId)
       .eq('phase', 'maintaining'),
+    // Facial-structure photo cadence row. Same three fields the /today
+    // page reads to gate the standalone tile — kept in sync here so
+    // the primary-action card and the waterfall tile fire from the
+    // same source of truth.
+    supabase
+      .from('facial_structure_assessments')
+      .select(
+        'stage_1_acknowledged_at, last_facial_photo_logged_at, report_generated_at',
+      )
+      .eq('user_id', userId)
+      .maybeSingle(),
   ]);
 
   // Pull the intervention type onto the concerning-events rows so the
@@ -289,6 +309,29 @@ export async function gatherPickerState(
     entered_at: string;
   }>;
 
+  // Facial-structure photo cadence: same gate the /today tile uses.
+  // Fires when the user has a generated report + acknowledged Stage 1
+  // + (never logged OR logged >30 days ago). All three fields nullable
+  // pre-shipping, so any nulls in the prerequisites short-circuit
+  // to "not due."
+  const fsCadence = (facialStructureCadenceRow as {
+    stage_1_acknowledged_at: string | null;
+    last_facial_photo_logged_at: string | null;
+    report_generated_at: string | null;
+  } | null) ?? null;
+  const facialStructurePhotoDue = (() => {
+    if (!fsCadence) return false;
+    if (!fsCadence.report_generated_at) return false;
+    if (!fsCadence.stage_1_acknowledged_at) return false;
+    if (!fsCadence.last_facial_photo_logged_at) return true;
+    const daysSince = Math.floor(
+      (Date.now() -
+        new Date(fsCadence.last_facial_photo_logged_at).getTime()) /
+        DAYS(1),
+    );
+    return daysSince >= 30;
+  })();
+
   return {
     steppedAway: trackingPausedAt != null,
     focusAreas,
@@ -314,6 +357,7 @@ export async function gatherPickerState(
     isSunday: new Date().getDay() === 0,
     weeklyReflectionPending: weeklyReflection.current === null,
     maintainingJourneys,
+    facialStructurePhotoDue,
   };
 }
 
@@ -531,8 +575,11 @@ function bucket3_overdueDailyAction(
       journey_topic: 'hair',
       title: 'Hair routine — three days behind.',
       body: 'Stage 4 daily routine has missed 3+ days. Even one quick check-in keeps the streak intact.',
-      cta_label: 'Open routine',
-      cta_href: '/plan/hair',
+      // Slice 3 follow-up (2026-05-11): repointed from /plan/hair
+      // to the inline HairRoutineCard anchor on /today now that the
+      // log surface is one scroll away.
+      cta_label: 'Log it now',
+      cta_href: '#hair-routine',
     };
   }
   // Strength — overdue if a report exists AND no logged sessions in 7 days.
@@ -544,9 +591,12 @@ function bucket3_overdueDailyAction(
       kind: 'pattern_a_overdue',
       journey_topic: 'strength',
       title: 'Strength — no sessions logged this week.',
-      body: 'Your plan expects 2-4 sessions a week. Get one on the calendar this week, or open the plan to adjust.',
-      cta_label: 'Open strength plan',
-      cta_href: '/plan/strength',
+      body: 'Your plan expects 2-4 sessions a week. Log one below, or open the plan to adjust.',
+      // Slice 3 follow-up (2026-05-11): the WorkoutLogCard now lives
+      // inline on /today inside DailyBasicsSection — the CTA scrolls
+      // to it instead of routing to /plan/strength.
+      cta_label: 'Log a session',
+      cta_href: '#workout-log',
     };
   }
   // Nutrition — overdue if a report exists AND zero protein logs in 3 days.
@@ -559,8 +609,27 @@ function bucket3_overdueDailyAction(
       journey_topic: 'nutrition',
       title: 'Nutrition — protein log is dark.',
       body: 'Three days without a protein hit logged. Even a yes/no log keeps the felt-sense compliance honest.',
-      cta_label: 'Open nutrition plan',
-      cta_href: '/plan/nutrition',
+      // Slice 3 follow-up (2026-05-11): the NutritionLogCard now
+      // lives inline on /today inside DailyBasicsSection — the CTA
+      // scrolls to it instead of routing to /plan/nutrition.
+      cta_label: 'Log it now',
+      cta_href: '#nutrition-log',
+    };
+  }
+  // Facial structure — monthly photo cadence due. Same gate as the
+  // standalone /today tile (report + Stage 1 acknowledged + last log
+  // null OR >30 days). The standalone tile still renders below as
+  // the actual logging surface; this primary-action card just makes
+  // the cadence visible at the top of /today instead of buried in the
+  // waterfall.
+  if (state.facialStructurePhotoDue) {
+    return {
+      kind: 'pattern_a_overdue',
+      journey_topic: 'facial_structure',
+      title: 'Facial structure — monthly photo due.',
+      body: 'Same lighting, same camera distance, casual face. Daily mirror checks are noisy; the monthly read is the honest one. Confirm via the tile below once captured.',
+      cta_label: 'Open facial structure',
+      cta_href: '/plan/facial-structure',
     };
   }
   return null;

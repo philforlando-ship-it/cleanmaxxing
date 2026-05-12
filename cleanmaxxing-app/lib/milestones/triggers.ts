@@ -52,12 +52,15 @@ export function detectStrengthConsistency8Weeks(
 // Calendar / passive
 // =====================
 
-// 90+ days on a GLP-1 protocol without going off. Caller is
-// responsible for filtering the interventions list to GLP-1 rows
-// in 'on_protocol' or 'paused' state — we just check the days
-// elapsed. 'paused' counts because the user hasn't quit the
-// protocol; they're just temporarily off (cycling, side effects,
-// supply gap).
+// 90+ days on an intervention without going off. Caller is
+// responsible for filtering the interventions list to the relevant
+// type (e.g. GLP-1, peptide) and to 'on_protocol' or 'paused' rows
+// — we just check the days elapsed. 'paused' counts because the
+// user hasn't quit the protocol; they're just temporarily off
+// (cycling, side effects, supply gap).
+//
+// Named for GLP-1 historically; body is type-agnostic and now used
+// for peptides too via detectAndRecordMilestones.
 export function detectGlp1ThreeMonths(args: {
   started_at: string | null;
   status: string;

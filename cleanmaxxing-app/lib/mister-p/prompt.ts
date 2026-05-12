@@ -16,9 +16,17 @@ Answer in plain prose, in your own voice — don't sound like a citation engine 
 
 When the user asks where they can read more, how to access a doc, or "send me the link," lead with the link itself: "Here it is: [Doc title](/povs/<slug>)." Then add a one-line summary if useful. If the doc isn't in your retrieved context, say so honestly rather than guessing a slug.
 
+Cleanmaxxing journey vocabulary: Cleanmaxxing organizes self-improvement work into JOURNEYS (not goals — that model was retired in May 2026). The canonical journey names + their plan pages are listed in the "CLEANMAXXING JOURNEY MAP" block below. When your answer recommends follow-up work that lives in a journey, link to that journey's plan page using a markdown link with the canonical name: [Nutrition journey](/plan/nutrition), [Facial structure journey](/plan/facial-structure), etc. NEVER invent legacy vocabulary like "your body recomp goal," "your hair loss goal," or "your body composition goal" — Cleanmaxxing has journeys, and the canonical names are the ones in the map. One important pairing: body-composition work lives in the Nutrition journey (the focus area is named 'body_composition' internally, but the user-facing journey is called "Nutrition" and the page is /plan/nutrition). Refer to it as "the Nutrition journey." POV docs and journeys are different surfaces — a POV is the underlying content article; a journey is the user's plan page that reads from that POV. When both apply, prefer linking to the journey for actionable work; link to the POV when the user wants the deeper read.
+
 Always render heights in feet-inches notation (e.g. 6'3", 5'10") rather than raw inches. The user's height is shown to you below in the user-state block in this format — match it in your answers.
 
-Photo access:
+Photo capture surfaces — where to direct users when they want to upload:
+- Face, body, and fit photos: captured at /photos. Face uses milestone slots (baseline / 30d / 90d / 180d) with optional close-up and side angles. Body uses the same milestone shape. Fit is chronological — uploaded any time the user wants outfit feedback.
+- Hair photos: captured at /plan/hair/photos. Session-based (user starts a session, adds up to 7 angles, marks complete). NOT in /photos. The /photos page DISPLAYS completed hair sessions in a read-only grid, but the upload surface is /plan/hair/photos.
+- Facial-structure photo analysis: re-uses the baseline face photo set already captured at /photos. The user runs the structured baseline read on /plan/facial-structure; no separate facial-structure upload exists. If the user has no baseline face photo yet, direct them to /photos first.
+- /profile does NOT have photo capture. It's identity + stats only.
+
+Photo access in chat:
 When the user has uploaded photos, you can see them — they will be attached as image content on their message. Up to FIVE images may be attached, in this fixed order:
 
   1. Baseline face photo (front, captured at onboarding or /photos)
@@ -153,6 +161,12 @@ export function buildSystemPromptFull(
   journeyStateBlock: string | null = null,
 ): string {
   let prompt = MISTER_P_SYSTEM_PROMPT.replace('{retrieved_chunks}', retrievedChunks);
+  // Journey map (static — built from lib/today/journeys.ts) goes
+  // BEFORE per-user state so the model has the canonical journey
+  // vocabulary anchored before it reads any user-specific block. Same
+  // shape as the POV linking instructions in the main prompt — both
+  // tell the model how to reference a specific surface.
+  prompt += '\n\n' + buildJourneyMapBlock();
   if (userStateBlock) prompt += '\n\n' + userStateBlock;
   // Journey-state block sits right after user state. Both are "here's
   // who the user is" context. Order matters for LLM anchoring — when
@@ -173,6 +187,28 @@ export function buildSystemPromptFull(
 import type { MisterPUserState } from './user-state';
 import type { ConversationPair } from './conversation';
 import { ageFeelLabelFor } from '@/lib/confidence/context';
+import { JOURNEYS } from '@/lib/today/journeys';
+
+// Static block listing all 10 Cleanmaxxing journeys with their
+// canonical names + plan-page routes. Built from JOURNEYS (the SoT
+// in lib/today/journeys.ts) so the prompt and the /today grid never
+// drift. Injected by buildSystemPromptFull so the model has a
+// concrete anchor for journey vocabulary + linking — without this
+// block the model invents legacy terms like "body recomp goal" and
+// fails to point users at the specific plan page (e.g. cites POV 16
+// for facial-structure questions but never recommends
+// /plan/facial-structure).
+export function buildJourneyMapBlock(): string {
+  const lines = JOURNEYS.map((j) => {
+    const tierLabel = j.tier.replace('tier-', 'Tier ');
+    return `- ${j.label} (${tierLabel}) → ${j.planPath} — ${j.blurb}`;
+  }).join('\n');
+  return `--- CLEANMAXXING JOURNEY MAP ---
+Cleanmaxxing structures self-improvement work into ten journeys. Use this map when your answer points the user toward a specific plan page. Link with a markdown link using the canonical journey name, e.g. [Nutrition journey](/plan/nutrition). Never use legacy "goal" vocabulary — Cleanmaxxing retired that model. One historical note: the focus_areas value 'body_composition' maps to the journey users see as "Nutrition" (page at /plan/nutrition). Refer to it as "the Nutrition journey," not "body recomp" or "body composition goal."
+
+${lines}
+--- END CLEANMAXXING JOURNEY MAP ---`;
+}
 
 // Render a height-in-inches value as feet-inches notation. 75 → 6'3".
 // Used inside the user-state block so Mister P's prompt context shows
@@ -382,7 +418,8 @@ export type JourneyFilterKey =
   | 'strength'
   | 'cardio'
   | 'skincare'
-  | 'facial_hair';
+  | 'facial_hair'
+  | 'facial_structure';
 
 export function formatJourneyStateBlock(
   state: MisterPJourneyState,
@@ -519,6 +556,27 @@ export function formatJourneyStateBlock(
     lines.push(`facial_hair: ${parts.join('; ')}`);
   }
 
+  if (state.facial_structure && allow('facial_structure')) {
+    const fs = state.facial_structure;
+    const parts: string[] = [];
+    parts.push(fs.has_report ? 'report ✓' : 'assessment only (no report)');
+    parts.push(`bf=${fs.body_fat_estimate}`);
+    parts.push(`primary_lever=${fs.primary_lever}`);
+    if (fs.chin_jaw_concern.length > 0) {
+      parts.push(`concerns=${fs.chin_jaw_concern.join(',')}`);
+    }
+    parts.push(`face_first=${fs.face_first_distribution}`);
+    parts.push(`puff=${fs.facial_puff_baseline}`);
+    parts.push(`cosmetic_openness=${fs.cosmetic_procedure_openness}`);
+    if (fs.current_stage > 0) {
+      parts.push(`stage=${fs.current_stage}`);
+    }
+    if (fs.days_since_facial_photo !== null) {
+      parts.push(`last_photo=${fs.days_since_facial_photo}d ago`);
+    }
+    lines.push(`facial_structure: ${parts.join('; ')}`);
+  }
+
   if (state.active_protocols.length > 0) {
     const protocolLines = state.active_protocols.map((p) => {
       const since = p.started_at
@@ -580,6 +638,7 @@ Specifically, this state is what makes contextual coaching possible:
 - "Should I add a hip thrust?" → check strength.bodyweight_preference + selected exercises (don't recommend if already there)
 - "I've lost 15 lbs, what changes?" → check nutrition.goal_direction + active_protocols (especially glp1)
 - "Is my growout test done?" → check facial_hair.growout_test_started_days_ago
+- "What should I be working on for my face?" → check facial_structure.primary_lever (don't second-guess the resolved lever) and the concern + puff signals before recommending
 
 When the user's question doesn't depend on journey state, ignore this block entirely. Don't pull state in just because it's there.
 

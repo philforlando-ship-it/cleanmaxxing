@@ -40,15 +40,33 @@ type Props = {
   // journey slug for journey-scoped chats. Threads omitted from the
   // map default to empty.
   initialThreads: Record<string, ChatMessage[]>;
+  // Optional: pre-fill the input on mount. Used when /chat is opened
+  // from a Mister P chip (e.g. on /photos) — the chip carries the
+  // question text in a URL param and /chat threads it through here.
+  initialPrefill?: string | null;
+  // Optional: switch to a specific thread on mount. Same flow — chips
+  // pick the right journey-scoped thread so the question lands in
+  // the right conversation history.
+  initialThreadKey?: string | null;
 };
 
-export function MisterPChatCard({ journeys, initialThreads }: Props) {
+export function MisterPChatCard({
+  journeys,
+  initialThreads,
+  initialPrefill = null,
+  initialThreadKey = null,
+}: Props) {
   const router = useRouter();
-  const [selectedKey, setSelectedKey] = useState<string>(GENERAL_KEY);
+  const [selectedKey, setSelectedKey] = useState<string>(
+    // If a valid thread was requested, start on it; otherwise General.
+    initialThreadKey && initialThreads[initialThreadKey] !== undefined
+      ? initialThreadKey
+      : GENERAL_KEY,
+  );
   const [threads, setThreads] = useState<Record<string, ChatMessage[]>>(
     initialThreads,
   );
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState(initialPrefill ?? '');
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingClear, setConfirmingClear] = useState(false);
@@ -57,6 +75,22 @@ export function MisterPChatCard({ journeys, initialThreads }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLElement>(null);
   const streamingRef = useRef(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // When opened with a prefill (e.g. clicked a Mister P chip on
+  // /photos), focus the input and move the caret to the end so the
+  // user can immediately submit, tweak the wording, or paste more.
+  useEffect(() => {
+    if (initialPrefill && inputRef.current) {
+      inputRef.current.focus();
+      const len = inputRef.current.value.length;
+      inputRef.current.setSelectionRange(len, len);
+    }
+    // Run once on mount only. initialPrefill arrives from search
+    // params and doesn't change post-mount; further input edits go
+    // through onChange.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const messages = useMemo(
     () => threads[selectedKey] ?? [],
@@ -364,6 +398,7 @@ export function MisterPChatCard({ journeys, initialThreads }: Props) {
         }}
       >
         <input
+          ref={inputRef}
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}

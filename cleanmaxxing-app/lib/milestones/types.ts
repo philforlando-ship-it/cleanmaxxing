@@ -77,12 +77,20 @@ export function glp1ThreeMonthsKey(interventionId: string): string {
   return `glp1_three_months_on_protocol:${interventionId}`;
 }
 
+// Same per-intervention shape for peptide cycles. A user with two
+// peptide rows (one ended, one current) earns the milestone once
+// per row when each crosses 90 days.
+export function peptideThreeMonthsKey(interventionId: string): string {
+  return `peptide_three_months_on_protocol:${interventionId}`;
+}
+
 // Reverse lookup — extracts the static category from any trigger
 // key. Used by the copy lookup to route dynamic keys to the
 // right copy template.
 export function categoryForTriggerKey(triggerKey: string):
   | StaticTriggerKey
   | 'glp1_three_months_on_protocol'
+  | 'peptide_three_months_on_protocol'
   | 'unknown' {
   if (
     (Object.values(STATIC_TRIGGER_KEYS) as string[]).includes(triggerKey)
@@ -91,6 +99,9 @@ export function categoryForTriggerKey(triggerKey: string):
   }
   if (triggerKey.startsWith('glp1_three_months_on_protocol:')) {
     return 'glp1_three_months_on_protocol';
+  }
+  if (triggerKey.startsWith('peptide_three_months_on_protocol:')) {
+    return 'peptide_three_months_on_protocol';
   }
   return 'unknown';
 }

@@ -16,6 +16,7 @@ import {
   type FacialStructureReportInputModifiers,
   type PosturalPattern,
 } from './types';
+import type { PhotoFeatures } from './photo-baseline/types';
 
 export async function getFacialStructureAssessment(
   supabase: SupabaseClient,
@@ -152,7 +153,39 @@ function rowToAssessment(row: unknown): FacialStructureAssessment {
     primary_lever_override:
       (r.primary_lever_override as FacialStructureAssessment['primary_lever_override']) ??
       null,
+    photo_features: (r.photo_features as PhotoFeatures | null) ?? null,
+    photo_features_at: (r.photo_features_at as string | null) ?? null,
+    photo_features_model: (r.photo_features_model as string | null) ?? null,
+    photo_features_refused: (r.photo_features_refused as boolean | null) ?? null,
+    photo_features_refusal_reason:
+      (r.photo_features_refusal_reason as string | null) ?? null,
     created_at: r.created_at as string,
     updated_at: r.updated_at as string,
   };
+}
+
+// Persist a photo-baseline analysis run. Called from the
+// /api/plan/facial-structure/photo-baseline route after the model
+// returns. The assessment row must already exist — the
+// facial-structure form requires it before the photo step.
+export async function saveFacialStructurePhotoBaseline(
+  supabase: SupabaseClient,
+  userId: string,
+  features: PhotoFeatures | null,
+  refused: boolean,
+  refusalReason: string | null,
+  model: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('facial_structure_assessments')
+    .update({
+      photo_features: features,
+      photo_features_at: new Date().toISOString(),
+      photo_features_model: model,
+      photo_features_refused: refused,
+      photo_features_refusal_reason: refusalReason,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId);
+  if (error) throw error;
 }

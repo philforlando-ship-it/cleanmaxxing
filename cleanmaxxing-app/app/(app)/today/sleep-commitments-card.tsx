@@ -11,6 +11,8 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
+import { MoonIcon } from '@phosphor-icons/react/ssr';
+import { TileIcon } from './tile-icon';
 import type { CommitmentWithTodayLog } from '@/lib/sleep/commitments';
 
 type Props = {
@@ -76,24 +78,29 @@ export function SleepCommitmentsCard({ commitments }: Props) {
 
   return (
     <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
-          Tonight&rsquo;s sleep commitments
-        </h2>
-        <span className="text-xs text-zinc-500 dark:text-zinc-400">
-          {completedCount}/{total} done
-        </span>
+      <div className="flex items-start gap-3">
+        <TileIcon icon={MoonIcon} tone="sky" />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
+              Tonight&rsquo;s sleep commitments
+            </h2>
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+              {completedCount}/{total} done
+            </span>
+          </div>
+          <p className="mt-1 text-[12px] text-zinc-500 dark:text-zinc-400">
+            From your{' '}
+            <Link
+              href="/plan/sleep"
+              className="underline decoration-dotted underline-offset-2"
+            >
+              sleep plan
+            </Link>
+            . Tap to mark.
+          </p>
+        </div>
       </div>
-      <p className="mt-1 text-[12px] text-zinc-500 dark:text-zinc-400">
-        From your{' '}
-        <Link
-          href="/plan/sleep"
-          className="underline decoration-dotted underline-offset-2"
-        >
-          sleep plan
-        </Link>
-        . Tap to mark.
-      </p>
 
       <ul className="mt-3 space-y-1.5">
         {items.map((c) => {

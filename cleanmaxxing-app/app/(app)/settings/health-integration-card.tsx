@@ -21,6 +21,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 type Props = {
   connected: boolean;
@@ -28,6 +29,12 @@ type Props = {
   connectedAt: string | null;
   lastSyncedAt: string | null;
   vitalConfigured: boolean;
+  // Wearable connect is Pro-gated. Free + already-connected users
+  // (e.g. downgrade case) keep the connected state visible and the
+  // disconnect button working; the gate is on starting NEW connect
+  // flows. Free + not-connected users see an upgrade CTA instead of
+  // the connect button.
+  isPremium: boolean;
 };
 
 // Local copy of the friendly-name lookup. Lifting it here avoids
@@ -87,6 +94,7 @@ export function HealthIntegrationCard({
   connectedAt,
   lastSyncedAt,
   vitalConfigured,
+  isPremium,
 }: Props) {
   const router = useRouter();
   const [connecting, startConnect] = useTransition();
@@ -151,14 +159,26 @@ export function HealthIntegrationCard({
             Connect Whoop, Oura, Fitbit, Garmin, Strava, Withings, or any
             other wearable you use. Sleep data fills your nightly log
             automatically; daily steps surface as a passive line on your
-            home screen. Apple Health needs a native iOS app, which
-            isn&rsquo;t available yet — manual entry stays as a fallback.
+            home screen. Apple Health support is on the iOS app
+            roadmap — manual entry stays as a fallback.
           </p>
           {!vitalConfigured ? (
             <p className="mt-3 text-xs text-zinc-500">
               Wearable sync is not yet enabled on this server. Once
               configured, the Connect button will appear here.
             </p>
+          ) : !isPremium ? (
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <span className="rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium uppercase tracking-wider text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                Pro
+              </span>
+              <Link
+                href="/pricing"
+                className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              >
+                Upgrade to connect a wearable &rarr;
+              </Link>
+            </div>
           ) : (
             <button
               type="button"

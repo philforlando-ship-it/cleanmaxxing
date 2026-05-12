@@ -209,6 +209,18 @@ export default async function SkincarePlanPage({ searchParams }: Props) {
               ) : null;
             })()}
 
+          <p className="mt-10 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+            Skin texture and tone shifts are easier to read in photos than
+            in the mirror day-to-day. Capture a baseline close-up at{' '}
+            <Link
+              href="/photos"
+              className="underline decoration-dotted underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100"
+            >
+              /photos
+            </Link>
+            {' '}and revisit at the 30 / 90 / 180-day marks.
+          </p>
+
           <footer className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 pt-6 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
             <span>
               Written by Mister P on{' '}

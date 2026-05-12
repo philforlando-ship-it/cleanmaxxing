@@ -366,6 +366,17 @@ export type StyleReportInputModifiers = {
     | 'fights_your_frame'
     | null;
   target_archetype_feasibility_rationale: string | null;
+  // 2026-05-11 — facial-structure × style coordination. The style
+  // report reads facial_structure_assessments so collar / V-neck /
+  // accessory choices account for the face the wardrobe is framing.
+  // Null when the user hasn't taken the facial-structure journey.
+  // chin_jaw_concern is a multi-select array; the prompt branches
+  // on submental_fullness and chin_neck_transition (collar choices)
+  // and on overall_softness (structured-collar bias). face_first_
+  // distribution drives the "face softer than body" → add face-frame
+  // structure rule.
+  facial_structure_chin_jaw_concern: string[] | null;
+  facial_structure_face_first_distribution: string | null;
 };
 
 export const FRAME_ESTIMATE_LABEL: Record<FrameEstimate, string> = {

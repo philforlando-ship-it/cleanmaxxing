@@ -16,6 +16,8 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { BarbellIcon } from '@phosphor-icons/react/ssr';
+import { TileIcon } from './tile-icon';
 
 type MuscleGroup =
   | 'chest'
@@ -108,23 +110,28 @@ export function RecoveryCheckCard({
 
   return (
     <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
-          Recovery check
-        </h2>
-        <span className="text-[11px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-          {yesterdayLabel}&rsquo;s session
-        </span>
+      <div className="flex items-start gap-3">
+        <TileIcon icon={BarbellIcon} tone="emerald" />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
+              Recovery check
+            </h2>
+            <span className="text-[11px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              {yesterdayLabel}&rsquo;s session
+            </span>
+          </div>
+          {liftSummary && (
+            <p className="mt-1 text-[12px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+              {liftSummary}
+            </p>
+          )}
+          <p className="mt-2 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-300">
+            Mark anything that&rsquo;s still trashed today. Skip the rest. Mister P
+            adjusts next session&rsquo;s volume off this signal.
+          </p>
+        </div>
       </div>
-      {liftSummary && (
-        <p className="mt-1 text-[12px] leading-relaxed text-zinc-500 dark:text-zinc-400">
-          {liftSummary}
-        </p>
-      )}
-      <p className="mt-2 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-300">
-        Mark anything that&rsquo;s still trashed today. Skip the rest. Mister P
-        adjusts next session&rsquo;s volume off this signal.
-      </p>
 
       <div className="mt-4 space-y-1.5">
         {MUSCLES.map((m) => (

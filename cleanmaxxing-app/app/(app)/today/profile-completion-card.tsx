@@ -6,6 +6,8 @@
 // No dismissal, on purpose: cross 80% to make it disappear.
 
 import Link from 'next/link';
+import { UserCircleIcon } from '@phosphor-icons/react/ssr';
+import { TileIcon } from './tile-icon';
 import type { ProfileCompletion } from '@/lib/profile/completion';
 
 const HIDE_THRESHOLD = 80;
@@ -21,7 +23,10 @@ export function ProfileCompletionCard({ completion }: Props) {
   return (
     <section className="rounded-xl border border-zinc-300 bg-zinc-50 p-6 dark:border-zinc-700 dark:bg-zinc-900">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-lg font-medium">Finish your profile</h2>
+        <div className="flex items-center gap-3">
+          <TileIcon icon={UserCircleIcon} tone="sky" />
+          <h2 className="text-lg font-medium">Finish your profile</h2>
+        </div>
         <span className="shrink-0 text-xs text-zinc-500">
           {completion.percentage}% complete
         </span>

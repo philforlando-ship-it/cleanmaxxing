@@ -22,7 +22,11 @@ import {
   detectWeight5lbBelowStart,
 } from './triggers';
 import { recordMilestoneIfNew } from './service';
-import { STATIC_TRIGGER_KEYS, glp1ThreeMonthsKey } from './types';
+import {
+  STATIC_TRIGGER_KEYS,
+  glp1ThreeMonthsKey,
+  peptideThreeMonthsKey,
+} from './types';
 import { getRhrSignals, getVo2MaxSignal } from '@/lib/vital/wearable-signals';
 
 const DAYS_MS = 24 * 60 * 60 * 1000;
@@ -162,33 +166,36 @@ export async function detectAndRecordMilestones(
     );
   }
 
-  // ===== Calendar: GLP-1 three months on protocol — Pro =====
-  // One milestone per intervention row — a user with two GLP-1
-  // cycles (one ended, one current) gets two distinct trigger keys
-  // when each crosses 90 days.
+  // ===== Calendar: GLP-1 / peptide three months on protocol — Pro =====
+  // One milestone per intervention row — a user with two cycles of
+  // either type (one ended, one current) gets two distinct trigger
+  // keys when each crosses 90 days. Same detector body for both;
+  // separate trigger-key prefixes so the copy can speak to the
+  // protocol class the user is actually on (GLP-1 vs peptide).
   if (isPremium) {
     for (const intervention of interventions) {
-      if (intervention.type !== 'glp1') continue;
+      const isGlp1 = intervention.type === 'glp1';
+      const isPeptide = intervention.type === 'peptide';
+      if (!isGlp1 && !isPeptide) continue;
       if (
-        detectGlp1ThreeMonths({
+        !detectGlp1ThreeMonths({
           started_at: intervention.started_at,
           status: intervention.status,
           now,
         })
       ) {
-        await recordMilestoneIfNew(
-          supabase,
-          userId,
-          glp1ThreeMonthsKey(intervention.id),
-          {
-            intervention_id: intervention.id,
-            started_at: intervention.started_at,
-            days_on_protocol: Math.floor(
-              (now - new Date(intervention.started_at!).getTime()) / DAYS_MS,
-            ),
-          },
-        );
+        continue;
       }
+      const triggerKey = isGlp1
+        ? glp1ThreeMonthsKey(intervention.id)
+        : peptideThreeMonthsKey(intervention.id);
+      await recordMilestoneIfNew(supabase, userId, triggerKey, {
+        intervention_id: intervention.id,
+        started_at: intervention.started_at,
+        days_on_protocol: Math.floor(
+          (now - new Date(intervention.started_at!).getTime()) / DAYS_MS,
+        ),
+      });
     }
   }
 
