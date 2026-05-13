@@ -74,9 +74,9 @@ const GROUPS: FeatureGroup[] = [
       {
         label: 'Advanced protocols',
         description:
-          'GLP-1, TRT, peptides. Three phases: deciding whether to start, running the protocol, and coming off. Both tiers get the full protocol surface — assessment, event logging, ending an intervention. Pro adds the wearable signal layering on top, plus 3-month anniversary milestones for GLP-1 and peptides (TRT on the roadmap).',
-        free: 'Full tracking',
-        premium: '+ Anniversaries + wearable layer',
+          'GLP-1, TRT, peptides. Three phases: deciding whether to start, running the protocol, and coming off. Both tiers get the full protocol surface — assessment, event logging, the phase you’re in, and ending an intervention cleanly.',
+        free: true,
+        premium: true,
       },
       {
         label: 'Plan re-evaluation',
@@ -95,28 +95,14 @@ const GROUPS: FeatureGroup[] = [
     ],
   },
   {
-    heading: 'Daily use',
+    heading: 'Cross-journey orchestration',
     rows: [
       {
-        label: 'Daily check-ins on /today',
+        label: 'Your journeys read each other',
         description:
-          'Ten-second tiles for the habits each journey is tracking. The tiles you see — and what they ask you — adapt to where you are in each plan.',
-        free: true,
-        premium: true,
-      },
-      {
-        label: 'Weekly reflection',
-        description:
-          'Sunday process-and-outcome review across every active journey.',
-        free: true,
-        premium: true,
-      },
-      {
-        label: 'Milestone tracking',
-        description:
-          'Free covers weight thresholds, sleep consistency, protein-floor autopilot, strength consistency, wardrobe re-eval, hair Stage 4, and body-fat brackets. Pro adds RHR trained-band, VO2max progression, and protocol anniversaries (GLP-1 / nutrition / strength).',
+          'Lifting volume changes the cardio dose. Cardio load adjusts the calorie target. Sleep deficit downweights tomorrow’s training. Hair recs read facial hair, and the reverse. This is the architecture that makes Cleanmaxxing different from single-vertical tools — Free runs the orchestration on your self-report; Pro layers wearable HRV / RHR / activity on top when you have one connected.',
         free: 'Self-report',
-        premium: '+ Wearable & tenure',
+        premium: '+ Wearable signals',
       },
     ],
   },
@@ -143,37 +129,6 @@ const GROUPS: FeatureGroup[] = [
           'Mister P answers from every journey you have active. Free covers your 3 core picks; Pro spans all 10 core + active advanced protocols — so the more you track, the more connections he can see (cardio fatigue affecting strength, GLP-1 reshaping nutrition, hair density influencing style, etc.).',
         free: '3 core',
         premium: 'All 10 core + protocols',
-      },
-    ],
-  },
-  {
-    heading: 'Wearable integration',
-    rows: [
-      {
-        label: 'Connect any major wearable',
-        description:
-          'Fitbit, Whoop, Oura, Garmin, Withings, Strava, and more via Junction. Sleep, steps, intensity minutes, active calories, RHR, HRV, and VO2max all flow in. Apple Watch / Apple Health support is on the iOS app roadmap.',
-        free: false,
-        premium: true,
-      },
-      {
-        label: 'Wearable-aware coaching',
-        description:
-          'Your reports read passive recovery signals (HRV trend, RHR trained-band, VO2max progression) alongside self-report.',
-        free: false,
-        premium: true,
-      },
-    ],
-  },
-  {
-    heading: 'Cross-journey orchestration',
-    rows: [
-      {
-        label: 'Your journeys read each other',
-        description:
-          'Lifting volume changes the cardio dose. Cardio load adjusts the calorie target. Sleep deficit downweights tomorrow’s training. Hair recs read facial hair, and the reverse. The architecture is what makes Cleanmaxxing different from single-vertical tools — Free runs the orchestration on your self-report, Pro layers wearable HRV / RHR / activity load on top for objective recovery confirmation.',
-        free: 'Self-report',
-        premium: '+ Wearable signals',
       },
     ],
   },
@@ -205,6 +160,44 @@ const GROUPS: FeatureGroup[] = [
         label: 'Beard style try-on',
         description:
           'Preview yourself with different facial-hair shapes — light or heavy stubble, circle beard, corporate beard, short boxed, full beard, classic mustache, and more — at your current density. No regret-shaving required.',
+        free: false,
+        premium: true,
+      },
+    ],
+  },
+  {
+    heading: 'Daily use',
+    rows: [
+      {
+        label: 'Daily check-ins',
+        description:
+          'Ten-second tiles on your home screen for the habits each journey is tracking. The tiles you see — and what they ask you — adapt to where you are in each plan.',
+        free: true,
+        premium: true,
+      },
+      {
+        label: 'Weekly reflection',
+        description:
+          'Sunday process-and-outcome review across every active journey.',
+        free: true,
+        premium: true,
+      },
+      {
+        label: 'Milestone tracking',
+        description:
+          'Free covers weight thresholds, sleep consistency, protein-floor autopilot, strength consistency, wardrobe re-eval, hair Stage 4, and body-fat brackets. Pro adds protocol anniversaries (3-month marks for GLP-1 and peptides) and, when a wearable is connected, RHR trained-band and VO2max progression.',
+        free: 'Self-report',
+        premium: '+ Tenure & wearable',
+      },
+    ],
+  },
+  {
+    heading: 'Wearable integration',
+    rows: [
+      {
+        label: 'Connect a wearable',
+        description:
+          'Whoop, Oura, Fitbit, Garmin, Withings, Strava — connected through Junction. HRV, RHR, VO2max, sleep stages, and active minutes feed your reports and the cross-journey logic. Apple Watch / Apple Health support requires the iOS app, which is on the roadmap.',
         free: false,
         premium: true,
       },
@@ -297,8 +290,8 @@ export default async function PricingPage() {
               Sign up and pick three journeys to start. Daily check-ins,
               weekly reflection, and 10 Mister P queries a month are on
               the free plan. Pro unlocks the other seven journeys, the
-              cross-journey logic, wearable integration, photo-aware
-              chat, unlimited Mister P, and the AI vision features.
+              cross-journey logic, photo-aware chat, unlimited Mister P,
+              and the AI vision features.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-4">
               <Link
@@ -345,10 +338,10 @@ export default async function PricingPage() {
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
               All ten core journeys plus the advanced protocols
-              (GLP-1, TRT, peptides), the cross-journey logic, wearable
-              integration, photo-aware Mister P, unlimited chat, and
-              the AI vision features. Cancel anytime from the billing
-              page; your three free journeys stay yours either way.
+              (GLP-1, TRT, peptides), the cross-journey logic,
+              photo-aware Mister P, unlimited chat, and the AI vision
+              features. Cancel anytime from the billing page; your
+              three free journeys stay yours either way.
             </p>
             <div className="mt-8">
               <BillingPlanPicker />
