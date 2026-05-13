@@ -384,6 +384,17 @@ export default async function PricingPage() {
           </p>
         </div>
       </section>
+
+      <p className="mt-10 text-center text-sm text-zinc-500 dark:text-zinc-500">
+        Questions about pricing, billing, or anything else? Email{' '}
+        <a
+          href="mailto:support@cleanmaxxing.com"
+          className="underline underline-offset-2 text-zinc-700 dark:text-zinc-300"
+        >
+          support@cleanmaxxing.com
+        </a>
+        .
+      </p>
     </main>
   );
 }

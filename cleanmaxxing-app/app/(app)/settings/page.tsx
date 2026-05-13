@@ -115,6 +115,16 @@ export default async function SettingsPage() {
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
             Signed in as {user.email}
           </p>
+          <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+            Need help with a bug, billing issue, or data request? Email{' '}
+            <a
+              href="mailto:support@cleanmaxxing.com"
+              className="underline underline-offset-2 text-zinc-900 dark:text-zinc-100"
+            >
+              support@cleanmaxxing.com
+            </a>
+            .
+          </p>
           <form action="/api/auth/signout" method="post" className="mt-4">
             <button
               type="submit"
