@@ -12,8 +12,15 @@
 //   strength         >=36 strength workouts in last 12 wks (avg >=3/wk)
 //   cardio           >=12 cardio workouts in last 12 wks (avg >=1/wk)
 //   sleep            SD <=1hr over last 28 logged nights AND avg >=7
+//                    drifting when older 14-night half was maintaining
+//                    and recent 14-night half no longer is (each half
+//                    requires >=7 logged nights to evaluate)
 //   skincare         assessment >=8 wks old
 //   facial_hair      assessment >=8 wks old
+//   facial_structure stage_3_acknowledged_at non-null + >=4 wks elapsed
+//                    drifting when stage 3 was reached >=60d ago AND
+//                    last_facial_photo_logged_at is null OR >=60d old
+//                    (two missed monthly cycles)
 //
 // Absence of an assessment row leaves the slug missing from the
 // result — the user hasn't started this journey at all. Distinguished
@@ -69,6 +76,7 @@ type DatedRow = { created_at: string };
 
 type FacialStructureRow = {
   stage_3_acknowledged_at: string | null;
+  last_facial_photo_logged_at: string | null;
 };
 
 export async function computeAllJourneyPhases(
@@ -126,7 +134,7 @@ export async function computeAllJourneyPhases(
       .maybeSingle(),
     supabase
       .from('facial_structure_assessments')
-      .select('stage_3_acknowledged_at')
+      .select('stage_3_acknowledged_at, last_facial_photo_logged_at')
       .eq('user_id', userId)
       .maybeSingle(),
     supabase
@@ -469,17 +477,42 @@ function computeFacialStructurePhase(
   // OPTIONAL — most users will never enter it, so making it the
   // maintenance gate would lock the majority out of maintaining.
   // Matches the style journey's stage_3_acknowledged_at pattern.
-  if (row.stage_3_acknowledged_at) {
-    const ackMs = new Date(row.stage_3_acknowledged_at).getTime();
-    if (nowMs - ackMs >= 4 * 7 * DAYS_MS) {
-      return {
-        phase: 'maintaining',
-        source: 'facial_structure_stage_3_plus_4wks',
-      };
-    }
+  if (!row.stage_3_acknowledged_at) {
+    return {
+      phase: 'implementing',
+      source: 'facial_structure_assessment_active',
+    };
   }
+  const ackMs = new Date(row.stage_3_acknowledged_at).getTime();
+  if (nowMs - ackMs < 4 * 7 * DAYS_MS) {
+    return {
+      phase: 'implementing',
+      source: 'facial_structure_assessment_active',
+    };
+  }
+
+  // Drift: user is past the maintaining gate AND it's been 60+ days
+  // since the user reached that gate (so they've had time to hit the
+  // monthly photo cadence at least once) AND the last logged facial
+  // photo is either missing or 60+ days old. The 60-day photo gap
+  // means two missed monthly cycles — past the "skipped a month"
+  // grace and into "the cadence has slipped." Photo cadence is the
+  // proxy: without a fresh photo the user can't tell if body comp /
+  // posture has moved the face, which is the actual drift.
+  const photoMs = row.last_facial_photo_logged_at
+    ? new Date(row.last_facial_photo_logged_at).getTime()
+    : null;
+  const photoStaleMs = nowMs - 60 * DAYS_MS;
+  const cadenceStarted = nowMs - ackMs >= 60 * DAYS_MS;
+  if (cadenceStarted && (photoMs === null || photoMs < photoStaleMs)) {
+    return {
+      phase: 'drifting',
+      source: 'facial_structure_photo_60d_gap',
+    };
+  }
+
   return {
-    phase: 'implementing',
-    source: 'facial_structure_assessment_active',
+    phase: 'maintaining',
+    source: 'facial_structure_stage_3_plus_4wks',
   };
 }
