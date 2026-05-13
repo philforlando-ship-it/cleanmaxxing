@@ -154,6 +154,24 @@ __Night__
 
 That routine alone puts you ahead of the vast majority of people in terms of long\-term skin quality\.
 
+__Skincare Maintenance — Defending Skin Stability__
+
+Skincare is almost entirely routine\-dependent\. The difference between success and failure is rarely the recommendation itself — it's whether the user actually repeats it consistently and adjusts appropriately\. That has a direct consequence for what "maintenance" means in this category\.
+
+Maintenance is not a calendar event\. A skincare plan can be eight weeks old without being followed, tolerated, effective, stable, sunscreen\-supported, or producing the intended outcome\. Awarding maintenance off elapsed time alone is the wrong gate — it labels a user "maintaining" who may have done nothing since the assessment\. Per POV 54, maintenance has to be evidenced\.
+
+The shift the user has actually made is from "I need to fix or improve this concern" to "I need to keep my skin stable and prevent the concern from returning\." The improvement version of skincare advice asks: what concern are we targeting, what active should we introduce, how do we build tolerance, is the plan working, do we need to change products\. The maintenance version asks something different: is the routine consistent, is the skin stable, are there early signs of relapse, is the user overusing actives, is sunscreen consistent, is the routine sustainable, does anything need to change because of weather, travel, stress, or shaving\.
+
+Skincare maintenance, properly defined, means the user has a stable routine, the routine is being followed, the skin is stable or improved, and the work has shifted to preserving results while preventing relapse or irritation\.
+
+__Maintenance signals — what evidence actually looks like__
+
+A reasonable evidence\-based gate: at least eight weeks since plan start, plus a recent check\-in within the last 14\-30 days, plus user confirms the routine is active, plus user reports skin is stable or improved, plus no unresolved severe irritation or worsening flag\. Higher\-confidence: same plus three or more skincare check\-ins completed and adherence above threshold and target concern stable or improved and the user's stated goal has shifted from "fix/improve" to "maintain/prevent\." Elapsed time stays in the model — it just is not sufficient on its own\.
+
+Once in maintenance, the guidance shifts away from constant optimization\. Keep the routine simple\. Avoid adding unnecessary actives\. Protect the habit\. Monitor irritation\. Maintain sunscreen\. Adjust slowly\. Identify relapse triggers — season change, travel, stress, a new shaving setup, a product reformulation, a course of medication that affects skin\. Use small corrections instead of full resets\. The mistake men make in this phase is treating a stable face as the trigger to start tinkering — adding a second active, switching cleansers, layering peptides on top of an already\-working routine\. The cost of tinkering on stable skin is usually irritation, not improvement\.
+
+The goal is no longer new\. The goal is stability: keep the core habits consistent, avoid overcorrecting, and catch small changes before they become bigger issues\.
+
 __Tier Placement__
 
 __Age\-Segmented Approach — Prevention to Correction__

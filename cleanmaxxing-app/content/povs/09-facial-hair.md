@@ -193,6 +193,24 @@ __The Near\-Universal Upgrade__
 
 For a large percentage of men, two to four millimeters of stubble with a clean neckline and a slightly defined cheek line is a reliable improvement\. It works across face shapes and skin tones, adds masculine texture, and avoids the risks of longer beard styles\.
 
+__Facial Hair Maintenance — Defending Grooming Intentionality__
+
+Facial hair degrades quickly without behavior\. A beard, stubble, mustache, neckline, or cheekline can drift in a week and read as accidental even when the underlying choice was deliberate\. That has a direct consequence for what "maintenance" means in this category\.
+
+Maintenance is not a calendar event\. A facial\-hair plan can be eight weeks old without the user having trimmed consistently, maintained a neckline, cleaned cheek lines, controlled length, chosen a stable style, adapted the shape to growth pattern, resolved patchiness strategy, or learned the right grooming cadence\. Per POV 54, maintenance has to be evidenced or it is fiction\.
+
+The shift the user has actually made is from "what should I do with my facial hair" to "how do I keep this shape looking deliberate\." This is a real and important distinction because facial hair makes a man look more structured, mature, masculine, styled, or balanced — but only if it is maintained\. Without upkeep, the same facial hair quickly looks accidental, which is the worst read in this category\. Maintenance is not just having facial hair\. It is keeping it intentional\.
+
+Facial\-hair maintenance, properly defined, means the user has landed on an intentional grooming baseline — a chosen length, a chosen shape, a clean neckline, a clean cheekline — and is actively keeping the shape, length, and edges from drifting\. The user has moved from picking a style to defending one\.
+
+__Maintenance signals — what evidence actually looks like__
+
+A reasonable evidence\-based gate: at least four to eight weeks since the style recommendation, plus at least two grooming check\-ins completed, plus user confirms the current style or length is intentional, plus a defined trim/upkeep cadence\. A lighter version: elapsed time threshold plus a recent confirmation within the last 14\-30 days\. Even the lighter version is a meaningful upgrade over elapsed time alone\.
+
+Once in maintenance, the guidance shifts away from style discovery\. Hold the cadence \(per the trim\-cadence section above for the chosen length\)\. Cleanup pass on schedule\. Reshape pass on schedule\. Catch the drift inside one week, not three\. Do not switch styles every month — drift is fixable in a single grooming session, but a complete style change resets the visual baseline and forces the user back into the discovery phase\. The mistake men make in this phase is treating a stable shape as the trigger to start tinkering — adding a new product, switching trimmers, growing it longer "just to see\." The cost is usually a few weeks of looking unintentional before the new choice settles, which is exactly the read maintenance was supposed to prevent\.
+
+You landed on a grooming baseline\. The work now is keeping the shape intentional: clean edges, consistent length, no drift\.
+
 __Tier Placement__
 
 __Minoxidil for Beard Growth — Community Reality Check__
