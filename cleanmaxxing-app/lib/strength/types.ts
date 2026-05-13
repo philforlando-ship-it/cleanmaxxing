@@ -21,6 +21,7 @@ export type StrengthDaysPerWeek =
 export type StrengthEquipmentAccess =
   | 'full_commercial_gym'
   | 'home_rack_bench'
+  | 'dumbbells_and_bench'
   | 'minimal_dumbbells'
   | 'bodyweight_only';
 
@@ -63,16 +64,15 @@ export const PRIORITY_MUSCLES: ReadonlyArray<StrengthPriorityMuscle> = [
 
 export const PRIORITY_MUSCLE_MAX = 3;
 
-// T1 — multi-objective intent. v1 caps at one secondary objective per
-// user; the prompt's combinatorial space is bounded by primary × this.
-// Adding more secondaries later is a Zod-schema change, not a migration.
+// T1 — multi-objective intent. Multi-select per migration 0117
+// (2026-05-12). Empty array is canonical "no secondary." 'none' is
+// retired from the value set — the empty state IS the absence.
 export type StrengthSecondaryObjective =
   | 'weight_loss'
   | 'core_strength'
   | 'mobility_flexibility'
   | 'cardiovascular_health'
-  | 'general_function'
-  | 'none';
+  | 'general_function';
 
 export const SECONDARY_OBJECTIVES: ReadonlyArray<StrengthSecondaryObjective> = [
   'weight_loss',
@@ -80,7 +80,6 @@ export const SECONDARY_OBJECTIVES: ReadonlyArray<StrengthSecondaryObjective> = [
   'mobility_flexibility',
   'cardiovascular_health',
   'general_function',
-  'none',
 ];
 
 // Partial A4 — high-impact injury subset for 35+ chronic conditions.
@@ -148,10 +147,10 @@ export type StrengthAssessment = {
   // "what feels lagging" free text. Empty array = no priority bias.
   priority_muscles: StrengthPriorityMuscle[];
   lagging_muscles_text: string | null;
-  // Q6 (migration 0067): one secondary objective alongside the
-  // primary goal. Null when the user hasn't filled this in since
-  // the field landed; nominally 'none' for "no secondary."
-  secondary_objective: StrengthSecondaryObjective | null;
+  // Q2 (migration 0067 + 0117): zero-or-more secondary objectives
+  // alongside the primary goal. Multi-select as of 2026-05-12; empty
+  // array is canonical "no secondary."
+  secondary_objective: StrengthSecondaryObjective[];
   // Q7 (migration 0067): high-impact injury constraints. Empty array
   // = no constraints. Drives exercise EXCLUSIONS in the report's
   // recommendations (the user's selected_exercise_slugs stay intact;
@@ -255,9 +254,10 @@ export type StrengthReportInputModifiers = {
   // at gen time so the prompt's volume/frequency bias is reproducible.
   priority_muscles: StrengthPriorityMuscle[];
   lagging_muscles_text: string | null;
-  // Q6 + Q7 (migration 0067) snapshotted into modifiers for prompt
-  // input. secondary_objective null = user hasn't filled the field.
-  secondary_objective: StrengthSecondaryObjective | null;
+  // Q2 + Q9 (migration 0067 + 0117) snapshotted into modifiers for
+  // prompt input. secondary_objective is multi-select as of 0117;
+  // empty array is canonical "no secondary."
+  secondary_objective: StrengthSecondaryObjective[];
   injury_constraints: StrengthInjuryConstraint[];
   // Q8 (migration 0080) — BW preference snapshot. Null = legacy row;
   // prompt treats null as 'mixed'.
@@ -302,6 +302,7 @@ export const EQUIPMENT_ACCESS_LABEL: Record<StrengthEquipmentAccess, string> = {
   full_commercial_gym:
     'Full commercial gym (machines, cables, free weights, dedicated rack)',
   home_rack_bench: 'Home gym — rack, bench, barbell, plates',
+  dumbbells_and_bench: 'Dumbbells + bench (no barbell or rack)',
   minimal_dumbbells: 'Minimal — dumbbells, bands, basic equipment',
   bodyweight_only: 'Bodyweight only / very minimal',
 };
@@ -351,7 +352,6 @@ export const SECONDARY_OBJECTIVE_LABEL: Record<
     'Cardiovascular health — integrate zone-2 cardio with the strength work',
   general_function:
     'General function — daily-life capability (carries, unilateral, posture)',
-  none: 'None — strength is the only goal',
 };
 
 export const INJURY_CONSTRAINT_LABEL: Record<
@@ -2206,6 +2206,7 @@ export const StrengthAssessmentInputSchema = z.object({
   equipment_access: z.enum([
     'full_commercial_gym',
     'home_rack_bench',
+    'dumbbells_and_bench',
     'minimal_dumbbells',
     'bodyweight_only',
   ]),
@@ -2248,20 +2249,22 @@ export const StrengthAssessmentInputSchema = z.object({
     )
     .max(PRIORITY_MUSCLE_MAX),
   lagging_muscles_text: z.string().max(280).nullable(),
-  // Q6 + Q7 (migration 0067). Both nullable to support the migration
-  // window where existing assessments don't have these. The form
-  // requires them on next submit. injury_constraints enum-array
-  // enforced at the API boundary (DB stores raw text[]).
+  // Q2 (migration 0067 + 0117) — multi-select secondary objectives.
+  // Empty array is canonical "no secondary." Pre-0117 single-value
+  // rows are migrated to single-element arrays automatically.
   secondary_objective: z
-    .enum([
-      'weight_loss',
-      'core_strength',
-      'mobility_flexibility',
-      'cardiovascular_health',
-      'general_function',
-      'none',
-    ])
-    .nullable(),
+    .array(
+      z.enum([
+        'weight_loss',
+        'core_strength',
+        'mobility_flexibility',
+        'cardiovascular_health',
+        'general_function',
+      ]),
+    )
+    .max(5),
+  // Q9 (migration 0067). injury_constraints enum-array enforced at
+  // the API boundary (DB stores raw text[]).
   injury_constraints: z
     .array(
       z.enum([

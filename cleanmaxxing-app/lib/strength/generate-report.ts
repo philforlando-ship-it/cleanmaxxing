@@ -337,8 +337,10 @@ function formatAssessmentForPrompt(
     }`,
   );
   modifierLines.push(
-    `- secondary_objective (Q7 — strength + something else, single value): ${
-      modifiers.secondary_objective ?? 'not set — treat as none'
+    `- secondary_objective (Q2 — strength + something else, multi-select): ${
+      modifiers.secondary_objective.length === 0
+        ? 'none — primary goal stands alone'
+        : modifiers.secondary_objective.join(', ')
     }`,
   );
   modifierLines.push(

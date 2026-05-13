@@ -137,6 +137,11 @@ export const DEFAULT_OWNED_BY_ACCESS: Record<string, GearItem[]> = {
     'pull_up_bar',
     'exercise_mat',
   ],
+  // dumbbells_and_bench is the explicit middle tier — the user has
+  // dumbbells AND an adjustable bench but no barbell / rack. Seeds
+  // unlock bench-requiring DB work (incline press, flat press, rows)
+  // without falsely promising barbell movements.
+  dumbbells_and_bench: ['dumbbells', 'adjustable_bench', 'exercise_mat'],
   minimal_dumbbells: ['dumbbells', 'exercise_mat'],
   bodyweight_only: ['exercise_mat'],
 };

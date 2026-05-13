@@ -157,8 +157,8 @@ function rowToAssessment(row: unknown): StrengthAssessment {
       [],
     lagging_muscles_text: (r.lagging_muscles_text as string | null) ?? null,
     secondary_objective:
-      (r.secondary_objective as StrengthAssessment['secondary_objective']) ??
-      null,
+      (r.secondary_objective as StrengthAssessment['secondary_objective'] | null) ??
+      [],
     injury_constraints:
       (r.injury_constraints as StrengthAssessment['injury_constraints'] | null) ??
       [],

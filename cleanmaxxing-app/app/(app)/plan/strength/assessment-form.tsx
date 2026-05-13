@@ -79,6 +79,7 @@ type HomeSetup = Exclude<StrengthEquipmentAccess, 'full_commercial_gym'>;
 
 const HOME_SETUPS: HomeSetup[] = [
   'home_rack_bench',
+  'dumbbells_and_bench',
   'minimal_dumbbells',
   'bodyweight_only',
 ];
@@ -89,6 +90,7 @@ const HOME_SETUPS: HomeSetup[] = [
 // these are tuned to the "what do you have at home" framing.
 const HOME_SETUP_LABEL: Record<HomeSetup, string> = {
   home_rack_bench: 'Home gym with a rack, bench, barbell + plates',
+  dumbbells_and_bench: 'Dumbbells + a bench (no barbell or rack)',
   minimal_dumbbells: 'Just dumbbells (and maybe some bands)',
   bodyweight_only: 'Nothing right now (or just a mat)',
 };
@@ -116,7 +118,7 @@ export type StrengthAssessmentInitialValues = {
   strength_goal_text: string | null;
   priority_muscles: StrengthPriorityMuscle[];
   lagging_muscles_text: string | null;
-  secondary_objective: StrengthSecondaryObjective | null;
+  secondary_objective: StrengthSecondaryObjective[];
   injury_constraints: StrengthInjuryConstraint[];
   bodyweight_preference: StrengthBodyweightPreference | null;
   asymmetry_concern: StrengthAsymmetryConcern | null;
@@ -189,10 +191,9 @@ export function StrengthAssessmentForm({
   const [laggingText, setLaggingText] = useState(
     initialValues?.lagging_muscles_text ?? '',
   );
-  const [secondaryObjective, setSecondaryObjective] =
-    useState<StrengthSecondaryObjective | null>(
-      initialValues?.secondary_objective ?? null,
-    );
+  const [secondaryObjectives, setSecondaryObjectives] = useState<
+    StrengthSecondaryObjective[]
+  >(initialValues?.secondary_objective ?? []);
   const [injuryConstraints, setInjuryConstraints] = useState<
     StrengthInjuryConstraint[]
   >(initialValues?.injury_constraints ?? []);
@@ -224,6 +225,8 @@ export function StrengthAssessmentForm({
   function submit() {
     setError(null);
     if (!primaryGoal) return setError('Pick a primary goal.');
+    // Secondary objective is optional — empty array is canonical "no
+    // secondary." No validation gate here.
     if (!daysPerWeek) return setError('Pick days per week.');
     if (trainsAtGym === null) {
       return setError('Tell us whether you train at a gym.');
@@ -236,8 +239,6 @@ export function StrengthAssessmentForm({
     if (!trainingExperience)
       return setError('Pick your training experience.');
     if (!currentSplit) return setError('Pick your current split.');
-    if (!secondaryObjective)
-      return setError('Pick a secondary objective (or "None").');
     if (!bodyweightPreference)
       return setError('Pick how you want bodyweight exercises handled.');
     if (!asymmetryConcern)
@@ -254,7 +255,7 @@ export function StrengthAssessmentForm({
       strength_goal_text: goalText.trim() || null,
       priority_muscles: priorityMuscles,
       lagging_muscles_text: laggingText.trim() || null,
-      secondary_objective: secondaryObjective,
+      secondary_objective: secondaryObjectives,
       injury_constraints: injuryConstraints,
       bodyweight_preference: bodyweightPreference,
       asymmetry_concern: asymmetryConcern,
@@ -310,6 +311,45 @@ export function StrengthAssessmentForm({
 
       <Question
         number={2}
+        title="Any secondary objectives alongside strength? (optional, multi-select)"
+        helper="Most 35+ users want strength PLUS something — pick any that apply. The plan honors each without diluting the primary goal. Leaving them all unchecked is fine."
+      >
+        <div className="space-y-2">
+          {SECONDARY_OBJECTIVES.map((s) => {
+            const checked = secondaryObjectives.includes(s);
+            return (
+              <label
+                key={s}
+                className={
+                  checked
+                    ? 'flex cursor-pointer items-start gap-3 rounded-md border border-zinc-900 bg-zinc-50 px-3 py-2 dark:border-zinc-100 dark:bg-zinc-800'
+                    : 'flex cursor-pointer items-start gap-3 rounded-md border border-zinc-200 px-3 py-2 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900'
+                }
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() =>
+                    setSecondaryObjectives((prev) =>
+                      prev.includes(s)
+                        ? prev.filter((x) => x !== s)
+                        : [...prev, s],
+                    )
+                  }
+                  disabled={pending}
+                  className="mt-0.5 h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900 dark:border-zinc-700"
+                />
+                <span className="flex-1 text-sm text-zinc-900 dark:text-zinc-100">
+                  {SECONDARY_OBJECTIVE_LABEL[s]}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </Question>
+
+      <Question
+        number={3}
         title="How many days a week can you actually train?"
         helper="Honest. The plan is built around what you'll do, not what you wish you'd do."
       >
@@ -328,7 +368,7 @@ export function StrengthAssessmentForm({
       </Question>
 
       <Question
-        number={3}
+        number={4}
         title="Do you train at a gym, or plan to?"
         helper="Big-population catalogs only make sense if you have access to the equipment. If you don't, we'll keep it cleaner."
       >
@@ -377,7 +417,7 @@ export function StrengthAssessmentForm({
       </Question>
 
       <Question
-        number={4}
+        number={5}
         title="How much strength training experience do you have?"
         helper="Time spent doing structured lifting, not general gym presence. The plan tunes prescription depth and the recomp deficit off this — beginners eat at maintenance and ride newbie gains; experienced lifters get a slight deficit so recomp is honest about what's possible."
       >
@@ -396,7 +436,7 @@ export function StrengthAssessmentForm({
       </Question>
 
       <Question
-        number={5}
+        number={6}
         title="What does your current training look like?"
         helper="The plan respects what's already working. ‘Nothing structured’ triggers the beginner ramp regardless of how strong you feel."
       >
@@ -415,7 +455,7 @@ export function StrengthAssessmentForm({
       </Question>
 
       <Question
-        number={6}
+        number={7}
         title="Which muscles do you most want to develop? (optional, pick up to 3)"
         helper="The visual-leverage stack. The plan biases volume + frequency toward what you pick — more sets per week and 2x-a-week minimum frequency on these specifically. Skip if you want balanced development."
       >
@@ -455,7 +495,7 @@ export function StrengthAssessmentForm({
       </Question>
 
       <Question
-        number={7}
+        number={8}
         title="Anything that feels lagging? (optional)"
         helper="Free text. ‘Calves never grow’, ‘left side smaller than right’, ‘flat upper chest’. Mister P folds it into the prescription."
       >
@@ -468,25 +508,6 @@ export function StrengthAssessmentForm({
           placeholder="e.g. calves never grow despite three sessions a week"
           className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
         />
-      </Question>
-
-      <Question
-        number={8}
-        title="Any secondary objective alongside strength?"
-        helper="Most 35+ users want strength PLUS something. Pick the one secondary that matters most — the plan honors it without diluting the primary goal. ‘None’ is fine."
-      >
-        <div className="space-y-2">
-          {SECONDARY_OBJECTIVES.map((s) => (
-            <RadioRow
-              key={s}
-              checked={secondaryObjective === s}
-              onChange={() => setSecondaryObjective(s)}
-              disabled={pending}
-              label={SECONDARY_OBJECTIVE_LABEL[s]}
-              name="secondary_objective"
-            />
-          ))}
-        </div>
       </Question>
 
       <Question

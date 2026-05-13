@@ -40,7 +40,7 @@ type Props = {
   equipmentAccess: StrengthEquipmentAccess;
   injuryConstraints: StrengthInjuryConstraint[];
   priorityMuscles: StrengthPriorityMuscle[];
-  secondaryObjective: StrengthSecondaryObjective | null;
+  secondaryObjective: StrengthSecondaryObjective[];
   bodyweightPreference: StrengthBodyweightPreference | null;
   // The user's fine-grained gear list. Threaded through to the
   // recommender so bodyweight-tagged exercises that need a pull-up
@@ -387,9 +387,7 @@ export function ExerciseLibraryPanel({
               onClick={() => setShowAll((v) => !v)}
               className="text-[12px] text-zinc-600 underline decoration-dotted underline-offset-2 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
             >
-              {showAll ? 'Hide' : 'Show'}{' '}
-              {recommendedResult.filteredOut.length} more exercises that
-              don&rsquo;t fit your profile
+              {`${showAll ? 'Hide' : 'Show'} ${recommendedResult.filteredOut.length} more exercises that don’t fit your profile`}
             </button>
             {showAll && (
               <div className="mt-4 space-y-6 opacity-70">

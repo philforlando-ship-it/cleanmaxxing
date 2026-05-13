@@ -350,9 +350,7 @@ export function FoodLibraryPanel({
               onClick={() => setShowAll((v) => !v)}
               className="text-[12px] text-zinc-600 underline decoration-dotted underline-offset-2 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
             >
-              {showAll ? 'Hide' : 'Show'}{' '}
-              {recommendedResult.filteredOut.length} more foods that
-              don&rsquo;t fit your profile
+              {`${showAll ? 'Hide' : 'Show'} ${recommendedResult.filteredOut.length} more foods that don’t fit your profile`}
             </button>
             {showAll && (
               <div className="mt-4 space-y-7 opacity-70">

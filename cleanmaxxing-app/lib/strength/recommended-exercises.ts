@@ -57,6 +57,13 @@ const EQUIPMENT_VISIBILITY: Record<
     'ez_bar',
     'kettlebell',
   ],
+  // dumbbells_and_bench is dumbbell + bodyweight at the visibility
+  // tier — same equipment categories as minimal_dumbbells. The bench
+  // unlocks per-exercise gear requirements (incline DB press, DB row
+  // on bench, Bulgarian split squat) via the equipment-owned seed in
+  // lib/strength/gear.ts (DEFAULT_OWNED_BY_ACCESS) rather than via a
+  // top-level equipment category.
+  dumbbells_and_bench: ['dumbbell', 'bodyweight'],
   minimal_dumbbells: ['dumbbell', 'bodyweight'],
   bodyweight_only: ['bodyweight'],
 };
@@ -137,7 +144,7 @@ export type RecommendedExercisesArgs = {
   equipment_access: StrengthEquipmentAccess;
   injury_constraints: StrengthInjuryConstraint[];
   priority_muscles: StrengthPriorityMuscle[];
-  secondary_objective: StrengthSecondaryObjective | null;
+  secondary_objective: StrengthSecondaryObjective[];
   bodyweight_preference: StrengthBodyweightPreference | null;
   // Optional fine-grained gear list. When provided, exercises whose
   // required gear isn't in this set are dropped (catches the case
@@ -190,24 +197,23 @@ function exerciseMatchesPriority(
   );
 }
 
-// Slugs the secondary objective wants pinned. Returns the set of
-// exercise slugs to up-rank for that objective. Empty for objectives
-// where no specific exercises are favored.
+// Slugs the secondary objectives want pinned. Returns the union of
+// exercise slugs to up-rank across all selected objectives. Empty for
+// objective sets where no specific exercises are favored.
 function secondaryObjectivePinSlugs(
-  obj: StrengthSecondaryObjective | null,
+  objs: StrengthSecondaryObjective[],
 ): Set<string> {
-  if (obj === 'core_strength') {
-    return new Set(['ab_wheel_rollout']);
+  const pins = new Set<string>();
+  if (objs.includes('core_strength')) {
+    pins.add('ab_wheel_rollout');
   }
-  if (obj === 'general_function') {
+  if (objs.includes('general_function')) {
     // Unilateral + carry-style work pinned for daily-life capability.
-    return new Set([
-      'split_squat',
-      'dumbbell_reverse_lunge',
-      'front_foot_elevated_smith_lunge',
-    ]);
+    pins.add('split_squat');
+    pins.add('dumbbell_reverse_lunge');
+    pins.add('front_foot_elevated_smith_lunge');
   }
-  return new Set();
+  return pins;
 }
 
 export function getRecommendedExercises(
